@@ -1,1 +1,3 @@
-# BIEON IoT System\n\nGenerated with Monorepo workspaces.
+# BIEON IoT System
+
+Generated with Monorepo workspaces.
