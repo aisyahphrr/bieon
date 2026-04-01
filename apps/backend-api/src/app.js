@@ -1,0 +1,1 @@
+const express = require("express");\nconst app = express();\n\nmodule.exports = app;\n

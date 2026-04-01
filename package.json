@@ -1,0 +1,12 @@
+{
+  "name": "bieon-iot-system",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "microservices/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present"
+  }
+}
