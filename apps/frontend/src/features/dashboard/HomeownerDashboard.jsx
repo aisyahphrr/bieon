@@ -134,12 +134,12 @@ function ComplaintModal({ isOpen, onClose }) {
                     type="button"
                     onClick={() => setFormData({ ...formData, priority: level })}
                     className={`flex-1 py-3 rounded-xl font-semibold transition-all ${formData.priority === level
-                        ? level === 'high'
-                          ? 'bg-red-600 text-white'
-                          : level === 'medium'
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? level === 'high'
+                        ? 'bg-red-600 text-white'
+                        : level === 'medium'
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                   >
                     {level === 'high' ? 'Tinggi' : level === 'medium' ? 'Sedang' : 'Rendah'}
@@ -440,8 +440,8 @@ export function HomeownerDashboard() {
     },
   };
 
-  const currentDevices = devicesPerRoom[selectedRoom as keyof typeof devicesPerRoom] || devicesPerRoom.all;
-  const currentSensors = roomSensors[selectedRoom as keyof typeof roomSensors] || roomSensors.all;
+  const currentDevices = devicesPerRoom[selectedRoom] || devicesPerRoom.all;
+  const currentSensors = roomSensors[selectedRoom] || roomSensors.all;
 
   // Hourly data (real-time updates every hour)
   const dailyData = [
@@ -525,7 +525,7 @@ export function HomeownerDashboard() {
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
                 <div>
-                  <div className="text-xs font-semibold text-gray-900">Hi, Aleyhi!</div>
+                  <div className="text-xs font-semibold text-gray-900">Hi, Aisyah!</div>
                   <div className="text-xs text-gray-500">Homeowner</div>
                 </div>
               </div>
@@ -547,8 +547,8 @@ export function HomeownerDashboard() {
                 key={room.id}
                 onClick={() => setSelectedRoom(room.id)}
                 className={`px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${selectedRoom === room.id
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
                 {room.name} ({room.devices})
@@ -667,8 +667,8 @@ export function HomeownerDashboard() {
                       </div>
                     </div>
                     <div className={`px-3 py-2 rounded-lg text-xs font-bold text-center ${currentSensors.security.find(s => s.type.includes('Motion'))?.status === 'No Motion'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-700'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-amber-100 text-amber-700'
                       }`}>
                       {currentSensors.security.find(s => s.type.includes('Motion'))?.status === 'No Motion' ? '✓ Aman' : '👁️ Detected'}
                     </div>
@@ -710,8 +710,8 @@ export function HomeownerDashboard() {
                       </div>
                     </div>
                     <div className={`px-3 py-2 rounded-lg text-xs font-bold text-center ${currentSensors.security.find(s => s.type.includes('Door'))?.status === 'Closed'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-red-100 text-red-700'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-red-100 text-red-700'
                       }`}>
                       {currentSensors.security.find(s => s.type.includes('Door'))?.status === 'Closed' ? '🔒 Tertutup' : '🚪 Terbuka'}
                     </div>
@@ -734,8 +734,8 @@ export function HomeownerDashboard() {
                       </div>
                     </div>
                     <div className={`px-3 py-2 rounded-lg text-xs font-bold text-center ${currentSensors.security.find(s => s.type.includes('Gas'))?.status === 'Normal'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-red-100 text-red-700'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-red-100 text-red-700'
                       }`}>
                       {currentSensors.security.find(s => s.type.includes('Gas'))?.status === 'Normal' ? '✓ Aman' : '⚠️ Terdeteksi'}
                     </div>
@@ -776,10 +776,10 @@ export function HomeownerDashboard() {
                           </div>
                         </div>
                         <div className={`mt-6 px-4 py-3 rounded-xl text-center font-semibold ${currentSensors.waterQuality.status === 'drinkable'
-                            ? 'bg-emerald-500/30 text-white'
-                            : currentSensors.waterQuality.status === 'usable'
-                              ? 'bg-blue-500/30 text-white'
-                              : 'bg-red-500/30 text-white'
+                          ? 'bg-emerald-500/30 text-white'
+                          : currentSensors.waterQuality.status === 'usable'
+                            ? 'bg-blue-500/30 text-white'
+                            : 'bg-red-500/30 text-white'
                           }`}>
                           {currentSensors.waterQuality.status === 'drinkable'
                             ? 'Air aman untuk diminum langsung'
@@ -999,12 +999,12 @@ export function HomeownerDashboard() {
                     <div
                       key={notif.id}
                       className={`p-4 rounded-xl border-l-4 ${notif.type === 'danger'
-                          ? 'bg-red-50 border-red-500'
-                          : notif.type === 'warning'
-                            ? 'bg-amber-50 border-amber-500'
-                            : notif.type === 'security'
-                              ? 'bg-purple-50 border-purple-500'
-                              : 'bg-blue-50 border-blue-500'
+                        ? 'bg-red-50 border-red-500'
+                        : notif.type === 'warning'
+                          ? 'bg-amber-50 border-amber-500'
+                          : notif.type === 'security'
+                            ? 'bg-purple-50 border-purple-500'
+                            : 'bg-blue-50 border-blue-500'
                         }`}
                     >
                       <div className="flex items-start gap-3">
