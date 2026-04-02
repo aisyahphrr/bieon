@@ -1,10 +1,10 @@
 import React from 'react';
-import { HomeownerDashboard } from './features/dashboard/HomeownerDashboard';
+import LandingPage from './features/general-page/LandingPage';
 
 function App() {
   return (
     <>
-      <HomeownerDashboard />
+      <LandingPage />
     </>
   );
 }
