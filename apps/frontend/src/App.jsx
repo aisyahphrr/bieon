@@ -6,7 +6,7 @@ import Setup from './features/general-page/setup';
 import { HomeownerDashboard } from './features/dashboard/HomeownerDashboard';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('landing');
+  const [currentPage, setCurrentPage] = useState('dashboard');
 
   return (
     <>
