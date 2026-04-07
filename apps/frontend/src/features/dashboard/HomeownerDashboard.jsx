@@ -328,7 +328,7 @@ function DataModal({ isOpen, onClose, chartType }) {
   );
 }
 
-export function HomeownerDashboard() {
+export function HomeownerDashboard({ onNavigate }) {
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [chartType, setChartType] = useState('daily');
   const [showDataModal, setShowDataModal] = useState(false);
@@ -498,9 +498,9 @@ export function HomeownerDashboard() {
             </div>
 
             <nav className="hidden md:flex items-center gap-10">
-              <a href="#" className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Beranda</a>
-              <a href="#" className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</a>
-              <a href="#" className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</a>
+              <button onClick={() => onNavigate && onNavigate('dashboard')} className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Beranda</button>
+              <button onClick={() => onNavigate && onNavigate('control')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</button>
+              <button onClick={() => onNavigate && onNavigate('history')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</button>
             </nav>
 
             <div className="flex items-center gap-4">
