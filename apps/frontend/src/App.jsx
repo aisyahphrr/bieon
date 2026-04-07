@@ -5,6 +5,8 @@ import Signup from './features/general-page/signup';
 import Setup from './features/general-page/setup';
 import { HomeownerDashboard } from './features/dashboard/HomeownerDashboard';
 import { HomeownerHistory } from './features/dashboard/HomeownerHistory';
+import { DeviceControlPage } from './features/dashboard/kendali';
+import { TechnicianDashboard } from './features/technician/TechnicianDashboard';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -17,6 +19,8 @@ function App() {
       {currentPage === 'setup' && <Setup onNavigate={setCurrentPage} />}
       {currentPage === 'dashboard' && <HomeownerDashboard onNavigate={setCurrentPage} />}
       {currentPage === 'history' && <HomeownerHistory onNavigate={setCurrentPage} />}
+      {currentPage === 'kendali' && <DeviceControlPage onNavigate={setCurrentPage} />}
+      {currentPage === 'teknisi' && <TechnicianDashboard onNavigate={setCurrentPage} />}
     </>
   );
 }

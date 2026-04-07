@@ -4,6 +4,7 @@ import {
   Zap,
   Bell,
   ChevronRight,
+  ChevronDown,
   Download,
   Droplets,
   Thermometer,
@@ -23,7 +24,6 @@ import {
   Send,
   CheckCircle2,
   XCircle,
-  ChevronDown,
   Settings,
   DoorOpen,
   DoorClosed,
@@ -499,7 +499,7 @@ export function HomeownerDashboard({ onNavigate }) {
 
             <nav className="hidden md:flex items-center gap-10">
               <button onClick={() => onNavigate && onNavigate('dashboard')} className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Beranda</button>
-              <button onClick={() => onNavigate && onNavigate('control')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</button>
+              <button onClick={() => onNavigate && onNavigate('kendali')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</button>
               <button onClick={() => onNavigate && onNavigate('history')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</button>
             </nav>
 
@@ -515,12 +515,26 @@ export function HomeownerDashboard({ onNavigate }) {
                 <Bell className="w-5 h-5 text-gray-600" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
               </button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
-                <div>
-                  <div className="text-xs font-semibold text-gray-900">Hi, Aisyah!</div>
-                  <div className="text-xs text-gray-500">Homeowner</div>
-                </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                  className="flex items-center gap-2 hover:bg-gray-50 p-1.5 rounded-lg transition-all"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
+                  <div className="text-left">
+                    <div className="text-xs font-semibold text-gray-900">Hi, Aisyah!</div>
+                    <div className="text-xs text-gray-500">Homeowner</div>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
+                </button>
+                {showRoleDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                    <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
+                    <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
+                    <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
+                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
