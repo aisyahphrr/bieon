@@ -488,13 +488,7 @@ export function HomeownerDashboard({ onNavigate }) {
         <div className="max-w-[1900px] mx-auto px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">BIEON Homeowner</h1>
-                <p className="text-xs text-gray-500">Smart Green Home Monitoring</p>
-              </div>
+              <img src="/logo_bieon.png" alt="BIEON" className="h-10 object-contain" />
             </div>
 
             <nav className="hidden md:flex items-center gap-10">
@@ -532,7 +526,7 @@ export function HomeownerDashboard({ onNavigate }) {
                     <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
                     <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
                     <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
+                    <button onClick={() => onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
                   </div>
                 )}
               </div>
