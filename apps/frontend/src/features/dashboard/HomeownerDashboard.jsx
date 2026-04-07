@@ -336,12 +336,11 @@ export function HomeownerDashboard() {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   const rooms = [
-    { id: 'all', name: 'All Rooms', devices: 15 },
-    { id: 'r1', name: 'R1 - Living Room', devices: 3 },
+    { id: 'all', name: 'All Room', devices: 15 },
+    { id: 'r1', name: 'R1 - Living Room', devices: 6 },
     { id: 'r2', name: 'R2 - Bedroom', devices: 4 },
-    { id: 'r3', name: 'R3 - Terrace', devices: 2 },
-    { id: 'r4', name: 'R4 - Garage', devices: 2 },
-    { id: 'r5', name: 'R5 - Kitchen', devices: 4 },
+    { id: 'r3', name: 'R3 - Kitchen', devices: 4 },
+    { id: 'r4', name: 'R4 - Garage', devices: 3 },
   ];
 
   const devicesPerRoom = {
@@ -363,12 +362,10 @@ export function HomeownerDashboard() {
       { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
     ],
     r1: [
-      { name: 'Lampu Tamu 1', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
-      { name: 'Lampu Tamu 2', room: 'Living Room', status: 'OFF', power: 0, type: 'lighting' },
-      { name: 'Door Sensor Depan', room: 'Living Room', status: 'ON', power: 2, type: 'security' },
-      { name: 'Wi-Fi Router', room: 'Living Room', status: 'ON', power: 12, type: 'network' },
-      { name: 'TV 55 inch', room: 'Living Room', status: 'ON', power: 120, type: 'appliance' },
-      { name: 'AC Living Room', room: 'Living Room', status: 'ON', power: 800, type: 'comfort' },
+      { name: 'AC', room: 'Living Room', status: 'ON', power: 750, type: 'comfort' },
+      { name: 'Lampu', room: 'Living Room', status: 'ON', power: 20, type: 'lighting' },
+      { name: 'Lampu 2', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
+      { name: 'Motion Sensor', room: 'Living Room', status: 'OFF', power: 0, type: 'security' },
     ],
     r2: [
       { name: 'AC Kamar', room: 'Bedroom', status: 'ON', power: 750, type: 'comfort' },
@@ -377,19 +374,15 @@ export function HomeownerDashboard() {
       { name: 'Kipas Angin', room: 'Bedroom', status: 'OFF', power: 0, type: 'comfort' },
     ],
     r3: [
-      { name: 'Lampu Terrace', room: 'Terrace', status: 'ON', power: 15, type: 'lighting' },
-      { name: 'Smart Plug Terrace', room: 'Terrace', status: 'ON', power: 50, type: 'appliance' },
+      { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
+      { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
+      { name: 'Gas Sensor', room: 'Kitchen', status: 'ON', power: 5, type: 'security' },
+      { name: 'Lampu Dapur', room: 'Kitchen', status: 'ON', power: 30, type: 'lighting' },
     ],
     r4: [
       { name: 'CCTV Depan', room: 'Garage', status: 'ON', power: 15, type: 'security' },
       { name: 'Kipas Produksi', room: 'Garage', status: 'OFF', power: 0, type: 'comfort' },
       { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
-    ],
-    r5: [
-      { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
-      { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
-      { name: 'Gas Sensor', room: 'Kitchen', status: 'ON', power: 5, type: 'security' },
-      { name: 'Lampu Dapur', room: 'Kitchen', status: 'ON', power: 30, type: 'lighting' },
     ],
   };
 
@@ -410,32 +403,26 @@ export function HomeownerDashboard() {
         { type: 'Gas Sensor', status: 'Normal', room: 'Kitchen' },
       ]
     },
-    r1: { // Living Room - Kenyamanan Only (Suhu + Kelembapan)
-      comfort: { temp: 25, humidity: 65, comfortLevel: 85 }
-    },
-    r2: { // Bedroom - Kenyamanan Only (Suhu + Kelembapan) - 4 devices
-      comfort: { temp: 24, humidity: 70, comfortLevel: 88 }
-    },
-    r3: { // Terrace - Security Only (Door Sensor)
+    r1: { // Living Room - Kenyamanan + Keamanan
+      comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
       security: [
-        { type: 'Door Sensor', status: 'Closed', room: 'Terrace' },
+        { type: 'Motion Sensor', status: 'Active', room: 'Bedroom' },
+        { type: 'Door Sensor', status: 'Closed', room: 'Living Room' },
       ]
     },
-    r4: { // Garage - Security Only (Door Sensor)
-      security: [
-        { type: 'Door Sensor', status: 'Closed', room: 'Garage' },
-      ]
+    r2: { // Bedroom - Kenyamanan Only
+      comfort: { temp: 26, humidity: 68, comfortLevel: 82 }
     },
-    r5: { // Kitchen - Security (Gas Sensor) + Water Quality
-      waterQuality: {
-        status: 'drinkable', // drinkable, usable, unsafe
-        ph: 7.2,
-        turbidity: 2.1, // NTU
-        tds: 78, // ppm
-        temp: 24
-      },
+    r3: { // Kitchen - Security + Water Quality
+      waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
       security: [
         { type: 'Gas Sensor', status: 'Normal', room: 'Kitchen' },
+      ]
+    },
+    r4: { // Garage - Security Only
+      security: [
+        { type: 'Door Sensor', status: 'Closed', room: 'Terrace' },
+        { type: 'Door Sensor', status: 'Closed', room: 'Garage' },
       ]
     },
   };
@@ -466,18 +453,18 @@ export function HomeownerDashboard() {
 
   // Monthly data (12 months, current month shows accumulation until today)
   const monthlyData = [
-    { month: 'Jan', kwh: 345.5, cost: 345500 },
-    { month: 'Feb', kwh: 298.3, cost: 298300 },
-    { month: 'Mar', kwh: 412.7, cost: 412700 },
-    { month: 'Apr', kwh: 389.4, cost: 389400 },
-    { month: 'May', kwh: 434.2, cost: 434200 },
-    { month: 'Jun', kwh: 398.6, cost: 398600 },
-    { month: 'Jul', kwh: 456.8, cost: 456800 },
-    { month: 'Aug', kwh: 478.9, cost: 478900 },
-    { month: 'Sep', kwh: 398.5, cost: 398500 },
-    { month: 'Oct', kwh: 412.4, cost: 412400 },
-    { month: 'Nov', kwh: 389.7, cost: 389700 },
-    { month: 'Dec', kwh: 234.1, cost: 234100 },
+    { month: 'Jan', kwh: 100, cost: 100000 },
+    { month: 'Feb', kwh: 90, cost: 90000 },
+    { month: 'Mar', kwh: 95, cost: 95000 },
+    { month: 'Apr', kwh: 105, cost: 105000 },
+    { month: 'Mei', kwh: 130, cost: 130000 },
+    { month: 'Jun', kwh: 160, cost: 160000 },
+    { month: 'Jul', kwh: 180, cost: 180000 },
+    { month: 'Agt', kwh: 195, cost: 195000 },
+    { month: 'Sep', kwh: 205, cost: 205000 },
+    { month: 'Okt', kwh: 195, cost: 195000 },
+    { month: 'Nov', kwh: 210, cost: 210000 },
+    { month: 'Des', kwh: 230, cost: 230000 },
   ];
 
   const notifications = [
@@ -509,6 +496,12 @@ export function HomeownerDashboard() {
                 <p className="text-xs text-gray-500">Smart Green Home Monitoring</p>
               </div>
             </div>
+
+            <nav className="hidden md:flex items-center gap-10">
+              <a href="#" className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Beranda</a>
+              <a href="#" className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</a>
+              <a href="#" className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</a>
+            </nav>
 
             <div className="flex items-center gap-4">
               <button
@@ -561,185 +554,182 @@ export function HomeownerDashboard() {
           {/* Left Side - Main Content */}
           <div className="col-span-9 space-y-8">
             {/* Kenyamanan & Kesehatan */}
+            {/* Kenyamanan & Keamanan Title */}
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Kenyamanan & Kesehatan - {rooms.find(r => r.id === selectedRoom)?.name}
+                {currentSensors.comfort && currentSensors.security
+                  ? 'Kenyamanan & Keamanan'
+                  : currentSensors.comfort
+                    ? 'Kenyamanan'
+                    : 'Keamanan'}
               </h2>
 
-              {/* Complex Grid Layout - Big Cards (Conclusions) + Small Cards (Sensors) */}
-              <div className="grid grid-cols-4 grid-rows-2 gap-4 mb-6" style={{ gridAutoRows: 'minmax(220px, auto)' }}>
-                {/* KENYAMANAN - Big Card (row-span-2) - Column 1 */}
-                {currentSensors.comfort && currentSensors.comfort.comfortLevel !== null && (
-                  <div className="row-span-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
-                    <div className="relative h-full flex flex-col">
-                      <div className="mb-4">
-                        <h3 className="text-2xl font-bold mb-2">Kenyamanan</h3>
-                        <p className="text-emerald-100 text-xs">Dari: Suhu + Kelembapan</p>
-                      </div>
-                      <div className="flex-1 flex flex-col justify-center items-center text-center">
-                        <div className="text-6xl font-bold mb-2">{currentSensors.comfort.comfortLevel}%</div>
-                        <div className="text-lg font-semibold mb-3">
-                          {currentSensors.comfort.comfortLevel >= 80 ? '😊 Sangat Nyaman' : currentSensors.comfort.comfortLevel >= 60 ? '🙂 Nyaman' : '😕 Kurang Nyaman'}
+              <div
+                className="grid grid-flow-col gap-4 mb-6 overflow-x-auto pb-4"
+                style={{
+                  gridTemplateRows: 'repeat(2, minmax(180px, 1fr))',
+                  gridAutoColumns: 'minmax(250px, 1fr)'
+                }}
+              >
+                {/* COMFORT SECTION */}
+                {currentSensors.comfort && (
+                  <>
+                    {/* KELEMBAPAN - Row 1, Col 1 */}
+                    {currentSensors.comfort.humidity !== null && (
+                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-gray-900">Kelembapan</span>
+                          <Droplets className="w-5 h-5 text-blue-500" />
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
-                          <div className="text-xs mb-1">Suhu</div>
-                          <div className="font-bold">{currentSensors.comfort.temp}°C</div>
-                        </div>
-                        {currentSensors.comfort.humidity !== null && (
-                          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
-                            <div className="text-xs mb-1">RH</div>
-                            <div className="font-bold">{currentSensors.comfort.humidity}%</div>
+                        <div className="mb-3">
+                          <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.humidity}%</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {currentSensors.comfort.humidity < 30 ? 'Kering' : currentSensors.comfort.humidity <= 68 ? 'Lembap' : 'Sangat Lembap'}
                           </div>
-                        )}
+                        </div>
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
+                          <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-600" style={{ width: `${currentSensors.comfort.humidity}%` }}></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUHU - Row 2, Col 1 */}
+                    {currentSensors.comfort.temp && (
+                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-gray-900">Suhu</span>
+                          <Thermometer className="w-5 h-5 text-orange-500" />
+                        </div>
+                        <div className="mb-3">
+                          <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.temp}°C</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {currentSensors.comfort.temp < 20 ? 'Dingin' : currentSensors.comfort.temp < 28 ? 'Sejuk' : 'Panas'}
+                          </div>
+                        </div>
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
+                          <div className="h-full bg-gradient-to-r from-orange-500 to-red-500" style={{ width: `${(currentSensors.comfort.temp / 40) * 100}%` }}></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* KENYAMANAN BIG CARD - Row Span 2, Col 2 */}
+                    <div className="row-span-2 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden flex flex-col">
+                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
+                      <div className="relative flex flex-col h-full">
+                        <div className="mb-2">
+                          <h3 className="text-2xl font-bold mb-1">Kenyamanan</h3>
+                          <p className="text-emerald-100 text-xs mb-1">Berdasarkan: Suhu + Kelembapan</p>
+                          <p className="text-emerald-100 text-[10px]">(Permenkes No. 2 Tahun 2023)</p>
+                        </div>
+                        <div className="flex-1 flex flex-col justify-center items-center text-center mt-4 mb-4">
+                          <div className="text-2xl font-bold mb-3 flex items-center gap-2">
+                            {currentSensors.comfort.comfortLevel >= 80 ? '😊 Nyaman' : currentSensors.comfort.comfortLevel >= 60 ? '🙂 Cukup Nyaman' : '😕 Kurang Nyaman'}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-auto">
+                          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
+                            <div className="text-[10px] mb-1">Suhu</div>
+                            <div className="font-bold text-lg">{currentSensors.comfort.temp}°C</div>
+                          </div>
+                          {currentSensors.comfort.humidity !== null && (
+                            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
+                              <div className="text-[10px] mb-1">Kelembapan</div>
+                              <div className="font-bold text-lg">{currentSensors.comfort.humidity}%</div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
 
-                {/* KELEMBAPAN - Small Card - Column 2, Row 1 */}
-                {currentSensors.comfort && currentSensors.comfort.humidity !== null && (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-bold text-gray-900">Kelembapan</span>
-                      <Droplets className="w-5 h-5 text-blue-500" />
-                    </div>
-                    <div className="mb-3">
-                      <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.humidity}%</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.comfort.humidity < 30 ? 'Kering' : currentSensors.comfort.humidity < 60 ? 'Normal' : 'Lembap'}
-                      </div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-600" style={{ width: `${currentSensors.comfort.humidity}%` }}></div>
-                    </div>
-                  </div>
-                )}
-
-                {/* KEAMANAN - Big Card (row-span-2) - Column 3 */}
+                {/* SECURITY SECTION */}
                 {currentSensors.security && currentSensors.security.length > 0 && (
-                  <div className="row-span-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
-                    <div className="relative h-full flex flex-col">
-                      <div className="mb-4">
-                        <h3 className="text-2xl font-bold mb-2">Keamanan</h3>
-                        <p className="text-purple-100 text-xs">{currentSensors.security.length} sensor aktif</p>
-                      </div>
-                      <div className="flex-1 flex flex-col justify-center items-center text-center">
-                        <div className="text-7xl font-bold mb-3">
-                          {currentSensors.security.every(s =>
-                            s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
-                          ) ? '✓' : '⚠️'}
+                  <>
+
+
+                    {/* MOTION SENSORS */}
+                    {currentSensors.security.filter(s => s.type.includes('Motion')).map((sensor, idx) => (
+                      <div key={'motion' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-gray-900">Motion</span>
+                          <Activity className="w-5 h-5 text-purple-600" />
                         </div>
-                        <div className="text-lg font-semibold">
-                          {currentSensors.security.every(s =>
-                            s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
-                          ) ? '🔒 Semua Aman' : '⚠️ Perlu Perhatian'}
+                        <div className="mb-4">
+                          <div className="text-xl font-bold text-gray-900">{sensor.status}</div>
+                          <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
+                        </div>
+                        <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'No Motion' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {sensor.status === 'No Motion' ? '✓ Aman' : '👁️ Detected'}
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        {currentSensors.security.slice(0, 2).map((sensor, idx) => (
-                          <div key={idx} className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
-                            <div className="text-xs font-semibold">{sensor.type}</div>
-                            <div className="text-sm">{sensor.status}</div>
+                    ))}
+
+                    {/* DOOR SENSORS */}
+                    {currentSensors.security.filter(s => s.type.includes('Door')).map((sensor, idx) => (
+                      <div key={'door' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-gray-900">Door Sensor</span>
+                          <Lock className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div className="mb-4">
+                          <div className="text-xl font-bold text-gray-900">{sensor.status}</div>
+                          <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
+                        </div>
+                        <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'Closed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {sensor.status === 'Closed' ? '🔒 Tertutup' : '🚪 Terbuka'}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* GAS SENSORS */}
+                    {currentSensors.security.filter(s => s.type.includes('Gas')).map((sensor, idx) => (
+                      <div key={'gas' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-bold text-gray-900">Gas Sensor</span>
+                          <Flame className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div className="mb-4">
+                          <div className="text-xl font-bold text-gray-900">{sensor.status === 'Normal' ? 'Normal' : sensor.status}</div>
+                          <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
+                        </div>
+                        <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                          {sensor.status === 'Normal' ? '✓ Aman' : '⚠️ Terdeteksi'}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* KEAMANAN BIG CARD - Always after small cards */}
+                    <div className="row-span-2 bg-gradient-to-br flex flex-col from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
+                      <div className="relative flex flex-col h-full">
+                        <div className="mb-2">
+                          <h3 className="text-2xl font-bold mb-1">Keamanan</h3>
+                          <p className="text-purple-100 text-xs">{currentSensors.security.length} sensor aktif</p>
+                        </div>
+                        <div className="flex-1 flex flex-col justify-center items-center text-center py-6">
+                          <div className="text-[80px] font-bold leading-none mb-4">
+                            {currentSensors.security.every(s =>
+                              s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
+                            ) ? '✓' : '⚠️'}
                           </div>
-                        ))}
+                          <div className="text-xl font-semibold mt-2">
+                            {currentSensors.security.every(s =>
+                              s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
+                            ) ? '🔒 Semua Aman' : '⚠️ Perlu Perhatian'}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 mt-auto">
+                          {currentSensors.security.slice(0, 2).map((sensor, idx) => (
+                            <div key={idx} className="bg-white/20 backdrop-blur-sm rounded-lg p-3 flex justify-between items-center">
+                              <div className="text-xs font-semibold">{sensor.type} - {sensor.room}</div>
+                              <div className="text-xs font-bold">{sensor.status}</div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* MOTION SENSOR - Small Card - Column 4, Row 1 */}
-                {currentSensors.security && currentSensors.security.find(s => s.type.includes('Motion')) && (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-bold text-gray-900">Motion</span>
-                      <Activity className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div className="mb-3">
-                      <div className="text-xl font-bold text-gray-900">
-                        {currentSensors.security.find(s => s.type.includes('Motion'))?.status}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.security.find(s => s.type.includes('Motion'))?.room}
-                      </div>
-                    </div>
-                    <div className={`px-3 py-2 rounded-lg text-xs font-bold text-center ${currentSensors.security.find(s => s.type.includes('Motion'))?.status === 'No Motion'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-amber-100 text-amber-700'
-                      }`}>
-                      {currentSensors.security.find(s => s.type.includes('Motion'))?.status === 'No Motion' ? '✓ Aman' : '👁️ Detected'}
-                    </div>
-                  </div>
-                )}
-
-                {/* SUHU - Small Card - Column 2, Row 2 */}
-                {currentSensors.comfort && currentSensors.comfort.temp && (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-bold text-gray-900">Suhu</span>
-                      <Thermometer className="w-5 h-5 text-orange-500" />
-                    </div>
-                    <div className="mb-3">
-                      <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.temp}°C</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.comfort.temp < 20 ? 'Dingin' : currentSensors.comfort.temp < 28 ? 'Sejuk' : 'Panas'}
-                      </div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-orange-500 to-red-500" style={{ width: `${(currentSensors.comfort.temp / 40) * 100}%` }}></div>
-                    </div>
-                  </div>
-                )}
-
-                {/* DOOR SENSOR - Small Card - Column 4, Row 2 */}
-                {currentSensors.security && currentSensors.security.find(s => s.type.includes('Door')) && (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-bold text-gray-900">Door Sensor</span>
-                      <Lock className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div className="mb-3">
-                      <div className="text-xl font-bold text-gray-900">
-                        {currentSensors.security.find(s => s.type.includes('Door'))?.status}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.security.find(s => s.type.includes('Door'))?.room}
-                      </div>
-                    </div>
-                    <div className={`px-3 py-2 rounded-lg text-xs font-bold text-center ${currentSensors.security.find(s => s.type.includes('Door'))?.status === 'Closed'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-red-100 text-red-700'
-                      }`}>
-                      {currentSensors.security.find(s => s.type.includes('Door'))?.status === 'Closed' ? '🔒 Tertutup' : '🚪 Terbuka'}
-                    </div>
-                  </div>
-                )}
-
-                {/* GAS SENSOR - Small Card */}
-                {currentSensors.security && currentSensors.security.find(s => s.type.includes('Gas')) && (
-                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-bold text-gray-900">Gas Sensor</span>
-                      <Flame className="w-5 h-5 text-orange-600" />
-                    </div>
-                    <div className="mb-3">
-                      <div className="text-xl font-bold text-gray-900">
-                        {currentSensors.security.find(s => s.type.includes('Gas'))?.status}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.security.find(s => s.type.includes('Gas'))?.room}
-                      </div>
-                    </div>
-                    <div className={`px-3 py-2 rounded-lg text-xs font-bold text-center ${currentSensors.security.find(s => s.type.includes('Gas'))?.status === 'Normal'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-red-100 text-red-700'
-                      }`}>
-                      {currentSensors.security.find(s => s.type.includes('Gas'))?.status === 'Normal' ? '✓ Aman' : '⚠️ Terdeteksi'}
-                    </div>
-                  </div>
+                  </>
                 )}
               </div>
 
@@ -862,19 +852,19 @@ export function HomeownerDashboard() {
             </div>
 
             {/* Energy Monitoring Charts */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Grafik Monitoring Daya Real-Time</h3>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <h3 className="text-xl font-bold text-gray-900">Konsumsi Energi</h3>
+                  <p className="text-xs text-gray-500 mt-1">
                     {chartType === 'daily'
                       ? 'Update setiap jam | Hari berjalan 00:00-23:59'
-                      : '1 tahun terakhir | Bulan berjalan: akumulasi s/d hari ini'}
+                      : 'Update setiap bulan | Periode 1 tahun (Januari–Desember)'}
                   </p>
                 </div>
                 <button
                   onClick={() => setShowDataModal(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-[#00a67d] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
                 >
                   <Eye className="w-4 h-4" />
                   View Details
@@ -882,33 +872,43 @@ export function HomeownerDashboard() {
                 </button>
               </div>
 
-              {/* Real-time Display */}
-              {chartType === 'daily' && (
-                <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-                  <div className="text-center">
-                    <div className="text-xs text-emerald-700 font-semibold mb-1">Daya Sekarang</div>
-                    <div className="text-2xl font-bold text-gray-900">{currentPowerUsage} W</div>
+              {/* Status Bar */}
+              <div className="grid grid-cols-4 gap-4 mb-8 p-6 bg-[#ebfbf5] rounded-2xl border border-[#bbf7d0]">
+                <div className="text-center px-4 border-r border-[#86efac]/30 last:border-0 relative">
+                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
+                    {chartType === 'daily' ? 'Daya Saat Ini' : 'Daya Bulan Ini'}
                   </div>
-                  <div className="text-center">
-                    <div className="text-xs text-emerald-700 font-semibold mb-1">Total Hari Ini</div>
-                    <div className="text-2xl font-bold text-gray-900">{dailyTotal.toFixed(2)} kWh</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-emerald-700 font-semibold mb-1">Rata-rata/Jam</div>
-                    <div className="text-2xl font-bold text-gray-900">{avgPerHour.toFixed(3)} kWh</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-emerald-700 font-semibold mb-1">Total Biaya</div>
-                    <div className="text-2xl font-bold text-emerald-700">Rp {dailyCost.toLocaleString('id-ID')}</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    947 <span className="text-base font-semibold">{chartType === 'daily' ? 'W' : 'kWh'}</span>
                   </div>
                 </div>
-              )}
+                <div className="text-center px-4 border-r border-[#86efac]/30 last:border-0 relative">
+                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
+                    {chartType === 'daily' ? 'Total Daya Hari Ini' : 'Total Daya Tahun Ini'}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    7.85 <span className="text-base font-semibold">kWh</span>
+                  </div>
+                </div>
+                <div className="text-center px-4 border-r border-[#86efac]/30 last:border-0 relative">
+                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
+                    {chartType === 'daily' ? 'Rata-rata daya/Jam' : 'Rata-rata daya/bulan'}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    0.462 <span className="text-base font-semibold">kWh</span>
+                  </div>
+                </div>
+                <div className="text-center px-4">
+                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">Total Pemakaian Daya (Rp)</div>
+                  <div className="text-2xl font-bold text-[#00a67d]">Rp 78.490</div>
+                </div>
+              </div>
 
               {/* Tab Switcher */}
-              <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl">
+              <div className="flex gap-2 mb-8 bg-gray-50/50 p-1.5 rounded-[16px] border border-gray-100">
                 <button
                   onClick={() => setChartType('daily')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${chartType === 'daily' ? 'bg-white text-emerald-700 shadow-md' : 'text-gray-600'
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${chartType === 'daily' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.06)]' : 'text-gray-500 hover:bg-white/50'
                     }`}
                 >
                   <Clock className="w-4 h-4" />
@@ -916,7 +916,7 @@ export function HomeownerDashboard() {
                 </button>
                 <button
                   onClick={() => setChartType('monthly')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${chartType === 'monthly' ? 'bg-white text-emerald-700 shadow-md' : 'text-gray-600'
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${chartType === 'monthly' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.06)]' : 'text-gray-500 hover:bg-white/50'
                     }`}
                 >
                   <Calendar className="w-4 h-4" />
@@ -925,29 +925,44 @@ export function HomeownerDashboard() {
               </div>
 
               {/* Chart */}
-              <div className="h-80">
+              <div className="h-[400px]">
                 {chartType === 'daily' ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <RechartsLineChart data={dailyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="time" stroke="#6b7280" style={{ fontSize: '11px' }} />
-                      <YAxis stroke="#6b7280" style={{ fontSize: '11px' }} />
+                    <RechartsLineChart data={dailyData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                      <XAxis
+                        dataKey="time"
+                        stroke="#9ca3af"
+                        axisLine={{ stroke: '#9ca3af' }}
+                        tickLine={false}
+                        style={{ fontSize: '11px' }}
+                        dy={10}
+                        label={{ value: 'Waktu', position: 'insideBottom', offset: -15, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                      />
+                      <YAxis
+                        stroke="#9ca3af"
+                        axisLine={{ stroke: '#9ca3af' }}
+                        tickLine={false}
+                        style={{ fontSize: '11px' }}
+                        dx={-10}
+                        label={{ value: 'Daya (W)', angle: -90, position: 'insideLeft', offset: 0, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                      />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
                           borderRadius: '12px',
                           padding: '12px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
                         formatter={(value) => `${value} kWh`}
                       />
-                      <Legend />
                       <Line
                         type="monotone"
                         dataKey="kwh"
                         stroke="#10b981"
                         strokeWidth={3}
-                        dot={{ fill: '#10b981', r: 4 }}
+                        dot={{ fill: '#10b981', r: 4, strokeWidth: 2, stroke: '#fff' }}
                         activeDot={{ r: 6 }}
                         name="Konsumsi (kWh)"
                       />
@@ -955,26 +970,51 @@ export function HomeownerDashboard() {
                   </ResponsiveContainer>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <RechartsBarChart data={monthlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="month" stroke="#6b7280" style={{ fontSize: '11px' }} />
-                      <YAxis stroke="#6b7280" style={{ fontSize: '11px' }} />
+                    <RechartsLineChart data={monthlyData} margin={{ top: 30, right: 20, bottom: 30, left: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                      <XAxis
+                        dataKey="month"
+                        stroke="#9ca3af"
+                        axisLine={{ stroke: '#9ca3af' }}
+                        tickLine={false}
+                        style={{ fontSize: '11px' }}
+                        dy={10}
+                        label={{ value: 'Waktu', position: 'insideBottom', offset: -15, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                      />
+                      <YAxis
+                        stroke="#9ca3af"
+                        axisLine={{ stroke: '#9ca3af' }}
+                        tickLine={false}
+                        style={{ fontSize: '11px' }}
+                        dx={-10}
+                        label={{ value: 'Daya (kWh)', angle: -90, position: 'insideLeft', offset: -10, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                        domain={[0, 250]}
+                        ticks={[0, 50, 100, 150, 200, 250]}
+                      />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
                           borderRadius: '12px',
                           padding: '12px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
                         formatter={(value, name) => {
                           if (name === 'Biaya (Rp)') return `Rp ${value.toLocaleString('id-ID')}`;
                           return `${value} kWh`;
                         }}
                       />
-                      <Legend />
-                      <Bar dataKey="kwh" fill="#10b981" name="Konsumsi (kWh)" radius={[8, 8, 0, 0]} />
-                      <Bar dataKey="cost" fill="#14b8a6" name="Biaya (Rp)" radius={[8, 8, 0, 0]} />
-                    </RechartsBarChart>
+                      {/* Legend dihapus sesuai permintaan */}
+                      <Line
+                        type="monotone"
+                        dataKey="kwh"
+                        stroke="#10b981"
+                        strokeWidth={2.5}
+                        dot={{ fill: '#10b981', r: 5, strokeWidth: 0 }}
+                        activeDot={{ r: 7, stroke: '#fff', strokeWidth: 2 }}
+                        name="Konsumsi (kWh)"
+                      />
+                    </RechartsLineChart>
                   </ResponsiveContainer>
                 )}
               </div>
@@ -1062,3 +1102,5 @@ export function HomeownerDashboard() {
     </div>
   );
 }
+
+export default HomeownerDashboard;
