@@ -384,13 +384,13 @@ export function DeviceControlPage({ onNavigate }) {
             </div>
 
             <nav className="hidden md:flex items-center gap-10">
-              <button onClick={() => onNavigate("dashboard")} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Beranda</button>
-              <button className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Kendali Perangkat</button>
-              <button className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</button>
+              <button onClick={() => onNavigate && onNavigate("dashboard")} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Beranda</button>
+              <button onClick={() => onNavigate && onNavigate("kendali")} className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Kendali Perangkat</button>
+              <button onClick={() => onNavigate && onNavigate("history")} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</button>
             </nav>
 
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
+              <button onClick={() => onNavigate && onNavigate('pengaduan')} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
                 <MessageSquare className="w-4 h-4" />
                 Ajukan Pengaduan
               </button>

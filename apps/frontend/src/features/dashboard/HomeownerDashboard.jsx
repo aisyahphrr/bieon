@@ -505,7 +505,7 @@ export function HomeownerDashboard({ onNavigate }) {
 
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setShowComplaintModal(true)}
+                onClick={() => onNavigate && onNavigate('pengaduan')}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
               >
                 <MessageSquare className="w-4 h-4" />
