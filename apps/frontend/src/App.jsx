@@ -7,9 +7,12 @@ import { HomeownerDashboard } from './features/dashboard/HomeownerDashboard';
 import { HomeownerHistory } from './features/dashboard/HomeownerHistory';
 import { DeviceControlPage } from './features/dashboard/kendali';
 import { TechnicianDashboard } from './features/technician/TechnicianDashboard';
+import SuperAdminDashboard from './features/admin/SuperAdminDashboard';
+import ClientDetailPage from './features/admin/ClientDetailPage';
+
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState('landing');
 
   return (
     <>
@@ -21,6 +24,10 @@ function App() {
       {currentPage === 'history' && <HomeownerHistory onNavigate={setCurrentPage} />}
       {currentPage === 'kendali' && <DeviceControlPage onNavigate={setCurrentPage} />}
       {currentPage === 'teknisi' && <TechnicianDashboard onNavigate={setCurrentPage} />}
+      {currentPage === 'admin' && <SuperAdminDashboard onNavigate={setCurrentPage} />}
+      {currentPage === 'admin-client-detail' && <ClientDetailPage onNavigate={setCurrentPage} />}
+
+
     </>
   );
 }

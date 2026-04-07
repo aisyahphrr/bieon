@@ -21,6 +21,7 @@ export function HomeownerHistory({ onNavigate }) {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
     const tabs = [
         { id: 'Kenyamanan', full: 'Kenyamanan', short: 'Kenyamanan' },
@@ -372,54 +373,52 @@ export function HomeownerHistory({ onNavigate }) {
     const colWidth = ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'w-[14.2%]' : 'w-1/5';
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA]">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/20 to-teal-50/20">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-                <div className="max-w-[1900px] mx-auto px-4 md:px-8 py-3 flex items-center justify-between gap-4">
-                    {/* Logo Left */}
-                    <div className="flex-1 flex justify-start items-center min-w-0">
-                        <img src="/logo_bieon.png" alt="BIEON" className="h-8 md:h-9 object-contain shrink-0" />
-                    </div>
+            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+                <div className="max-w-[1900px] mx-auto px-8 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <img src="/logo_bieon.png" alt="BIEON" className="h-10 object-contain" />
+                        </div>
 
-                    {/* Nav Center */}
-                    <nav className="hidden md:flex shrink-0 items-center justify-center gap-4 lg:gap-8 xl:gap-10 px-4">
-                        <button
-                            onClick={() => onNavigate && onNavigate('dashboard')}
-                            className="text-[#235C50] font-semibold hover:text-teal-900 transition-colors whitespace-nowrap text-sm xl:text-base"
-                        >
-                            Beranda
-                        </button>
-                        <button
-                            onClick={() => onNavigate && onNavigate('control')}
-                            className="text-[#235C50] font-semibold hover:text-teal-900 transition-colors whitespace-nowrap text-sm xl:text-base"
-                        >
-                            Kendali Perangkat
-                        </button>
-                        <button
-                            onClick={() => onNavigate && onNavigate('history')}
-                            className="text-[#235C50] font-semibold border-b-2 border-[#235C50] pb-1 whitespace-nowrap text-sm xl:text-base"
-                        >
-                            Riwayat
-                        </button>
-                    </nav>
+                        <nav className="hidden md:flex items-center gap-10">
+                            <button onClick={() => onNavigate && onNavigate('dashboard')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Beranda</button>
+                            <button onClick={() => onNavigate && onNavigate('kendali')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</button>
+                            <button onClick={() => onNavigate && onNavigate('history')} className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Riwayat</button>
+                        </nav>
 
-                    {/* Actions Right */}
-                    <div className="flex-1 flex items-center justify-end gap-3 lg:gap-5 min-w-0">
-                        <button className="flex items-center justify-center gap-2 w-9 h-9 xl:w-auto xl:h-auto xl:px-5 xl:py-2.5 bg-[#FF8C00] text-white rounded-lg font-bold hover:bg-[#E67E00] transition-colors shadow-sm">
-                            <MessageSquare className="w-4 h-4 xl:w-4 xl:h-4" />
-                            <span className="hidden xl:inline text-sm">Ajukan Pengaduan</span>
-                        </button>
-
-                        <button className="relative p-1 hover:bg-gray-100 rounded-lg transition-colors shrink-0">
-                            <Bell className="w-5 h-5 lg:w-6 lg:h-6 text-gray-500" />
-                            <span className="absolute top-1 right-1 w-2 h-2 xl:w-2.5 xl:h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                            <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-[#189F5A] flex flex-shrink-0"></div>
-                            <div className="hidden lg:block text-left">
-                                <div className="text-[12px] xl:text-[13px] font-bold text-gray-900 leading-none mb-1">Hi, Aisyah!</div>
-                                <div className="text-[10px] xl:text-[11px] text-gray-500">Homeowner</div>
+                        <div className="flex items-center gap-4">
+                            <button
+                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                            >
+                                <MessageSquare className="w-4 h-4" />
+                                Ajukan Pengaduan
+                            </button>
+                            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                <Bell className="w-5 h-5 text-gray-600" />
+                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                            </button>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                                    className="flex items-center gap-2 hover:bg-gray-50 p-1.5 rounded-lg transition-all"
+                                >
+                                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
+                                    <div className="text-left">
+                                        <div className="text-xs font-semibold text-gray-900">Hi, Aisyah!</div>
+                                        <div className="text-xs text-gray-500">Homeowner</div>
+                                    </div>
+                                    <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
+                                </button>
+                                {showRoleDropdown && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
+                                        <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
+                                        <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
+                                        <button onClick={() => onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -427,7 +426,7 @@ export function HomeownerHistory({ onNavigate }) {
             </header>
 
             {/* Main Content */}
-            <div className="max-w-[1900px] mx-auto px-4 md:px-8 py-10">
+            <div className="max-w-[1900px] mx-auto px-8 py-8">
                 <h1 className="text-4xl font-bold text-center text-[#235C50] mb-8">Riwayat Aktivitas</h1>
 
                 {/* Export Button Area */}
