@@ -378,15 +378,9 @@ export function DeviceControlPage({ onNavigate }) {
             </div>
 
             <nav className="hidden md:flex items-center gap-10">
-<<<<<<< HEAD
-              <button onClick={() => onNavigate && onNavigate("dashboard")} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Beranda</button>
-              <button onClick={() => onNavigate && onNavigate("kendali")} className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Kendali Perangkat</button>
-              <button onClick={() => onNavigate && onNavigate("history")} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</button>
-=======
               <button onClick={() => onNavigate && onNavigate('dashboard')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Beranda</button>
-              <button className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Kendali Perangkat</button>
+              <button onClick={() => onNavigate && onNavigate('kendali')} className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Kendali Perangkat</button>
               <button onClick={() => onNavigate && onNavigate('history')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</button>
->>>>>>> 6c0e3716914d4c1818421953ec2e52f4063fa589
             </nav>
 
             <div className="flex items-center gap-4">
