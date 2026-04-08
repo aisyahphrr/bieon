@@ -20,8 +20,10 @@ export function HomeownerHistory({ onNavigate }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRoomFilter, setSelectedRoomFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showRowsDropdown, setShowRowsDropdown] = useState(false);
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     const tabs = [
         { id: 'Kenyamanan', full: 'Kenyamanan', short: 'Kenyamanan' },
@@ -462,42 +464,70 @@ export function HomeownerHistory({ onNavigate }) {
 
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
                         {/* Search Input */}
-                        <div className="relative w-full sm:w-[100px] md:w-[220px] shrink-0">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <div className="relative w-full sm:w-[100px] md:w-[220px] shrink-0 group">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Search data..."
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
                                 disabled={availableFilters.length === 0}
                             />
                         </div>
 
-                        {/* Filters Dropdown */}
-                        <div className="relative w-full sm:w-[180px] md:w-[200px] shrink-0">
-                            <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                            <select
-                                value={selectedRoomFilter}
-                                onChange={(e) => { setSelectedRoomFilter(e.target.value); setCurrentPage(1); }}
+                        <div className="relative w-full sm:w-[180px] md:w-[220px] shrink-0">
+                            <button
+                                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                                 disabled={availableFilters.length === 0}
-                                className="appearance-none w-full pl-9 pr-8 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-medium text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'} ${availableFilters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <option value="">
-                                    {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Semua Perangkat' : 'Semua Ruangan'}
-                                </option>
-                                {availableFilters.map(r => (
-                                    <option key={r} value={r}>{r}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                <div className="flex items-center gap-2.5">
+                                    <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                    <span className={selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}>
+                                        {selectedRoomFilter || (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Semua Perangkat' : 'Semua Ruangan')}
+                                    </span>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                            </button>
+
+                            {showFilterDropdown && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowFilterDropdown(false)}></div>
+                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 min-w-[200px]">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedRoomFilter('');
+                                                setCurrentPage(1);
+                                                setShowFilterDropdown(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === '' ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                        >
+                                            {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Semua Perangkat' : 'Semua Ruangan'}
+                                        </button>
+                                        {availableFilters.map(r => (
+                                            <button
+                                                key={r}
+                                                onClick={() => {
+                                                    setSelectedRoomFilter(r);
+                                                    setCurrentPage(1);
+                                                    setShowFilterDropdown(false);
+                                                }}
+                                                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                            >
+                                                {r}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* Table Area */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto min-h-[400px]">
+                    <div className="overflow-x-auto">
                         <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-[1000px]">
                             <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                                 <tr>
@@ -727,20 +757,37 @@ export function HomeownerHistory({ onNavigate }) {
                     {/* Pagination */}
                     {activeTabsConfigured.includes(activeTab) && (
                         <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-200 gap-4">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-3 text-sm text-gray-500">
                                 <span>Rows per page:</span>
-                                <select
-                                    value={rowsPerPage}
-                                    onChange={(e) => {
-                                        setRowsPerPage(Number(e.target.value));
-                                        setCurrentPage(1);
-                                    }}
-                                    className="border border-gray-200 rounded-md py-1 px-2 bg-transparent font-medium text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
-                                >
-                                    {[5, 10, 15, 20, 30, 50, 100].map(val => (
-                                        <option key={val} value={val}>{val}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => setShowRowsDropdown(!showRowsDropdown)}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all"
+                                    >
+                                        {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    
+                                    {showRowsDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
+                                            <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
+                                                {[5, 10, 15, 20, 30, 50].map(val => (
+                                                    <button
+                                                        key={val}
+                                                        onClick={() => {
+                                                            setRowsPerPage(val);
+                                                            setCurrentPage(1);
+                                                            setShowRowsDropdown(false);
+                                                        }}
+                                                        className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                    >
+                                                        {val}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="text-sm font-medium text-gray-600">

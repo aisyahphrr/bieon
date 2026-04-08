@@ -13,7 +13,7 @@ import ClientDetailPage from './features/admin/ClientDetailPage';
 
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('landing');
+  const [currentPage, setCurrentPage] = useState('dashboard');
 
   return (
     <>

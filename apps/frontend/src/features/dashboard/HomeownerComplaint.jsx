@@ -23,8 +23,10 @@ import {
     ArrowDown,
     ArrowUpDown,
     Star,
-    User
+    User,
+    Cpu
 } from 'lucide-react';
+import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 
 export function HomeownerComplaint({ onNavigate }) {
     const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -35,8 +37,12 @@ export function HomeownerComplaint({ onNavigate }) {
     // Filter, Sort, Pagination State
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [rowsPerPage, setRowsPerPage] = useState(6);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showRowsDropdown, setShowRowsDropdown] = useState(false);
+    const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+    const [showDeviceDropdown, setShowDeviceDropdown] = useState(false);
 
     // Rating State
     const [ratingTargetId, setRatingTargetId] = useState(null);
@@ -163,10 +169,14 @@ export function HomeownerComplaint({ onNavigate }) {
                 targetDate: 'Maks. 22 Feb 2026, 09:15 WIB'
             },
             timeline: [
-                { time: '21 Feb 2026, 10:00', desc: 'Homeowner telah mengonfirmasi tiket selesai.', status: 'Selesai', isDone: true },
+                { time: '21 Feb 2026, 10:00', desc: 'Homeowner telah mengonfirmasi tiket selesai dan memberikan penilaian.', status: 'Selesai', isDone: true },
                 { time: '21 Feb 2026, 09:00', desc: 'Teknisi mengonfirmasi perbaikan (Restart Gateway & Update Firmware) selesai.', status: 'Status: Menunggu Konfirmasi Homeowner', isDone: true },
                 { time: '20 Feb 2026, 09:15', desc: 'Laporan pengaduan berhasil dibuat.', isDone: true }
             ],
+            rating: {
+                stars: 4,
+                review: 'Respon teknisi cepat, tapi butuh waktu sedikit lama untuk sinkronisasi gateway. Overall oke!'
+            },
             files: []
         },
         {
@@ -557,35 +567,58 @@ export function HomeownerComplaint({ onNavigate }) {
                             <p className="text-sm text-gray-500">Pantau status perbaikan perangkat Anda secara real-time. Jangan lupa untuk mengonfirmasi tiket yang sudah selesai diperbaiki oleh teknisi.</p>
                         </div>
                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-                            <div className="relative flex-1 md:w-64">
-                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <div className="relative flex-1 md:w-64 group">
+                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                 <input
                                     type="text"
                                     placeholder="Search..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all font-medium"
                                 />
                             </div>
-                            <select
-                                value={selectedStatusFilter}
-                                onChange={(e) => setSelectedStatusFilter(e.target.value)}
-                                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 shrink-0 bg-white"
-                            >
-                                <option value="">Semua Status</option>
-                                <option value="Menunggu Respons">Menunggu Respons</option>
-                                <option value="Diproses Teknisi">Diproses</option>
-                                <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
-                                <option value="Selesai">Selesai</option>
-                                <option value="Ditolak">Ditolak</option>
-                            </select>
+                            <div className="relative min-w-[180px]">
+                                <button
+                                    onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                                    className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <Filter className={`w-4 h-4 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                        <span className={selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}>
+                                            {selectedStatusFilter || 'Semua Status'}
+                                        </span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                                </button>
+
+                                {showStatusDropdown && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
+                                        <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                                            {['', 'Menunggu Respons', 'Diproses Teknisi', 'Menunggu Konfirmasi', 'Selesai', 'Ditolak'].map((status) => (
+                                                <button
+                                                    key={status}
+                                                    onClick={() => {
+                                                        setSelectedStatusFilter(status);
+                                                        setCurrentPage(1);
+                                                        setShowStatusDropdown(false);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedStatusFilter === status ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    {status || 'Semua Status'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                             <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-[#E6F5F0] text-[#0F9E78] rounded-lg text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0">
                                 <Download className="w-4 h-4" /> Export
                             </button>
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto min-h-[300px]">
+                    <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm text-gray-600 whitespace-nowrap min-w-[1000px]">
                             <thead className="text-gray-500 border-b border-gray-100">
                                 <tr>
@@ -649,20 +682,37 @@ export function HomeownerComplaint({ onNavigate }) {
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-between mt-6 text-sm text-gray-500 pt-4 border-t border-gray-100 gap-4">
-                        <div className="flex items-center gap-2">
-                            Rows per page:
-                            <select
-                                className="border border-gray-200 rounded p-1.5 focus:ring-1 focus:ring-teal-500 focus:outline-none"
-                                value={rowsPerPage}
-                                onChange={(e) => {
-                                    setRowsPerPage(Number(e.target.value));
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <option value={5}>5</option>
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                            </select>
+                        <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+                            <span>Rows per page:</span>
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowRowsDropdown(!showRowsDropdown)}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all shadow-sm"
+                                >
+                                    {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                {showRowsDropdown && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
+                                        <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
+                                            {[5, 10, 15, 20].map(val => (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => {
+                                                        setRowsPerPage(val);
+                                                        setCurrentPage(1);
+                                                        setShowRowsDropdown(false);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    {val}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                         <div>{totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} items</div>
                         <div className="flex items-center gap-2">
@@ -696,37 +746,83 @@ export function HomeownerComplaint({ onNavigate }) {
                             <form onSubmit={handleSubmitComplaint} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-800 mb-2">Kategori <span className="text-red-500">*</span></label>
-                                        <select
-                                            required
-                                            value={formData.category}
-                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                                        >
-                                            <option value="">Pilih kategori pengaduan</option>
-                                            <option value="Energi & Kelistrikan">Energi & Kelistrikan</option>
-                                            <option value="Kualitas Air">Kualitas Air</option>
-                                            <option value="Keamanan">Keamanan</option>
-                                            <option value="Kenyamanan & Udara">Kenyamanan & Udara</option>
-                                            <option value="Perangkat Aktuator">Perangkat Aktuator</option>
-                                            <option value="Lainnya">Lainnya</option>
-                                        </select>
+                                        <label className="block text-sm font-bold text-gray-800 mb-2.5">Kategori <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                                                className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${showCategoryDropdown ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-gray-200'}`}
+                                            >
+                                                <span className={formData.category ? 'text-gray-900' : 'text-gray-400'}>
+                                                    {formData.category || 'Pilih kategori pengaduan'}
+                                                </span>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180 text-emerald-500' : ''}`} />
+                                            </button>
+
+                                            {showCategoryDropdown && (
+                                                <>
+                                                    <div className="fixed inset-0 z-[60]" onClick={() => setShowCategoryDropdown(false)}></div>
+                                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[70] animate-in fade-in zoom-in-95 duration-200 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                        {['Energi & Kelistrikan', 'Kualitas Air', 'Keamanan', 'Kenyamanan & Udara', 'Perangkat Aktuator', 'Lainnya'].map((cat) => (
+                                                            <button
+                                                                key={cat}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setFormData({ ...formData, category: cat });
+                                                                    setShowCategoryDropdown(false);
+                                                                }}
+                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-emerald-600 bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                            >
+                                                                {cat}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
+
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-800 mb-2">Pilih Ruangan & Perangkat <span className="text-red-500">*</span></label>
-                                        <select
-                                            required
-                                            value={formData.device}
-                                            onChange={(e) => setFormData({ ...formData, device: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                                        >
-                                            <option value="">Pilih Ruangan & Perangkat</option>
-                                            <option value="R3 Kitchen - Smart Plug (Exhaust)">R3 Kitchen - Smart Plug (Exhaust)</option>
-                                            <option value="R3 Kitchen - Gas Detector">R3 Kitchen - Gas Detector</option>
-                                            <option value="R1 Living - Door Sensor">R1 Living - Door Sensor</option>
-                                            <option value="Master Node - Power Meter Utama">Master Node - Power Meter Utama</option>
-                                            <option value="R2 Bedroom - Node Udara">R2 Bedroom - Node Udara</option>
-                                        </select>
+                                        <label className="block text-sm font-bold text-gray-800 mb-2.5">Pilih Ruangan & Perangkat <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowDeviceDropdown(!showDeviceDropdown)}
+                                                className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${showDeviceDropdown ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-gray-200'}`}
+                                            >
+                                                <span className={formData.device ? 'text-gray-900' : 'text-gray-400'}>
+                                                    {formData.device || 'Pilih Ruangan & Perangkat'}
+                                                </span>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDeviceDropdown ? 'rotate-180 text-emerald-500' : ''}`} />
+                                            </button>
+
+                                            {showDeviceDropdown && (
+                                                <>
+                                                    <div className="fixed inset-0 z-[60]" onClick={() => setShowDeviceDropdown(false)}></div>
+                                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[70] animate-in fade-in zoom-in-95 duration-200 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                        {[
+                                                            'R3 Kitchen - Smart Plug (Exhaust)',
+                                                            'R3 Kitchen - Gas Detector',
+                                                            'R1 Living - Door Sensor',
+                                                            'Master Node - Power Meter Utama',
+                                                            'R2 Bedroom - Node Udara'
+                                                        ].map((dev) => (
+                                                            <button
+                                                                key={dev}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setFormData({ ...formData, device: dev });
+                                                                    setShowDeviceDropdown(false);
+                                                                }}
+                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === dev ? 'text-emerald-600 bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                            >
+                                                                {dev}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -818,250 +914,30 @@ export function HomeownerComplaint({ onNavigate }) {
                 </div>
             )}
 
-            {/* MODAL: DETAIL PENGADUAN */}
-            {selectedTicket && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
-                    <div className="w-full max-w-[1300px] h-full max-h-[95vh] flex flex-col relative">
-                        {/* Header Floating (Desktop) */}
-                        <div className="flex justify-between items-end mb-6 shrink-0 mt-4 px-2 lg:px-4 hidden md:flex">
-                            <div className="flex items-center gap-6">
-                                <button
-                                    onClick={() => setSelectedTicket(null)}
-                                    className="flex items-center gap-2 bg-white text-gray-800 px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors shadow-sm"
-                                >
-                                    <ArrowLeft className="w-4 h-4" /> Kembali ke Pusat Pengaduan
-                                </button>
-                                <h2 className="text-4xl font-extrabold text-white tracking-tight">Detail Pengaduan</h2>
+            {/* MODAL: DETAIL PENGADUAN (Shared Component) */}
+            <ComplaintDetailModal 
+                isOpen={!!selectedTicket}
+                onClose={() => setSelectedTicket(null)}
+                ticket={selectedTicket}
+                renderActions={
+                    selectedTicket?.status === 'Menunggu Konfirmasi' && (
+                        <div className="space-y-4">
+                            <div className="text-center mb-4">
+                                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                                <p className="font-bold text-emerald-900 text-sm mb-1">Perlu Konfirmasi Anda</p>
+                                <p className="text-xs text-emerald-700">Teknisi menyatakan bahwa kendala sudah teratasi. Anda wajib mengonfirmasi untuk menyelesaikan tiket ini.</p>
                             </div>
-                        </div>
-
-                        {/* Mobile Header */}
-                        <div className="flex justify-between items-center mb-6 shrink-0 md:hidden px-2">
-                             <button
-                                onClick={() => setSelectedTicket(null)}
-                                className="flex items-center gap-2 text-white font-bold"
+                            <button
+                                onClick={() => handleSelesaikanTiket(selectedTicket.id)}
+                                className="w-full py-3.5 bg-[#4B8378] text-white rounded-xl font-bold text-sm shadow-lg hover:bg-[#3d6b62] transition-all hover:shadow-xl active:scale-95"
                             >
-                                <ArrowLeft className="w-5 h-5" /> Kembali
+                                Selesaikan Tiket
                             </button>
-                            <h2 className="text-xl font-bold text-white">Detail Pengaduan</h2>
                         </div>
+                    )
+                }
+            />
 
-                        <style>{`
-                            .modal-custom-scrollbar::-webkit-scrollbar {
-                                width: 8px;
-                            }
-                            .modal-custom-scrollbar::-webkit-scrollbar-track {
-                                background: transparent;
-                            }
-                            .modal-custom-scrollbar::-webkit-scrollbar-thumb {
-                                background-color: rgba(255, 255, 255, 0.4);
-                                border-radius: 9999px;
-                            }
-                            .modal-custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                                background-color: rgba(255, 255, 255, 0.7);
-                            }
-                        `}</style>
-
-                        {/* Scrolling Cards Container */}
-                        <div className="flex-1 overflow-y-auto pb-4 md:pb-8 modal-custom-scrollbar">
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-1 lg:px-4">
-                                {/* LEFT COLUMN (Data & Progress) */}
-                                <div className="lg:col-span-2 space-y-6">
-                                    {/* KOTAK 1: DATA FORM PENGADUAN */}
-                                    <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-200">
-                                        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6 pb-6 border-b border-gray-100">
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-gray-900 mb-1 leading-tight">{selectedTicket.topic}</h3>
-                                                <p className="text-sm font-medium text-gray-500">ID Tiket: {selectedTicket.id}</p>
-                                            </div>
-                                            <div className="shrink-0 mt-1 md:mt-0">
-                                                {getStatusBadge(selectedTicket.status)}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            <div>
-                                                <h4 className="font-bold text-gray-800 text-sm mb-2">Deskripsi Detail</h4>
-                                                <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">{selectedTicket.description}</p>
-                                            </div>
-
-                                            <div className="flex flex-col border-y border-gray-200 my-6">
-                                                <div className="grid grid-cols-2 gap-4 py-4 border-b border-gray-100">
-                                                    <div>
-                                                        <p className="text-xs text-gray-500 mb-1">Kategori</p>
-                                                        <p className="font-bold text-sm text-gray-700">{selectedTicket.category}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs text-gray-500 mb-1">Ruangan & Perangkat</p>
-                                                        <p className="font-bold text-sm text-gray-700">{selectedTicket.device}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4 py-4">
-                                                    <div>
-                                                        <p className="text-xs text-gray-500 mb-1">created</p>
-                                                        <p className="font-bold text-sm text-gray-700">{selectedTicket.date}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs text-gray-500 mb-1">Last Update</p>
-                                                        <p className="font-bold text-sm text-gray-700">{selectedTicket.timeline[0]?.time || '-'}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="font-bold text-gray-800 text-sm mb-3">Upload Files</h4>
-                                                {selectedTicket.files && selectedTicket.files.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-4">
-                                                        {selectedTicket.files.map((file, idx) => (
-                                                            <div key={idx} className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
-                                                                <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-sm text-gray-400 italic">Tidak ada file yang dilampirkan oleh pengguna.</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* KOTAK 2: RIWAYAT PROGRESS */}
-                                    <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-200">
-                                        <h3 className="font-bold text-lg text-gray-900 mb-6 flex items-center gap-2">
-                                            <Clock className="w-5 h-5 text-emerald-600" /> Riwayat Progres Pengaduan
-                                        </h3>
-                                        <div className="space-y-6 pl-2">
-                                            {selectedTicket.timeline.map((step, idx) => (
-                                                <div key={idx} className="relative flex gap-6">
-                                                    {idx !== selectedTicket.timeline.length - 1 && (
-                                                        <div className="absolute left-1.5 top-6 bottom-[-24px] w-0.5 bg-emerald-100 z-0"></div>
-                                                    )}
-                                                    <div className="relative z-10 shrink-0 mt-1">
-                                                        <div className={`w-3.5 h-3.5 rounded-full ring-4 ring-white ${idx === 0 ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
-                                                    </div>
-                                                    <div className="pb-2">
-                                                        <div className="text-xs font-bold text-gray-500 mb-1">{step.time}</div>
-                                                        <div className="text-sm text-gray-800 font-medium leading-relaxed">{step.desc}</div>
-                                                        {step.status && (
-                                                            <div className="text-xs text-emerald-600 font-semibold mt-1 bg-emerald-50 inline-block px-2 py-0.5 rounded-full">{step.status.replace('Status: ', '')}</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* KOTAK 6: HASIL PENILAIAN TEKNISI (JIKA SELESAI & ADA RATING) */}
-                                    {selectedTicket.status === 'Selesai' && selectedTicket.rating && (
-                                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                                            <div className="flex flex-col md:flex-row md:items-center gap-4 border-b border-gray-100 pb-4 mb-4">
-                                                <div className="flex items-center gap-4 flex-1">
-                                                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                                                        <User className="w-6 h-6 text-white" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-gray-900 text-lg">{selectedTicket.technicianInfo?.name || selectedTicket.technician}</h3>
-                                                        <p className="text-xs text-gray-500 font-medium">Rate: {selectedTicket.rating.stars}/5</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    {[1, 2, 3, 4, 5].map((star) => (
-                                                        <Star 
-                                                            key={star} 
-                                                            className={`w-6 h-6 ${star <= selectedTicket.rating.stars ? 'fill-[#FCD34D] text-[#FCD34D]' : 'fill-gray-300 text-gray-300'}`} 
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-gray-800 text-sm mb-2">Ulasan</h4>
-                                                <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">{selectedTicket.rating.review || "Tidak ada teks ulasan yang diberikan."}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* RIGHT COLUMN (Pengguna, Teknisi, Aksi) */}
-                                <div className="space-y-6">
-                                    {/* KOTAK 3: HOMEOWNER / PENGGUNA */}
-                                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                                        <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-emerald-600" /> Informasi Pengguna
-                                        </h3>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Nama</p>
-                                                <p className="text-sm font-medium text-gray-900">{selectedTicket.clientInfo.name}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Email</p>
-                                                <p className="text-sm font-medium text-gray-900">{selectedTicket.clientInfo.email}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">No Phone</p>
-                                                <p className="text-sm font-medium text-gray-900">{selectedTicket.clientInfo.phone}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">Alamat Lengkap</p>
-                                                <p className="text-sm font-medium text-gray-900 leading-relaxed">{selectedTicket.clientInfo.address}</p>
-                                            </div>
-                                            <div className="pt-2 border-t border-gray-50">
-                                                <p className="text-xs text-gray-500 mb-1">ID BIEON</p>
-                                                <p className="text-sm font-bold text-emerald-700 bg-emerald-50/50 inline-block px-2 py-1 border border-emerald-100 rounded-md mt-0.5">{selectedTicket.clientInfo.idBieon}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* KOTAK 4: TEKNISI */}
-                                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                                        <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100 flex items-center gap-2">
-                                            <Bell className="w-4 h-4 text-orange-500" /> Informasi Teknisi
-                                        </h3>
-                                        {selectedTicket.technicianInfo ? (
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <p className="text-xs text-gray-500 mb-1">Nama Teknisi</p>
-                                                    <p className="text-sm font-medium text-gray-900">{selectedTicket.technicianInfo.name}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-gray-500 mb-1">Kontak Teknisi</p>
-                                                    <p className="text-sm font-medium text-gray-900">{selectedTicket.technicianInfo.phone}</p>
-                                                </div>
-                                                <div className="pt-2 border-t border-gray-50">
-                                                    <p className="text-xs text-gray-500 mb-1">SLA Target Penyelesaian</p>
-                                                    <p className="text-sm font-bold text-orange-600 bg-orange-50/50 inline-block px-2 py-1 border border-orange-100 rounded-md mt-0.5">{selectedTicket.technicianInfo.targetDate}</p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-xl text-center border border-dashed border-gray-200">
-                                                <Clock className="w-8 h-8 text-gray-300 mb-2" />
-                                                <p className="text-sm text-gray-500 italic">Belum ada teknisi yang<br/>ditugaskan untuk tiket ini.</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* KOTAK 5: AKSI (Jika Menunggu Konfirmasi) */}
-                                    {selectedTicket.status === 'Menunggu Konfirmasi' && (
-                                        <div className="bg-emerald-50 rounded-2xl p-6 shadow-sm border border-emerald-100 border-dashed">
-                                            <div className="text-center mb-4">
-                                                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                                                <p className="font-bold text-emerald-900 text-sm mb-1">Perlu Konfirmasi Anda</p>
-                                                <p className="text-xs text-emerald-700">Teknisi menyatakan bahwa kendala sudah teratasi. Anda wajib mengonfirmasi untuk menyelesaikan tiket ini.</p>
-                                            </div>
-                                            <button
-                                                onClick={() => handleSelesaikanTiket(selectedTicket.id)}
-                                                className="w-full py-3.5 bg-[#0F9E78] text-white rounded-xl font-bold text-sm shadow-lg hover:bg-[#0B8563] hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                                            >
-                                                Selesaikan Tiket
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {ratingTargetId && (

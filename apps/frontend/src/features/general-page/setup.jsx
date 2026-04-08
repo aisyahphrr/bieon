@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const CalendarIcon = () => (
-    <svg className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
         <line x1="16" y1="2" x2="16" y2="6"></line>
         <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -11,14 +12,44 @@ const CalendarIcon = () => (
 );
 
 const CheckBadgeIcon = () => (
-    <svg width="100" height="100" viewBox="0 0 24 24" fill="#00B482" xmlns="http://www.w3.org/2000/svg" className="filter drop-shadow-md">
-        <path d="M12 1L14.7 3.51L18.33 3.55L19.5 7L22.61 8.89L21.6 12.33L23.68 15.24L20.65 17.51L19.98 21.05L16.48 20.62L13.1 23L10.05 20.89L6.46 21.02L5.43 17.58L2.24 15.54L4.04 12.3L2.83 9.02L6.14 7L7.02 3.61L10.63 3.91L12 1Z" />
-        <path d="M10.5 15.5L7 12L8.41 10.59L10.5 12.67L15.59 7.58L17 9L10.5 15.5Z" fill="white" />
-    </svg>
+    <div className="relative flex items-center justify-center w-full min-h-[160px] mb-6">
+        {/* Background Glows & Particles */}
+        <div className="absolute w-40 h-40 bg-emerald-50 rounded-full animate-pulse opacity-60"></div>
+        <div className="absolute w-32 h-32 bg-emerald-100/50 rounded-full"></div>
+
+        {/* Floating Decorative Elements (Small Leaves/Dots) */}
+        <div className="absolute top-2 right-[35%] w-3 h-3 bg-[#00B482]/30 rounded-full animate-bounce duration-1000"></div>
+        <div className="absolute bottom-6 left-[30%] w-2 h-2 bg-[#7fc78d]/40 rounded-full animate-pulse"></div>
+        <div className="absolute top-10 left-[35%] w-4 h-6 bg-[#00B482]/10 rounded-full rotate-45 scale-x-75"></div> {/* Mock Leaf */}
+        <div className="absolute bottom-10 right-[32%] w-4 h-6 bg-[#00B482]/10 rounded-full -rotate-12 scale-x-75"></div> {/* Mock Leaf */}
+
+        {/* Main Success Card Circle */}
+        <div className="relative w-24 h-24 bg-white rounded-full shadow-[0_10px_40px_-10px_rgba(0,180,130,0.3)] border-[6px] border-[#00B482] flex items-center justify-center transform transition-all duration-700 hover:scale-110 group">
+            <svg
+                width="42"
+                height="42"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-[#00B482] animate-in zoom-in duration-500 delay-300"
+            >
+                <path
+                    d="M5 13L9 17L19 7"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+
+            {/* Inner Ring Detail */}
+            <div className="absolute inset-1 border-2 border-dashed border-emerald-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </div>
+    </div>
 );
 
 const ChevronDownIcon = () => (
-    <svg className="w-4 h-4 text-gray-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none group-focus-within:text-emerald-500 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="6 9 12 15 18 9"></polyline>
     </svg>
 );
@@ -36,6 +67,64 @@ const Setup = ({ onNavigate }) => {
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [modalCheckboxChecked, setModalCheckboxChecked] = useState(false);
     const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+    const [showPlnDropdown, setShowPlnDropdown] = useState(false);
+    const [selectedPln, setSelectedPln] = useState('');
+
+    // Calendar States
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [selectedDate, setSelectedDate] = useState('');
+    const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+    const [viewYear, setViewYear] = useState(new Date().getFullYear());
+    const [showYearDropdown, setShowYearDropdown] = useState(false);
+
+    // Month Names
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    // Calendar Generation Logic
+    const calendarDays = useMemo(() => {
+        const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+        const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
+
+        const days = [];
+        // Prev Month days
+        for (let i = firstDay - 1; i >= 0; i--) {
+            days.push({ day: daysInPrevMonth - i, month: viewMonth - 1, year: viewYear, current: false });
+        }
+        // Current Month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push({ day: i, month: viewMonth, year: viewYear, current: true });
+        }
+        // Next Month days (Total 42 for 6 rows)
+        const nextDays = 42 - days.length;
+        for (let i = 1; i <= nextDays; i++) {
+            days.push({ day: i, month: viewMonth + 1, year: viewYear, current: false });
+        }
+        return days;
+    }, [viewMonth, viewYear]);
+
+    const changeMonth = (dir) => {
+        if (dir === 'prev') {
+            if (viewMonth === 0) {
+                setViewMonth(11);
+                setViewYear(v => v - 1);
+            } else {
+                setViewMonth(v => v - 1);
+            }
+        } else {
+            if (viewMonth === 11) {
+                setViewMonth(0);
+                setViewYear(v => v + 1);
+            } else {
+                setViewMonth(v => v + 1);
+            }
+        }
+    };
+
+    const formatDate = (dateObj) => {
+        const { day, month, year } = dateObj;
+        return `${day} ${monthNames[month]} ${year}`;
+    };
 
     const handleScrollTerms = (e) => {
         const bottom = e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 2;
@@ -85,18 +174,18 @@ const Setup = ({ onNavigate }) => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">First</label>
-                                        <input type="text" placeholder="Asri" className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors" />
+                                        <label className="block text-[13px] font-bold text-[#111827]">First Name</label>
+                                        <input type="text" placeholder="Asri" className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">Last</label>
-                                        <input type="text" placeholder="Aisah" className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors" />
+                                        <label className="block text-[13px] font-bold text-[#111827]">Last Name</label>
+                                        <input type="text" placeholder="Aisah" className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" />
                                     </div>
                                 </div>
 
                                 <div className="mb-4 space-y-2">
                                     <label className="block text-[13px] font-bold text-[#111827]">Username</label>
-                                    <input type="text" placeholder="asrisarassufi" className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors" />
+                                    <input type="text" placeholder="asrisarassufi" className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" />
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
@@ -114,11 +203,98 @@ const Setup = ({ onNavigate }) => {
                                     <div className="space-y-2">
                                         <label className="block text-[13px] font-bold text-[#111827]">Date of birth</label>
                                         <div className="relative">
-                                            <input
-                                                type="date"
-                                                className="w-full border border-gray-200 rounded-lg px-4 py-3 pr-10 text-[13px] text-gray-700 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-10 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:z-10"
-                                            />
-                                            <CalendarIcon />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCalendar(!showCalendar)}
+                                                className={`w-full flex items-center justify-between px-4 py-3 bg-white border rounded-xl text-sm font-medium transition-all ${showCalendar ? 'border-[#00B482] ring-4 ring-emerald-500/10 shadow-sm' : 'border-gray-200 hover:bg-gray-50/50'}`}
+                                            >
+                                                <span className={selectedDate ? 'text-gray-900' : 'text-gray-400 text-[13px]'}>
+                                                    {selectedDate || 'Select Date of Birth'}
+                                                </span>
+                                                <Calendar className={`w-4 h-4 text-gray-400 transition-colors ${showCalendar ? 'text-[#00B482]' : ''}`} />
+                                            </button>
+
+                                            {showCalendar && (
+                                                <>
+                                                    <div className="fixed inset-0 z-30" onClick={() => setShowCalendar(false)}></div>
+                                                    <div className="absolute top-full mt-2 w-full sm:w-[320px] bg-white border border-gray-100 rounded-2xl shadow-2xl p-4 z-40 animate-in fade-in zoom-in-95 duration-200">
+                                                        {/* Header */}
+                                                        <div className="flex items-center justify-between mb-4 px-1">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-bold text-gray-900">{monthNames[viewMonth]}</span>
+                                                                <div className="relative">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setShowYearDropdown(!showYearDropdown)}
+                                                                        className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-emerald-600 transition-colors bg-transparent outline-none py-0.5"
+                                                                    >
+                                                                        {viewYear} <ChevronDown className={`w-2.5 h-2.5 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} />
+                                                                    </button>
+
+                                                                    {showYearDropdown && (
+                                                                        <>
+                                                                            <div className="fixed inset-0 z-[45]" onClick={() => setShowYearDropdown(false)}></div>
+                                                                            <div className="absolute top-full left-0 mt-1 w-24 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[50] max-h-[160px] overflow-y-auto scrollbar-hide animate-in fade-in slide-in-from-top-2 duration-200">
+                                                                                {Array.from({ length: 101 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                                                                    <button
+                                                                                        key={year}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setViewYear(year);
+                                                                                            setShowYearDropdown(false);
+                                                                                        }}
+                                                                                        className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${viewYear === year ? 'text-emerald-600 bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                                    >
+                                                                                        {year}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <button type="button" onClick={() => changeMonth('prev')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                                                                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                                                                </button>
+                                                                <button type="button" onClick={() => changeMonth('next')} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                                                                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Week Days */}
+                                                        <div className="grid grid-cols-7 gap-1 mb-2">
+                                                            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                                                                <span key={d} className="text-[10px] font-bold text-gray-400 text-center uppercase tracking-wider">{d}</span>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Days Grid */}
+                                                        <div className="grid grid-cols-7 gap-1">
+                                                            {calendarDays.map((d, i) => {
+                                                                const isSelected = selectedDate === formatDate(d);
+                                                                return (
+                                                                    <button
+                                                                        key={i}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setSelectedDate(formatDate(d));
+                                                                            setShowCalendar(false);
+                                                                        }}
+                                                                        className={`h-9 w-full flex items-center justify-center rounded-lg text-xs transition-all
+                                                                            ${!d.current ? 'text-gray-300' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-600'}
+                                                                            ${isSelected ? 'bg-emerald-500 text-white font-bold hover:bg-emerald-600 hover:text-white' : ''}
+                                                                        `}
+                                                                    >
+                                                                        {d.day}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -172,17 +348,45 @@ const Setup = ({ onNavigate }) => {
                                     <div className="space-y-2">
                                         <label className="block text-[13px] font-bold text-[#111827]">Pilih Golongan Tarif PLN</label>
                                         <div className="relative">
-                                            <select className="w-full appearance-none bg-[#F8FAFC] border border-gray-200 rounded-lg px-4 py-3.5 text-[13px] text-gray-500 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors cursor-pointer">
-                                                <option>Pilih Tarif Listrik</option>
-                                                <option>R1 - 450 VA (Subsidi)</option>
-                                                <option>R1 - 900 VA (Subsidi)</option>
-                                                <option>R1M - 900 VA (Non-Subsidi)</option>
-                                                <option>R1 - 1300 VA</option>
-                                                <option>R1 - 2200 VA</option>
-                                                <option>R2 - 3500 s.d 5500 VA</option>
-                                                <option>R3 - 6600 VA ke atas</option>
-                                            </select>
-                                            <ChevronDownIcon />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPlnDropdown(!showPlnDropdown)}
+                                                className={`w-full flex items-center justify-between px-4 py-3.5 bg-white border rounded-xl text-sm font-medium transition-all ${showPlnDropdown ? 'border-[#00B482] ring-4 ring-emerald-500/10 shadow-sm' : 'border-gray-200 hover:bg-gray-50/50'}`}
+                                            >
+                                                <span className={selectedPln ? 'text-gray-900' : 'text-gray-400 text-[13px]'}>
+                                                    {selectedPln || 'Pilih Tarif Listrik'}
+                                                </span>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-all ${showPlnDropdown ? 'rotate-180 text-[#00B482]' : ''}`} />
+                                            </button>
+
+                                            {showPlnDropdown && (
+                                                <>
+                                                    <div className="fixed inset-0 z-10" onClick={() => setShowPlnDropdown(false)}></div>
+                                                    <div className="absolute top-full mb-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 max-h-[220px] overflow-y-auto custom-scrollbar">
+                                                        {[
+                                                            'R1 - 450 VA (Subsidi)',
+                                                            'R1 - 900 VA (Subsidi)',
+                                                            'R1M - 900 VA (Non-Subsidi)',
+                                                            'R1 - 1300 VA',
+                                                            'R1 - 2200 VA',
+                                                            'R2 - 3500 s.d 5500 VA',
+                                                            'R3 - 6600 VA ke atas'
+                                                        ].map((pln) => (
+                                                            <button
+                                                                key={pln}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedPln(pln);
+                                                                    setShowPlnDropdown(false);
+                                                                }}
+                                                                className={`w-full text-left px-5 py-3 text-[13px] transition-colors ${selectedPln === pln ? 'text-[#009b7c] bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                            >
+                                                                {pln}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -199,20 +403,35 @@ const Setup = ({ onNavigate }) => {
                         )}
 
                         {step === 3 && (
-                            <div className="flex flex-col items-center justify-center text-center py-6 mt-4">
-                                <CheckBadgeIcon />
+                            <div className="flex flex-col items-center justify-center text-center py-10 px-4">
+                                <div className="mb-8">
+                                    <CheckBadgeIcon />
+                                </div>
 
-                                <h1 className="text-[22px] md:text-2xl font-bold text-[#111827] mt-8 mb-2">
-                                    Semua Sudah Siap! <span className="inline-block transform origin-bottom hover:rotate-12 transition-transform">🎉</span>
-                                </h1>
+                                <div className="space-y-4">
+                                    <h1 className="text-3xl md:text-4xl font-extrabold text-[#111827] tracking-tight">
+                                        Semua Sudah Siap! <span className="inline-block animate-bounce">🎉</span>
+                                    </h1>
 
-                                <p className="text-[13px] text-gray-600 max-w-[340px] leading-relaxed mx-auto mb-10 font-medium">
-                                    Selamat, sistem BIEON berhasil terhubung. Yuk, mulai pantau efisiensi energi dan kesehatan lingkungan rumahmu sekarang.
-                                </p>
+                                    <p className="text-[15px] text-gray-500 max-w-[380px] leading-relaxed mx-auto font-medium">
+                                        Selamat, sistem <span className="text-[#00B482] font-bold">BIEON</span> berhasil terhubung. Yuk, mulai pantau gaya hidup cerdasmu sekarang!
+                                    </p>
+                                </div>
 
-                                <button onClick={() => onNavigate && onNavigate('dashboard')} className="bg-[#009b7c] hover:bg-[#008268] text-white font-bold py-3 px-10 rounded-lg text-[13px] transition-all transform hover:scale-105 shadow-sm">
-                                    Masuk ke Dashboard
-                                </button>
+                                <div className="mt-12 w-full max-w-[280px]">
+                                    <button
+                                        onClick={() => onNavigate && onNavigate('dashboard')}
+                                        className="group relative w-full overflow-hidden rounded-xl bg-[#009b7c] p-4 text-sm font-bold text-white transition-all hover:bg-[#008268] active:scale-95 shadow-lg shadow-emerald-200"
+                                    >
+                                        <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-[100%]"></div>
+                                        <span className="relative flex items-center justify-center gap-2">
+                                            Masuk ke Dashboard
+                                            <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>

@@ -35,7 +35,7 @@ const LandingPage = ({ onNavigate }) => {
               <button className="px-3 py-1.5 rounded-md bg-white shadow-sm transition-all">ID</button>
               <button className="px-3 py-1.5 rounded-md hover:text-[#207565] transition-all opacity-60 hover:opacity-100">EN</button>
             </div>
-            
+
             <button onClick={() => onNavigate && onNavigate('login')} className="bg-[#1A5F53] hover:bg-[#144f45] text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors">
               Log in
             </button>
@@ -53,7 +53,7 @@ const LandingPage = ({ onNavigate }) => {
             Smart Green Living Monitoring System
           </h1>
           <p className="font-bold text-[#113a33] text-base md:text-lg mb-4">
-            Wujudkan Gaya Hidup Cerdas, Sehat, dan Hemat Energi.
+            Monitor Today, Sustain Tomorrow.
           </p>
           <p className="text-gray-700 mb-8 leading-relaxed text-sm md:text-base">
             BIEON mengintegrasikan pemantauan lingkungan, kontrol perangkat otomatis, dan efisiensi listrik ke dalam satu dashboard pintar. Kendalikan kenyamanan dan keamanan ruang hidup Anda dari mana saja, kapan saja.
@@ -92,7 +92,7 @@ const LandingPage = ({ onNavigate }) => {
               <Zap size={18} /> Monitoring Real-Time
             </h3>
             <p className="text-gray-500 text-sm md:text-base md:text-left leading-relaxed px-2">
-              Sistem IoT kami bekerja tanpa henti untuk menampilkan data sensor lingkungan dan status perangkat secara instan, membantu Anda mengambil keputusan cepat saat terjadi anomali.
+              Sistem IoT kami bekerja tanpa henti untuk menampilkan data kondisi lingkungan dan status perangkat secara real-time, membantu Anda mengambil keputusan cepat saat terjadi penyimpangan.
             </p>
           </div>
           {/* Feature 3 */}
@@ -104,7 +104,7 @@ const LandingPage = ({ onNavigate }) => {
               <NavLinkIcon size={18} /> Ekosistem Terintegrasi
             </h3>
             <p className="text-gray-500 text-sm md:text-base md:text-left leading-relaxed px-2">
-              Menghubungkan berbagai sensor cerdas dan smart device ke dalam satu dashboard sentral. Menciptakan ekosistem smart living yang efisien, responsif, dan saling terhubung.
+              Menghubungkan berbagai perangkat cerdas ke dalam satu dashboard sentral. Menciptakan ekosistem smart living yang efisien, responsif, dan saling terhubung.
             </p>
           </div>
         </div>
@@ -141,70 +141,68 @@ const LandingPage = ({ onNavigate }) => {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="bg-[#24625A] text-white py-16 px-4 md:px-8 lg:px-16">
-        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-24 mb-12">
+      <footer id="contact" className="bg-[#24625A] text-white pt-12 pb-6 px-4 md:px-8 lg:px-16">
+        <div className="flex flex-col lg:flex-row justify-between gap-10 lg:gap-24 mb-10">
 
           <div className="max-w-[400px]">
             <img src="/logo_bieon_footer.png" alt="BIEON Footer" className="max-w-[280px] w-full h-auto object-contain mb-2 md:max-w-[320px]" />
-            <p className="text-[13px] text-green-50 mb-8 leading-[1.6] font-light ml-[68px] md:ml-[52px]">
+            <p className="text-[13px] text-green-50 mb-6 leading-[1.6] font-light ml-[68px] md:ml-[52px]">
               Sistem pemantauan gaya hidup cerdas<br />
               berbasis IoT. Mewujudkan lingkungan tempat<br />
               tinggal yang lebih sehat, aman, dan efisien.
             </p>
             <div className="flex gap-4 items-center ml-[68px] md:ml-[52px]">
-              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Instagram size={28} /></a>
-              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Linkedin size={28} /></a>
-              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Github size={28} /></a>
-              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Youtube size={28} /></a>
+              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Instagram size={24} /></a>
+              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Linkedin size={24} /></a>
+              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Github size={24} /></a>
+              <a href="#" className="hover:text-[#a1c0b8] text-white transition-all"><Youtube size={24} /></a>
             </div>
           </div>
 
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 mt-2">
-            <div className="w-full">
-              <h4 className="font-bold mb-4 text-base pb-2 border-b border-white w-full">Quick Link</h4>
-              <ul className="space-y-3 text-[13px] text-[#a1c0b8]">
-                <li><a href="#home" className="hover:text-white transition-colors">Home</a></li>
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-2">
+            <div className="w-full text-center sm:text-left">
+              <h4 className="font-bold mb-4 text-sm pb-1 border-b border-white/30 w-full inline-block sm:block">Quick Link</h4>
+              <ul className="space-y-2 text-[12px] text-[#a1c0b8]">
+                <li><a href="#home" className="hover:text-white transition-colors text-center sm:text-left">Home</a></li>
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#about" className="hover:text-white transition-colors">About</a></li>
                 <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
-            <div className="w-full">
-              <h4 className="font-bold mb-4 text-base pb-2 border-b border-white w-full">Layanan Sistem</h4>
-              <ul className="space-y-3 text-[13px] text-[#a1c0b8]">
+            <div className="w-full text-center sm:text-left">
+              <h4 className="font-bold mb-4 text-sm pb-1 border-b border-white/30 w-full inline-block sm:block">Layanan Sistem</h4>
+              <ul className="space-y-2 text-[12px] text-[#a1c0b8]">
                 <li><a href="#" className="hover:text-white transition-colors">Dashboard Monitoring</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Kendali Perangkat</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Riwayat & Data Log</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Pusat Pengaduan</a></li>
               </ul>
             </div>
-            <div className="w-full">
-              <h4 className="font-bold mb-4 text-base pb-2 border-b border-white w-full">Contact Info</h4>
-              <ul className="space-y-[14px] text-[13px] text-[#a1c0b8]">
-                <li className="flex items-start gap-3">
-                  <MapPin size={16} className="shrink-0 mt-0.5 text-white" />
+            <div className="w-full text-center sm:text-left">
+              <h4 className="font-bold mb-4 text-sm pb-1 border-b border-white/30 w-full inline-block sm:block">Contact Info</h4>
+              <ul className="space-y-3 text-[12px] text-[#a1c0b8]">
+                <li className="flex items-start gap-3 justify-center sm:justify-start">
+                  <MapPin size={14} className="shrink-0 mt-0.5 text-white" />
                   <span className="leading-[1.6]">
-                    Jl. Permata Cimanggu<br />
-                    No.3 Blok A, RT.008/<br />
-                    RW.007, Kedungbadak,<br />
-                    Kec. Tanah Sareal, Kota<br />
-                    Bogor, Jawa Barat 16164
+                    Jl. Permata Cimanggu No.3 Blok A, RT.008/<br className="hidden sm:block" />
+                    RW.007, Kedungbadak, Tanah Sareal,<br className="hidden sm:block" />
+                    Kota Bogor, Jawa Barat 16164
                   </span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={16} className="shrink-0 text-white" />
+                <li className="flex items-center gap-3 justify-center sm:justify-start">
+                  <Phone size={14} className="shrink-0 text-white" />
                   <span>+62 812-121-323</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Mail size={16} className="shrink-0 text-white" />
+                <li className="flex items-center gap-3 justify-center sm:justify-start">
+                  <Mail size={14} className="shrink-0 text-white" />
                   <span>support.bieon@gmail.com</span>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="text-center text-[13px] text-[#a1c0b8] pt-6 border-t border-[#468A81]">
-          © Copyright 2026 | BIEON - Smart Green Living Monitoring System | All right reserved | Privacy Policy
+        <div className="text-center text-[11px] md:text-[12px] text-[#a1c0b8] pt-6 border-t border-[#468A81] opacity-70">
+          © Copyright 2026 | BIEON - Smart Green Living Monitoring System | All right reserved
         </div>
       </footer>
     </div>
