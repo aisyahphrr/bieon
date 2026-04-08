@@ -10,6 +10,7 @@ import { TechnicianDashboard } from './features/technician/TechnicianDashboard';
 import { HomeownerComplaint } from './features/dashboard/HomeownerComplaint';
 import SuperAdminDashboard from './features/admin/SuperAdminDashboard';
 import ClientDetailPage from './features/admin/ClientDetailPage';
+import AdminHistory from './features/admin/AdminHistory';
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
       {currentPage === 'pengaduan' && <HomeownerComplaint onNavigate={setCurrentPage} />}
       {currentPage === 'admin' && <SuperAdminDashboard onNavigate={setCurrentPage} />}
       {currentPage === 'admin-client-detail' && <ClientDetailPage onNavigate={setCurrentPage} />}
+      {currentPage === 'admin-history' && <AdminHistory onNavigate={setCurrentPage} />}
     </>
 
   );

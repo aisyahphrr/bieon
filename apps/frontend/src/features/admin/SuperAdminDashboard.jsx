@@ -139,7 +139,13 @@ export default function SuperAdminDashboard({ onNavigate }) {
           {menuItems.map((item) => (
             <button
               key={item.name}
-              onClick={() => setActiveTab(item.name)}
+              onClick={() => {
+                if (item.name === 'Riwayat') {
+                   onNavigate && onNavigate('admin-history');
+                } else {
+                   setActiveTab(item.name);
+                }
+              }}
               className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center px-0'} py-3 rounded-2xl transition-all group ${
                 activeTab === item.name ? 'bg-white text-[#009b7c] shadow-lg' : 'hover:bg-white/10 text-white'
               }`}
