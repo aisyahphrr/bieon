@@ -354,7 +354,7 @@ export function PengaduanKlienPage({ onNavigate }) {
             setIsLogModalOpen(false);
             setLogRequestText('');
             alert('Permintaan log telah dikirim ke SuperAdmin.');
-            
+
             // Simulasikan konfirmasi otomatis setelah 2 detik untuk demo
             setTimeout(() => {
                 setComplaints(prev => prev.map(c => c.id === selectedTicket.id ? { ...c, logConfirmed: true } : c));
@@ -376,10 +376,10 @@ export function PengaduanKlienPage({ onNavigate }) {
                 return c;
             });
             setComplaints(updatedComplaints);
-            setSelectedTicket({ 
-                ...selectedTicket, 
-                status: updateTargetStatus, 
-                timeline: [{ time: now, desc: statusNoteText || `Status diperbarui menjadi ${updateTargetStatus}`, status: `Status: ${updateTargetStatus}` }, ...selectedTicket.timeline] 
+            setSelectedTicket({
+                ...selectedTicket,
+                status: updateTargetStatus,
+                timeline: [{ time: now, desc: statusNoteText || `Status diperbarui menjadi ${updateTargetStatus}`, status: `Status: ${updateTargetStatus}` }, ...selectedTicket.timeline]
             });
             setIsUpdateModalOpen(false);
             setStatusNoteText('');
@@ -400,10 +400,10 @@ export function PengaduanKlienPage({ onNavigate }) {
                 return c;
             });
             setComplaints(updatedComplaints);
-            setSelectedTicket({ 
-                ...selectedTicket, 
-                status: 'Menunggu Konfirmasi', 
-                timeline: [{ time: now, desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Status: Menunggu Konfirmasi' }, ...selectedTicket.timeline] 
+            setSelectedTicket({
+                ...selectedTicket,
+                status: 'Menunggu Konfirmasi',
+                timeline: [{ time: now, desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Status: Menunggu Konfirmasi' }, ...selectedTicket.timeline]
             });
             alert('Status berhasil diubah menjadi Menunggu Konfirmasi. Homeowner akan menerima notifikasi.');
         }
@@ -706,7 +706,7 @@ export function PengaduanKlienPage({ onNavigate }) {
             </div>
 
             {/* MODAL: DETAIL PENGADUAN (Shared Component) */}
-            <ComplaintDetailModal 
+            <ComplaintDetailModal
                 isOpen={!!selectedTicket}
                 onClose={() => setSelectedTicket(null)}
                 ticket={selectedTicket}
@@ -717,9 +717,9 @@ export function PengaduanKlienPage({ onNavigate }) {
                                 <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
                                     <Clock className="w-4 h-4 text-gray-400" /> Aksi Teknisi
                                 </h3>
-                                
+
                                 {!selectedTicket?.logConfirmed ? (
-                                    <button 
+                                    <button
                                         onClick={() => setIsLogModalOpen(true)}
                                         disabled={selectedTicket?.logRequested}
                                         className={`w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs transition-all shadow-sm ${selectedTicket?.logRequested ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
@@ -727,7 +727,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                                         {selectedTicket?.logRequested ? 'Log Diminta...' : 'Minta Data Log'}
                                     </button>
                                 ) : (
-                                    <button 
+                                    <button
                                         className="w-full py-3 bg-[#E1F2EB] text-[#1E4D40] font-bold rounded-xl text-xs hover:bg-[#d4ece3] transition-all shadow-sm flex items-center justify-center gap-2"
                                         onClick={() => { alert('Mengarahkan ke halaman data log...'); }}
                                     >
@@ -735,14 +735,14 @@ export function PengaduanKlienPage({ onNavigate }) {
                                     </button>
                                 )}
 
-                                <button 
+                                <button
                                     onClick={() => { setUpdateTargetStatus(selectedTicket?.status); setIsUpdateModalOpen(true); }}
                                     className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all shadow-sm"
                                 >
                                     Update Progress
                                 </button>
 
-                                <button 
+                                <button
                                     onClick={() => handleAction('selesai')}
                                     className="w-full py-3 bg-[#0D9488] text-white font-bold rounded-xl text-xs hover:bg-[#0F766E] shadow-lg shadow-teal-500/20 active:scale-95 transition-all"
                                 >
@@ -758,6 +758,20 @@ export function PengaduanKlienPage({ onNavigate }) {
                                 <p className="text-xs text-orange-700 leading-relaxed px-2">Tiket akan otomatis selesai setelah Homeowner memberikan penilaian.</p>
                             </div>
                         )}
+
+                        {selectedTicket?.status === 'Selesai' && (
+                            <div className="bg-emerald-50 rounded-2xl p-6 shadow-sm border border-emerald-100 border-dashed text-center">
+                                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
+                                <p className="font-bold text-emerald-900 text-sm mb-1">Riwayat Selesai</p>
+                                <p className="text-xs text-emerald-700 leading-relaxed px-2">Tiket ini telah diselesaikan dan dikonfirmasi oleh pelanggan.</p>
+                                <button
+                                    onClick={() => alert('Fitur Ekspor PDF Riwayat...')}
+                                    className="mt-4 w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-xs hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <Download className="w-4 h-4" /> Ekspor Riwayat (PDF)
+                                </button>
+                            </div>
+                        )}
                     </>
                 }
             />
@@ -768,7 +782,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                     <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative">
                         <h2 className="text-xl font-bold text-gray-900 mb-2">Permintaan Data Log kepada SuperAdmin</h2>
                         <p className="text-sm text-gray-500 mb-6 leading-relaxed">Sistem akan mengirimkan notifikasi permintaan akses data log historis kepada SuperAdmin.</p>
-                        
+
                         <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
                             <textarea
                                 value={logRequestText}
@@ -780,7 +794,7 @@ export function PengaduanKlienPage({ onNavigate }) {
 
                         <div className="flex gap-4">
                             <button onClick={() => setIsLogModalOpen(false)} className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all">Batal</button>
-                            <button 
+                            <button
                                 onClick={() => handleAction('request_log')}
                                 disabled={!logRequestText.trim()}
                                 className="flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 disabled:opacity-50"
@@ -797,12 +811,12 @@ export function PengaduanKlienPage({ onNavigate }) {
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl">
                         <h2 className="text-xl font-bold text-gray-900 mb-6 font-primary">Update Status</h2>
-                        
+
                         <div className="space-y-5 mb-8">
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Status</label>
                                 <div className="relative">
-                                    <button 
+                                    <button
                                         onClick={() => setShowUpdateStatusDropdown(!showUpdateStatusDropdown)}
                                         className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700"
                                     >
@@ -811,8 +825,8 @@ export function PengaduanKlienPage({ onNavigate }) {
                                     {showUpdateStatusDropdown && (
                                         <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-20 py-1.5 overflow-hidden">
                                             {['Baru', 'Diproses', 'Menunggu Konfirmasi'].map(s => (
-                                                <button 
-                                                    key={s} 
+                                                <button
+                                                    key={s}
                                                     onClick={() => { setUpdateTargetStatus(s); setShowUpdateStatusDropdown(false); }}
                                                     className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${updateTargetStatus === s ? 'text-teal-600 font-bold bg-teal-50' : 'text-gray-600 hover:bg-gray-50'}`}
                                                 >
@@ -837,7 +851,7 @@ export function PengaduanKlienPage({ onNavigate }) {
 
                         <div className="flex gap-4">
                             <button onClick={() => setIsUpdateModalOpen(false)} className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all">Batal</button>
-                            <button 
+                            <button
                                 onClick={() => handleAction('update_progress')}
                                 className="flex-1 py-3.5 bg-[#0D9488] text-white font-bold rounded-xl hover:bg-[#0F766E] transition-all shadow-lg shadow-teal-500/20"
                             >

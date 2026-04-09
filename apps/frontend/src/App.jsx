@@ -12,7 +12,7 @@ import SuperAdminDashboard from './features/admin/SuperAdminDashboard';
 import ClientDetailPage from './features/admin/ClientDetailPage';
 import AdminHistory from './features/admin/AdminHistory';
 import AdminComplaint from './features/admin/AdminComplaint';
-
+import AdminTariff from './features/admin/AdminTariff';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
@@ -32,6 +32,7 @@ function App() {
       {currentPage === 'admin-client-detail' && <ClientDetailPage onNavigate={setCurrentPage} />}
       {currentPage === 'admin-history' && <AdminHistory onNavigate={setCurrentPage} />}
       {currentPage === 'admin-complaint' && <AdminComplaint onNavigate={setCurrentPage} />}
+      {currentPage === 'admin-tariff' && <AdminTariff onNavigate={setCurrentPage} />}
     </>
 
   );
