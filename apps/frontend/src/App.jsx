@@ -15,7 +15,7 @@ import AdminComplaint from './features/admin/AdminComplaint';
 
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState('landing');
 
   return (
     <>

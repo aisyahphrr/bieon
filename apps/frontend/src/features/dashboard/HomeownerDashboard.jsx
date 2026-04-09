@@ -27,7 +27,6 @@ import {
   Settings,
   DoorOpen,
   DoorClosed,
-  Flame,
   Beaker
 } from 'lucide-react';
 import {
@@ -97,7 +96,6 @@ function ComplaintModal({ isOpen, onClose }) {
                 <option>CCTV Depan</option>
                 <option>Lampu Ruang Tamu</option>
                 <option>AC Kamar</option>
-                <option>Sensor Gas</option>
                 <option>Door Sensor</option>
                 <option>Lainnya</option>
               </select>
@@ -354,7 +352,6 @@ export function HomeownerDashboard({ onNavigate }) {
       { name: 'Lampu Kamar', room: 'Bedroom', status: 'ON', power: 20, type: 'lighting' },
       { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
       { name: 'Door Sensor Depan', room: 'Living Room', status: 'ON', power: 2, type: 'security' },
-      { name: 'Gas Sensor', room: 'Kitchen', status: 'ON', power: 5, type: 'security' },
       { name: 'Wi-Fi Router', room: 'Living Room', status: 'ON', power: 12, type: 'network' },
       { name: 'Motion Sensor', room: 'Bedroom', status: 'ON', power: 3, type: 'security' },
       { name: 'Lampu Terrace', room: 'Terrace', status: 'ON', power: 15, type: 'lighting' },
@@ -376,7 +373,6 @@ export function HomeownerDashboard({ onNavigate }) {
     r3: [
       { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
       { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
-      { name: 'Gas Sensor', room: 'Kitchen', status: 'ON', power: 5, type: 'security' },
       { name: 'Lampu Dapur', room: 'Kitchen', status: 'ON', power: 30, type: 'lighting' },
     ],
     r4: [
@@ -400,7 +396,6 @@ export function HomeownerDashboard({ onNavigate }) {
       security: [
         { type: 'Door Sensor - Terrace', status: 'Closed', room: 'Terrace' },
         { type: 'Door Sensor - Garage', status: 'Closed', room: 'Garage' },
-        { type: 'Gas Sensor', status: 'Normal', room: 'Kitchen' },
       ]
     },
     r1: { // Living Room - Kenyamanan + Keamanan
@@ -415,9 +410,7 @@ export function HomeownerDashboard({ onNavigate }) {
     },
     r3: { // Kitchen - Security + Water Quality
       waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
-      security: [
-        { type: 'Gas Sensor', status: 'Normal', room: 'Kitchen' },
-      ]
+      security: []
     },
     r4: { // Garage - Security Only
       security: [
@@ -470,7 +463,6 @@ export function HomeownerDashboard({ onNavigate }) {
   const notifications = [
     { id: 1, title: 'Motion Detected', desc: 'Gerakan terdeteksi di ruang tamu', type: 'security', time: '2 min ago', icon: Activity },
     { id: 2, title: 'Suhu Tinggi - Kipas Auto ON', desc: 'Suhu ruang produksi 31°C, kipas otomatis menyala', type: 'auto', time: '5 min ago', icon: Fan },
-    { id: 3, title: 'Gas Berbahaya Terdeteksi', desc: 'Konsentrasi gas di dapur melebihi batas', type: 'danger', time: '10 min ago', icon: AlertTriangle },
     { id: 4, title: 'Door Sensor Alert', desc: 'Pintu depan terbuka tanpa otoritas', type: 'security', time: '15 min ago', icon: Lock },
     { id: 5, title: 'Peringatan Token PLN', desc: 'Sisa token PLN hampir habis (Rp 50.000)', type: 'warning', time: '1 hour ago', icon: Zap },
     { id: 6, title: 'Kualitas Udara Buruk', desc: 'CO₂ melebihi batas normal (1200 ppm)', type: 'warning', time: '2 hours ago', icon: Wind },
@@ -562,302 +554,284 @@ export function HomeownerDashboard({ onNavigate }) {
           {/* Left Side - Main Content */}
           <div className="col-span-9 space-y-8">
             {/* Kenyamanan & Kesehatan */}
-            {/* Kenyamanan & Keamanan Title */}
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                {currentSensors.comfort && currentSensors.security
-                  ? 'Kenyamanan & Keamanan'
-                  : currentSensors.comfort
-                    ? 'Kenyamanan'
-                    : 'Keamanan'}
-              </h2>
+            {(currentSensors.comfort || (currentSensors.security && currentSensors.security.length > 0)) && (
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                  {currentSensors.comfort && currentSensors.security && currentSensors.security.length > 0
+                    ? 'Kenyamanan & Keamanan'
+                    : currentSensors.comfort
+                      ? 'Kenyamanan'
+                      : 'Keamanan'}
+                </h2>
+                <div
+                  className="grid grid-flow-col gap-4 mb-6 overflow-x-auto pb-4"
+                  style={{
+                    gridTemplateRows: 'repeat(2, minmax(180px, 1fr))',
+                    gridAutoColumns: 'minmax(250px, 1fr)'
+                  }}
+                >
+                  {/* COMFORT SECTION */}
+                  {currentSensors.comfort && (
+                    <>
+                      {/* KELEMBAPAN - Row 1, Col 1 */}
+                      {currentSensors.comfort.humidity !== null && (
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-bold text-gray-900">Kelembapan</span>
+                            <Droplets className="w-5 h-5 text-blue-500" />
+                          </div>
+                          <div className="mb-3">
+                            <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.humidity}%</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {currentSensors.comfort.humidity < 30 ? 'Kering' : currentSensors.comfort.humidity <= 68 ? 'Lembap' : 'Sangat Lembap'}
+                            </div>
+                          </div>
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
+                            <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-600" style={{ width: `${currentSensors.comfort.humidity}%` }}></div>
+                          </div>
+                        </div>
+                      )}
 
-              <div
-                className="grid grid-flow-col gap-4 mb-6 overflow-x-auto pb-4"
-                style={{
-                  gridTemplateRows: 'repeat(2, minmax(180px, 1fr))',
-                  gridAutoColumns: 'minmax(250px, 1fr)'
-                }}
-              >
-                {/* COMFORT SECTION */}
-                {currentSensors.comfort && (
-                  <>
-                    {/* KELEMBAPAN - Row 1, Col 1 */}
-                    {currentSensors.comfort.humidity !== null && (
-                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-gray-900">Kelembapan</span>
-                          <Droplets className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <div className="mb-3">
-                          <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.humidity}%</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {currentSensors.comfort.humidity < 30 ? 'Kering' : currentSensors.comfort.humidity <= 68 ? 'Lembap' : 'Sangat Lembap'}
+                      {/* SUHU - Row 2, Col 1 */}
+                      {currentSensors.comfort.temp && (
+                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-bold text-gray-900">Suhu</span>
+                            <Thermometer className="w-5 h-5 text-orange-500" />
+                          </div>
+                          <div className="mb-3">
+                            <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.temp}°C</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {currentSensors.comfort.temp < 20 ? 'Dingin' : currentSensors.comfort.temp < 28 ? 'Sejuk' : 'Panas'}
+                            </div>
+                          </div>
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
+                            <div className="h-full bg-gradient-to-r from-orange-500 to-red-500" style={{ width: `${(currentSensors.comfort.temp / 40) * 100}%` }}></div>
                           </div>
                         </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                          <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-600" style={{ width: `${currentSensors.comfort.humidity}%` }}></div>
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* SUHU - Row 2, Col 1 */}
-                    {currentSensors.comfort.temp && (
-                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-gray-900">Suhu</span>
-                          <Thermometer className="w-5 h-5 text-orange-500" />
-                        </div>
-                        <div className="mb-3">
-                          <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.temp}°C</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {currentSensors.comfort.temp < 20 ? 'Dingin' : currentSensors.comfort.temp < 28 ? 'Sejuk' : 'Panas'}
+                      {/* KENYAMANAN BIG CARD - Row Span 2, Col 2 */}
+                      <div className="row-span-2 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden flex flex-col">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
+                        <div className="relative flex flex-col h-full">
+                          <div className="mb-2">
+                            <h3 className="text-2xl font-bold mb-1">Kenyamanan</h3>
+                            <p className="text-emerald-100 text-xs mb-1">Berdasarkan: Suhu + Kelembapan</p>
+                            <p className="text-emerald-100 text-[10px]">(Permenkes No. 2 Tahun 2023)</p>
                           </div>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                          <div className="h-full bg-gradient-to-r from-orange-500 to-red-500" style={{ width: `${(currentSensors.comfort.temp / 40) * 100}%` }}></div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* KENYAMANAN BIG CARD - Row Span 2, Col 2 */}
-                    <div className="row-span-2 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden flex flex-col">
-                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
-                      <div className="relative flex flex-col h-full">
-                        <div className="mb-2">
-                          <h3 className="text-2xl font-bold mb-1">Kenyamanan</h3>
-                          <p className="text-emerald-100 text-xs mb-1">Berdasarkan: Suhu + Kelembapan</p>
-                          <p className="text-emerald-100 text-[10px]">(Permenkes No. 2 Tahun 2023)</p>
-                        </div>
-                        <div className="flex-1 flex flex-col justify-center items-center text-center mt-4 mb-4">
-                          <div className="text-2xl font-bold mb-3 flex items-center gap-2">
-                            {currentSensors.comfort.comfortLevel >= 80 ? '😊 Nyaman' : currentSensors.comfort.comfortLevel >= 60 ? '🙂 Cukup Nyaman' : '😕 Kurang Nyaman'}
+                          <div className="flex-1 flex flex-col justify-center items-center text-center mt-4 mb-4">
+                            <div className="text-2xl font-bold mb-3 flex items-center gap-2">
+                              {currentSensors.comfort.comfortLevel >= 80 ? '😊 Nyaman' : currentSensors.comfort.comfortLevel >= 60 ? '🙂 Cukup Nyaman' : '😕 Kurang Nyaman'}
+                            </div>
                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 mt-auto">
-                          <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                            <div className="text-[10px] mb-1">Suhu</div>
-                            <div className="font-bold text-lg">{currentSensors.comfort.temp}°C</div>
-                          </div>
-                          {currentSensors.comfort.humidity !== null && (
+                          <div className="grid grid-cols-2 gap-3 mt-auto">
                             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                              <div className="text-[10px] mb-1">Kelembapan</div>
-                              <div className="font-bold text-lg">{currentSensors.comfort.humidity}%</div>
+                              <div className="text-[10px] mb-1">Suhu</div>
+                              <div className="font-bold text-lg">{currentSensors.comfort.temp}°C</div>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* SECURITY SECTION */}
-                {currentSensors.security && currentSensors.security.length > 0 && (
-                  <>
-
-
-                    {/* MOTION SENSORS */}
-                    {currentSensors.security.filter(s => s.type.includes('Motion')).map((sensor, idx) => (
-                      <div key={'motion' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-gray-900">Motion</span>
-                          <Activity className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div className="mb-4">
-                          <div className="text-xl font-bold text-gray-900">{sensor.status}</div>
-                          <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
-                        </div>
-                        <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'No Motion' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                          {sensor.status === 'No Motion' ? '✓ Aman' : '👁️ Detected'}
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* DOOR SENSORS */}
-                    {currentSensors.security.filter(s => s.type.includes('Door')).map((sensor, idx) => (
-                      <div key={'door' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-gray-900">Door Sensor</span>
-                          <Lock className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div className="mb-4">
-                          <div className="text-xl font-bold text-gray-900">{sensor.status}</div>
-                          <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
-                        </div>
-                        <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'Closed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                          {sensor.status === 'Closed' ? '🔒 Tertutup' : '🚪 Terbuka'}
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* GAS SENSORS */}
-                    {currentSensors.security.filter(s => s.type.includes('Gas')).map((sensor, idx) => (
-                      <div key={'gas' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-bold text-gray-900">Gas Sensor</span>
-                          <Flame className="w-5 h-5 text-orange-600" />
-                        </div>
-                        <div className="mb-4">
-                          <div className="text-xl font-bold text-gray-900">{sensor.status === 'Normal' ? 'Normal' : sensor.status}</div>
-                          <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
-                        </div>
-                        <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                          {sensor.status === 'Normal' ? '✓ Aman' : '⚠️ Terdeteksi'}
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* KEAMANAN BIG CARD - Always after small cards */}
-                    <div className="row-span-2 bg-gradient-to-br flex flex-col from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
-                      <div className="relative flex flex-col h-full">
-                        <div className="mb-2">
-                          <h3 className="text-2xl font-bold mb-1">Keamanan</h3>
-                          <p className="text-purple-100 text-xs">{currentSensors.security.length} sensor aktif</p>
-                        </div>
-                        <div className="flex-1 flex flex-col justify-center items-center text-center py-6">
-                          <div className="text-[80px] font-bold leading-none mb-4">
-                            {currentSensors.security.every(s =>
-                              s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
-                            ) ? '✓' : '⚠️'}
-                          </div>
-                          <div className="text-xl font-semibold mt-2">
-                            {currentSensors.security.every(s =>
-                              s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
-                            ) ? '🔒 Semua Aman' : '⚠️ Perlu Perhatian'}
+                            {currentSensors.comfort.humidity !== null && (
+                              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
+                                <div className="text-[10px] mb-1">Kelembapan</div>
+                                <div className="font-bold text-lg">{currentSensors.comfort.humidity}%</div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <div className="grid grid-cols-1 gap-2 mt-auto">
-                          {currentSensors.security.slice(0, 2).map((sensor, idx) => (
-                            <div key={idx} className="bg-white/20 backdrop-blur-sm rounded-lg p-3 flex justify-between items-center">
-                              <div className="text-xs font-semibold">{sensor.type} - {sensor.room}</div>
-                              <div className="text-xs font-bold">{sensor.status}</div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* SECURITY SECTION */}
+                  {currentSensors.security && currentSensors.security.length > 0 && (
+                    <>
+                      {/* MOTION SENSORS */}
+                      {currentSensors.security.filter(s => s.type.includes('Motion')).map((sensor, idx) => (
+                        <div key={'motion' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-bold text-gray-900">Motion</span>
+                            <Activity className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="mb-4">
+                            <div className="text-xl font-bold text-gray-900">{sensor.status}</div>
+                            <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
+                          </div>
+                          <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'No Motion' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {sensor.status === 'No Motion' ? '✓ Aman' : '👁️ Detected'}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* DOOR SENSORS */}
+                      {currentSensors.security.filter(s => s.type.includes('Door')).map((sensor, idx) => (
+                        <div key={'door' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-bold text-gray-900">Door Sensor</span>
+                            <Lock className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="mb-4">
+                            <div className="text-xl font-bold text-gray-900">{sensor.status}</div>
+                            <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
+                          </div>
+                          <div className={`mt-auto px-3 py-2 rounded-lg text-xs font-bold text-center ${sensor.status === 'Closed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                            {sensor.status === 'Closed' ? '🔒 Tertutup' : '🚪 Terbuka'}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* KEAMANAN BIG CARD - Always after small cards */}
+                      <div className="row-span-2 bg-gradient-to-br flex flex-col from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
+                        <div className="relative flex flex-col h-full">
+                          <div className="mb-2">
+                            <h3 className="text-2xl font-bold mb-1">Keamanan</h3>
+                            <p className="text-purple-100 text-xs">{currentSensors.security.length} sensor aktif</p>
+                          </div>
+                          <div className="flex-1 flex flex-col justify-center items-center text-center py-6">
+                            <div className="text-[80px] font-bold leading-none mb-4">
+                              {currentSensors.security.every(s =>
+                                s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
+                              ) ? '✓' : '⚠️'}
                             </div>
-                          ))}
+                            <div className="text-xl font-semibold mt-2">
+                              {currentSensors.security.every(s =>
+                                s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
+                              ) ? '🔒 Semua Aman' : '⚠️ Perlu Perhatian'}
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 gap-2 mt-auto">
+                            {currentSensors.security.slice(0, 2).map((sensor, idx) => (
+                              <div key={idx} className="bg-white/20 backdrop-blur-sm rounded-lg p-3 flex justify-between items-center">
+                                <div className="text-xs font-semibold">{sensor.type} - {sensor.room}</div>
+                                <div className="text-xs font-bold">{sensor.status}</div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
               </div>
+            )}
 
-              {/* WATER QUALITY - Kitchen Only - Big Card + Small Metrics */}
-              {currentSensors.waterQuality && (
-                <div className="space-y-4 mt-6">
-                  <h2 className="text-xl font-bold text-gray-900">Kesehatan Air</h2>
+            {/* WATER QUALITY - Kitchen Only - Big Card + Small Metrics */}
+            {currentSensors.waterQuality && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-900">Kesehatan Air</h2>
 
-                  <div className="grid grid-cols-12 gap-4">
-                    {/* Big Card - Water Status */}
-                    <div className="col-span-6 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
-                      <div className="relative h-full flex flex-col">
-                        <div className="mb-6">
-                          <h3 className="text-3xl font-bold mb-2 flex items-center gap-3">
-                            <Beaker className="w-8 h-8" />
-                            Status Air
-                          </h3>
-                          <p className="text-cyan-100 text-sm">Berdasarkan: pH, Turbidity, TDS, Suhu</p>
+                <div className="grid grid-cols-12 gap-4">
+                  {/* Big Card - Water Status */}
+                  <div className="col-span-6 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+                    <div className="relative h-full flex flex-col">
+                      <div className="mb-6">
+                        <h3 className="text-3xl font-bold mb-2 flex items-center gap-3">
+                          <Beaker className="w-8 h-8" />
+                          Status Air
+                        </h3>
+                        <p className="text-cyan-100 text-sm">Berdasarkan: pH, Turbidity, TDS, Suhu</p>
+                        <p className="text-emerald-100 text-[10px]">(Permenkes No. 2 Tahun 2023)</p>
+                      </div>
+                      <div className="flex-1 flex flex-col justify-center items-center text-center">
+                        <div className="text-7xl font-bold mb-4">
+                          {currentSensors.waterQuality.status === 'drinkable' ? '💧' : currentSensors.waterQuality.status === 'usable' ? '🚿' : '⚠️'}
                         </div>
-                        <div className="flex-1 flex flex-col justify-center items-center text-center">
-                          <div className="text-7xl font-bold mb-4">
-                            {currentSensors.waterQuality.status === 'drinkable' ? '💧' : currentSensors.waterQuality.status === 'usable' ? '🚿' : '⚠️'}
-                          </div>
-                          <div className="text-2xl font-bold mb-2">
-                            {currentSensors.waterQuality.status === 'drinkable' ? 'Level 1' : currentSensors.waterQuality.status === 'usable' ? 'Level 2' : 'Level 3'}
-                          </div>
-                          <div className="text-lg font-semibold">
-                            {currentSensors.waterQuality.status === 'drinkable'
-                              ? '✓ Layak Minum'
-                              : currentSensors.waterQuality.status === 'usable'
-                                ? '✓ Layak Pakai'
-                                : '✗ Tidak Layak'}
-                          </div>
+                        <div className="text-2xl font-bold mb-2">
+                          {currentSensors.waterQuality.status === 'drinkable' ? 'Level 1' : currentSensors.waterQuality.status === 'usable' ? 'Level 2' : 'Level 3'}
                         </div>
-                        <div className={`mt-6 px-4 py-3 rounded-xl text-center font-semibold ${currentSensors.waterQuality.status === 'drinkable'
-                          ? 'bg-emerald-500/30 text-white'
-                          : currentSensors.waterQuality.status === 'usable'
-                            ? 'bg-blue-500/30 text-white'
-                            : 'bg-red-500/30 text-white'
-                          }`}>
+                        <div className="text-lg font-semibold">
                           {currentSensors.waterQuality.status === 'drinkable'
-                            ? 'Air aman untuk diminum langsung'
+                            ? '✓ Layak Minum'
                             : currentSensors.waterQuality.status === 'usable'
-                              ? 'Air aman untuk keperluan harian'
-                              : 'Segera periksa sistem filtrasi air'}
+                              ? '✓ Layak Pakai'
+                              : '✗ Tidak Layak'}
                         </div>
+                      </div>
+                      <div className={`mt-6 px-4 py-3 rounded-xl text-center font-semibold ${currentSensors.waterQuality.status === 'drinkable'
+                        ? 'bg-emerald-500/30 text-white'
+                        : currentSensors.waterQuality.status === 'usable'
+                          ? 'bg-blue-500/30 text-white'
+                          : 'bg-red-500/30 text-white'
+                        }`}>
+                        {currentSensors.waterQuality.status === 'drinkable'
+                          ? 'Air aman untuk diminum langsung'
+                          : currentSensors.waterQuality.status === 'usable'
+                            ? 'Air aman untuk keperluan harian'
+                            : 'Segera periksa sistem filtrasi air'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Small Cards Grid - 4 Metrics (2x2) */}
+                  <div className="col-span-6 grid grid-cols-2 gap-4">
+                    {/* pH */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-gray-900">Tingkat Keasaman Air (pH)</span>
+                        <Beaker className="w-5 h-5 text-cyan-600" />
+                      </div>
+                      <div className="mb-3">
+                        <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.ph}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {currentSensors.waterQuality.ph < 6.5 ? 'Asam' : currentSensors.waterQuality.ph < 8.5 ? 'Normal' : 'Basa'}
+                        </div>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${(currentSensors.waterQuality.ph / 14) * 100}%` }}></div>
                       </div>
                     </div>
 
-                    {/* Small Cards Grid - 4 Metrics (2x2) */}
-                    <div className="col-span-6 grid grid-cols-2 gap-4">
-                      {/* pH */}
-                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-bold text-gray-900">pH Air</span>
-                          <Beaker className="w-5 h-5 text-cyan-600" />
-                        </div>
-                        <div className="mb-3">
-                          <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.ph}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {currentSensors.waterQuality.ph < 6.5 ? 'Asam' : currentSensors.waterQuality.ph < 8.5 ? 'Normal' : 'Basa'}
-                          </div>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${(currentSensors.waterQuality.ph / 14) * 100}%` }}></div>
+                    {/* Turbidity */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-gray-900">Kekeruhan</span>
+                        <Droplets className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div className="mb-3">
+                        <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.turbidity}</div>
+                        <div className="text-xs text-gray-500 mt-1">NTU</div>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500" style={{ width: `${Math.min((currentSensors.waterQuality.turbidity / 10) * 100, 100)}%` }}></div>
+                      </div>
+                    </div>
+
+                    {/* TDS */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-gray-900">Padatan Terlarut (TDS)</span>
+                        <Wind className="w-5 h-5 text-teal-600" />
+                      </div>
+                      <div className="mb-3">
+                        <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.tds}</div>
+                        <div className="text-xs text-gray-500 mt-1">ppm</div>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-600" style={{ width: `${Math.min((currentSensors.waterQuality.tds / 500) * 100, 100)}%` }}></div>
+                      </div>
+                    </div>
+
+                    {/* Water Temperature */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-gray-900">Suhu Air</span>
+                        <Thermometer className="w-5 h-5 text-orange-500" />
+                      </div>
+                      <div className="mb-3">
+                        <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.temp}°C</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {currentSensors.waterQuality.temp < 10 ? 'Dingin' : currentSensors.waterQuality.temp < 30 ? 'Normal' : 'Hangat'}
                         </div>
                       </div>
-
-                      {/* Turbidity */}
-                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-bold text-gray-900">Kekeruhan</span>
-                          <Droplets className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="mb-3">
-                          <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.turbidity}</div>
-                          <div className="text-xs text-gray-500 mt-1">NTU</div>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500" style={{ width: `${Math.min((currentSensors.waterQuality.turbidity / 10) * 100, 100)}%` }}></div>
-                        </div>
-                      </div>
-
-                      {/* TDS */}
-                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-bold text-gray-900">TDS</span>
-                          <Wind className="w-5 h-5 text-teal-600" />
-                        </div>
-                        <div className="mb-3">
-                          <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.tds}</div>
-                          <div className="text-xs text-gray-500 mt-1">ppm</div>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-600" style={{ width: `${Math.min((currentSensors.waterQuality.tds / 500) * 100, 100)}%` }}></div>
-                        </div>
-                      </div>
-
-                      {/* Water Temperature */}
-                      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-bold text-gray-900">Suhu Air</span>
-                          <Thermometer className="w-5 h-5 text-orange-500" />
-                        </div>
-                        <div className="mb-3">
-                          <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.temp}°C</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {currentSensors.waterQuality.temp < 10 ? 'Dingin' : currentSensors.waterQuality.temp < 30 ? 'Normal' : 'Hangat'}
-                          </div>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-orange-400 to-red-500" style={{ width: `${(currentSensors.waterQuality.temp / 50) * 100}%` }}></div>
-                        </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-orange-400 to-red-500" style={{ width: `${(currentSensors.waterQuality.temp / 50) * 100}%` }}></div>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Energy Monitoring Charts */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">

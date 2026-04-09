@@ -378,6 +378,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <div className="flex items-center justify-between mb-8 relative z-10">
                 <div>
                   <h3 className="text-xl font-black text-gray-900 leading-tight">Jumlah Smart Device</h3>
+                  <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest leading-none">Akumulasi pertumbuhan per bulan</p>
                 </div>
                 <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all">
                   <Download className="w-3.5 h-3.5" /> Export
@@ -459,7 +460,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 relative overflow-hidden">
               <div className="flex items-center justify-between mb-8 relative z-10">
                 <div>
-                  <h3 className="text-xl font-black text-gray-900 leading-tight">Jumlah Pengaduan</h3>
+                  <h3 className="text-xl font-black text-gray-900 leading-tight">Jumlah Pengaduan Pelanggan</h3>
                   <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest leading-none">Laporan per bulan</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -486,22 +487,22 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* Customer Table Section */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-             <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
-               <h3 className="text-xl font-bold text-gray-900">Daftar Pelanggan Terdaftar</h3>
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+             <div className="p-10 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+               <h3 className="text-2xl font-black text-gray-900">Daftar Pelanggan Terdaftar</h3>
                <div className="flex flex-wrap items-center gap-4">
                  <div className="relative group">
                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#009b7c] transition-colors" />
                    <input 
                      type="text" 
                      placeholder="Cari pelanggan..." 
-                     className="pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#009b7c] focus:bg-white text-xs w-64 transition-all"
+                     className="pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#009b7c] focus:bg-white text-xs w-64 transition-all"
                    />
                  </div>
-                 <button className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-100 text-gray-500 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all">
+                 <button className="flex items-center gap-2 px-6 py-3 bg-gray-50 border border-gray-100 text-gray-500 rounded-2xl text-xs font-black hover:bg-gray-100 transition-all uppercase tracking-widest">
                    <Filter className="w-4 h-4" /> Semua Status <ChevronDown className="w-3 h-3" />
                  </button>
-                 <button className="flex items-center gap-2 px-6 py-2.5 bg-[#009b7c] text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-100 hover:bg-[#008268] transition-all">
+                 <button className="flex items-center gap-2 px-6 py-3 bg-[#009b7c] text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-100 hover:bg-[#008268] transition-all uppercase tracking-widest">
                    <Download className="w-4 h-4" /> Download Table
                  </button>
                </div>
@@ -511,48 +512,48 @@ export default function SuperAdminDashboard({ onNavigate }) {
                <table className="w-full text-left">
                  <thead className="bg-[#009b7c] text-white">
                    <tr>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest first:rounded-tl-lg">User ID</th>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest">Nama Lengkap</th>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest">Email</th>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest">Status</th>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest text-center">BIEON</th>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest text-center">Devices</th>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest">Teknisi</th>
-                     <th className="px-8 py-5 text-[11px] font-bold uppercase tracking-widest text-center last:rounded-tr-lg">Aksi</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest">User ID</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest">Nama Lengkap</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest">Email</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-center">Status</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-center">BIEON</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-center">Devices</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest">Teknisi</th>
+                     <th className="px-10 py-6 text-[11px] font-black uppercase tracking-widest text-center">Aksi</th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-gray-50">
                     {customers.map((cust) => (
                       <tr key={cust.id} className="hover:bg-[#F2F8F5]/30 transition-colors group">
-                        <td className="px-8 py-6 text-xs font-black text-[#009b7c] font-mono">{cust.id}</td>
-                        <td className="px-8 py-6">
+                        <td className="px-10 py-8 text-xs font-black text-[#009b7c] font-mono">{cust.id}</td>
+                        <td className="px-10 py-8">
                           <div>
-                            <div className="text-sm font-black text-gray-900 leading-none mb-1.5">{cust.name}</div>
-                            <div className="text-[10px] text-gray-400 font-bold tracking-wider">{cust.username}</div>
+                            <div className="text-sm font-black text-gray-900 leading-none mb-2">{cust.name}</div>
+                            <div className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">{cust.username}</div>
                           </div>
                         </td>
-                        <td className="px-8 py-6 text-xs text-blue-500 font-black hover:underline cursor-pointer tracking-tight">{cust.email}</td>
-                        <td className="px-8 py-6">
-                           <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                             cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
-                             cust.status === 'Warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
-                             'bg-[#FEEBEB] text-[#ef4444]'
-                           }`}>
-                             {cust.status === 'Aktif' ? <CheckCircle className="w-3.5 h-3.5" /> : 
-                              cust.status === 'Warning' ? <AlertTriangle className="w-3.5 h-3.5" /> : 
-                              <XCircle className="w-3.5 h-3.5" />}
-                             {cust.status}
+                        <td className="px-10 py-8 text-xs text-blue-500 font-bold hover:underline cursor-pointer">{cust.email}</td>
+                        <td className="px-10 py-8">
+                           <div className="flex justify-center">
+                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                              cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
+                              cust.status === 'Warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
+                              'bg-[#FEEBEB] text-[#ef4444]'
+                            }`}>
+                              <span className="w-2 h-2 rounded-full bg-current"></span>
+                              {cust.status}
+                            </div>
                            </div>
                         </td>
-                        <td className="px-8 py-6 text-xs font-black text-gray-700 text-center">{cust.bieon}</td>
-                        <td className="px-8 py-6 text-xs font-black text-gray-700 text-center">{cust.devices}</td>
-                        <td className="px-8 py-6 text-xs font-black text-gray-500 tracking-tight">{cust.technician}</td>
-                        <td className="px-8 py-6 text-center">
+                        <td className="px-10 py-8 text-xs font-black text-gray-700 text-center">{cust.bieon}</td>
+                        <td className="px-10 py-8 text-xs font-black text-gray-700 text-center">{cust.devices}</td>
+                        <td className="px-10 py-8 text-xs font-bold text-gray-500 tracking-tight">{cust.technician}</td>
+                        <td className="px-10 py-8 text-center">
                           <button 
                             onClick={() => onNavigate && onNavigate('admin-client-detail')}
-                            className="inline-flex items-center gap-2 px-5 py-2 bg-[#EAFDF3] text-[#009b7c] rounded-xl text-[10px] font-black hover:bg-[#009b7c] hover:text-white transition-all shadow-sm uppercase tracking-widest"
+                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#EAFDF3] text-[#009b7c] rounded-2xl text-[10px] font-black hover:bg-[#009b7c] hover:text-white transition-all shadow-sm uppercase tracking-widest"
                           >
-                             <span className="text-base leading-none">◉</span> Detail
+                             Detail
                           </button>
                         </td>
                       </tr>
@@ -561,13 +562,13 @@ export default function SuperAdminDashboard({ onNavigate }) {
                </table>
              </div>
 
-              <div className="p-10 bg-gray-50/30 flex items-center justify-between">
-                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Menampilkan 6 dari 6 Pelanggan</span>
+              <div className="p-10 bg-gray-50/50 flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Menampilkan 6 dari 6 Pelanggan</span>
                 <div className="flex items-center gap-3">
-                  <button className="px-5 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest">Prev</button>
-                  <button className="w-10 h-10 bg-[#009b7c] text-white rounded-xl text-[10px] font-black shadow-lg shadow-emerald-100 flex items-center justify-center">1</button>
-                  <button className="w-10 h-10 bg-white border border-gray-100 text-gray-400 rounded-xl text-[10px] font-black hover:bg-gray-50 flex items-center justify-center">2</button>
-                  <button className="px-5 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest">Next</button>
+                  <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Previous</button>
+                  <button className="w-12 h-12 bg-[#009b7c] text-white rounded-2xl text-[10px] font-black shadow-lg shadow-emerald-100 flex items-center justify-center">1</button>
+                  <button className="w-12 h-12 bg-white border border-gray-100 text-gray-400 rounded-2xl text-[10px] font-black hover:bg-gray-50 flex items-center justify-center">2</button>
+                  <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Next</button>
                 </div>
               </div>
           </div>
@@ -578,62 +579,68 @@ export default function SuperAdminDashboard({ onNavigate }) {
       {showPlnModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPlnModal(false)}></div>
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-orange-500 to-red-500 p-8 text-white relative">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 p-10 text-white relative">
                <button 
                 onClick={() => setShowPlnModal(false)}
-                className="absolute top-8 right-8 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all"
+                className="absolute top-10 right-10 w-12 h-12 bg-white/20 hover:bg-white/30 rounded-2xl flex items-center justify-center transition-all"
                >
-                 <X className="w-5 h-5" />
+                 <X className="w-6 h-6" />
                </button>
-               <div className="flex items-center gap-4">
-                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
-                   <Zap className="w-7 h-7 text-white" />
+               <div className="flex items-center gap-6">
+                 <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center">
+                   <Zap className="w-8 h-8 text-white" />
                  </div>
-                 <h2 className="text-3xl font-black">Update Tarif PLN</h2>
+                 <div>
+                  <h2 className="text-4xl font-black tracking-tight">Update Tarif PLN</h2>
+                  <p className="text-white/60 font-bold uppercase tracking-widest text-[10px] mt-1">Konfigurasi Parameter Sistem</p>
+                 </div>
                </div>
             </div>
 
             {/* Modal Body */}
-            <div className="p-10 space-y-8">
-               <div className="space-y-4">
-                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tarif Saat Ini</label>
-                 <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100">
-                    <div className="text-4xl font-black text-gray-900">Rp {plnTariff}</div>
-                    <p className="text-xs text-gray-400 font-bold mt-1">per kWh</p>
+            <div className="p-12 space-y-10">
+               <div className="space-y-5">
+                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Tarif Saat Ini</label>
+                 <div className="bg-gray-50 rounded-[2rem] p-8 border-2 border-gray-100 shadow-inner">
+                    <div className="text-5xl font-black text-gray-900 leading-none">Rp {plnTariff}</div>
+                    <p className="text-[11px] text-gray-400 font-black mt-2 uppercase tracking-widest">per kilowatt hour (kWh)</p>
                  </div>
                </div>
 
-               <div className="space-y-4">
-                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tarif Baru <span className="text-red-500">*</span></label>
+               <div className="space-y-5">
+                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Tarif Baru <span className="text-red-500">*</span></label>
                  <div className="relative group">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 font-bold text-gray-400 text-lg group-focus-within:text-[#009b7c]">Rp</span>
+                    <span className="absolute left-8 top-1/2 -translate-y-1/2 font-black text-gray-400 text-2xl group-focus-within:text-[#009b7c] transition-colors">Rp</span>
                     <input 
                       type="number" 
                       value={newTariff}
                       onChange={(e) => setNewTariff(e.target.value)}
-                      className="w-full px-16 py-5 bg-white border-2 border-gray-100 rounded-2xl text-xl font-black text-gray-900 focus:outline-none focus:border-[#009b7c] transition-all"
+                      className="w-full pl-20 pr-24 py-7 bg-white border-4 border-gray-100 rounded-[2rem] text-3xl font-black text-gray-900 focus:outline-none focus:border-[#009b7c] transition-all shadow-sm"
                     />
-                    <span className="absolute right-6 top-1/2 -translate-y-1/2 font-bold text-gray-400 tracking-tighter group-focus-within:text-[#009b7c]">/kWh</span>
+                    <span className="absolute right-8 top-1/2 -translate-y-1/2 font-black text-gray-400 text-sm tracking-tighter group-focus-within:text-[#009b7c] transition-colors">/ kWh</span>
                  </div>
-                 <p className="text-[10px] text-gray-400 font-medium italic">
-                   * Tarif akan diterapkan untuk perhitungan estimasi biaya energi semua pelanggan
-                 </p>
+                 <div className="flex items-start gap-3 px-2">
+                    <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-gray-400 font-medium leading-relaxed italic">
+                      Tarif ini akan diterapkan secara global untuk perhitungan estimasi biaya energi pada seluruh dashboard pelanggan.
+                    </p>
+                 </div>
                </div>
 
-               <div className="flex gap-4 pt-4">
+               <div className="flex gap-6 pt-6">
                  <button 
                   onClick={() => setShowPlnModal(false)}
-                  className="flex-1 py-4 border-2 border-gray-100 text-gray-500 font-black rounded-2xl hover:bg-gray-50 transition-all uppercase tracking-widest text-xs"
+                  className="flex-1 py-5 border-4 border-gray-100 text-gray-500 font-black rounded-3xl hover:bg-gray-50 transition-all uppercase tracking-widest text-xs"
                  >
                    Batal
                  </button>
                  <button 
                   onClick={handleUpdateTariff}
-                  className="flex-1 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-black rounded-2xl shadow-xl shadow-orange-100 hover:shadow-orange-200 transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs"
+                  className="flex-1 py-5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-black rounded-3xl shadow-xl shadow-orange-100 hover:shadow-orange-200 transition-all flex items-center justify-center gap-4 uppercase tracking-widest text-xs"
                  >
-                   <Save className="w-5 h-5" />
+                   <Save className="w-6 h-6" />
                    Simpan Perubahan
                  </button>
                </div>
