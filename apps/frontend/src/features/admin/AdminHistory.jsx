@@ -21,7 +21,8 @@ import {
     ArrowUp,
     ArrowDown,
     ArrowUpDown,
-    ChevronLeft
+    ChevronLeft,
+    MessageSquare
 } from 'lucide-react';
 
 export default function AdminHistory({ onNavigate }) {
@@ -63,10 +64,10 @@ export default function AdminHistory({ onNavigate }) {
     const tabs = [
         { id: 'Kenyamanan', full: 'Kenyamanan', short: 'Kenyamanan' },
         { id: 'Keamanan', full: 'Keamanan', short: 'Keamanan' },
-        { id: 'Kualitas Air', full: 'Kualitas Air', short: 'Kualitas Air' },
+        { id: 'Kualitas Air', full: 'Kualitas Air', short: 'Air' },
         { id: 'Konsumsi Energi', full: 'Konsumsi Energi', short: 'Energi' },
-        { id: 'Log Perangkat', full: 'Log Perangkat', short: 'Log Perangkat' },
-        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi' }
+        { id: 'Log Perangkat', full: 'Log Perangkat', short: 'Log' },
+        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Alert' }
     ];
 
     const baseComfortData = [
@@ -436,63 +437,79 @@ export default function AdminHistory({ onNavigate }) {
     };
 
     const menuItems = [
-        { name: 'Dashboard', icon: LayoutDashboard },
-        { name: 'Homeowner', icon: Users },
-        { name: 'Teknisi', icon: User },
-        { name: 'Pengaduan', icon: Monitor },
-        { name: 'PLN Listrik', icon: Zap },
-        { name: 'Riwayat', icon: History },
+        { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
+        { name: 'Homeowner', icon: Users, id: 'admin' },
+        { name: 'Teknisi', icon: User, id: 'admin' },
+        { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
+        { name: 'PLN Listrik', icon: Zap, id: 'admin' },
+        { name: 'Riwayat', icon: History, id: 'admin-history' },
     ];
 
     return (
         <div className="flex min-h-screen bg-[#F9FAFB] font-sans text-[#111827]">
             {/* Sidebar */}
-            <aside className={`${sidebarExpanded ? 'w-56' : 'w-16'} bg-[#009b7c] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-50 flex flex-col`}>
+            <aside
+                className={`${sidebarExpanded ? 'w-56' : 'w-16'} bg-[#009b7c] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-50 flex flex-col`}
+            >
+                {/* Sidebar Header */}
                 <div className="p-4 flex items-center justify-between border-b border-white/10">
                     {sidebarExpanded && <img src="/logo_bieon.png" alt="BIEON" className="h-8 object-contain" />}
-                    <button onClick={() => setSidebarExpanded(!sidebarExpanded)} className="p-1 hover:bg-white/10 rounded-lg transition-colors mx-auto lg:mx-0">
+                    <button
+                        onClick={() => setSidebarExpanded(!sidebarExpanded)}
+                        className="p-1 hover:bg-white/10 rounded-lg transition-colors mx-auto lg:mx-0"
+                    >
                         <Menu className="w-5 h-5" />
                     </button>
                 </div>
+
+                {/* Sidebar Menu */}
                 <nav className="flex-1 py-10 px-3 space-y-4">
                     {menuItems.map((item) => (
                         <button
                             key={item.name}
                             onClick={() => {
                                 if (item.name === 'Riwayat') setActiveMenu('Riwayat');
-                                else if (onNavigate) onNavigate('admin');
+                                else if (onNavigate) onNavigate(item.id);
                             }}
                             className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center px-0'} py-3 rounded-2xl transition-all group ${activeMenu === item.name ? 'bg-white text-[#009b7c] shadow-lg' : 'hover:bg-white/10 text-white'
                                 }`}
                         >
                             <item.icon className={`w-5 h-5 flex-shrink-0 ${activeMenu === item.name ? 'text-[#009b7c]' : 'text-white'}`} />
-                            {sidebarExpanded && <span className="ml-4 font-semibold text-xs tracking-wide">{item.name}</span>}
+                            {sidebarExpanded && (
+                                <span className={`ml-4 text-xs tracking-wide ${activeMenu === item.name ? 'font-bold' : 'font-bold'}`}>{item.name}</span>
+                            )}
                         </button>
                     ))}
                 </nav>
             </aside>
 
             {/* Main Content Area */}
-            <div className={`${sidebarExpanded ? 'ml-56' : 'ml-16'} flex-1 flex flex-col transition-all duration-300`}>
+            <div className={`${sidebarExpanded ? 'md:ml-56' : 'md:ml-16'} flex-1 flex flex-col transition-all duration-300 min-w-0`}>
                 {/* Top Header */}
-                <header className="bg-[#009b7c] text-white px-10 py-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-                    <h1 className="text-2xl font-bold tracking-tight">Riwayat Aktivitas</h1>
-                    <div className="flex items-center gap-6">
-                        <button className="relative w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
-                            <Bell className="w-6 h-6" />
-                            <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-red-500 border-2 border-[#009b7c] rounded-full flex items-center justify-center text-[10px] font-bold">3</span>
+                <header className="bg-[#009b7c] text-white px-6 md:px-10 py-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">Riwayat Aktivitas</h1>
+
+                    <div className="flex items-center gap-3 md:gap-6">
+                        <button className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
+                            <Bell className="w-5 h-5 md:w-6 md:h-6" />
+                            <span className="absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 bg-red-500 border-2 border-[#009b7c] rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-bold">3</span>
                         </button>
+
                         <div className="relative">
-                            <button onClick={() => setShowRoleDropdown(!showRoleDropdown)} className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-1.5 pr-6 rounded-2xl transition-all border border-white/5">
+                            <button
+                                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                                className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-1.5 pr-6 rounded-2xl transition-all border border-white/5"
+                            >
                                 <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center font-bold shadow-sm overflow-hidden">
                                     <ShieldCheck className="w-6 h-6 text-white" />
                                 </div>
                                 <div className="text-left hidden md:block">
                                     <div className="text-sm font-bold leading-none mb-1">Super Admin</div>
-                                    <div className="text-[10px] font-semibold opacity-60 leading-none">admin@bieon.id</div>
+                                    <div className="text-[10px] font-bold opacity-60 leading-none">admin@bieon.id</div>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 opacity-50 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} />
                             </button>
+
                             {showRoleDropdown && (
                                 <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-2xl border border-gray-100 py-3 z-50 text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <div className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Ganti Role (Demo)</div>
@@ -512,7 +529,7 @@ export default function AdminHistory({ onNavigate }) {
                 </header>
 
                 {/* Filters and Search Bar Area */}
-                <main className="p-8 pb-16 space-y-6">
+                <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
                     <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 relative overflow-visible">
                         <div className="flex items-center gap-3 mb-6">
                             <Filter className="w-5 h-5 text-gray-400" />
@@ -643,7 +660,7 @@ export default function AdminHistory({ onNavigate }) {
                                     className="w-full flex items-center justify-center gap-3 px-5 py-3.5 bg-[#009b7c] text-white rounded-2xl text-sm font-bold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 group"
                                 >
                                     <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-                                    <span>Export to PDF/CSV</span>
+                                    <span>Export</span>
                                 </button>
                             </div>
                         </div>
@@ -653,15 +670,32 @@ export default function AdminHistory({ onNavigate }) {
                     <div className="space-y-6">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                             {/* Tabs */}
-                            <div className="flex bg-white rounded-2xl border border-gray-100 p-1.5 shadow-sm overflow-x-auto max-w-full no-scrollbar">
+                            <div className="flex bg-white rounded-2xl border border-gray-100 p-1.5 shadow-sm w-full lg:w-auto overflow-hidden">
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
                                         onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSelectedRoomFilter(''); }}
-                                        className={`px-6 py-2.5 rounded-xl text-[13px] font-semibold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-[#009b7c] text-white shadow-md shadow-emerald-100' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
+                                        className={`flex-1 lg:flex-none px-3 md:px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all whitespace-nowrap overflow-hidden text-ellipsis ${activeTab === tab.id ? 'bg-[#009b7c] text-white shadow-md shadow-emerald-100' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
+                                        title={tab.full}
                                     >
-                                        {tab.id}
+                                        {/* Priority: Konsumsi Energi & Notifikasi shorten first, then others, then ellipsis */}
+                                        {tab.id === 'Konsumsi Energi' ? (
+                                            <>
+                                                <span className="hidden xl:inline">{tab.full}</span>
+                                                <span className="inline xl:hidden">{tab.short}</span>
+                                            </>
+                                        ) : tab.id === 'Notifikasi & Alert' ? (
+                                            <>
+                                                <span className="hidden lg:inline">{tab.full}</span>
+                                                <span className="inline lg:hidden">{tab.short}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="hidden md:inline">{tab.full}</span>
+                                                <span className="inline md:hidden">{tab.short}</span>
+                                            </>
+                                        )}
                                     </button>
                                 ))}
                             </div>

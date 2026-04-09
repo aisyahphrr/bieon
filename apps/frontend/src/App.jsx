@@ -11,6 +11,7 @@ import { HomeownerComplaint } from './features/dashboard/HomeownerComplaint';
 import SuperAdminDashboard from './features/admin/SuperAdminDashboard';
 import ClientDetailPage from './features/admin/ClientDetailPage';
 import AdminHistory from './features/admin/AdminHistory';
+import AdminComplaint from './features/admin/AdminComplaint';
 
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
       {currentPage === 'admin' && <SuperAdminDashboard onNavigate={setCurrentPage} />}
       {currentPage === 'admin-client-detail' && <ClientDetailPage onNavigate={setCurrentPage} />}
       {currentPage === 'admin-history' && <AdminHistory onNavigate={setCurrentPage} />}
+      {currentPage === 'admin-complaint' && <AdminComplaint onNavigate={setCurrentPage} />}
     </>
 
   );

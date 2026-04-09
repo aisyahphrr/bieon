@@ -104,12 +104,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const [newTariff, setNewTariff] = useState(1495);
 
   const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard },
-    { name: 'Homeowner', icon: Users },
-    { name: 'Teknisi', icon: User },
-    { name: 'Pengaduan', icon: MessageSquare },
-    { name: 'PLN Listrik', icon: Zap },
-    { name: 'Riwayat', icon: History },
+    { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
+    { name: 'Homeowner', icon: Users, id: 'admin' },
+    { name: 'Teknisi', icon: User, id: 'admin' },
+    { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
+    { name: 'PLN Listrik', icon: Zap, id: 'admin' },
+    { name: 'Riwayat', icon: History, id: 'admin-history' },
   ];
 
   const handleUpdateTariff = () => {
@@ -140,11 +140,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
             <button
               key={item.name}
               onClick={() => {
-                if (item.name === 'Riwayat') {
-                   onNavigate && onNavigate('admin-history');
-                } else {
-                   setActiveTab(item.name);
-                }
+                if (item.name === 'Dashboard') setActiveTab('Dashboard');
+                else if (onNavigate) onNavigate(item.id);
               }}
               className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center px-0'} py-3 rounded-2xl transition-all group ${
                 activeTab === item.name ? 'bg-white text-[#009b7c] shadow-lg' : 'hover:bg-white/10 text-white'
