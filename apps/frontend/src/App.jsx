@@ -12,6 +12,8 @@ import SuperAdminDashboard from './features/admin/SuperAdminDashboard';
 import ClientDetailPage from './features/admin/ClientDetailPage';
 import AdminHistory from './features/admin/AdminHistory';
 import AdminComplaint from './features/admin/AdminComplaint';
+import { ManajemenAkunPage } from './features/admin/pelanggan';
+import { ManajemenTeknisiPage } from './features/admin/teknisi';
 
 
 function App() {
@@ -29,9 +31,11 @@ function App() {
       {currentPage === 'teknisi' && <TechnicianDashboard onNavigate={setCurrentPage} />}
       {currentPage === 'pengaduan' && <HomeownerComplaint onNavigate={setCurrentPage} />}
       {currentPage === 'admin' && <SuperAdminDashboard onNavigate={setCurrentPage} />}
+      {currentPage === 'admin-pelanggan' && <ManajemenAkunPage onNavigate={setCurrentPage} />}
       {currentPage === 'admin-client-detail' && <ClientDetailPage onNavigate={setCurrentPage} />}
       {currentPage === 'admin-history' && <AdminHistory onNavigate={setCurrentPage} />}
       {currentPage === 'admin-complaint' && <AdminComplaint onNavigate={setCurrentPage} />}
+      {currentPage === 'admin-teknisi' && <ManajemenTeknisiPage onNavigate={setCurrentPage} />}
     </>
 
   );

@@ -95,22 +95,13 @@ const customers = [
   { id: 'USR006', name: 'Linda Wijaya', username: '@linda.wijaya', email: 'linda.wijaya@email.com', status: 'Aktif', bieon: 6, devices: 42, technician: 'Andi Wijaya' },
 ];
 
+import { SuperAdminLayout } from './SuperAdminLayout';
+
 export default function SuperAdminDashboard({ onNavigate }) {
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showPlnModal, setShowPlnModal] = useState(false);
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [plnTariff, setPlnTariff] = useState(1495);
   const [newTariff, setNewTariff] = useState(1495);
-
-  const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
-    { name: 'Homeowner', icon: Users, id: 'admin' },
-    { name: 'Teknisi', icon: User, id: 'admin' },
-    { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
-    { name: 'PLN Listrik', icon: Zap, id: 'admin' },
-    { name: 'Riwayat', icon: History, id: 'admin-history' },
-  ];
 
   const handleUpdateTariff = () => {
     setPlnTariff(newTariff);
@@ -118,91 +109,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F9FAFB] font-sans text-[#111827]">
-      {/* Sidebar */}
-      <aside 
-        className={`${sidebarExpanded ? 'w-56' : 'w-16'} bg-[#009b7c] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-50 flex flex-col`}
-      >
-        {/* Sidebar Header */}
-        <div className="p-4 flex items-center justify-between border-b border-white/10">
-          {sidebarExpanded && <img src="/logo_bieon.png" alt="BIEON" className="h-8 object-contain" />}
-          <button 
-            onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className="p-1 hover:bg-white/10 rounded-lg transition-colors mx-auto lg:mx-0"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Sidebar Menu */}
-        <nav className="flex-1 py-10 px-3 space-y-4">
-          {menuItems.map((item) => (
-            <button
-              key={item.name}
-              onClick={() => {
-                if (item.name === 'Dashboard') setActiveTab('Dashboard');
-                else if (onNavigate) onNavigate(item.id);
-              }}
-              className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center px-0'} py-3 rounded-2xl transition-all group ${
-                activeTab === item.name ? 'bg-white text-[#009b7c] shadow-lg' : 'hover:bg-white/10 text-white'
-              }`}
-            >
-              <item.icon className={`w-5 h-5 flex-shrink-0 ${activeTab === item.name ? 'text-[#009b7c]' : 'text-white'}`} />
-              {sidebarExpanded && (
-                <span className="ml-4 font-bold text-xs tracking-wide">{item.name}</span>
-              )}
-            </button>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className={`${sidebarExpanded ? 'ml-56' : 'ml-16'} flex-1 flex flex-col transition-all duration-300`}>
-        {/* Top Header */}
-        <header className="bg-[#009b7c] text-white px-10 py-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-          <h1 className="text-2xl font-black tracking-tight">Super Admin Dashboard</h1>
-          
-          <div className="flex items-center gap-6">
-            <button className="relative w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
-              <Bell className="w-6 h-6" />
-              <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-red-500 border-2 border-[#009b7c] rounded-full flex items-center justify-center text-[10px] font-black">3</span>
-            </button>
-            
-            <div className="relative">
-              <button 
-                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-1.5 pr-6 rounded-2xl transition-all border border-white/5"
-              >
-                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center font-bold shadow-sm overflow-hidden">
-                   <ShieldCheck className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left hidden md:block">
-                  <div className="text-sm font-black leading-none mb-1">Super Admin</div>
-                  <div className="text-[10px] font-bold opacity-60 leading-none">admin@bieon.id</div>
-                </div>
-                <ChevronDown className={`w-4 h-4 opacity-50 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} />
-              </button>
-
-              {showRoleDropdown && (
-                <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-2xl border border-gray-100 py-3 z-50 text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="px-5 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Ganti Role (Demo)</div>
-                  <button onClick={() => onNavigate && onNavigate("dashboard")} className="w-full text-left px-5 py-4 text-sm font-bold text-gray-700 hover:bg-[#F2F8F5] transition-colors flex items-center justify-between group">
-                    <span>Homeowner</span>
-                    <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                  </button>
-                  <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-5 py-4 text-sm font-bold text-gray-700 hover:bg-[#F2F8F5] transition-colors flex items-center justify-between group">
-                    <span>Teknisi</span>
-                    <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                  </button>
-                  <button className="w-full text-left px-5 py-4 text-sm text-[#009b7c] bg-[#F2F8F5] font-black border-l-4 border-[#009b7c]">Super Admin</button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
+    <SuperAdminLayout activeMenu="Dashboard" onNavigate={onNavigate} title="Super Admin Dashboard">
         {/* Dashboard Content */}
-        <main className="p-8 pb-16 space-y-8">
+        <main className="space-y-8">
           {/* Stats Row 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-[#3b82f6] rounded-[2.5rem] p-8 shadow-xl shadow-blue-200/50 relative overflow-hidden group hover:scale-[1.02] transition-all text-white">
@@ -573,7 +482,6 @@ export default function SuperAdminDashboard({ onNavigate }) {
               </div>
           </div>
         </main>
-      </div>
 
       {/* Update Tarif PLN Modal */}
       {showPlnModal && (
@@ -648,6 +556,6 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
         </div>
       )}
-    </div>
+    </SuperAdminLayout>
   );
 }

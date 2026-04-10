@@ -40,6 +40,7 @@ import {
     XCircle
 } from 'lucide-react';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
+import { SuperAdminLayout } from './SuperAdminLayout';
 
 // --- Dummy Data (Moved outside to avoid ReferenceError in state initialization) ---
 const initialComplaints = [
@@ -409,309 +410,219 @@ export default function AdminComplaint({ onNavigate }) {
     };
 
     return (
-        <div className="flex min-h-screen bg-[#F9FAFB] font-sans text-[#111827]">
-            {/* Sidebar */}
-            <aside
-                className={`${sidebarExpanded ? 'w-56' : 'w-16'} bg-[#009b7c] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-50 flex flex-col`}
-            >
-                {/* Sidebar Header */}
-                <div className="p-4 flex items-center justify-between border-b border-white/10">
-                    {sidebarExpanded && <img src="/logo_bieon.png" alt="BIEON" className="h-8 object-contain" />}
-                    <button
-                        onClick={() => setSidebarExpanded(!sidebarExpanded)}
-                        className="p-1 hover:bg-white/10 rounded-lg transition-colors mx-auto lg:mx-0"
-                    >
-                        <Menu className="w-5 h-5" />
-                    </button>
+        <SuperAdminLayout activeMenu="Pengaduan" onNavigate={onNavigate} title="Manajemen Pengaduan">
+            <div className="space-y-6">
+                {/* Stats Cards - REVISED PER USER REQUEST */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {stats.map((stat, idx) => (
+                        <div key={idx} className={`bg-white p-6 rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden flex flex-col justify-between min-h-[160px] ${stat.color === 'red' ? 'border-red-100 shadow-red-50/50' : 'border-gray-100 shadow-sm'}`}>
+                            <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-emerald-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
+
+                            <div className="relative z-10 space-y-4">
+                                {/* Simbol di Paling Atas Kiri */}
+                                <div className={`p-3 rounded-2xl w-fit ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+                                    <stat.icon className="w-6 h-6" />
+                                </div>
+
+                                {/* Judul di bawahnya ada spasi */}
+                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">{stat.label}</p>
+                            </div>
+
+                            <div className="relative z-10 flex items-end justify-between mt-auto">
+                                {/* Angka di Bawah Judul */}
+                                <h3 className="text-4xl font-bold text-gray-900 tracking-tight">{stat.value}{stat.isRating && <span className="text-2xl ml-1 text-amber-400">★</span>}</h3>
+
+                                {/* Tren di Samping Angka (Kanan Bawah) */}
+                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                    {stat.trend}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Sidebar Menu */}
-                <nav className="flex-1 py-10 px-3 space-y-4">
-                    {[
-                        { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
-                        { name: 'Homeowner', icon: Users, id: 'admin' },
-                        { name: 'Teknisi', icon: User, id: 'admin' },
-                        { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
-                        { name: 'PLN Listrik', icon: Zap, id: 'admin' },
-                        { name: 'Riwayat', icon: History, id: 'admin-history' },
-                    ].map((item) => (
-                        <button
-                            key={item.name}
-                            onClick={() => {
-                                if (item.name === 'Pengaduan') setActiveMenu('Pengaduan');
-                                else if (onNavigate) onNavigate(item.id);
-                            }}
-                            className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center px-0'} py-3 rounded-2xl transition-all group ${activeMenu === item.name ? 'bg-white text-[#009b7c] shadow-lg' : 'hover:bg-white/10 text-white'
-                                }`}
-                        >
-                            <item.icon className={`w-5 h-5 flex-shrink-0 ${activeMenu === item.name ? 'text-[#009b7c]' : 'text-white'}`} />
-                            {sidebarExpanded && (
-                                <span className={`ml-4 text-xs tracking-wide ${activeMenu === item.name ? 'font-bold' : 'font-medium'}`}>{item.name}</span>
-                            )}
-                        </button>
-                    ))}
-                </nav>
-            </aside>
-
-            {/* Main Content Area */}
-            <div className={`${sidebarExpanded ? 'md:ml-56' : 'md:ml-16'} flex-1 flex flex-col transition-all duration-300 min-w-0`}>
-                {/* Top Header */}
-                <header className="bg-[#009b7c] text-white px-6 md:px-10 py-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-                    <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">Manajemen Pengaduan Pusat</h1>
-
-                    <div className="flex items-center gap-3 md:gap-6">
-                        <button className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
-                            <Bell className="w-5 h-5 md:w-6 md:h-6" />
-                            <span className="absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 bg-red-500 border-2 border-[#009b7c] rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-bold">3</span>
-                        </button>
-
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                                className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-1.5 pr-6 rounded-2xl transition-all border border-white/5"
-                            >
-                                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center font-bold shadow-sm overflow-hidden">
-                                    <ShieldCheck className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="text-left hidden md:block">
-                                    <div className="text-sm font-bold leading-none mb-1">Super Admin</div>
-                                    <div className="text-[10px] font-semibold opacity-60 leading-none">admin@bieon.id</div>
-                                </div>
-                                <ChevronDown className={`w-4 h-4 opacity-50 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {showRoleDropdown && (
-                                <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-2xl border border-gray-100 py-3 z-50 text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Ganti Role (Demo)</div>
-                                    <button onClick={() => onNavigate && onNavigate("dashboard")} className="w-full text-left px-5 py-4 text-sm font-bold text-gray-700 hover:bg-[#F2F8F5] transition-colors flex items-center justify-between group">
-                                        <span>Homeowner</span>
-                                        <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                                    </button>
-                                    <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-5 py-4 text-sm font-bold text-gray-700 hover:bg-[#F2F8F5] transition-colors flex items-center justify-between group">
-                                        <span>Teknisi</span>
-                                        <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                                    </button>
-                                    <button className="w-full text-left px-5 py-4 text-sm text-[#009b7c] bg-[#F2F8F5] font-bold border-l-4 border-[#009b7c]">Super Admin</button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </header>
-
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 modal-custom-scrollbar">
-                    {/* Stats Cards - REVISED PER USER REQUEST */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        {stats.map((stat, idx) => (
-                            <div key={idx} className={`bg-white p-6 rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden flex flex-col justify-between min-h-[160px] ${stat.color === 'red' ? 'border-red-100 shadow-red-50/50' : 'border-gray-100 shadow-sm'}`}>
-                                <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-emerald-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
-
-                                <div className="relative z-10 space-y-4">
-                                    {/* Simbol di Paling Atas Kiri */}
-                                    <div className={`p-3 rounded-2xl w-fit ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
-                                        <stat.icon className="w-6 h-6" />
-                                    </div>
-
-                                    {/* Judul di bawahnya ada spasi */}
-                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">{stat.label}</p>
-                                </div>
-
-                                <div className="relative z-10 flex items-end justify-between mt-auto">
-                                    {/* Angka di Bawah Judul */}
-                                    <h3 className="text-4xl font-bold text-gray-900 tracking-tight">{stat.value}{stat.isRating && <span className="text-2xl ml-1 text-amber-400">★</span>}</h3>
-
-                                    {/* Tren di Samping Angka (Kanan Bawah) */}
-                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                                        {stat.trend}
-                                    </div>
-                                </div>
+                {/* Table Control & Table Area - FLATTENED */}
+                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
+                    {/* Header & Controls inside the same box */}
+                    <div className="p-8 border-b border-gray-50">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900 leading-tight">Daftar Pengaduan Masuk</h2>
+                                <p className="text-xs text-gray-500 mt-1 italic leading-relaxed">Pantau status laporan serta penugasan teknisi BIEON Smart Monitoring secara real-time.</p>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Table Control & Table Area - FLATTENED */}
-                    <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
-                        {/* Header & Controls inside the same box */}
-                        <div className="p-8 border-b border-gray-50">
-                            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                                <div>
-                                    <h2 className="text-xl font-bold text-gray-900 leading-tight">Daftar Pengaduan Masuk</h2>
-                                    <p className="text-xs text-gray-500 mt-1 italic leading-relaxed">Pantau status laporan serta penugasan teknisi BIEON Smart Monitoring secara real-time.</p>
+                            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                                {/* Search */}
+                                <div className="relative flex-1 lg:w-72 group">
+                                    <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009B7C] transition-colors" />
+                                    <input
+                                        type="text"
+                                        placeholder="Cari Tiket, Hub, atau Kendala..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-11 pr-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:outline-none focus:border-[#009B7C] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                                    />
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                                    {/* Search */}
-                                    <div className="relative flex-1 lg:w-72 group">
-                                        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009B7C] transition-colors" />
-                                        <input
-                                            type="text"
-                                            placeholder="Cari Tiket, Hub, atau Kendala..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-11 pr-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:outline-none focus:border-[#009B7C] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
-                                        />
-                                    </div>
 
-                                    {/* Status Filter */}
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                            className={`flex items-center gap-2 px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
-                                        >
-                                            <Filter className="w-4 h-4 text-gray-400" />
-                                            {selectedStatusFilter || 'Semua Status'}
-                                            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
-                                        </button>
-                                        {showStatusDropdown && (
-                                            <>
-                                                <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
-                                                <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-[1.5rem] shadow-xl py-2 z-20">
-                                                    {['', 'Menunggu Respons', 'Unassigned', 'Diproses', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan'].map(s => (
-                                                        <button
-                                                            key={s}
-                                                            onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
-                                                            className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedStatusFilter === s ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
-                                                        >
-                                                            {s || 'Semua Status'}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Export Data */}
+                                {/* Status Filter */}
+                                <div className="relative">
                                     <button
-                                        onClick={() => alert("Eksport PDF...")}
-                                        className="flex items-center gap-3 px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm group"
+                                        onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                                        className={`flex items-center gap-2 px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
                                     >
-                                        <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-                                        <span>Export</span>
+                                        <Filter className="w-4 h-4 text-gray-400" />
+                                        {selectedStatusFilter || 'Semua Status'}
+                                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
                                     </button>
+                                    {showStatusDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
+                                            <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-[1.5rem] shadow-xl py-2 z-20">
+                                                {['', 'Menunggu Respons', 'Unassigned', 'Diproses', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan'].map(s => (
+                                                    <button
+                                                        key={s}
+                                                        onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
+                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedStatusFilter === s ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                    >
+                                                        {s || 'Semua Status'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
+
+                                {/* Export Data */}
+                                <button
+                                    onClick={() => alert("Eksport PDF...")}
+                                    className="flex items-center gap-3 px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm group"
+                                >
+                                    <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
+                                    <span>Export</span>
+                                </button>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                            <table className="w-full text-left min-w-[1000px] table-auto">
-                                <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
-                                    <tr>
-                                        <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('id')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">ID Tiket {getSortIcon('id')}</div>
-                                        </th>
-                                        <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('date')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Tanggal Dibuat {getSortIcon('date')}</div>
-                                        </th>
-                                        <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('customer')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Pelanggan {getSortIcon('customer')}</div>
-                                        </th>
-                                        <th className="px-8 py-5 font-normal whitespace-nowrap outline-none">
-                                            <div className="uppercase tracking-wider text-[11px] font-bold">Topik Kendala</div>
-                                        </th>
-                                        <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('technician')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Teknisi {getSortIcon('technician')}</div>
-                                        </th>
-                                        <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors text-center outline-none" onClick={() => requestSort('rating')}>
-                                            <div className="flex items-center justify-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Rating {getSortIcon('rating')}</div>
-                                        </th>
-                                        <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('status')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status {getSortIcon('status')}</div>
-                                        </th>
-                                        <th className="px-8 py-5 w-[140px] font-normal whitespace-nowrap text-center text-[11px] font-bold uppercase tracking-wider">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                    {paginatedData.length > 0 ? (
-                                        paginatedData.map((item) => (
-                                            <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
-                                                <td className="px-8 py-5 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
-                                                <td className="px-8 py-5 text-[13px] text-gray-500 font-medium whitespace-nowrap">{item.date}</td>
-                                                <td className="px-8 py-5 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
-                                                <td className="px-8 py-5 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
-                                                <td className="px-8 py-5 text-[13px]">
-                                                    <span className={item.technician === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
-                                                        {item.technician === 'Unassigned' ? 'Menunggu Teknisi' : item.technician}
-                                                    </span>
-                                                </td>
-                                                <td className="px-8 py-5 text-[13px] text-center">
-                                                    {item.status === 'Selesai' && item.rating !== '-' ? (
-                                                        <div className="inline-flex items-center gap-1 font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                                                            <Star className="w-3 h-3 fill-amber-500" />
-                                                            {item.rating}/5
-                                                        </div>
-                                                    ) : <span className="text-gray-300 font-bold">0/0</span>}
-                                                </td>
-                                                <td className="px-8 py-5 text-[13px]">
-                                                    {getStatusBadge(item.status, item.sla)}
-                                                </td>
-                                                <td className="px-8 py-5 text-[13px]">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        {item.status.includes('Overdue') ? (
-                                                            <button
-                                                                onClick={() => handlePing(item)}
-                                                                className="px-4 py-2 bg-[#F98C12] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
-                                                            >
-                                                                Ping Teknisi
-                                                            </button>
-                                                        ) : (item.status === 'Menunggu Respons' || item.technician === 'Unassigned') ? (
-                                                            <button
-                                                                onClick={() => handleAssign(item)}
-                                                                className="px-4 py-2 bg-[#1076E5] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
-                                                            >
-                                                                Alihkan Teknisi
-                                                            </button>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => handleDetail(item)}
-                                                                className="px-4 py-2 bg-[#009B7C] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1 whitespace-nowrap"
-                                                            >
-                                                                Detail <ChevronRight className="w-3 h-3" />
-                                                            </button>
-                                                        )}
+                    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                        <table className="w-full text-left min-w-[1000px] table-auto">
+                            <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
+                                <tr>
+                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('id')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">ID Tiket {getSortIcon('id')}</div>
+                                    </th>
+                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('date')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Tanggal Dibuat {getSortIcon('date')}</div>
+                                    </th>
+                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('customer')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Pelanggan {getSortIcon('customer')}</div>
+                                    </th>
+                                    <th className="px-8 py-5 font-normal whitespace-nowrap outline-none">
+                                        <div className="uppercase tracking-wider text-[11px] font-bold">Topik Kendala</div>
+                                    </th>
+                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('technician')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Teknisi {getSortIcon('technician')}</div>
+                                    </th>
+                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors text-center outline-none" onClick={() => requestSort('rating')}>
+                                        <div className="flex items-center justify-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Rating {getSortIcon('rating')}</div>
+                                    </th>
+                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('status')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status {getSortIcon('status')}</div>
+                                    </th>
+                                    <th className="px-8 py-5 w-[140px] font-normal whitespace-nowrap text-center text-[11px] font-bold uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {paginatedData.length > 0 ? (
+                                    paginatedData.map((item) => (
+                                        <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
+                                            <td className="px-8 py-5 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
+                                            <td className="px-8 py-5 text-[13px] text-gray-500 font-medium whitespace-nowrap">{item.date}</td>
+                                            <td className="px-8 py-5 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
+                                            <td className="px-8 py-5 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
+                                            <td className="px-8 py-5 text-[13px]">
+                                                <span className={item.technician === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
+                                                    {item.technician === 'Unassigned' ? 'Menunggu Teknisi' : item.technician}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-5 text-[13px] text-center">
+                                                {item.status === 'Selesai' && item.rating !== '-' ? (
+                                                    <div className="inline-flex items-center gap-1 font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                                                        <Star className="w-3 h-3 fill-amber-500" />
+                                                        {item.rating}/5
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={8} className="px-8 py-20 text-center">
-                                                <div className="flex flex-col items-center gap-4">
-                                                    <Activity className="w-12 h-12 text-gray-100" />
-                                                    <div className="space-y-1">
-                                                        <p className="text-lg font-bold text-gray-900">Tidak ada pengaduan ditemukan</p>
-                                                        <p className="text-sm font-semibold text-gray-400">Coba ubah filter atau kata kunci pencarian Anda</p>
-                                                    </div>
+                                                ) : <span className="text-gray-300 font-bold">0/0</span>}
+                                            </td>
+                                            <td className="px-8 py-5 text-[13px]">
+                                                {getStatusBadge(item.status, item.sla)}
+                                            </td>
+                                            <td className="px-8 py-5 text-[13px]">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    {item.status.includes('Overdue') ? (
+                                                        <button
+                                                            onClick={() => handlePing(item)}
+                                                            className="px-4 py-2 bg-[#F98C12] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
+                                                        >
+                                                            Ping Teknisi
+                                                        </button>
+                                                    ) : (item.status === 'Menunggu Respons' || item.technician === 'Unassigned') ? (
+                                                        <button
+                                                            onClick={() => handleAssign(item)}
+                                                            className="px-4 py-2 bg-[#1076E5] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
+                                                        >
+                                                            Alihkan Teknisi
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleDetail(item)}
+                                                            className="px-4 py-2 bg-[#009B7C] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1 whitespace-nowrap"
+                                                        >
+                                                            Detail <ChevronRight className="w-3 h-3" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={8} className="px-8 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <Activity className="w-12 h-12 text-gray-100" />
+                                                <div className="space-y-1">
+                                                    <p className="text-lg font-bold text-gray-900">Tidak ada pengaduan ditemukan</p>
+                                                    <p className="text-sm font-semibold text-gray-400">Coba ubah filter atau kata kunci pencarian Anda</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                        {/* Pagination Footer - SYNCED WITH ADMIN HISTORY */}
-                        <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-3">
-                                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest text-[10px]">Rows per page:</span>
-                                <div className="relative">
-                                    <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all">
-                                        {rowsPerPage} <ChevronDown className={`w-3 h-3 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {showRowsDropdown && (
-                                        <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
-                                            {[5, 10, 15, 20, 30, 50].map(val => (
-                                                <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                    {/* Pagination Footer - SYNCED WITH ADMIN HISTORY */}
+                    <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-3">
+                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest text-[10px]">Rows per page:</span>
+                            <div className="relative">
+                                <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all">
+                                    {rowsPerPage} <ChevronDown className={`w-3 h-3 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                                </button>
+                                {showRowsDropdown && (
+                                    <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                                        {[5, 10, 15, 20, 30, 50].map(val => (
+                                            <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                                {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Previous</button>
-                                <button disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)} onClick={() => setCurrentPage(currentPage + 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Next</button>
-                            </div>
+                        </div>
+                        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                            {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Previous</button>
+                            <button disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)} onClick={() => setCurrentPage(currentPage + 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Next</button>
                         </div>
                     </div>
                 </div>
@@ -940,6 +851,6 @@ export default function AdminComplaint({ onNavigate }) {
                     </div>
                 </div>
             )}
-        </div>
+        </SuperAdminLayout>
     );
 }
