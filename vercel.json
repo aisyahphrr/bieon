@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build --workspace=@bieon/frontend",
+  "outputDirectory": "apps/frontend/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
