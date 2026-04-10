@@ -442,7 +442,7 @@ export default function AdminHistory({ onNavigate }) {
         { name: 'Homeowner', icon: Users, id: 'admin' },
         { name: 'Teknisi', icon: User, id: 'admin' },
         { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
-        { name: 'PLN Listrik', icon: Zap, id: 'admin' },
+        { name: 'PLN Listrik', icon: Zap, id: 'admin-tariff' },
         { name: 'Riwayat', icon: History, id: 'admin-history' },
     ];
 

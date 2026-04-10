@@ -26,7 +26,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
     { name: 'Homeowner', icon: Users, id: 'admin-pelanggan' },
     { name: 'Teknisi', icon: User, id: 'admin-teknisi' },
     { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
-    { name: 'PLN Listrik', icon: Zap, id: 'admin' },
+    { name: 'PLN Listrik', icon: Zap, id: 'admin-tariff' },
     { name: 'Riwayat', icon: History, id: 'admin-history' },
   ];
 

@@ -14,7 +14,7 @@ import AdminHistory from './features/admin/AdminHistory';
 import AdminComplaint from './features/admin/AdminComplaint';
 import { ManajemenAkunPage } from './features/admin/pelanggan';
 import { ManajemenTeknisiPage } from './features/admin/teknisi';
-
+import AdminTariff from './features/admin/AdminTariff';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
@@ -36,6 +36,7 @@ function App() {
       {currentPage === 'admin-history' && <AdminHistory onNavigate={setCurrentPage} />}
       {currentPage === 'admin-complaint' && <AdminComplaint onNavigate={setCurrentPage} />}
       {currentPage === 'admin-teknisi' && <ManajemenTeknisiPage onNavigate={setCurrentPage} />}
+      {currentPage === 'admin-tariff' && <AdminTariff onNavigate={setCurrentPage} />}
     </>
 
   );

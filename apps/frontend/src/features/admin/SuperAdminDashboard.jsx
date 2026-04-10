@@ -103,6 +103,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const [plnTariff, setPlnTariff] = useState(1495);
   const [newTariff, setNewTariff] = useState(1495);
 
+
   const handleUpdateTariff = () => {
     setPlnTariff(newTariff);
     setShowPlnModal(false);
