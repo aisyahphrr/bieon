@@ -31,6 +31,7 @@ import {
   Lock
 } from "lucide-react";
 import { EditHubNodePage } from "./edithub";
+import NotificationPopup from "../../components/NotificationPopup";
 
 const BIEON_DATABASE = {
   "BIEON-001": { name: "BIEON Smart Home System A", totalHubs: 2 },
@@ -90,6 +91,7 @@ export function DeviceControlPage({ onNavigate }) {
   const [showEditPage, setShowEditPage] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [activeSensorAspect, setActiveSensorAspect] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleSubmitBieonId = () => {
     const bieonData = BIEON_DATABASE[bieonIdInput];
@@ -412,10 +414,20 @@ export function DeviceControlPage({ onNavigate }) {
               <MessageSquare className="w-4 h-4" />
               Ajukan Pengaduan
             </button>
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Bell className="w-5 h-5 text-gray-600" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+              </button>
+              <NotificationPopup 
+                isOpen={showNotifications} 
+                onClose={() => setShowNotifications(false)} 
+                role="homeowner" 
+              />
+            </div>
             <div className="relative">
               <button
                 onClick={() => setShowRoleDropdown(!showRoleDropdown)}

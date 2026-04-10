@@ -27,12 +27,14 @@ import {
     Cpu
 } from 'lucide-react';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
+import NotificationPopup from '../../components/NotificationPopup';
 
 export function HomeownerComplaint({ onNavigate }) {
     const [showRoleDropdown, setShowRoleDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState(null);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     // Filter, Sort, Pagination State
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
@@ -430,10 +432,20 @@ export function HomeownerComplaint({ onNavigate }) {
                                 <MessageSquare className="w-4 h-4" />
                                 Ajukan Pengaduan
                             </button>
-                            <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                <Bell className="w-5 h-5 text-gray-600" />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                            </button>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowNotifications(!showNotifications)}
+                                    className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <Bell className="w-5 h-5 text-gray-600" />
+                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                </button>
+                                <NotificationPopup 
+                                    isOpen={showNotifications} 
+                                    onClose={() => setShowNotifications(false)} 
+                                    role="homeowner" 
+                                />
+                            </div>
                             <div className="relative">
                                 <button
                                     onClick={() => setShowRoleDropdown(!showRoleDropdown)}
