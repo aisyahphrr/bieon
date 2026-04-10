@@ -225,81 +225,81 @@ export function ManajemenAkunPage({ onNavigate }) {
             <div className="space-y-8">
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-[#3b82f6] rounded-[2.5rem] p-8 shadow-xl shadow-blue-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-[#3b82f6] rounded-[2rem] p-6 shadow-xl shadow-blue-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="flex items-center justify-between mb-2">
-                             <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <Users className="w-8 h-8" />
+                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                                <Users className="w-6 h-6" />
                              </div>
                              <div className="text-right">
-                                <span className="text-5xl font-black">{totalHomeowners}</span>
-                                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mt-1">Total Klien</p>
+                                <span className="text-4xl font-bold">{totalHomeowners}</span>
+                                <p className="text-xs font-medium text-white/80 mt-1">Total Klien</p>
                              </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#10b981] rounded-[2.5rem] p-8 shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-[#10b981] rounded-[2rem] p-6 shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="flex items-center justify-between mb-2">
-                             <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <CheckCircle className="w-8 h-8" />
+                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                                <CheckCircle className="w-6 h-6" />
                              </div>
                              <div className="text-right">
-                                <span className="text-5xl font-black">{activeHomeowners}</span>
-                                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mt-1">Status Aktif</p>
+                                <span className="text-4xl font-bold">{activeHomeowners}</span>
+                                <p className="text-xs font-medium text-white/80 mt-1">Status Aktif</p>
                              </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#f59e0b] rounded-[2.5rem] p-8 shadow-xl shadow-amber-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-[#f59e0b] rounded-[2rem] p-6 shadow-xl shadow-amber-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="flex items-center justify-between mb-2">
-                             <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <AlertCircle className="w-8 h-8" />
+                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                                <AlertCircle className="w-6 h-6" />
                              </div>
                              <div className="text-right">
-                                <span className="text-5xl font-black">{warningHomeowners}</span>
-                                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mt-1">Peringatan</p>
+                                <span className="text-4xl font-bold">{warningHomeowners}</span>
+                                <p className="text-xs font-medium text-white/80 mt-1">Peringatan</p>
                              </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#a855f7] rounded-[2.5rem] p-8 shadow-xl shadow-purple-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-[#a855f7] rounded-[2rem] p-6 shadow-xl shadow-purple-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="flex items-center justify-between mb-2">
-                             <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <Zap className="w-8 h-8" />
+                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+                                <Zap className="w-6 h-6" />
                              </div>
                              <div className="text-right">
-                                <span className="text-5xl font-black">{totalDevices}</span>
-                                <p className="text-[10px] font-black text-white/70 uppercase tracking-widest mt-1">Total Node</p>
+                                <span className="text-4xl font-bold">{totalDevices}</span>
+                                <p className="text-xs font-medium text-white/80 mt-1">Total Node</p>
                              </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Table Card */}
-                <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-8 border-b border-gray-50 bg-gray-50/30">
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                             <div>
-                                <h2 className="text-2xl font-black text-gray-900 tracking-tight uppercase">Daftar Akun Homeowner</h2>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 italic">Manajemen akun, monitoring konsumsi, dan kontrol akses klien BIEON</p>
+                                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Daftar Akun Homeowner</h2>
+                                <p className="text-sm font-medium text-gray-500 mt-1">Manajemen akun, monitoring konsumsi, dan kontrol akses klien BIEON</p>
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
                                 <div className="relative group flex-1 lg:w-72">
                                     <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009b7c] transition-all" />
                                     <input 
                                         type="text" 
-                                        placeholder="Cari nama, email, atau ID..."
+                                        placeholder="Cari nama, email..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-11 pr-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-[10px] font-black focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-[#009b7c] transition-all shadow-sm"
+                                        className="w-full pl-11 pr-5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm group-focus-within:bg-white"
                                     />
                                 </div>
                                 
                                 <button 
                                     onClick={() => setIsAddModalOpen(true)}
-                                    className="px-6 py-3 bg-[#009b7c] text-white rounded-2xl text-[10px] font-black hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center gap-2 group uppercase tracking-widest"
+                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center gap-2 group"
                                 >
                                     <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" />
-                                    TAMBAH HOMEOWNER
+                                    Tambah Homeowner
                                 </button>
                             </div>
                         </div>
@@ -308,51 +308,51 @@ export function ManajemenAkunPage({ onNavigate }) {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left table-auto">
                             <thead>
-                                <tr className="bg-[#009b7c] text-white text-[10px] font-black uppercase tracking-widest">
-                                    <th className="px-8 py-5">Identitas</th>
-                                    <th className="px-8 py-5">Email & Kontak</th>
-                                    <th className="px-8 py-5">Hardware</th>
-                                    <th className="px-8 py-5">Teknisi</th>
-                                    <th className="px-8 py-5">Status</th>
-                                    <th className="px-8 py-5 text-center">Aksi</th>
+                                <tr className="bg-[#009b7c] text-white text-xs font-semibold uppercase tracking-wider">
+                                    <th className="px-6 py-4">Identitas</th>
+                                    <th className="px-6 py-4">Email & Kontak</th>
+                                    <th className="px-6 py-4">Hardware</th>
+                                    <th className="px-6 py-4">Teknisi</th>
+                                    <th className="px-6 py-4">Status</th>
+                                    <th className="px-6 py-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {filteredHomeowners.map((ho) => (
                                     <tr key={ho.id} className="hover:bg-gray-50/50 transition-all group">
-                                        <td className="px-8 py-6">
+                                        <td className="px-6 py-5">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-[#009b7c] to-teal-600 rounded-2xl flex items-center justify-center text-white text-lg font-black shadow-lg shadow-teal-100">
+                                                <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold">
                                                     {ho.fullName.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <p className="font-black text-gray-900">{ho.fullName}</p>
-                                                    <p className="text-[10px] font-black text-[#009b7c] uppercase tracking-tighter italic">ID: {ho.id}</p>
+                                                    <p className="font-bold text-gray-900">{ho.fullName}</p>
+                                                    <p className="text-xs font-semibold text-[#009b7c]">ID: {ho.id}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <div className="space-y-1">
-                                                <p className="text-sm font-bold text-gray-700">{ho.email}</p>
-                                                <p className="text-xs font-medium text-gray-400">{ho.phone}</p>
+                                        <td className="px-6 py-5">
+                                            <div className="space-y-0.5">
+                                                <p className="text-sm font-semibold text-gray-700">{ho.email}</p>
+                                                <p className="text-xs font-medium text-gray-500">{ho.phone}</p>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6">
+                                        <td className="px-6 py-5">
                                             <div className="flex flex-wrap gap-2">
-                                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100">{ho.totalBieonDevices} Hub</span>
-                                                <span className="px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-[10px] font-black border border-purple-100">{ho.totalSmartDevices} Node</span>
+                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-semibold border border-emerald-100">{ho.totalBieonDevices} Hub</span>
+                                                <span className="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-lg text-xs font-semibold border border-purple-100">{ho.totalSmartDevices} Node</span>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6">
+                                        <td className="px-6 py-5">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                                    <UserCog className="w-4 h-4 text-gray-400" />
+                                                    <UserCog className="w-4 h-4 text-gray-500" />
                                                 </div>
-                                                <span className="text-sm font-bold text-gray-700">{ho.assignedTechnician}</span>
+                                                <span className="text-sm font-semibold text-gray-700">{ho.assignedTechnician}</span>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-6">
-                                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-2 w-fit ${
+                                        <td className="px-6 py-5">
+                                            <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border flex items-center gap-2 w-fit ${
                                                 ho.status === 'aktif' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                                 ho.status === 'warning' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                                 'bg-red-50 text-red-600 border-red-100'
@@ -365,23 +365,23 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 {ho.status}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-6">
+                                        <td className="px-6 py-5">
                                             <div className="flex items-center justify-center gap-2">
                                                 <button 
                                                     onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
-                                                    className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-[#009b7c] hover:border-[#009b7c] rounded-2xl transition-all shadow-sm group/btn"
+                                                    className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-[#009b7c] hover:border-[#009b7c] hover:bg-emerald-50 rounded-xl transition-all shadow-sm group/btn"
                                                 >
-                                                    <Eye className="w-5 h-5 transition-transform group-hover/btn:scale-110" />
+                                                    <Eye className="w-4 h-4 transition-transform gap-2" />
                                                 </button>
                                                 <button 
-                                                    className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-amber-500 hover:border-amber-500 rounded-2xl transition-all shadow-sm group/btn"
+                                                    className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-amber-500 hover:border-amber-500 hover:bg-amber-50 rounded-xl transition-all shadow-sm group/btn"
                                                 >
-                                                    <Edit3 className="w-5 h-5 transition-transform group-hover/btn:scale-110" />
+                                                    <Edit3 className="w-4 h-4 transition-transform" />
                                                 </button>
                                                 <button 
-                                                    className="p-3 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500 rounded-2xl transition-all shadow-sm group/btn"
+                                                    className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm group/btn"
                                                 >
-                                                    <Trash2 className="w-5 h-5 transition-transform group-hover/btn:scale-110" />
+                                                    <Trash2 className="w-4 h-4 transition-transform" />
                                                 </button>
                                             </div>
                                         </td>
@@ -395,62 +395,62 @@ export function ManajemenAkunPage({ onNavigate }) {
 
             {/* MODALS */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[500] flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[3rem] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-                        <div className="p-8 bg-gradient-to-r from-[#009b7c] to-teal-600 text-white flex items-center justify-between">
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
+                        <div className="px-8 py-6 bg-[#009b7c] text-white flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                    <Plus className="w-8 h-8" />
+                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner">
+                                    <Plus className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black tracking-tight uppercase">Tambah Homeowner</h2>
-                                    <p className="text-teal-50 text-[10px] font-black tracking-widest uppercase opacity-70">Pengaturan akun baru Sistem BIEON</p>
+                                    <h2 className="text-xl font-bold tracking-tight">Tambah Homeowner</h2>
+                                    <p className="text-white/80 text-xs font-medium mt-0.5">Pengaturan akun baru Sistem BIEON</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsAddModalOpen(false)} className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center transition-all">
-                                <X className="w-6 h-6" />
+                            <button onClick={() => setIsAddModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all">
+                                <X className="w-5 h-5 text-white" />
                             </button>
                         </div>
                         
-                        <div className="p-10 overflow-y-auto space-y-8">
+                        <div className="p-8 overflow-y-auto space-y-6">
                              <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Nama Lengkap</label>
-                                    <input type="text" className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-[#009b7c] transition-all" />
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Nama Lengkap</label>
+                                    <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Email Klien</label>
-                                    <input type="email" className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-[#009b7c] transition-all" />
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Email Klien</label>
+                                    <input type="email" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" />
                                 </div>
                              </div>
 
                              <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Alamat Domisili</label>
-                                <textarea rows="3" className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-[#009b7c] transition-all"></textarea>
+                                <label className="text-sm font-semibold text-gray-700 ml-1">Alamat Domisili</label>
+                                <textarea rows="3" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm"></textarea>
                              </div>
 
-                             <div className="flex items-center gap-4 p-6 bg-emerald-50 border border-emerald-100 rounded-[2rem]">
-                                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200/50">
-                                    <ShieldCheck className="w-8 h-8 text-[#009b7c]" />
+                             <div className="flex items-center gap-4 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                    <ShieldCheck className="w-6 h-6 text-[#009b7c]" />
                                 </div>
                                 <div className="flex-1">
-                                    <h4 className="text-sm font-black text-emerald-900 leading-none mb-1 uppercase">Notifikasi Sistem</h4>
-                                    <p className="text-[10px] font-black text-emerald-700 opacity-60 uppercase tracking-tighter">Email selamat datang & kredensial login akan dikirim secara otomatis ke klien.</p>
+                                    <h4 className="text-sm font-bold text-emerald-900 mb-0.5">Notifikasi Sistem</h4>
+                                    <p className="text-xs font-medium text-emerald-700 opacity-80">Email selamat datang & kredensial login akan dikirim otomatis.</p>
                                 </div>
                                 <button 
                                     onClick={() => setIsEmailPreviewOpen(true)}
-                                    className="p-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-black text-[10px] uppercase shadow-md shadow-emerald-200"
+                                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all font-semibold text-xs shadow-sm"
                                 >
-                                    PRATINJAU EMAIL
+                                    Pratinjau Email
                                 </button>
                              </div>
                         </div>
 
-                        <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex items-center justify-end gap-4">
-                            <button onClick={() => setIsAddModalOpen(false)} className="px-8 py-4 text-sm font-black text-gray-400 hover:text-gray-600 transition-all uppercase tracking-widest">Batal</button>
-                            <button onClick={handleAddHomeowner} className="px-10 py-4 bg-[#009b7c] text-white rounded-2xl font-black text-sm hover:bg-[#008268] transition-all shadow-xl shadow-emerald-100 flex items-center gap-3 group">
-                                SIMPAN DATA KLIEN
-                                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />
+                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-end gap-3">
+                            <button onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">Batal</button>
+                            <button onClick={handleAddHomeowner} className="px-6 py-2.5 bg-[#009b7c] text-white rounded-xl font-semibold text-sm hover:bg-[#008268] transition-all shadow-md shadow-emerald-100 flex items-center gap-2 group">
+                                Simpan Data Klien
+                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                             </button>
                         </div>
                     </div>
@@ -458,15 +458,15 @@ export function ManajemenAkunPage({ onNavigate }) {
             )}
 
             {isEmailPreviewOpen && (
-                <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-md z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-[3rem] shadow-2xl max-w-xl w-full overflow-hidden border border-white/20">
-                        <div className="p-8 border-b border-gray-50 flex items-center justify-between">
-                             <h2 className="text-xl font-black text-gray-800 tracking-tight uppercase">Pratinjau Notifikasi Email</h2>
-                             <button onClick={() => setIsEmailPreviewOpen(false)} className="w-10 h-10 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-xl flex items-center justify-center transition-all">
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full flex flex-col overflow-hidden border border-white/20">
+                        <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
+                             <h2 className="text-lg font-bold text-gray-900 tracking-tight">Pratinjau Notifikasi Email</h2>
+                             <button onClick={() => setIsEmailPreviewOpen(false)} className="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center transition-all">
                                 <X className="w-5 h-5" />
                              </button>
                         </div>
-                        <div className="p-10">
+                        <div className="p-8">
                             <EmailApprovalTemplate type="welcome" data={{ fullName: 'Pengguna Baru BIEON', email: 'contoh@gmail.com', id: 'HO-007', username: 'pengguna.baru' }} />
                         </div>
                     </div>
