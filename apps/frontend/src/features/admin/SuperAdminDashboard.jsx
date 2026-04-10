@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   LayoutDashboard,
   Users,
@@ -100,16 +102,38 @@ const customers = [
 import { SuperAdminLayout } from './SuperAdminLayout';
 
 export default function SuperAdminDashboard({ onNavigate }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Semua Status');
   const [showPlnModal, setShowPlnModal] = useState(false);
   const [activeTab, setActiveTab] = useState('Dashboard');
-  const [plnTariff, setPlnTariff] = useState(1495);
-  const [newTariff, setNewTariff] = useState(1495);
+  const [plnTariff, setPlnTariff] = useState(1445);
+  const [newTariff, setNewTariff] = useState(plnTariff);
 
+  const handleDownloadPDF = (title, columns, data, filename) => {
+    const doc = new jsPDF();
+    doc.text(title, 14, 15);
+    
+    autoTable(doc, {
+      head: [columns],
+      body: data,
+      startY: 20,
+    });
+
+    doc.save(`${filename}.pdf`);
+  };
 
   const handleUpdateTariff = () => {
     setPlnTariff(newTariff);
     setShowPlnModal(false);
   };
+
+  const filteredCustomers = customers.filter(cust => {
+    const matchesSearch = cust.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          cust.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          cust.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'Semua Status' || cust.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <SuperAdminLayout activeMenu="Dashboard" onNavigate={onNavigate} title="Super Admin Dashboard">
@@ -304,7 +328,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <h3 className="text-xl font-bold text-gray-800">Jumlah Smart Device</h3>
                   <p className="text-sm text-gray-600 mt-1">Akumulasi pertumbuhan per bulan</p>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">
+                <button 
+                  onClick={() => handleDownloadPDF(
+                    "Laporan Jumlah Smart Device", 
+                    ["Bulan", "Jumlah Device"], 
+                    smartDeviceTrend.map(d => [d.name, d.value]), 
+                    "SmartDevice_Report"
+                  )}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
+                >
                   <Download className="w-4 h-4" /> Export
                 </button>
               </div>
@@ -339,7 +371,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">
+                  <button 
+                    onClick={() => handleDownloadPDF(
+                      "Laporan Jumlah Pelanggan", 
+                      ["Bulan", "Jumlah Pelanggan"], 
+                      pelangganTrend.map(d => [d.name, d.value]), 
+                      "Pelanggan_Report"
+                    )}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
+                  >
                     <Download className="w-4 h-4" /> Export
                   </button>
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-purple-100">
@@ -404,7 +444,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">
+                  <button 
+                    onClick={() => handleDownloadPDF(
+                      "Laporan Pengaduan Pelanggan", 
+                      ["Bulan", "Jumlah Pengaduan"], 
+                      pengaduanTrend.map(d => [d.name, d.value]), 
+                      "Pengaduan_Report"
+                    )}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
+                  >
                     <Download className="w-4 h-4" /> Export
                   </button>
                   <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-100">
@@ -441,15 +489,35 @@ export default function SuperAdminDashboard({ onNavigate }) {
                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#009b7c] transition-colors" />
                    <input 
                      type="text" 
+                     value={searchQuery}
+                     onChange={(e) => setSearchQuery(e.target.value)}
                      placeholder="Cari pelanggan..." 
                      className="pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#009b7c] focus:bg-white text-xs w-64 transition-all"
                    />
                  </div>
-                 <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600">
-                   <Filter className="w-4 h-4" /> Semua Status <ChevronDown className="w-3 h-3" />
-                 </button>
-                 <button className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white rounded-xl text-sm font-semibold shadow-sm hover:bg-[#008268] transition-all">
-                   <Download className="w-4 h-4" /> Download Table
+                 <div className="relative">
+                   <select 
+                     value={statusFilter}
+                     onChange={(e) => setStatusFilter(e.target.value)}
+                     className="appearance-none flex items-center justify-between gap-8 px-4 py-3 min-w-[160px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
+                   >
+                     <option value="Semua Status">Semua Status</option>
+                     <option value="Aktif">Aktif</option>
+                     <option value="Warning">Warning</option>
+                     <option value="Nonaktif">Nonaktif</option>
+                   </select>
+                   <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                 </div>
+                 <button  
+                  onClick={() => handleDownloadPDF(
+                    "Daftar Pelanggan Terdaftar BIEON", 
+                    ["User ID", "Nama", "Username", "Email", "Status", "BIEON", "Devices", "Teknisi"], 
+                    filteredCustomers.map(c => [c.id, c.name, c.username, c.email, c.status, c.bieon, c.devices, c.technician]), 
+                    "Daftar_Pelanggan"
+                  )}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white rounded-xl text-sm font-semibold shadow-sm hover:bg-[#008268] transition-all"
+                 >
+                   <Download className="w-4 h-4" /> Download
                  </button>
                </div>
              </div>
@@ -469,15 +537,16 @@ export default function SuperAdminDashboard({ onNavigate }) {
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-gray-50">
-                    {customers.map((cust) => (
-                      <tr key={cust.id} className="hover:bg-[#F2F8F5]/30 transition-colors group">
-                        <td className="px-6 py-4 text-xs font-semibold text-[#009b7c]">{cust.id}</td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-semibold text-gray-900 mb-1">{cust.name}</div>
-                            <div className="text-xs text-gray-500">{cust.username}</div>
-                          </div>
-                        </td>
+                    {filteredCustomers.length > 0 ? (
+                      filteredCustomers.map((cust) => (
+                        <tr key={cust.id} className="hover:bg-[#F2F8F5]/30 transition-colors group">
+                          <td className="px-6 py-4 text-xs font-semibold text-[#009b7c]">{cust.id}</td>
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="text-sm font-semibold text-gray-900 mb-1">{cust.name}</div>
+                              <div className="text-xs text-gray-500">{cust.username}</div>
+                            </div>
+                          </td>
                         <td className="px-6 py-4 text-sm text-gray-600">{cust.email}</td>
                         <td className="px-6 py-4 text-center">
                            <div className="flex justify-center">
@@ -500,20 +569,36 @@ export default function SuperAdminDashboard({ onNavigate }) {
                         <td className="px-6 py-4 text-sm text-gray-600">{cust.technician}</td>
                         <td className="px-6 py-4 text-center">
                           <button 
-                            onClick={() => onNavigate && onNavigate('admin-client-detail')}
+                            onClick={() => {
+                                if (onNavigate) {
+                                  onNavigate('admin-pelanggan');
+                                  setTimeout(() => {
+                                    window.dispatchEvent(new CustomEvent('openHomeownerDetail', { detail: cust.name }));
+                                  }, 100);
+                                }
+                            }}
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
                           >
                              <Eye className="w-4 h-4" /> Detail
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="px-6 py-12 text-center text-gray-500 text-sm font-medium">
+                        Tidak ada pelanggan yang cocok dengan pencarian Anda.
+                      </td>
+                    </tr>
+                  )}
                  </tbody>
                </table>
              </div>
 
               <div className="p-10 bg-gray-50/50 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Menampilkan 6 dari 6 Pelanggan</span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  Menampilkan {filteredCustomers.length} dari {customers.length} Pelanggan
+                </span>
                 <div className="flex items-center gap-3">
                   <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Previous</button>
                   <button className="w-12 h-12 bg-[#009b7c] text-white rounded-2xl text-[10px] font-black shadow-lg shadow-emerald-100 flex items-center justify-center">1</button>

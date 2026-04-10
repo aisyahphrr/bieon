@@ -14,12 +14,20 @@ import {
   ChevronRight,
   User,
   LogOut,
-  Settings
+  Settings,
+  X,
+  AlertTriangle,
+  Hourglass,
+  ArrowLeft,
+  Database
 } from 'lucide-react';
 
 export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Super Admin Dashboard" }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationsRead, setNotificationsRead] = useState(false);
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
@@ -36,18 +44,36 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-gray-900">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[55] lg:hidden animate-in fade-in duration-200"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar - Green Aesthetic Theme */}
       <aside
-        className={`${sidebarExpanded ? 'w-64' : 'w-20'} bg-[#009b7c] border-r border-white/10 shadow-2xl shadow-emerald-900/20 transition-all duration-300 fixed left-0 top-0 h-screen z-50 flex flex-col text-white`}
+        className={`fixed left-0 top-0 h-screen z-[60] flex flex-col text-white bg-[#009b7c] border-r border-white/10 shadow-2xl transition-all duration-300 
+          ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'} 
+          ${sidebarExpanded ? 'lg:w-64' : 'lg:w-20'}
+        `}
       >
         {/* Sidebar Header */}
-        <div className="h-[72px] px-6 flex items-center justify-between border-b border-white/10">
-          {sidebarExpanded && <img src="/logo_bieon.png" alt="BIEON" className="h-8 object-contain brightness-0 invert" />}
+        <div className="h-[72px] px-6 flex items-center justify-between border-b border-white/10 shrink-0">
+          <img src="/logo_bieon.png" alt="BIEON" className={`h-8 object-contain brightness-0 invert transition-all duration-300 ${sidebarExpanded || isMobileMenuOpen ? 'opacity-100' : 'opacity-0 hidden lg:block lg:w-0'}`} />
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className="p-2 hover:bg-white/10 rounded-xl transition-all text-white/70 hover:text-white"
+            className="hidden lg:flex p-2 hover:bg-white/10 rounded-xl transition-all text-white/70 hover:text-white"
           >
             <Menu className="w-5 h-5" />
+          </button>
+          {/* Mobile close button inside sidebar */}
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="lg:hidden p-2 hover:bg-white/10 rounded-xl transition-all text-white"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -58,15 +84,18 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
             return (
               <button
                 key={item.name}
-                onClick={() => handleNavigate(item.id)}
-                className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center px-0'} py-3.5 rounded-2xl transition-all group relative overflow-hidden ${isActive
+                onClick={() => {
+                  handleNavigate(item.id);
+                  if(window.innerWidth < 1024) setIsMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center px-0'} py-3.5 rounded-2xl transition-all group relative overflow-hidden ${isActive
                     ? 'bg-white/20 text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-white/20 backdrop-blur-md'
                     : 'hover:bg-white/10 text-white/70 hover:text-white'
                   }`}
               >
                 <item.icon className={`w-5 h-5 flex-shrink-0 transition-all ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
-                {sidebarExpanded && (
-                  <span className={`ml-4 text-[13px] tracking-wide ${isActive ? 'font-bold' : 'font-medium'}`}>{item.name}</span>
+                {(sidebarExpanded || isMobileMenuOpen) && (
+                  <span className={`ml-4 text-[13px] tracking-wide ${isActive ? 'font-bold' : 'font-medium'} whitespace-nowrap`}>{item.name}</span>
                 )}
               </button>
             );
@@ -74,29 +103,113 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 shrink-0">
           <button
             onClick={() => handleNavigate('login')}
-            className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center'} py-3 rounded-2xl hover:bg-white/10 text-white/70 transition-all group font-medium`}
+            className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center'} py-3 rounded-2xl hover:bg-white/10 text-white/70 transition-all group font-medium`}
           >
             <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 group-hover:text-red-300" />
-            {sidebarExpanded && <span className="ml-4 text-sm group-hover:text-red-300">Logout</span>}
+            {(sidebarExpanded || isMobileMenuOpen) && <span className="ml-4 text-sm group-hover:text-red-300 whitespace-nowrap">Logout</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className={`${sidebarExpanded ? 'ml-64 w-[calc(100%-16rem)]' : 'ml-20 w-[calc(100%-5rem)]'} flex-1 min-w-0 flex flex-col transition-all duration-300 bg-[#F8FAFC]`}>
+      <div className={`flex-1 min-w-0 flex flex-col transition-all duration-300 bg-[#F8FAFC] w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
         {/* Top Header - Premium Green Style */}
         <header className="h-[72px] bg-[#009b7c] text-white border-b border-white/10 sticky top-0 z-40 flex items-center shadow-md shadow-emerald-900/10 backdrop-blur-md">
-          <div className="w-full max-w-[1900px] mx-auto px-8 flex items-center justify-between">
-            <h1 className="text-xl font-bold tracking-tight truncate">{title}</h1>
-
-            <div className="flex items-center gap-5">
-              <button className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5">
-                <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-[#009b7c] rounded-full animate-pulse"></span>
+          <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div className="flex items-center gap-3 md:gap-4">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden p-2 hover:bg-white/10 rounded-xl transition-all text-white/90"
+              >
+                <Menu className="w-6 h-6" />
               </button>
+              <h1 className="text-lg md:text-xl font-bold tracking-tight truncate max-w-[200px] sm:max-w-xs">{title}</h1>
+            </div>
+
+            <div className="flex items-center gap-3 sm:gap-5">
+              <div className="relative z-50">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5 hidden sm:block"
+                >
+                  <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
+                  {!notificationsRead && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-[#009b7c] rounded-full animate-pulse"></span>}
+                </button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 mt-3 w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-50 text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-50 mb-2">
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                          <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <Bell className="w-5 h-5 text-[#009b7c]" />
+                        <h3 className="font-bold text-gray-900">Notifikasi & Alert</h3>
+                      </div>
+                      <button 
+                        onClick={() => setNotificationsRead(true)}
+                        className={`text-xs font-bold ${notificationsRead ? 'text-gray-400 cursor-not-allowed' : 'text-[#009b7c] hover:underline'}`}
+                        disabled={notificationsRead}
+                      >
+                        Tandai semua dibaca
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-2 max-h-[60vh] overflow-y-auto px-2 pb-2 custom-scrollbar">
+                      {/* Card 1: SLA Violation */}
+                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-red-50/50 border-red-100 border-l-4 border-l-red-500 hover:bg-red-50/80'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-red-100'}`}>
+                          <AlertTriangle className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-red-600'}`} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900 mb-1">Pelanggaran SLA: Teknisi Daffa</h4>
+                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Teknisi Daffa telah melewati batas SLA perbaikan ({'>'} 48 Jam) untuk tiket TCK-0085 (Bpk. Andi). Segera lakukan eskalasi atau alihkan penugasan!</p>
+                          <p className="text-[10px] font-bold text-gray-400">10 Menit yang lalu</p>
+                        </div>
+                      </div>
+                      
+                      {/* Card 2: Delete confirmation */}
+                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-amber-50/50 border-amber-100 border-l-4 border-l-amber-500 hover:bg-amber-50/80'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-amber-100'}`}>
+                          <Hourglass className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-amber-600'}`} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900 mb-1">Menunggu Konfirmasi Hapus Akun</h4>
+                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Tindakan hapus permanen untuk akun Homeowner Bpk. Rudi (USR-088) telah diteruskan. Sistem sedang menunggu konfirmasi persetujuan dari email Project Owner.</p>
+                          <p className="text-[10px] font-bold text-gray-400">30 Menit yang lalu</p>
+                        </div>
+                      </div>
+
+                      {/* Card 3: New client */}
+                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-blue-50/50 border-blue-100 border-l-4 border-l-blue-500 hover:bg-blue-50/80'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-blue-100'}`}>
+                          <User className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-blue-600'}`} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900 mb-1">Klien Baru Terdaftar</h4>
+                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Klien baru (Ibu Sarah - Perum Mutiara) telah berhasil melakukan setup Hub Node dan menyetujui dokumen Terms & Conditions BIEON.</p>
+                          <p className="text-[10px] font-bold text-gray-400">2 Jam yang lalu</p>
+                        </div>
+                      </div>
+
+                      {/* Card 4: System update */}
+                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-[#009b7c]/5 border-emerald-100 border-l-4 border-l-[#009b7c] hover:bg-[#009b7c]/10'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-emerald-100'}`}>
+                          <Database className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-[#009b7c]'}`} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900 mb-1">OTA Update Berhasil</h4>
+                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Pembaruan perangkat lunak (Over-The-Air Update) versi 2.1 untuk seluruh Hub Node di regional wilayah Bogor telah berhasil diterapkan tanpa kendala.</p>
+                          <p className="text-[10px] font-bold text-gray-400">Kemarin, 23:30</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="relative z-50">
                 <button
@@ -133,7 +246,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         </header>
 
         {/* Page Content */}
-        <main className="p-8">
+        <main className="p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-hidden">
           {children}
         </main>
       </div>
