@@ -7,6 +7,7 @@
     "microservices/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present"
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspace=@bieon/frontend"
   }
 }
