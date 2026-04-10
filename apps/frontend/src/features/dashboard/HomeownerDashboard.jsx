@@ -382,15 +382,14 @@ export function HomeownerDashboard({ onNavigate }) {
     ],
   };
 
-  // Sensor data per room
   const roomSensors = {
     all: {
       comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
       waterQuality: {
-        status: 'drinkable', // drinkable, usable, unsafe
+        status: 'drinkable',
         ph: 7.2,
-        turbidity: 2.1, // NTU
-        tds: 78, // ppm
+        turbidity: 2.1,
+        tds: 78,
         temp: 24
       },
       security: [
@@ -398,21 +397,21 @@ export function HomeownerDashboard({ onNavigate }) {
         { type: 'Door Sensor - Garage', status: 'Closed', room: 'Garage' },
       ]
     },
-    r1: { // Living Room - Kenyamanan + Keamanan
+    r1: {
       comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
       security: [
         { type: 'Motion Sensor', status: 'Active', room: 'Bedroom' },
         { type: 'Door Sensor', status: 'Closed', room: 'Living Room' },
       ]
     },
-    r2: { // Bedroom - Kenyamanan Only
+    r2: {
       comfort: { temp: 26, humidity: 68, comfortLevel: 82 }
     },
-    r3: { // Kitchen - Security + Water Quality
+    r3: {
       waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
       security: []
     },
-    r4: { // Garage - Security Only
+    r4: {
       security: [
         { type: 'Door Sensor', status: 'Closed', room: 'Terrace' },
         { type: 'Door Sensor', status: 'Closed', room: 'Garage' },
@@ -423,7 +422,6 @@ export function HomeownerDashboard({ onNavigate }) {
   const currentDevices = devicesPerRoom[selectedRoom] || devicesPerRoom.all;
   const currentSensors = roomSensors[selectedRoom] || roomSensors.all;
 
-  // Hourly data (real-time updates every hour)
   const dailyData = [
     { time: '00:00', kwh: 0.245, cost: 2450 },
     { time: '01:00', kwh: 0.198, cost: 1980 },
@@ -444,7 +442,6 @@ export function HomeownerDashboard({ onNavigate }) {
     { time: '16:00', kwh: 0.534, cost: 5340 },
   ];
 
-  // Monthly data (12 months, current month shows accumulation until today)
   const monthlyData = [
     { month: 'Jan', kwh: 100, cost: 100000 },
     { month: 'Feb', kwh: 90, cost: 90000 },
@@ -467,11 +464,6 @@ export function HomeownerDashboard({ onNavigate }) {
     { id: 5, title: 'Peringatan Token PLN', desc: 'Sisa token PLN hampir habis (Rp 50.000)', type: 'warning', time: '1 hour ago', icon: Zap },
     { id: 6, title: 'Kualitas Udara Buruk', desc: 'CO₂ melebihi batas normal (1200 ppm)', type: 'warning', time: '2 hours ago', icon: Wind },
   ];
-
-  const currentPowerUsage = 947; // Watt realtime
-  const dailyTotal = dailyData.reduce((acc, curr) => acc + curr.kwh, 0);
-  const dailyCost = dailyData.reduce((acc, curr) => acc + curr.cost, 0);
-  const avgPerHour = dailyTotal / dailyData.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/20 to-teal-50/20">
@@ -517,7 +509,7 @@ export function HomeownerDashboard({ onNavigate }) {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
                     <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
                     <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
-                    <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
+                    <button onClick={() => onNavigate && onNavigate('teknisi')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
                     <button onClick={() => onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
                   </div>
                 )}
@@ -528,7 +520,6 @@ export function HomeownerDashboard({ onNavigate }) {
       </header>
 
       <div className="max-w-[1900px] mx-auto px-8 py-8">
-        {/* Room Selector */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <Home className="w-5 h-5 text-emerald-600" />
@@ -551,9 +542,7 @@ export function HomeownerDashboard({ onNavigate }) {
         </div>
 
         <div className="grid grid-cols-12 gap-8">
-          {/* Left Side - Main Content */}
           <div className="col-span-9 space-y-8">
-            {/* Kenyamanan & Kesehatan */}
             {(currentSensors.comfort || (currentSensors.security && currentSensors.security.length > 0)) && (
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -570,10 +559,8 @@ export function HomeownerDashboard({ onNavigate }) {
                     gridAutoColumns: 'minmax(250px, 1fr)'
                   }}
                 >
-                  {/* COMFORT SECTION */}
                   {currentSensors.comfort && (
                     <>
-                      {/* KELEMBAPAN - Row 1, Col 1 */}
                       {currentSensors.comfort.humidity !== null && (
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                           <div className="flex items-center justify-between mb-2">
@@ -592,7 +579,6 @@ export function HomeownerDashboard({ onNavigate }) {
                         </div>
                       )}
 
-                      {/* SUHU - Row 2, Col 1 */}
                       {currentSensors.comfort.temp && (
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                           <div className="flex items-center justify-between mb-2">
@@ -611,14 +597,13 @@ export function HomeownerDashboard({ onNavigate }) {
                         </div>
                       )}
 
-                      {/* KENYAMANAN BIG CARD - Row Span 2, Col 2 */}
                       <div className="row-span-2 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
                         <div className="relative flex flex-col h-full">
                           <div className="mb-2">
                             <h3 className="text-2xl font-bold mb-1">Kenyamanan</h3>
-                            <p className="text-emerald-100 text-xs mb-1">Berdasarkan: Suhu + Kelembapan</p>
-                            <p className="text-emerald-100 text-[10px]">(Permenkes No. 2 Tahun 2023)</p>
+                            <p className="text-cyan-100 text-sm">Berdasarkan: suhu & kelembapan</p>
+                            <p className="text-emerald-100 text-xs mb-1">(Permenkes No. 2 Tahun 2023)</p>
                           </div>
                           <div className="flex-1 flex flex-col justify-center items-center text-center mt-4 mb-4">
                             <div className="text-2xl font-bold mb-3 flex items-center gap-2">
@@ -642,10 +627,8 @@ export function HomeownerDashboard({ onNavigate }) {
                     </>
                   )}
 
-                  {/* SECURITY SECTION */}
                   {currentSensors.security && currentSensors.security.length > 0 && (
                     <>
-                      {/* MOTION SENSORS */}
                       {currentSensors.security.filter(s => s.type.includes('Motion')).map((sensor, idx) => (
                         <div key={'motion' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                           <div className="flex items-center justify-between mb-2">
@@ -662,7 +645,6 @@ export function HomeownerDashboard({ onNavigate }) {
                         </div>
                       ))}
 
-                      {/* DOOR SENSORS */}
                       {currentSensors.security.filter(s => s.type.includes('Door')).map((sensor, idx) => (
                         <div key={'door' + idx} className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                           <div className="flex items-center justify-between mb-2">
@@ -679,7 +661,6 @@ export function HomeownerDashboard({ onNavigate }) {
                         </div>
                       ))}
 
-                      {/* KEAMANAN BIG CARD - Always after small cards */}
                       <div className="row-span-2 bg-gradient-to-br flex flex-col from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
                         <div className="relative flex flex-col h-full">
@@ -715,60 +696,17 @@ export function HomeownerDashboard({ onNavigate }) {
               </div>
             )}
 
-            {/* WATER QUALITY - Kitchen Only - Big Card + Small Metrics */}
             {currentSensors.waterQuality && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-gray-900">Kesehatan Air</h2>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Kesehatan Air</h2>
 
                 <div className="grid grid-cols-12 gap-4">
-                  {/* Big Card - Water Status */}
-                  <div className="col-span-6 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
-                    <div className="relative h-full flex flex-col">
-                      <div className="mb-6">
-                        <h3 className="text-3xl font-bold mb-2 flex items-center gap-3">
-                          <Beaker className="w-8 h-8" />
-                          Status Air
-                        </h3>
-                        <p className="text-cyan-100 text-sm">Berdasarkan: pH, Turbidity, TDS, Suhu</p>
-                        <p className="text-emerald-100 text-[10px]">(Permenkes No. 2 Tahun 2023)</p>
-                      </div>
-                      <div className="flex-1 flex flex-col justify-center items-center text-center">
-                        <div className="text-7xl font-bold mb-4">
-                          {currentSensors.waterQuality.status === 'drinkable' ? '💧' : currentSensors.waterQuality.status === 'usable' ? '🚿' : '⚠️'}
-                        </div>
-                        <div className="text-2xl font-bold mb-2">
-                          {currentSensors.waterQuality.status === 'drinkable' ? 'Level 1' : currentSensors.waterQuality.status === 'usable' ? 'Level 2' : 'Level 3'}
-                        </div>
-                        <div className="text-lg font-semibold">
-                          {currentSensors.waterQuality.status === 'drinkable'
-                            ? '✓ Layak Minum'
-                            : currentSensors.waterQuality.status === 'usable'
-                              ? '✓ Layak Pakai'
-                              : '✗ Tidak Layak'}
-                        </div>
-                      </div>
-                      <div className={`mt-6 px-4 py-3 rounded-xl text-center font-semibold ${currentSensors.waterQuality.status === 'drinkable'
-                        ? 'bg-emerald-500/30 text-white'
-                        : currentSensors.waterQuality.status === 'usable'
-                          ? 'bg-blue-500/30 text-white'
-                          : 'bg-red-500/30 text-white'
-                        }`}>
-                        {currentSensors.waterQuality.status === 'drinkable'
-                          ? 'Air aman untuk diminum langsung'
-                          : currentSensors.waterQuality.status === 'usable'
-                            ? 'Air aman untuk keperluan harian'
-                            : 'Segera periksa sistem filtrasi air'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Small Cards Grid - 4 Metrics (2x2) */}
+                  {/* Small Cards Grid - 4 Metrics (2x2) - Positioned LEFT */}
                   <div className="col-span-6 grid grid-cols-2 gap-4">
                     {/* pH */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-bold text-gray-900">Tingkat Keasaman Air (pH)</span>
+                        <span className="text-sm font-bold text-gray-900">Tingkat Keasaman Air (Ph)</span>
                         <Beaker className="w-5 h-5 text-cyan-600" />
                       </div>
                       <div className="mb-3">
@@ -829,11 +767,52 @@ export function HomeownerDashboard({ onNavigate }) {
                       </div>
                     </div>
                   </div>
+
+                  {/* Big Card - Water Status - Positioned RIGHT */}
+                  <div className="col-span-6 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+                    <div className="relative h-full flex flex-col">
+                      <div className="mb-6">
+                        <h3 className="text-3xl font-bold mb-2 flex items-center gap-3">
+                          <Beaker className="w-8 h-8" />
+                          Status Air
+                        </h3>
+                        <p className="text-cyan-100 text-sm">Berdasarkan: pH, Turbidity, TDS, Suhu</p>
+                        <p className="text-cyan-100 text-sm">(Permenkes No. 2 Tahun 2023)</p>
+                      </div>
+                      <div className="flex-1 flex flex-col justify-center items-center text-center">
+                        <div className="text-7xl font-bold mb-4">
+                          {currentSensors.waterQuality.status === 'drinkable' ? '💧' : currentSensors.waterQuality.status === 'usable' ? '🚿' : '⚠️'}
+                        </div>
+                        <div className="text-2xl font-bold mb-2">
+                          {currentSensors.waterQuality.status === 'drinkable' ? 'Level 1' : currentSensors.waterQuality.status === 'usable' ? 'Level 2' : 'Level 3'}
+                        </div>
+                        <div className="text-lg font-semibold">
+                          {currentSensors.waterQuality.status === 'drinkable'
+                            ? '✓ Layak Minum'
+                            : currentSensors.waterQuality.status === 'usable'
+                              ? '✓ Layak Pakai'
+                              : '✗ Tidak Layak'}
+                        </div>
+                      </div>
+                      <div className={`mt-6 px-4 py-3 rounded-xl text-center font-semibold ${currentSensors.waterQuality.status === 'drinkable'
+                        ? 'bg-emerald-500/30 text-white'
+                        : currentSensors.waterQuality.status === 'usable'
+                          ? 'bg-blue-500/30 text-white'
+                          : 'bg-red-500/30 text-white'
+                        }`}>
+                        {currentSensors.waterQuality.status === 'drinkable'
+                          ? 'Air aman untuk diminum langsung'
+                          : currentSensors.waterQuality.status === 'usable'
+                            ? 'Air aman untuk keperluan harian'
+                            : 'Segera periksa sistem filtrasi air'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Energy Monitoring Charts */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -854,7 +833,6 @@ export function HomeownerDashboard({ onNavigate }) {
                 </button>
               </div>
 
-              {/* Status Bar */}
               <div className="grid grid-cols-4 gap-4 mb-8 p-6 bg-[#ebfbf5] rounded-2xl border border-[#bbf7d0]">
                 <div className="text-center px-4 border-r border-[#86efac]/30 last:border-0 relative">
                   <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
@@ -886,7 +864,6 @@ export function HomeownerDashboard({ onNavigate }) {
                 </div>
               </div>
 
-              {/* Tab Switcher */}
               <div className="flex gap-2 mb-8 bg-gray-50/50 p-1.5 rounded-[16px] border border-gray-100">
                 <button
                   onClick={() => setChartType('daily')}
@@ -906,7 +883,6 @@ export function HomeownerDashboard({ onNavigate }) {
                 </button>
               </div>
 
-              {/* Chart */}
               <div className="h-[400px]">
                 {chartType === 'daily' ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -986,7 +962,6 @@ export function HomeownerDashboard({ onNavigate }) {
                           return `${value} kWh`;
                         }}
                       />
-                      {/* Legend dihapus sesuai permintaan */}
                       <Line
                         type="monotone"
                         dataKey="kwh"
@@ -1003,9 +978,7 @@ export function HomeownerDashboard({ onNavigate }) {
             </div>
           </div>
 
-          {/* Right Side - Notifications & Activity */}
           <div className="col-span-3 space-y-6">
-            {/* Notifications */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
@@ -1047,7 +1020,6 @@ export function HomeownerDashboard({ onNavigate }) {
               </div>
             </div>
 
-            {/* Recent Activity */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-emerald-600" />
@@ -1076,11 +1048,10 @@ export function HomeownerDashboard({ onNavigate }) {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Modals */}
-      <DataModal isOpen={showDataModal} onClose={() => setShowDataModal(false)} chartType={chartType} />
-      <ComplaintModal isOpen={showComplaintModal} onClose={() => setShowComplaintModal(false)} />
+        <DataModal isOpen={showDataModal} onClose={() => setShowDataModal(false)} chartType={chartType} />
+        <ComplaintModal isOpen={showComplaintModal} onClose={() => setShowComplaintModal(false)} />
+      </div>
     </div>
   );
 }

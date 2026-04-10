@@ -27,12 +27,9 @@ import {
     LineChart, Line, PieChart, Pie, Cell, Legend,
     XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
+import { SuperAdminLayout } from './SuperAdminLayout';
 
 export default function AdminTariff({ onNavigate }) {
-    // --- Admin Layout States ---
-    const [sidebarExpanded, setSidebarExpanded] = useState(true);
-    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-    const activeMenu = 'PLN Listrik';
 
     const golonganOptions = [
         'R1 - 450 VA (Subsidi)',
@@ -288,66 +285,9 @@ export default function AdminTariff({ onNavigate }) {
     const activeData = categoryStats[activeSlide];
 
     return (
-        <div className="flex min-h-screen bg-[#F9FAFB] font-sans text-[#111827]">
-            {/* Sidebar */}
-            <aside className={`${sidebarExpanded ? 'w-56' : 'w-16'} bg-[#009b7c] text-white transition-all duration-300 fixed left-0 top-0 h-screen z-50 flex flex-col`}>
-                <div className="p-4 flex items-center justify-between border-b border-white/10">
-                    {sidebarExpanded && <img src="/logo_bieon.png" alt="BIEON" className="h-8 object-contain" />}
-                    <button onClick={() => setSidebarExpanded(!sidebarExpanded)} className="p-1 hover:bg-white/10 rounded-lg transition-colors mx-auto lg:mx-0">
-                        <Menu className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <nav className="flex-1 py-10 px-3 space-y-4">
-                    {[
-                        { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
-                        { name: 'Homeowner', icon: Users, id: 'admin' },
-                        { name: 'Teknisi', icon: User, id: 'admin' },
-                        { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
-                        { name: 'PLN Listrik', icon: Zap, id: 'admin-tariff' },
-                        { name: 'Riwayat', icon: History, id: 'admin-history' },
-                    ].map((item) => (
-                        <button
-                            key={item.name}
-                            onClick={() => { if (onNavigate) onNavigate(item.id); }}
-                            className={`w-full flex items-center ${sidebarExpanded ? 'px-4' : 'justify-center px-0'} py-3 rounded-2xl transition-all group ${activeMenu === item.name ? 'bg-white text-[#009b7c] shadow-lg' : 'hover:bg-white/10 text-white'}`}
-                        >
-                            <item.icon className={`w-5 h-5 flex-shrink-0 ${activeMenu === item.name ? 'text-[#009b7c]' : 'text-white'}`} />
-                            {sidebarExpanded && (
-                                <span className={`ml-4 text-xs tracking-wide ${activeMenu === item.name ? 'font-bold' : 'font-medium'}`}>{item.name}</span>
-                            )}
-                        </button>
-                    ))}
-                </nav>
-            </aside>
-
-            {/* Main Content */}
-            <div className={`${sidebarExpanded ? 'md:ml-56' : 'md:ml-16'} flex-1 flex flex-col transition-all duration-300 min-w-0`}>
-                {/* Top Header */}
-                <header className="bg-[#009b7c] text-white px-6 md:px-10 py-5 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-                    <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">Manajemen Tarif Listrik</h1>
-                    <div className="flex items-center gap-3 md:gap-6">
-                        <button className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
-                            <Bell className="w-5 h-5 md:w-6 md:h-6" />
-                            <span className="absolute top-2 right-2 w-4 h-4 md:w-5 md:h-5 bg-red-500 border-2 border-[#009b7c] rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-bold">3</span>
-                        </button>
-                        <div className="relative">
-                            <button onClick={() => setShowRoleDropdown(!showRoleDropdown)} className="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-1.5 pr-6 rounded-2xl transition-all border border-white/5">
-                                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center font-bold shadow-sm overflow-hidden">
-                                    <ShieldCheck className="w-6 h-6 text-white" />
-                                </div>
-                                <div className="text-left hidden md:block">
-                                    <div className="text-sm font-bold leading-none mb-1">Super Admin</div>
-                                    <div className="text-[10px] font-semibold opacity-60 leading-none">admin@bieon.id</div>
-                                </div>
-                                <ChevronDown className={`w-4 h-4 opacity-50 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-                        </div>
-                    </div>
-                </header>
-
-                {/* Content Workspace */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8">
+        <SuperAdminLayout activeMenu="PLN Listrik" onNavigate={onNavigate} title="Manajemen Tarif Listrik">
+            {/* Content Workspace */}
+            <div className="flex-1 w-full max-w-[1900px] mx-auto pb-10">
 
                     {/* CAROUSEL TABS (Pills) */}
                     <div className="mb-6 flex justify-center w-full">
@@ -813,7 +753,6 @@ export default function AdminTariff({ onNavigate }) {
 
                     </div>
                 </div>
-            </div>
 
             <style>{`
                 input[type=number]::-webkit-inner-spin-button, 
@@ -829,6 +768,6 @@ export default function AdminTariff({ onNavigate }) {
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 999px; }
             `}</style>
-        </div>
+        </SuperAdminLayout>
     );
 }
