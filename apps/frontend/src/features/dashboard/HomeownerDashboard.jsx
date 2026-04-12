@@ -43,6 +43,143 @@ import {
 } from 'recharts';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
+import { StatusBadge } from '../../shared/StatusBadge';
+
+// ─────── Static mock data (outside component to avoid re-creation per render) ───────
+
+const ROOMS = [
+  { id: 'all', name: 'All Room', devices: 15 },
+  { id: 'r1',  name: 'R1 - Living Room', devices: 6 },
+  { id: 'r2',  name: 'R2 - Bedroom', devices: 4 },
+  { id: 'r3',  name: 'R3 - Kitchen', devices: 4 },
+  { id: 'r4',  name: 'R4 - Garage', devices: 3 },
+];
+
+const DEVICES_PER_ROOM = {
+  all: [
+    { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
+    { name: 'CCTV Depan', room: 'Garage', status: 'ON', power: 15, type: 'security' },
+    { name: 'Lampu Tamu 1', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
+    { name: 'Lampu Tamu 2', room: 'Living Room', status: 'OFF', power: 0, type: 'lighting' },
+    { name: 'AC Kamar', room: 'Bedroom', status: 'ON', power: 750, type: 'comfort' },
+    { name: 'Kipas Produksi', room: 'Garage', status: 'OFF', power: 0, type: 'comfort' },
+    { name: 'Lampu Kamar', room: 'Bedroom', status: 'ON', power: 20, type: 'lighting' },
+    { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
+    { name: 'Door Sensor Depan', room: 'Living Room', status: 'ON', power: 2, type: 'security' },
+    { name: 'Wi-Fi Router', room: 'Living Room', status: 'ON', power: 12, type: 'network' },
+    { name: 'Motion Sensor', room: 'Bedroom', status: 'ON', power: 3, type: 'security' },
+    { name: 'Lampu Terrace', room: 'Terrace', status: 'ON', power: 15, type: 'lighting' },
+    { name: 'Smart Plug Terrace', room: 'Terrace', status: 'ON', power: 50, type: 'appliance' },
+    { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
+  ],
+  r1: [
+    { name: 'AC', room: 'Living Room', status: 'ON', power: 750, type: 'comfort' },
+    { name: 'Lampu', room: 'Living Room', status: 'ON', power: 20, type: 'lighting' },
+    { name: 'Lampu 2', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
+    { name: 'Motion Sensor', room: 'Living Room', status: 'OFF', power: 0, type: 'security' },
+  ],
+  r2: [
+    { name: 'AC Kamar', room: 'Bedroom', status: 'ON', power: 750, type: 'comfort' },
+    { name: 'Lampu Kamar', room: 'Bedroom', status: 'ON', power: 20, type: 'lighting' },
+    { name: 'Motion Sensor', room: 'Bedroom', status: 'ON', power: 3, type: 'security' },
+    { name: 'Kipas Angin', room: 'Bedroom', status: 'OFF', power: 0, type: 'comfort' },
+  ],
+  r3: [
+    { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
+    { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
+    { name: 'Lampu Dapur', room: 'Kitchen', status: 'ON', power: 30, type: 'lighting' },
+  ],
+  r4: [
+    { name: 'CCTV Depan', room: 'Garage', status: 'ON', power: 15, type: 'security' },
+    { name: 'Kipas Produksi', room: 'Garage', status: 'OFF', power: 0, type: 'comfort' },
+    { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
+  ],
+};
+
+const ROOM_SENSORS = {
+  all: {
+    comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
+    waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
+    security: [
+      { type: 'Door Sensor - Terrace', status: 'Closed', room: 'Terrace' },
+      { type: 'Door Sensor - Garage', status: 'Closed', room: 'Garage' },
+    ],
+  },
+  r1: {
+    comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
+    security: [
+      { type: 'Motion Sensor', status: 'Active', room: 'Bedroom' },
+      { type: 'Door Sensor', status: 'Closed', room: 'Living Room' },
+    ],
+  },
+  r2: { comfort: { temp: 26, humidity: 68, comfortLevel: 82 } },
+  r3: {
+    waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
+    security: [],
+  },
+  r4: {
+    security: [
+      { type: 'Door Sensor', status: 'Closed', room: 'Terrace' },
+      { type: 'Door Sensor', status: 'Closed', room: 'Garage' },
+    ],
+  },
+};
+
+const DAILY_ENERGY_DATA = [
+  { time: '00:00', kwh: 0.245, cost: 2450 },
+  { time: '01:00', kwh: 0.198, cost: 1980 },
+  { time: '02:00', kwh: 0.167, cost: 1670 },
+  { time: '03:00', kwh: 0.189, cost: 1890 },
+  { time: '04:00', kwh: 0.212, cost: 2120 },
+  { time: '05:00', kwh: 0.312, cost: 3120 },
+  { time: '06:00', kwh: 0.445, cost: 4450 },
+  { time: '07:00', kwh: 0.523, cost: 5230 },
+  { time: '08:00', kwh: 0.589, cost: 5890 },
+  { time: '09:00', kwh: 0.612, cost: 6120 },
+  { time: '10:00', kwh: 0.567, cost: 5670 },
+  { time: '11:00', kwh: 0.634, cost: 6340 },
+  { time: '12:00', kwh: 0.701, cost: 7010 },
+  { time: '13:00', kwh: 0.678, cost: 6780 },
+  { time: '14:00', kwh: 0.645, cost: 6450 },
+  { time: '15:00', kwh: 0.598, cost: 5980 },
+  { time: '16:00', kwh: 0.534, cost: 5340 },
+];
+
+const MONTHLY_ENERGY_DATA = [
+  { month: 'Jan', kwh: 100, cost: 100000 },
+  { month: 'Feb', kwh: 90, cost: 90000 },
+  { month: 'Mar', kwh: 95, cost: 95000 },
+  { month: 'Apr', kwh: 105, cost: 105000 },
+  { month: 'Mei', kwh: 130, cost: 130000 },
+  { month: 'Jun', kwh: 160, cost: 160000 },
+  { month: 'Jul', kwh: 180, cost: 180000 },
+  { month: 'Agt', kwh: 195, cost: 195000 },
+  { month: 'Sep', kwh: 205, cost: 205000 },
+  { month: 'Okt', kwh: 195, cost: 195000 },
+  { month: 'Nov', kwh: 210, cost: 210000 },
+  { month: 'Des', kwh: 230, cost: 230000 },
+];
+
+const NOTIFICATIONS = [
+  { id: 1, title: 'Motion Detected', desc: 'Gerakan terdeteksi di ruang tamu', type: 'security', time: '2 min ago', icon: Activity },
+  { id: 2, title: 'Suhu Tinggi - Kipas Auto ON', desc: 'Suhu ruang produksi 31°C, kipas otomatis menyala', type: 'auto', time: '5 min ago', icon: Fan },
+  { id: 3, title: 'Door Sensor Alert', desc: 'Pintu depan terbuka tanpa otoritas', type: 'security', time: '15 min ago', icon: Lock },
+  { id: 4, title: 'Peringatan Token PLN', desc: 'Sisa token PLN hampir habis (Rp 50.000)', type: 'warning', time: '1 hour ago', icon: Zap },
+  { id: 5, title: 'Kualitas Udara Buruk', desc: 'CO₂ melebihi batas normal (1200 ppm)', type: 'warning', time: '2 hours ago', icon: Wind },
+];
+
+function Toast({ message, type = 'success', onClose }) {
+  return (
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-top-4 duration-500">
+      <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-3 ${
+        type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-gray-800/90 border-gray-700 text-white'
+      }`}>
+        {type === 'success' && <CheckCircle2 className="w-5 h-5" />}
+        <span className="text-sm font-bold tracking-wide">{message}</span>
+      </div>
+    </div>
+  );
+}
 
 function ComplaintModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -51,19 +188,40 @@ function ComplaintModal({ isOpen, onClose }) {
     description: '',
     priority: 'medium'
   });
+  const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Pengaduan berhasil dikirim! Tim kami akan segera menindaklanjuti.');
-    onClose();
+    setSubmitted(true);
+    // Auto-close after 2 seconds
+    setTimeout(() => {
+      setSubmitted(false);
+      setFormData({ device: '', issue: '', description: '', priority: 'medium' });
+      onClose();
+    }, 2000);
   };
 
+  // Inline success feedback instead of alert()
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
+        <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
+          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Pengaduan Terkirim!</h3>
+          <p className="text-gray-500 text-sm">Tim kami akan segera menindaklanjuti pengaduan Anda.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-6 text-white">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 sm:px-8 py-4 sm:py-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <MessageSquare className="w-6 h-6" />
@@ -81,7 +239,7 @@ function ComplaintModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-8 overflow-y-auto flex-1">
           <div className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -237,9 +395,9 @@ function DataModal({ isOpen, onClose, chartType }) {
   const totalCost = data.reduce((acc, curr) => acc + curr.cost, 0);
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-6 text-white">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-4 sm:px-8 py-4 sm:py-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">{title}</h2>
@@ -258,26 +416,26 @@ function DataModal({ isOpen, onClose, chartType }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="mb-6 flex gap-3">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <div className="mb-4 sm:mb-6 flex gap-2 sm:gap-3 flex-wrap">
             <button
-              onClick={() => alert('Downloading PDF...')}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg"
+              onClick={() => triggerToast('Laporan PDF sedang dikumpulkan...')}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg text-sm sm:text-base"
             >
               <FileDown className="w-5 h-5" />
               Download PDF
             </button>
             <button
-              onClick={() => alert('Downloading Excel...')}
-              className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg"
+              onClick={() => triggerToast('Laporan Excel sedang diproses...')}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg text-sm sm:text-base"
             >
               <Download className="w-5 h-5" />
               Download Excel
             </button>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden">
-            <table className="w-full">
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[400px]">
               <thead>
                 <tr className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
                   <th className="px-6 py-4 text-left font-bold">
@@ -335,138 +493,22 @@ export function HomeownerDashboard({ onNavigate }) {
   const [showComplaintModal, setShowComplaintModal] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [toast, setToast] = useState(null);
 
-  const rooms = [
-    { id: 'all', name: 'All Room', devices: 15 },
-    { id: 'r1', name: 'R1 - Living Room', devices: 6 },
-    { id: 'r2', name: 'R2 - Bedroom', devices: 4 },
-    { id: 'r3', name: 'R3 - Kitchen', devices: 4 },
-    { id: 'r4', name: 'R4 - Garage', devices: 3 },
-  ];
-
-  const devicesPerRoom = {
-    all: [
-      { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
-      { name: 'CCTV Depan', room: 'Garage', status: 'ON', power: 15, type: 'security' },
-      { name: 'Lampu Tamu 1', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
-      { name: 'Lampu Tamu 2', room: 'Living Room', status: 'OFF', power: 0, type: 'lighting' },
-      { name: 'AC Kamar', room: 'Bedroom', status: 'ON', power: 750, type: 'comfort' },
-      { name: 'Kipas Produksi', room: 'Garage', status: 'OFF', power: 0, type: 'comfort' },
-      { name: 'Lampu Kamar', room: 'Bedroom', status: 'ON', power: 20, type: 'lighting' },
-      { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
-      { name: 'Door Sensor Depan', room: 'Living Room', status: 'ON', power: 2, type: 'security' },
-      { name: 'Wi-Fi Router', room: 'Living Room', status: 'ON', power: 12, type: 'network' },
-      { name: 'Motion Sensor', room: 'Bedroom', status: 'ON', power: 3, type: 'security' },
-      { name: 'Lampu Terrace', room: 'Terrace', status: 'ON', power: 15, type: 'lighting' },
-      { name: 'Smart Plug Terrace', room: 'Terrace', status: 'ON', power: 50, type: 'appliance' },
-      { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
-    ],
-    r1: [
-      { name: 'AC', room: 'Living Room', status: 'ON', power: 750, type: 'comfort' },
-      { name: 'Lampu', room: 'Living Room', status: 'ON', power: 20, type: 'lighting' },
-      { name: 'Lampu 2', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
-      { name: 'Motion Sensor', room: 'Living Room', status: 'OFF', power: 0, type: 'security' },
-    ],
-    r2: [
-      { name: 'AC Kamar', room: 'Bedroom', status: 'ON', power: 750, type: 'comfort' },
-      { name: 'Lampu Kamar', room: 'Bedroom', status: 'ON', power: 20, type: 'lighting' },
-      { name: 'Motion Sensor', room: 'Bedroom', status: 'ON', power: 3, type: 'security' },
-      { name: 'Kipas Angin', room: 'Bedroom', status: 'OFF', power: 0, type: 'comfort' },
-    ],
-    r3: [
-      { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
-      { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
-      { name: 'Lampu Dapur', room: 'Kitchen', status: 'ON', power: 30, type: 'lighting' },
-    ],
-    r4: [
-      { name: 'CCTV Depan', room: 'Garage', status: 'ON', power: 15, type: 'security' },
-      { name: 'Kipas Produksi', room: 'Garage', status: 'OFF', power: 0, type: 'comfort' },
-      { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
-    ],
+  const triggerToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
   };
 
-  const roomSensors = {
-    all: {
-      comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
-      waterQuality: {
-        status: 'drinkable',
-        ph: 7.2,
-        turbidity: 2.1,
-        tds: 78,
-        temp: 24
-      },
-      security: [
-        { type: 'Door Sensor - Terrace', status: 'Closed', room: 'Terrace' },
-        { type: 'Door Sensor - Garage', status: 'Closed', room: 'Garage' },
-      ]
-    },
-    r1: {
-      comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
-      security: [
-        { type: 'Motion Sensor', status: 'Active', room: 'Bedroom' },
-        { type: 'Door Sensor', status: 'Closed', room: 'Living Room' },
-      ]
-    },
-    r2: {
-      comfort: { temp: 26, humidity: 68, comfortLevel: 82 }
-    },
-    r3: {
-      waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
-      security: []
-    },
-    r4: {
-      security: [
-        { type: 'Door Sensor', status: 'Closed', room: 'Terrace' },
-        { type: 'Door Sensor', status: 'Closed', room: 'Garage' },
-      ]
-    },
-  };
+  // Derive current room data from static constants (no re-creation per render)
+  const rooms = ROOMS;
+  const currentDevices = DEVICES_PER_ROOM[selectedRoom] || DEVICES_PER_ROOM.all;
+  const currentSensors = ROOM_SENSORS[selectedRoom] || ROOM_SENSORS.all;
+  const dailyData = DAILY_ENERGY_DATA;
+  const monthlyData = MONTHLY_ENERGY_DATA;
+  const notifications = NOTIFICATIONS;
 
-  const currentDevices = devicesPerRoom[selectedRoom] || devicesPerRoom.all;
-  const currentSensors = roomSensors[selectedRoom] || roomSensors.all;
 
-  const dailyData = [
-    { time: '00:00', kwh: 0.245, cost: 2450 },
-    { time: '01:00', kwh: 0.198, cost: 1980 },
-    { time: '02:00', kwh: 0.167, cost: 1670 },
-    { time: '03:00', kwh: 0.189, cost: 1890 },
-    { time: '04:00', kwh: 0.212, cost: 2120 },
-    { time: '05:00', kwh: 0.312, cost: 3120 },
-    { time: '06:00', kwh: 0.445, cost: 4450 },
-    { time: '07:00', kwh: 0.523, cost: 5230 },
-    { time: '08:00', kwh: 0.589, cost: 5890 },
-    { time: '09:00', kwh: 0.612, cost: 6120 },
-    { time: '10:00', kwh: 0.567, cost: 5670 },
-    { time: '11:00', kwh: 0.634, cost: 6340 },
-    { time: '12:00', kwh: 0.701, cost: 7010 },
-    { time: '13:00', kwh: 0.678, cost: 6780 },
-    { time: '14:00', kwh: 0.645, cost: 6450 },
-    { time: '15:00', kwh: 0.598, cost: 5980 },
-    { time: '16:00', kwh: 0.534, cost: 5340 },
-  ];
-
-  const monthlyData = [
-    { month: 'Jan', kwh: 100, cost: 100000 },
-    { month: 'Feb', kwh: 90, cost: 90000 },
-    { month: 'Mar', kwh: 95, cost: 95000 },
-    { month: 'Apr', kwh: 105, cost: 105000 },
-    { month: 'Mei', kwh: 130, cost: 130000 },
-    { month: 'Jun', kwh: 160, cost: 160000 },
-    { month: 'Jul', kwh: 180, cost: 180000 },
-    { month: 'Agt', kwh: 195, cost: 195000 },
-    { month: 'Sep', kwh: 205, cost: 205000 },
-    { month: 'Okt', kwh: 195, cost: 195000 },
-    { month: 'Nov', kwh: 210, cost: 210000 },
-    { month: 'Des', kwh: 230, cost: 230000 },
-  ];
-
-  const notifications = [
-    { id: 1, title: 'Motion Detected', desc: 'Gerakan terdeteksi di ruang tamu', type: 'security', time: '2 min ago', icon: Activity },
-    { id: 2, title: 'Suhu Tinggi - Kipas Auto ON', desc: 'Suhu ruang produksi 31°C, kipas otomatis menyala', type: 'auto', time: '5 min ago', icon: Fan },
-    { id: 4, title: 'Door Sensor Alert', desc: 'Pintu depan terbuka tanpa otoritas', type: 'security', time: '15 min ago', icon: Lock },
-    { id: 5, title: 'Peringatan Token PLN', desc: 'Sisa token PLN hampir habis (Rp 50.000)', type: 'warning', time: '1 hour ago', icon: Zap },
-    { id: 6, title: 'Kualitas Udara Buruk', desc: 'CO₂ melebihi batas normal (1200 ppm)', type: 'warning', time: '2 hours ago', icon: Wind },
-  ];
 
   return (
     <HomeownerLayout 
@@ -474,18 +516,18 @@ export function HomeownerDashboard({ onNavigate }) {
       onNavigate={onNavigate}
       hideBottomNav={showComplaintModal || showDataModal}
     >
-      <div className="max-w-[1900px] mx-auto px-4 md:px-8 py-6 md:py-8">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
+      <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6 md:mb-8">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <Home className="w-5 h-5 text-emerald-600" />
             <h3 className="font-bold text-gray-900">Pilih Ruangan</h3>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
             {rooms.map((room) => (
               <button
                 key={room.id}
                 onClick={() => setSelectedRoom(room.id)}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${selectedRoom === room.id
+                className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all whitespace-nowrap text-sm sm:text-base ${selectedRoom === room.id
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
@@ -496,8 +538,8 @@ export function HomeownerDashboard({ onNavigate }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-9 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          <div className="lg:col-span-9 space-y-6 md:space-y-8">
             {(currentSensors.comfort || (currentSensors.security && currentSensors.security.length > 0)) && (
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -508,10 +550,10 @@ export function HomeownerDashboard({ onNavigate }) {
                       : 'Keamanan'}
                 </h2>
                 <div
-                  className="grid grid-flow-col gap-4 mb-6 overflow-x-auto pb-4"
+                  className="grid grid-flow-col gap-3 sm:gap-4 mb-6 overflow-x-auto pb-4 scrollbar-none"
                   style={{
-                    gridTemplateRows: 'repeat(2, minmax(180px, 1fr))',
-                    gridAutoColumns: 'minmax(250px, 1fr)'
+                    gridTemplateRows: 'repeat(2, minmax(160px, 1fr))',
+                    gridAutoColumns: 'minmax(200px, 1fr)'
                   }}
                 >
                   {currentSensors.comfort && (
@@ -655,22 +697,22 @@ export function HomeownerDashboard({ onNavigate }) {
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Kesehatan Air</h2>
 
-                <div className="grid grid-cols-12 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   {/* Small Cards Grid - 4 Metrics (2x2) - Positioned LEFT */}
-                  <div className="col-span-6 grid grid-cols-2 gap-4">
+                  <div className="md:col-span-6 grid grid-cols-2 gap-3 sm:gap-4">
                     {/* pH */}
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5">
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-3 sm:p-5">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-bold text-gray-900">Tingkat Keasaman Air (Ph)</span>
-                        <Beaker className="w-5 h-5 text-cyan-600" />
+                        <span className="text-[10px] sm:text-sm font-bold text-gray-900 leading-tight">Tingkat Keasaman Air (Ph)</span>
+                        <Beaker className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-600" />
                       </div>
-                      <div className="mb-3">
-                        <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.ph}</div>
-                        <div className="text-xs text-gray-500 mt-1">
+                      <div className="mb-2 sm:mb-3">
+                        <div className="text-2xl sm:text-4xl font-bold text-gray-900">{currentSensors.waterQuality.ph}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5">
                           {currentSensors.waterQuality.ph < 6.5 ? 'Asam' : currentSensors.waterQuality.ph < 8.5 ? 'Normal' : 'Basa'}
                         </div>
                       </div>
-                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${(currentSensors.waterQuality.ph / 14) * 100}%` }}></div>
                       </div>
                     </div>
@@ -724,7 +766,7 @@ export function HomeownerDashboard({ onNavigate }) {
                   </div>
 
                   {/* Big Card - Water Status - Positioned RIGHT */}
-                  <div className="col-span-6 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
+                  <div className="md:col-span-6 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-5 sm:p-8 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
                     <div className="relative h-full flex flex-col">
                       <div className="mb-6">
@@ -768,10 +810,10 @@ export function HomeownerDashboard({ onNavigate }) {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Konsumsi Energi</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">Konsumsi Energi</h3>
                   <p className="text-xs text-gray-500 mt-1">
                     {chartType === 'daily'
                       ? 'Update setiap jam | Hari berjalan 00:00-23:59'
@@ -780,65 +822,68 @@ export function HomeownerDashboard({ onNavigate }) {
                 </div>
                 <button
                   onClick={() => setShowDataModal(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-[#00a67d] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+                  className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#00a67d] text-white rounded-xl text-xs sm:text-sm font-semibold hover:shadow-lg transition-all"
                 >
                   <Eye className="w-4 h-4" />
-                  View Details
-                  <ChevronRight className="w-4 h-4" />
+                  <span className="hidden sm:inline">View Details</span>
+                  <span className="sm:hidden">Detail</span>
+                  <ChevronRight className="w-4 h-4 hidden sm:inline" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-4 gap-4 mb-8 p-6 bg-[#ebfbf5] rounded-2xl border border-[#bbf7d0]">
-                <div className="text-center px-4 border-r border-[#86efac]/30 last:border-0 relative">
-                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-6 bg-[#ebfbf5] rounded-2xl border border-[#bbf7d0]">
+                <div className="text-center py-2 px-1 sm:px-4 relative">
+                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
                     {chartType === 'daily' ? 'Daya Saat Ini' : 'Daya Bulan Ini'}
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    947 <span className="text-base font-semibold">{chartType === 'daily' ? 'W' : 'kWh'}</span>
+                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
+                    947 <span className="text-xs sm:text-base font-semibold">{chartType === 'daily' ? 'W' : 'kWh'}</span>
                   </div>
                 </div>
-                <div className="text-center px-4 border-r border-[#86efac]/30 last:border-0 relative">
-                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
-                    {chartType === 'daily' ? 'Total Daya Hari Ini' : 'Total Daya Tahun Ini'}
+                <div className="text-center py-2 px-1 sm:px-4 relative">
+                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
+                    {chartType === 'daily' ? 'Total Hari Ini' : 'Total Tahun Ini'}
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    7.85 <span className="text-base font-semibold">kWh</span>
-                  </div>
-                </div>
-                <div className="text-center px-4 border-r border-[#86efac]/30 last:border-0 relative">
-                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
-                    {chartType === 'daily' ? 'Rata-rata daya/Jam' : 'Rata-rata daya/bulan'}
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">
-                    0.462 <span className="text-base font-semibold">kWh</span>
+                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
+                    7.85 <span className="text-xs sm:text-base font-semibold">kWh</span>
                   </div>
                 </div>
-                <div className="text-center px-4">
-                  <div className="text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">Total Pemakaian Daya (Rp)</div>
-                  <div className="text-2xl font-bold text-[#00a67d]">Rp 78.490</div>
+                <div className="text-center py-2 px-1 sm:px-4 relative">
+                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
+                    {chartType === 'daily' ? 'Rata-rata/Jam' : 'Rata-rata/Bulan'}
+                  </div>
+                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
+                    0.462 <span className="text-xs sm:text-base font-semibold">kWh</span>
+                  </div>
+                </div>
+                <div className="text-center py-2 px-1 sm:px-4">
+                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">Total (Rp)</div>
+                  <div className="text-base sm:text-2xl font-bold text-[#00a67d]">Rp 78.490</div>
                 </div>
               </div>
 
-              <div className="flex gap-2 mb-8 bg-gray-50/50 p-1.5 rounded-[16px] border border-gray-100">
+              <div className="flex gap-2 mb-6 sm:mb-8 bg-gray-50/50 p-1.5 rounded-[16px] border border-gray-100">
                 <button
                   onClick={() => setChartType('daily')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${chartType === 'daily' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.06)]' : 'text-gray-500 hover:bg-white/50'
+                  className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${chartType === 'daily' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.06)]' : 'text-gray-500 hover:bg-white/50'
                     }`}
                 >
-                  <Clock className="w-4 h-4" />
-                  Harian (Per Jam)
+                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Harian (Per Jam)</span>
+                  <span className="sm:hidden">Harian</span>
                 </button>
                 <button
                   onClick={() => setChartType('monthly')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${chartType === 'monthly' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.06)]' : 'text-gray-500 hover:bg-white/50'
+                  className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${chartType === 'monthly' ? 'bg-white text-gray-900 shadow-[0_2px_10px_rgba(0,0,0,0.06)]' : 'text-gray-500 hover:bg-white/50'
                     }`}
                 >
-                  <Calendar className="w-4 h-4" />
-                  Bulanan (1 Tahun)
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Bulanan (1 Tahun)</span>
+                  <span className="sm:hidden">Bulanan</span>
                 </button>
               </div>
 
-              <div className="h-[400px]">
+              <div className="h-[260px] sm:h-[340px] md:h-[400px]">
                 {chartType === 'daily' ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <RechartsLineChart data={dailyData} margin={{ top: 20, right: 20, bottom: 30, left: 20 }}>
@@ -933,7 +978,7 @@ export function HomeownerDashboard({ onNavigate }) {
             </div>
           </div>
 
-          <div className="col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-6">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
@@ -1006,6 +1051,7 @@ export function HomeownerDashboard({ onNavigate }) {
 
         <DataModal isOpen={showDataModal} onClose={() => setShowDataModal(false)} chartType={chartType} />
         <ComplaintModal isOpen={showComplaintModal} onClose={() => setShowComplaintModal(false)} />
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
     </HomeownerLayout>
   );

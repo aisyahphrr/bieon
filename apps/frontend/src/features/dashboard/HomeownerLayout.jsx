@@ -1,12 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerProfilePopup from './components/HomeownerProfilePopup';
+
+// Nav items shared between desktop navbar and mobile bottom nav
+const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Beranda', mobileIcon: Home },
+  { id: 'kendali',   label: 'Kendali Perangkat', mobileIcon: Zap },
+  { id: 'history',   label: 'Riwayat', mobileIcon: Clock },
+];
 
 export default function HomeownerLayout({ children, currentPage, onNavigate, hideBottomNav }) {
   const [showNotif, setShowNotif] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const roleDropdownRef = useRef(null);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target)) {
+        setShowRoleDropdown(false);
+      }
+    };
+    if (showRoleDropdown) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showRoleDropdown]);
 
   useEffect(() => {
     const handleOpenNotif = () => setShowNotif(true);
@@ -26,26 +45,21 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               <img src="/logo_bieon.png" alt="BIEON" className="h-8 md:h-10 object-contain" />
             </div>
 
-            {/* Desktop Navigation (Center Aligned via absolute positioning) */}
+            {/* Desktop Navigation — generated from NAV_ITEMS array */}
             <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 lg:gap-10">
-              <button 
-                onClick={() => onNavigate && onNavigate('dashboard')} 
-                className={`font-semibold pb-1 border-b-2 transition-all ${currentPage === 'dashboard' ? 'text-teal-700 border-transparent cursor-default' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}
-              >
-                Beranda
-              </button>
-              <button 
-                onClick={() => onNavigate && onNavigate('kendali')} 
-                className={`font-semibold pb-1 border-b-2 transition-all ${currentPage === 'kendali' ? 'text-teal-700 border-transparent cursor-default' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}
-              >
-                Kendali Perangkat
-              </button>
-              <button 
-                onClick={() => onNavigate && onNavigate('history')} 
-                className={`font-semibold pb-1 border-b-2 transition-all ${currentPage === 'history' ? 'text-teal-700 border-transparent cursor-default' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}
-              >
-                Riwayat
-              </button>
+              {NAV_ITEMS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => onNavigate && onNavigate(id)}
+                  className={`font-semibold pb-1 border-b-2 transition-all ${
+                    currentPage === id
+                      ? 'text-teal-700 border-transparent cursor-default'
+                      : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </nav>
 
             {/* Actions (Desktop & Mobile combined) shrink-0 to prevent compression */}
@@ -71,7 +85,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               </div>
 
               {/* Profile Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={roleDropdownRef}>
                 <button
                   onClick={() => setShowRoleDropdown(!showRoleDropdown)}
                   className="flex items-center gap-2 hover:bg-gray-50 p-1 md:p-1.5 rounded-lg transition-all"
@@ -122,10 +136,8 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       {!hideBottomNav && (
         <nav className="md:hidden fixed bottom-1 left-4 right-4 bg-white/80 backdrop-blur-md border border-gray-100 z-[60] flex justify-between items-center px-6 py-2 shadow-xl pb-safe rounded-[2rem]">
           {[
-            { id: 'dashboard', icon: Home, label: 'Beranda' },
-            { id: 'kendali', icon: Zap, label: 'Kendali' },
+            ...NAV_ITEMS.map(({ id, label, mobileIcon }) => ({ id, icon: mobileIcon, label })),
             { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan' },
-            { id: 'history', icon: Clock, label: 'Riwayat' },
           ].map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
@@ -133,9 +145,13 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               <button
                 key={item.id}
                 onClick={() => onNavigate && onNavigate(item.id)}
-                className={`flex flex-col items-center justify-center min-w-[64px] transition-all duration-200 ${isActive ? 'text-teal-600 scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`flex flex-col items-center justify-center min-w-[64px] transition-all duration-200 ${
+                  isActive ? 'text-teal-600 scale-105' : 'text-gray-400 hover:text-gray-600'
+                }`}
               >
-                <div className={`p-1.5 rounded-full mb-1 transition-all ${isActive ? 'bg-teal-50 shadow-inner' : 'bg-transparent'}`}>
+                <div className={`p-1.5 rounded-full mb-1 transition-all ${
+                  isActive ? 'bg-teal-50 shadow-inner' : 'bg-transparent'
+                }`}>
                   <Icon className={`w-6 h-6 stroke-[2] ${isActive ? 'fill-teal-50' : ''}`} />
                 </div>
                 <span className={`text-[10px] sm:text-xs font-semibold ${isActive ? 'font-bold' : ''}`}>
@@ -146,11 +162,6 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
           })}
         </nav>
       )}
-
-      {/* Global CSS for safe area padding on mobile */}
-      <style>{`
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 12px); }
-      `}</style>
     </div>
   );
 }

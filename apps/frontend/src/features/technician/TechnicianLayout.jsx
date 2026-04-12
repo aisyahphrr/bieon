@@ -1,17 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Home, Settings, Clock, MessageSquare, Bell, ChevronDown } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
-import TechnicianProfilePopup from '../dashboard/components/HomeownerProfilePopup';
+
+// Navigation items for bottom tab bar
+const NAV_ITEMS = [
+  { id: 'dashboard', icon: Home,         label: 'Beranda'   },
+  { id: 'konfigurasi', icon: Settings,   label: 'Kendali'   },
+  { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan' },
+  { id: 'riwayat', icon: Clock,          label: 'Riwayat'   },
+];
 
 export default function TechnicianLayout({ children, activeMenu, setActiveMenu, onNavigate }) {
   const [showNotif, setShowNotif] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
+  // Open notification from external event (e.g. bell icon in child page)
   useEffect(() => {
     const handleOpenNotif = () => setShowNotif(true);
     window.addEventListener('open-notifications', handleOpenNotif);
     return () => window.removeEventListener('open-notifications', handleOpenNotif);
   }, []);
+
+  // Click-outside handler for profile dropdown
+  useEffect(() => {
+    if (!showRoleDropdown) return;
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowRoleDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showRoleDropdown]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5FFFC] via-[#F5FFFC] to-[#F5FFFC] flex flex-col font-sans">
@@ -27,48 +48,51 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
 
             {/* Desktop Navigation (Center Aligned via absolute positioning) */}
             <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 lg:gap-10">
-              <button 
-                onClick={() => setActiveMenu('dashboard')} 
-                className={`font-semibold pb-1 border-b-2 transition-colors ${activeMenu === 'dashboard' ? 'text-teal-700 border-transparent cursor-default' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}>
-                Beranda
-              </button>
-              <button 
-                onClick={() => setActiveMenu('konfigurasi')} 
-                className={`font-semibold pb-1 border-b-2 transition-colors ${activeMenu === 'konfigurasi' ? 'text-teal-700 border-transparent cursor-default' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}>
-                Kendali Perangkat
-              </button>
-              <button 
-                onClick={() => setActiveMenu('riwayat')} 
-                className={`font-semibold pb-1 border-b-2 transition-colors ${activeMenu === 'riwayat' ? 'text-teal-700 border-transparent cursor-default' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}>
-                Riwayat
-              </button>
+              {[
+                { id: 'dashboard',   label: 'Beranda'          },
+                { id: 'konfigurasi', label: 'Kendali Perangkat' },
+                { id: 'riwayat',     label: 'Riwayat'          },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveMenu(id)}
+                  className={`font-semibold pb-1 border-b-2 transition-colors ${
+                    activeMenu === id
+                      ? 'text-teal-700 border-teal-700'
+                      : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </nav>
 
-            {/* Actions (Desktop & Mobile combined) shrink-0 to prevent compression */}
+            {/* Actions */}
             <div className="flex items-center gap-3 lg:gap-4 shrink-0">
-              {/* Pengaduan Button (Responsive Text) */}
+              {/* Pengaduan Button */}
               <button
                 onClick={() => setActiveMenu('pengaduan')}
                 className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                 title="Pengaduan"
               >
                 <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
-                {/* For technician, maybe label is just 'Pengaduan' instead of 'Ajukan Pengaduan' based on earlier code */}
-                <span className="hidden xl:block ml-2">Pengaduan</span>
-                <span className="hidden lg:block xl:hidden ml-2">Pengaduan</span>
+                <span className="hidden lg:block ml-2">Pengaduan</span>
               </button>
 
               {/* Notification */}
               <div className="relative flex">
-                <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center">
+                <button
+                  onClick={() => setShowNotif(!showNotif)}
+                  className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
+                >
                   <Bell className="w-5 h-5 text-gray-600" />
-                  <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 </button>
                 <NotificationPopup isOpen={showNotif} onClose={() => setShowNotif(false)} role="technician" />
               </div>
               
               {/* Profile Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowRoleDropdown(!showRoleDropdown)}
                   className="flex items-center gap-2 hover:bg-gray-50 p-1 md:p-1.5 rounded-lg transition-all"
@@ -76,7 +100,6 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0">
                     TB
                   </div>
-                  {/* Hide profile info text on tight screens */}
                   <div className="text-left hidden xl:block">
                     <div className="text-xs font-semibold text-gray-900">Teknisi BPJS</div>
                     <div className="text-xs text-gray-500">Teknisi</div>
@@ -86,16 +109,16 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                 
                 {showRoleDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                    <button 
-                       onClick={() => { setActiveMenu('profile'); setShowRoleDropdown(false); }} 
-                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-bold transition-colors border-b border-gray-100 pb-3 mb-1"
+                    <button
+                      onClick={() => { setActiveMenu('profile'); setShowRoleDropdown(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-bold transition-colors border-b border-gray-100 pb-3 mb-1"
                     >
                       Lihat Profil Saya
                     </button>
                     <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-1">Ganti Role (Demo)</div>
-                    <button onClick={() => onNavigate && onNavigate("dashboard")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Homeowner</button>
+                    <button onClick={() => onNavigate && onNavigate('dashboard')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Homeowner</button>
                     <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Teknisi</button>
-                    <button onClick={() => onNavigate && onNavigate("admin")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
+                    <button onClick={() => onNavigate && onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
                   </div>
                 )}
               </div>
@@ -109,16 +132,9 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
         {children}
       </main>
 
-      {/* Profile Popup state handled via renderContent in TechnicianDashboard currently */}
-
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-[60] flex justify-between items-center px-6 py-2 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] pb-safe">
-        {[
-          { id: 'dashboard', icon: Home, label: 'Beranda' },
-          { id: 'konfigurasi', icon: Settings, label: 'Kendali' },
-          { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan' },
-          { id: 'riwayat', icon: Clock, label: 'Riwayat' },
-        ].map((item) => {
+      {/* Mobile Bottom Navigation Bar - Floating Pill Design */}
+      <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/80 backdrop-blur-md border border-gray-100 z-[60] flex justify-between items-center px-6 py-2 shadow-2xl rounded-[2rem] pb-safe">
+        {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeMenu === item.id;
           return (
@@ -137,11 +153,6 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
           );
         })}
       </nav>
-
-      {/* Global CSS for safe area padding on mobile */}
-      <style>{`
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 12px); }
-      `}</style>
     </div>
   );
 }

@@ -336,7 +336,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         </div>
 
                         <div className="p-8 overflow-y-auto space-y-6">
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">Nama Teknisi <span className="text-red-500">*</span></label>
                                     <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="Budi Santoso" />
@@ -347,7 +347,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">Nomor Telepon <span className="text-red-500">*</span></label>
                                     <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="+62 812-3456-7890" />
@@ -363,7 +363,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <textarea rows="3" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="Jl. Sudirman No. 45, Jakarta Pusat"></textarea>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">Wilayah Kerja <span className="text-red-500">*</span></label>
                                     <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="Jakarta & Bandung" />
@@ -414,7 +414,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         <div className="p-8 overflow-y-auto space-y-8 bg-white">
                             
                             {/* Cards Row */}
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 {/* Informasi Teknisi */}
                                 <div className="bg-[#eff6ff] rounded-2xl p-6 border border-blue-100/50">
                                     <h3 className="text-base font-bold text-gray-800 mb-5">Informasi Teknisi</h3>

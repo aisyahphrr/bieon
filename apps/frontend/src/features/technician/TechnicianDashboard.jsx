@@ -14,28 +14,23 @@ import {
   ChevronDown,
   Search,
   Filter,
-  Bell,
-  LogOut,
-  Menu,
   X,
   Phone,
   MapPin,
   Package,
-  Activity
+  Activity,
+  CheckCircle2,
+  FileDown
 } from 'lucide-react';
 import {
   BarChart,
   Bar,
   LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer
 } from 'recharts';
 import { MonitoringKlienPage } from './MonitoringKlienPage';
@@ -291,26 +286,38 @@ const statusPerangkatTrendData = [
   { bulan: 'Des', online: 264, offline: 17, error: 5 }
 ];
 
-const deviceStatusData = [
-  { name: 'Online', value: 218, color: '#10b981' },
-  { name: 'Offline', value: 22, color: '#ef4444' },
-  { name: 'Error', value: 6, color: '#f59e0b' }
+const MENU_ITEMS = [
+  { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard'              },
+  { id: 'monitoring',  icon: Monitor,         label: 'Monitoring Klien'       },
+  { id: 'pengaduan',   icon: MessageSquare,   label: 'Pengaduan Klien'        },
+  { id: 'konfigurasi', icon: Settings,        label: 'Konfigurasi Perangkat'  },
+  { id: 'riwayat',     icon: History,         label: 'Riwayat Perbaikan'      },
+  { id: 'profile',     icon: User,            label: 'Profil Teknisi'         },
 ];
+
+function Toast({ message, type = 'success' }) {
+  return (
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-top-4 duration-500">
+      <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-3 ${
+        type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-gray-800/90 border-gray-700 text-white'
+      }`}>
+        {type === 'success' && <CheckCircle2 className="w-5 h-5" />}
+        <span className="text-sm font-bold tracking-wide">{message}</span>
+      </div>
+    </div>
+  );
+}
 
 export function TechnicianDashboard({ onNavigate }) {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'monitoring', icon: Monitor, label: 'Monitoring Klien' },
-    { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan Klien' },
-    { id: 'konfigurasi', icon: Settings, label: 'Konfigurasi Perangkat' },
-    { id: 'riwayat', icon: History, label: 'Riwayat Perbaikan' },
-    { id: 'profil', icon: User, label: 'Profil Teknisi' }
-  ];
+  const triggerToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const filteredClients = mockClients.filter(client =>
     client.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -394,8 +401,11 @@ export function TechnicianDashboard({ onNavigate }) {
                     <Filter className="w-4 h-4" />
                     <span className="text-sm font-semibold">Filter</span>
                   </button>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-xl transition-colors shadow-sm">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  <button 
+                    onClick={() => triggerToast('Laporan monitoring sedang diproses...')}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white hover:bg-teal-700 rounded-xl transition-colors shadow-sm"
+                  >
+                    <FileDown className="w-4 h-4" />
                     <span className="text-sm font-semibold">Download PDF</span>
                   </button>
                 </div>
@@ -650,6 +660,8 @@ export function TechnicianDashboard({ onNavigate }) {
       <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8">
           {renderContent()}
       </div>
+      
+      {toast && <Toast message={toast.message} type={toast.type} />}
 
       {/* Detail Modal */}
       {selectedClient && (
@@ -691,10 +703,10 @@ export function TechnicianDashboard({ onNavigate }) {
                 </span>
               </div>
 
-              {/* Statistik Sistem - Grid 4 Columns */}
+              {/* Statistik Sistem - Grid Responsive */}
               <div className="mb-6">
                 <h4 className="font-bold text-gray-800 mb-4 text-lg">Statistik Sistem</h4>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
@@ -745,8 +757,8 @@ export function TechnicianDashboard({ onNavigate }) {
                 </div>
               </div>
 
-              {/* Contact Information & Additional Info - 2 Columns */}
-              <div className="grid grid-cols-2 gap-6 mb-6">
+              {/* Contact Information & Additional Info - Responsive Columns */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Left Column - Contact */}
                 <div className="space-y-3">
                   <h4 className="font-bold text-gray-800 mb-3 text-lg">Informasi Kontak</h4>
@@ -806,7 +818,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
                       <p className="text-xs font-semibold text-gray-600 mb-1">Tanggal Instalasi</p>
                       <p className="font-bold text-gray-800 text-sm">{selectedClient.tanggalInstalasi}</p>

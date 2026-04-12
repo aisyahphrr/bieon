@@ -246,7 +246,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-hidden">
+        <main className="p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-hidden pb-4 lg:pb-8">
           {children}
         </main>
       </div>

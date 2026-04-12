@@ -1,15 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
-    LayoutDashboard,
     Users,
-    Box,
-    Monitor,
     Zap,
-    Activity,
-    History,
     Bell,
     ChevronDown,
-    Menu,
     ShieldCheck,
     Search,
     Filter,
@@ -24,20 +18,14 @@ import {
     MessageSquare,
     AlertCircle,
     Clock,
-    User,
     CheckCircle2,
     X,
     FileText,
     MoreVertical,
     Send,
-    LogOut,
-    Mail,
     Phone,
-    MapPin,
-    Cpu,
-    ArrowLeft,
-    RefreshCw,
-    XCircle
+    XCircle,
+    Activity
 } from 'lucide-react';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { SuperAdminLayout } from './SuperAdminLayout';
@@ -207,11 +195,6 @@ const initialComplaints = [
 ];
 
 export default function AdminComplaint({ onNavigate }) {
-    // --- Admin Layout States ---
-    const [sidebarExpanded, setSidebarExpanded] = useState(true);
-    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-    const [activeMenu, setActiveMenu] = useState('Pengaduan');
-
     // --- Filter & Pagination States ---
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');

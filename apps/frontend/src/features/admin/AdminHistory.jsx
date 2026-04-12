@@ -1,18 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-    LayoutDashboard,
-    Users,
-    Box,
-    Monitor,
-    Zap,
-    Activity,
-    History,
-    Bell,
     ChevronDown,
-    Menu,
     ShieldCheck,
     ChevronRight,
-    User,
     Search,
     Filter,
     Download,
@@ -22,16 +12,12 @@ import {
     ArrowDown,
     ArrowUpDown,
     ChevronLeft,
-    MessageSquare
+    MessageSquare,
+    CheckCircle2
 } from 'lucide-react';
 import { SuperAdminLayout } from './SuperAdminLayout';
 
 export default function AdminHistory({ onNavigate }) {
-    // --- Admin Layout States ---
-    const [sidebarExpanded, setSidebarExpanded] = useState(true);
-    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-    const [activeMenu, setActiveMenu] = useState('Riwayat');
-
     // --- Filter & Pagination States ---
     const [activeTab, setActiveTab] = useState('Kenyamanan');
     const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +34,14 @@ export default function AdminHistory({ onNavigate }) {
     const [showHubDropdown, setShowHubDropdown] = useState(false);
     const [showDateDropdown, setShowDateDropdown] = useState(false);
     const [showRowsDropdown, setShowRowsDropdown] = useState(false);
+    
+    // --- Toast States ---
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    const showToast = (message) => {
+        setToast({ show: true, message });
+        setTimeout(() => setToast({ show: false, message: '' }), 3000);
+    };
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     // --- Date Picker States (Synced with RiwayatPerbaikanPage) ---
@@ -437,15 +431,6 @@ export default function AdminHistory({ onNavigate }) {
         return <span className="text-[13px] font-semibold">{status}</span>;
     };
 
-    const menuItems = [
-        { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
-        { name: 'Homeowner', icon: Users, id: 'admin' },
-        { name: 'Teknisi', icon: User, id: 'admin' },
-        { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
-        { name: 'PLN Listrik', icon: Zap, id: 'admin-tariff' },
-        { name: 'Riwayat', icon: History, id: 'admin-history' },
-    ];
-
     return (
         <SuperAdminLayout activeMenu="Riwayat" onNavigate={onNavigate} title="Riwayat Aktivitas">
             <div className="space-y-6">
@@ -576,6 +561,7 @@ export default function AdminHistory({ onNavigate }) {
                             {/* Export Data */}
                             <div className="space-y-2 lg:pt-6">
                                 <button
+                                    onClick={() => showToast("Mengekspor data riwayat ke format Excel/PDF...")}
                                     className="w-full flex items-center justify-center gap-3 px-5 py-3.5 bg-[#009b7c] text-white rounded-2xl text-sm font-bold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 group"
                                 >
                                     <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
@@ -842,6 +828,18 @@ export default function AdminHistory({ onNavigate }) {
                         </div>
                     </div>
             </div>
+
+            {/* Unified Toast Notification */}
+            {toast.show && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="bg-[#1E293B] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-700/50 backdrop-blur-md">
+                        <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <span className="text-sm font-bold tracking-tight">{toast.message}</span>
+                    </div>
+                </div>
+            )}
         </SuperAdminLayout>
     );
 }

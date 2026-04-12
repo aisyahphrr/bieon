@@ -19,26 +19,17 @@ import {
     FileText,
     ArrowUp,
     ArrowDown,
-    X
+    X,
+    FileDown
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
+import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 
-export function PengaduanKlienPage({ onNavigate }) {
-    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
-    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
-    const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [showRowsDropdown, setShowRowsDropdown] = useState(false);
-    const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+// Module-level constant — avoids re-creation on every render
+const INITIAL_COMPLAINTS_DATA = [
 
-    // Dummy Data based on UI Mockup
-    const initialComplaintsData = [
         {
             id: 'TCK-0105',
             date: '28 Feb 2026, 08:15',
@@ -177,10 +168,30 @@ export function PengaduanKlienPage({ onNavigate }) {
             logConfirmed: false,
             progressNotes: []
         }
-    ];
+];
 
-    const [complaints, setComplaints] = useState(initialComplaintsData);
+export function PengaduanKlienPage({ onNavigate }) {
+    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
+    const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [showRowsDropdown, setShowRowsDropdown] = useState(false);
+    const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+    const [complaints, setComplaints] = useState(INITIAL_COMPLAINTS_DATA);
     const [selectedTicket, setSelectedTicket] = useState(null);
+
+    // --- Toast States ---
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    const showToast = (message) => {
+        setToast({ show: true, message });
+        setTimeout(() => setToast({ show: false, message: '' }), 3000);
+    };
 
     // New States for Detail & Action Modals
     const [isLogModalOpen, setIsLogModalOpen] = useState(false);
@@ -290,45 +301,7 @@ export function PengaduanKlienPage({ onNavigate }) {
         return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-gray-600" /> : <ArrowDown className="w-3.5 h-3.5 text-gray-600" />;
     };
 
-    const getStatusBadge = (status, sla, rating) => {
-        const getStyles = () => {
-            switch (status) {
-                case 'Baru':
-                case 'Menunggu Respons':
-                    return { bg: 'bg-red-50', text: 'text-[#D83C43]', dot: 'bg-[#D83C43]', label: 'Baru' };
-                case 'Diproses':
-                case 'Sedang Diproses':
-                case 'Diproses Teknisi':
-                    return { bg: 'bg-blue-50', text: 'text-[#2563EB]', dot: 'bg-[#2563EB]', label: 'Diproses' };
-                case 'Menunggu Konfirmasi':
-                    return { bg: 'bg-amber-50', text: 'text-[#D97706]', dot: 'bg-[#D97706]', label: 'Menunggu Konfirmasi' };
-                case 'Selesai':
-                    return { bg: 'bg-emerald-50', text: 'text-[#169456]', dot: 'bg-[#169456]', label: 'Selesai' };
-                default:
-                    return { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400', label: status };
-            }
-        };
-
-        const style = getStyles();
-
-        return (
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold ${style.bg} ${style.text} whitespace-nowrap`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
-                {style.label}
-                {sla && status !== 'Selesai' && (
-                    <span className="font-normal opacity-90 ml-0.5">
-                        (Sisa: {sla})
-                    </span>
-                )}
-                {status === 'Selesai' && rating && (
-                    <span className="inline-flex items-center gap-1 ml-1">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span className="font-bold">{rating}/5</span>
-                    </span>
-                )}
-            </span>
-        );
-    };
+    // getStatusBadge replaced by shared <TicketStatusBadge> component
 
     const handleAction = (type) => {
         if (!selectedTicket) return;
@@ -353,9 +326,7 @@ export function PengaduanKlienPage({ onNavigate }) {
             setSelectedTicket({ ...selectedTicket, logRequested: true, timeline: [{ time: now, desc: `Teknisi meminta data log: "${logRequestText}"` }, ...selectedTicket.timeline] });
             setIsLogModalOpen(false);
             setLogRequestText('');
-            alert('Permintaan log telah dikirim ke SuperAdmin.');
-
-            // Simulasikan konfirmasi otomatis setelah 2 detik untuk demo
+            // Auto-confirm after 2s to simulate SuperAdmin response (demo)
             setTimeout(() => {
                 setComplaints(prev => prev.map(c => c.id === selectedTicket.id ? { ...c, logConfirmed: true } : c));
             }, 2000);
@@ -386,6 +357,7 @@ export function PengaduanKlienPage({ onNavigate }) {
         }
 
         if (type === 'selesai') {
+            const now = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             const updatedComplaints = complaints.map(c => {
                 if (c.id === selectedTicket.id) {
                     return {
@@ -405,7 +377,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                 status: 'Menunggu Konfirmasi',
                 timeline: [{ time: now, desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Status: Menunggu Konfirmasi' }, ...selectedTicket.timeline]
             });
-            alert('Status berhasil diubah menjadi Menunggu Konfirmasi. Homeowner akan menerima notifikasi.');
+            // Tiket otomatis berpindah ke tab 'Menunggu Konfirmasi' di list
         }
     };
 
@@ -551,7 +523,7 @@ export function PengaduanKlienPage({ onNavigate }) {
 
                                 {/* Export */}
                                 <button
-                                    onClick={handleExportPDF}
+                                    onClick={() => showToast("Mengekspor data pengaduan ke PDF...")}
                                     className="flex items-center gap-2 px-4 py-2 bg-[#E1F2EB] text-[#1E4D40] rounded-lg text-sm font-bold hover:bg-[#d4ece3] transition-colors shadow-sm"
                                 >
                                     <Download className="w-4 h-4" />
@@ -599,7 +571,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                                                 {item.topic}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {getStatusBadge(item.status, item.sla, item.rating)}
+                                                <TicketStatusBadge status={item.status} sla={item.sla} rating={item.rating} />
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <button
@@ -641,7 +613,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                                     <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="shrink-0">
-                                            {getStatusBadge(item.status, item.sla, item.rating)}
+                                            <TicketStatusBadge status={item.status} sla={item.sla} rating={item.rating} />
                                         </div>
                                         <button
                                             onClick={() => setSelectedTicket(item)}
@@ -858,6 +830,18 @@ export function PengaduanKlienPage({ onNavigate }) {
                                 Update Status
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Unified Toast Notification */}
+            {toast.show && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="bg-[#1E293B] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-700/50 backdrop-blur-md">
+                        <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <span className="text-sm font-bold tracking-tight">{toast.message}</span>
                     </div>
                 </div>
             )}

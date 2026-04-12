@@ -1,15 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-    LayoutDashboard,
-    Users,
     Zap,
-    History,
-    Bell,
     ChevronDown,
-    Menu,
     ShieldCheck,
-    MessageSquare,
-    User,
     Calendar,
     Download,
     TrendingUp,
@@ -21,7 +14,9 @@ import {
     ArrowDown,
     ArrowUpDown,
     Search,
-    Filter
+    Filter,
+    History,
+    CheckCircle2
 } from 'lucide-react';
 import {
     LineChart, Line, PieChart, Pie, Cell, Legend,
@@ -107,6 +102,14 @@ export default function AdminTariff({ onNavigate }) {
     const [viewMonth, setViewMonth] = useState(new Date().getMonth());
     const [viewYear, setViewYear] = useState(new Date().getFullYear());
     const [showYearDropdown, setShowYearDropdown] = useState(false);
+    
+    // --- Toast States ---
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    const showToast = (message) => {
+        setToast({ show: true, message });
+        setTimeout(() => setToast({ show: false, message: '' }), 3000);
+    };
 
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
@@ -253,10 +256,10 @@ export default function AdminTariff({ onNavigate }) {
 
     const handleUpdateTariff = () => {
         if (!formGolongan || !newTariff || !selectedDate) {
-            alert("Harap isi Golongan, Nominal Tarif, dan Tanggal Berlaku!");
+            showToast("Harap isi Golongan, Nominal Tarif, dan Tanggal Berlaku!");
             return;
         }
-        alert(`Tarif untuk ${formGolongan} berhasil diupdate menjadi Rp ${newTariff}/kWh!`);
+        showToast(`Tarif untuk ${formGolongan} berhasil diupdate!`);
         setNewTariff('');
         setSelectedDate('');
         setNote('');
@@ -677,7 +680,7 @@ export default function AdminTariff({ onNavigate }) {
                                         )}
                                     </div>
                                     <button
-                                        onClick={() => alert("Mengekspor Riwayat Tarif ke PDF...")}
+                                        onClick={() => showToast("Mengekspor Riwayat Tarif ke PDF...")}
                                         className="flex items-center justify-center gap-2 px-5 py-2 h-9 bg-[#E1F2EB] text-[#1E4D40] rounded-xl text-xs font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0"
                                     >
                                         <Download className="w-3.5 h-3.5" /> Export PDF
@@ -768,6 +771,18 @@ export default function AdminTariff({ onNavigate }) {
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 999px; }
             `}</style>
+            
+            {/* Unified Toast Notification */}
+            {toast.show && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-5 duration-300">
+                    <div className="bg-[#1E293B] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-700/50 backdrop-blur-md">
+                        <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <span className="text-sm font-bold tracking-tight">{toast.message}</span>
+                    </div>
+                </div>
+            )}
         </SuperAdminLayout>
     );
 }

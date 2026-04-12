@@ -240,6 +240,7 @@ input:checked+.slider:before {
 /* Custom Scrollbar for list panels */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -248,6 +249,39 @@ input:checked+.slider:before {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+/* Utility: hide scrollbar but keep scrollability */
+.scrollbar-none {
+  -ms-overflow-style: none;   /* IE/Edge */
+  scrollbar-width: none;       /* Firefox */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;               /* Chrome/Safari */
+}
+
+/* Horizontal scroll containers - touch-friendly */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== MOBILE UTILITIES ===== */
+
+/* Safe area padding for iOS home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+}
+
+/* Custom scrollbar for panels (light mode) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
 }
 

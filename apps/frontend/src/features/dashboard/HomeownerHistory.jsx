@@ -13,6 +13,111 @@ import {
 } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
+import { StatusBadge } from '../../shared/StatusBadge';
+
+// ─── Static data outside component — prevents re-creation on every render ───
+
+const BASE_COMFORT_DATA = [
+    { time: '26 Feb 2026, 11:30:00', room: 'R5 - Ruang Produksi', temp: 24.0, humidity: '55%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 11:15:00', room: 'R1 - Ruang Keluarga', temp: 25.5, humidity: '60%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 11:00:00', room: 'R2 - Kamar Tidur', temp: 23.0, humidity: '50%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 10:45:00', room: 'R5 - Ruang Produksi', temp: 24.5, humidity: '58%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 10:30:00', room: 'R5 - Ruang Produksi', temp: 24.0, humidity: '55%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 10:15:00', room: 'R1 - Ruang Keluarga', temp: 26.0, humidity: '65%', status: 'Tidak Nyaman' },
+    { time: '26 Feb 2026, 10:00:00', room: 'R5 - Ruang Produksi', temp: 27.5, humidity: '55%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 09:45:00', room: 'R3 - Dapur', temp: 30.5, humidity: '70%', status: 'Tidak Nyaman' },
+    { time: '26 Feb 2026, 09:30:00', room: 'R5 - Ruang Produksi', temp: 31.5, humidity: '65%', status: 'Tidak Nyaman' },
+    { time: '26 Feb 2026, 09:15:00', room: 'R2 - Kamar Tidur', temp: 24.0, humidity: '55%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 09:00:00', room: 'R5 - Ruang Produksi', temp: 28.5, humidity: '58%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 08:45:00', room: 'R4 - Garasi', temp: 32.0, humidity: '75%', status: 'Tidak Nyaman' },
+    { time: '26 Feb 2026, 08:30:00', room: 'R1 - Ruang Keluarga', temp: 24.5, humidity: '55%', status: 'Nyaman' },
+    { time: '26 Feb 2026, 08:15:00', room: 'R2 - Kamar Tidur', temp: 25.0, humidity: '100%+', status: 'Out of Range' },
+];
+const COMFORT_HISTORY_DATA = [
+    ...BASE_COMFORT_DATA.map((d, i) => ({ ...d, id: i + 1 })),
+    ...BASE_COMFORT_DATA.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
+    ...BASE_COMFORT_DATA.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
+];
+
+const BASE_SECURITY_DATA = [
+    { time: '26 Feb 2026, 11:30:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
+    { time: '26 Feb 2026, 11:15:00', room: 'R1 - Pintu Utama', door: 'Terbuka', motion: 'Terdeteksi Gerak', status: 'Waspada' },
+    { time: '26 Feb 2026, 11:00:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Bahaya' },
+    { time: '26 Feb 2026, 10:45:00', room: 'R1 - Pintu Utama', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
+    { time: '26 Feb 2026, 10:30:00', room: 'R2 - Jendela Kamar', door: 'Terbuka', motion: 'Tidak Ada Gerak', status: 'Waspada' },
+    { time: '26 Feb 2026, 10:15:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Bahaya' },
+    { time: '26 Feb 2026, 10:00:00', room: 'R1 - Pintu Utama', door: 'Terbuka (>10 mnt)', motion: 'Tidak Ada Gerak', status: 'Aman' },
+    { time: '26 Feb 2026, 09:45:00', room: 'R3 - Dapur', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Aman' },
+    { time: '26 Feb 2026, 09:30:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
+    { time: '26 Feb 2026, 09:15:00', room: 'R1 - Jendela Living', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
+    { time: '26 Feb 2026, 09:00:00', room: 'R1 - Pintu Utama', door: 'Terbuka', motion: 'Terdeteksi Gerak', status: 'Aman' },
+    { time: '26 Feb 2026, 08:45:00', room: 'R1 - Pintu Belakang', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
+    { time: '26 Feb 2026, 08:30:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Aman' },
+    { time: '26 Feb 2026, 08:15:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
+];
+const SECURITY_HISTORY_DATA = [
+    ...BASE_SECURITY_DATA.map((d, i) => ({ ...d, id: i + 1 })),
+    ...BASE_SECURITY_DATA.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
+    ...BASE_SECURITY_DATA.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
+];
+
+const BASE_WATER_DATA = [
+    { time: '26 Feb 2026, 11:30:00', device: 'Toren Air', ph: 7.2, turbidity: '2 NTU', temp: '24.0°C', tds: '150 ppm', status: 'Layak Pakai' },
+    { time: '26 Feb 2026, 11:15:00', device: 'Pipa Distribusi', ph: 7.1, turbidity: '1 NTU', temp: '24.0°C', tds: '148 ppm', status: 'Layak Pakai' },
+    { time: '26 Feb 2026, 10:45:00', device: 'Toren Air', ph: 7.0, turbidity: '4 NTU', temp: '24.0°C', tds: '160 ppm', status: 'Tidak Layak' },
+    { time: '26 Feb 2026, 10:15:00', device: 'Toren Air', ph: 6.0, turbidity: '2 NTU', temp: '25.0°C', tds: '150 ppm', status: 'Tidak Layak' },
+    { time: '26 Feb 2026, 10:00:00', device: 'Toren Air', ph: 6.5, turbidity: '5 NTU', temp: '25.0°C', tds: '310 ppm', status: 'Tidak Layak' },
+    { time: '26 Feb 2026, 09:45:00', device: 'Pipa Distribusi', ph: 7.0, turbidity: '1 NTU', temp: '23.5°C', tds: '125 ppm', status: 'Layak Pakai' },
+    { time: '26 Feb 2026, 09:30:00', device: 'Toren Air', ph: 8.8, turbidity: '2 NTU', temp: '24.0°C', tds: '160 ppm', status: 'Tidak Layak' },
+    { time: '26 Feb 2026, 08:15:00', device: 'Pipa Distribusi', ph: '14+', turbidity: '2 NTU', temp: '24.0°C', tds: '145 ppm', status: 'Out of Range' },
+];
+const WATER_HISTORY_DATA = [
+    ...BASE_WATER_DATA.map((d, i) => ({ ...d, id: i + 1 })),
+    ...BASE_WATER_DATA.map((d, i) => ({ ...d, id: i + 9, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
+    ...BASE_WATER_DATA.map((d, i) => ({ ...d, id: i + 17, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
+];
+
+const BASE_ENERGY_DATA = [
+    { time: '26 Feb 2026, 11:30:00', device: 'Power Meter Utama', kwh: '1455.10 kWh', voltage: '220.5 V', current: '4.0 A', power: '850 W', pf: '0.96' },
+    { time: '26 Feb 2026, 11:15:00', device: 'Power Meter Utama', kwh: '1454.67 kWh', voltage: '220.5 V', current: '3.9 A', power: '845 W', pf: '0.95' },
+    { time: '26 Feb 2026, 11:00:00', device: 'Power Meter Utama', kwh: '1454.25 kWh', voltage: '221.0 V', current: '2.1 A', power: '450 W', pf: '0.97' },
+    { time: '26 Feb 2026, 10:45:00', device: 'Power Meter Utama', kwh: '1454.02 kWh', voltage: '220.2 V', current: '2.0 A', power: '440 W', pf: '0.96' },
+    { time: '26 Feb 2026, 09:00:00', device: 'Power Meter Utama', kwh: '1452.71 kWh', voltage: '222.2 V', current: '1.3 A', power: '280 W', pf: '0.91' },
+    { time: '26 Feb 2026, 08:15:00', device: 'Power Meter Utama', kwh: '1452.32 kWh', voltage: '221.9 V', current: '1.1 A', power: '230 W', pf: '0.89' },
+];
+const ENERGY_HISTORY_DATA = [
+    ...BASE_ENERGY_DATA.map((d, i) => ({ ...d, id: i + 1 })),
+    ...BASE_ENERGY_DATA.map((d, i) => ({ ...d, id: i + 7, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
+    ...BASE_ENERGY_DATA.map((d, i) => ({ ...d, id: i + 13, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
+];
+
+const BASE_DEVICE_LOG_DATA = [
+    { time: '26 Feb 2026, 11:30:00', room: 'R1 - Ruang Keluarga', actuator: 'Smart TV', status: 'OFF', trigger: 'Manual (Web)' },
+    { time: '26 Feb 2026, 11:15:00', room: 'R3 - Dapur', actuator: 'Smart Plug (Kulkas)', status: 'ON', trigger: 'Jadwal Otomatis' },
+    { time: '26 Feb 2026, 10:45:00', room: 'R5 - Ruang Produksi', actuator: 'Kipas Exhaust', status: 'OFF', trigger: 'Otomasi (Suhu 24°C)' },
+    { time: '26 Feb 2026, 10:30:00', room: 'R2 - Kamar Tidur', actuator: 'AC Split', status: 'OFF', trigger: 'Manual (Web)' },
+    { time: '26 Feb 2026, 09:45:00', room: 'R5 - Ruang Produksi', actuator: 'Kipas Exhaust', status: 'ON', trigger: 'Otomasi (Suhu > 31°C)' },
+    { time: '26 Feb 2026, 08:15:00', room: 'R3 - Dapur', actuator: 'Coffee Maker', status: 'ON', trigger: 'Jadwal Otomatis' },
+];
+const DEVICE_LOG_HISTORY_DATA = [
+    ...BASE_DEVICE_LOG_DATA.map((d, i) => ({ ...d, id: i + 1 })),
+    ...BASE_DEVICE_LOG_DATA.map((d, i) => ({ ...d, id: i + 7, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
+    ...BASE_DEVICE_LOG_DATA.map((d, i) => ({ ...d, id: i + 13, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
+];
+
+const BASE_ALERT_DATA = [
+    { time: '26 Feb 2026, 11:30:00', category: 'Keamanan', room: 'R1 - Pintu Utama', status: 'Waspada', message: 'Pintu utama dibuka menggunakan akses PIN.' },
+    { time: '26 Feb 2026, 11:15:00', category: 'Keamanan', room: 'R4 - Garasi', status: 'Bahaya', message: 'Terdeteksi pergerakan tidak wajar di area garasi!' },
+    { time: '26 Feb 2026, 10:45:00', category: 'Air Sanitasi', room: 'Toren Air', status: 'Bahaya', message: 'Kekeruhan air meningkat drastis (18 NTU). Status: Tidak Layak.' },
+    { time: '26 Feb 2026, 10:15:00', category: 'Energi', room: 'Power Meter Utama', status: 'Waspada', message: 'Beban daya melebihi 1000 W. Mendekati batas limit harian.' },
+    { time: '26 Feb 2026, 09:15:00', category: 'Gas', room: 'R3 - Dapur', status: 'Bahaya', message: 'Terdeteksi peningkatan kadar gas. Kualitas udara memburuk.' },
+    { time: '26 Feb 2026, 08:15:00', category: 'Air Sanitasi', room: 'Toren Air', status: 'Info', message: 'Siklus pembersihan filter air otomatis selesai.' },
+];
+const ALERT_HISTORY_DATA = [
+    ...BASE_ALERT_DATA.map((d, i) => ({ ...d, id: i + 1 })),
+    ...BASE_ALERT_DATA.map((d, i) => ({ ...d, id: i + 7, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
+    ...BASE_ALERT_DATA.map((d, i) => ({ ...d, id: i + 13, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
+];
 
 export function HomeownerHistory({ onNavigate }) {
     const [activeTab, setActiveTab] = useState('Kenyamanan');
@@ -29,151 +134,21 @@ export function HomeownerHistory({ onNavigate }) {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     const tabs = [
-        { id: 'Kenyamanan', full: 'Kenyamanan', short: 'Kenyamanan' },
-        { id: 'Keamanan', full: 'Keamanan', short: 'Keamanan' },
-        { id: 'Kualitas Air', full: 'Kualitas Air', short: 'Kualitas Air' },
-        { id: 'Konsumsi Energi', full: 'Konsumsi Energi', short: 'Energi' },
-        { id: 'Log Perangkat', full: 'Log Perangkat', short: 'Log Perangkat' },
+        { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Kenyamanan' },
+        { id: 'Keamanan',         full: 'Keamanan',         short: 'Keamanan' },
+        { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Kualitas Air' },
+        { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Energi' },
+        { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log Perangkat' },
         { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi' }
     ];
 
-    const baseComfortData = [
-        { time: '26 Feb 2026, 11:30:00', room: 'R5 - Ruang Produksi', temp: 24.0, humidity: '55%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 11:15:00', room: 'R1 - Ruang Keluarga', temp: 25.5, humidity: '60%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 11:00:00', room: 'R2 - Kamar Tidur', temp: 23.0, humidity: '50%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 10:45:00', room: 'R5 - Ruang Produksi', temp: 24.5, humidity: '58%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 10:30:00', room: 'R5 - Ruang Produksi', temp: 24.0, humidity: '55%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 10:15:00', room: 'R1 - Ruang Keluarga', temp: 26.0, humidity: '65%', status: 'Tidak Nyaman' },
-        { time: '26 Feb 2026, 10:00:00', room: 'R5 - Ruang Produksi', temp: 27.5, humidity: '55%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 09:45:00', room: 'R3 - Dapur', temp: 30.5, humidity: '70%', status: 'Tidak Nyaman' },
-        { time: '26 Feb 2026, 09:30:00', room: 'R5 - Ruang Produksi', temp: 31.5, humidity: '65%', status: 'Tidak Nyaman' },
-        { time: '26 Feb 2026, 09:15:00', room: 'R2 - Kamar Tidur', temp: 24.0, humidity: '55%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 09:00:00', room: 'R5 - Ruang Produksi', temp: 28.5, humidity: '58%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 08:45:00', room: 'R4 - Garasi', temp: 32.0, humidity: '75%', status: 'Tidak Nyaman' },
-        { time: '26 Feb 2026, 08:30:00', room: 'R1 - Ruang Keluarga', temp: 24.5, humidity: '55%', status: 'Nyaman' },
-        { time: '26 Feb 2026, 08:15:00', room: 'R2 - Kamar Tidur', temp: 25.0, humidity: '100%+', status: 'Out of Range' },
-    ];
-
-    const comfortHistoryData = [
-        ...baseComfortData.map((d, i) => ({ ...d, id: i + 1 })),
-        ...baseComfortData.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-        ...baseComfortData.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` }))
-    ];
-
-    const baseSecurityData = [
-        { time: '26 Feb 2026, 11:30:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
-        { time: '26 Feb 2026, 11:15:00', room: 'R1 - Pintu Utama', door: 'Terbuka', motion: 'Terdeteksi Gerak', status: 'Waspada' },
-        { time: '26 Feb 2026, 11:00:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Bahaya' },
-        { time: '26 Feb 2026, 10:45:00', room: 'R1 - Pintu Utama', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
-        { time: '26 Feb 2026, 10:30:00', room: 'R2 - Jendela Kamar', door: 'Terbuka', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-        { time: '26 Feb 2026, 10:15:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Bahaya' },
-        { time: '26 Feb 2026, 10:00:00', room: 'R1 - Pintu Utama', door: 'Terbuka (>10 mnt)', motion: 'Tidak Ada Gerak', status: 'Aman' },
-        { time: '26 Feb 2026, 09:45:00', room: 'R3 - Dapur', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Aman' },
-        { time: '26 Feb 2026, 09:30:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
-        { time: '26 Feb 2026, 09:15:00', room: 'R1 - Jendela Living', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-        { time: '26 Feb 2026, 09:00:00', room: 'R1 - Pintu Utama', door: 'Terbuka', motion: 'Terdeteksi Gerak', status: 'Aman' },
-        { time: '26 Feb 2026, 08:45:00', room: 'R1 - Pintu Belakang', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-        { time: '26 Feb 2026, 08:30:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Aman' },
-        { time: '26 Feb 2026, 08:15:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-    ];
-
-    const securityHistoryData = [
-        ...baseSecurityData.map((d, i) => ({ ...d, id: i + 1 })),
-        ...baseSecurityData.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-        ...baseSecurityData.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` }))
-    ];
-
-    const baseWaterData = [
-        { time: '26 Feb 2026, 11:30:00', device: 'Toren Air', ph: 7.2, turbidity: '2 NTU', temp: '24.0°C', tds: '150 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 11:15:00', device: 'Pipa Distribusi', ph: 7.1, turbidity: '1 NTU', temp: '24.0°C', tds: '148 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 11:00:00', device: 'Toren Air', ph: 7.2, turbidity: '2 NTU', temp: '24.5°C', tds: '152 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 10:45:00', device: 'Toren Air', ph: 7.0, turbidity: '4 NTU', temp: '24.0°C', tds: '160 ppm', status: 'Tidak Layak' },
-        { time: '26 Feb 2026, 10:30:00', device: 'Pipa Distribusi', ph: 7.1, turbidity: '2 NTU', temp: '24.5°C', tds: '155 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 10:15:00', device: 'Toren Air', ph: 6.0, turbidity: '2 NTU', temp: '25.0°C', tds: '150 ppm', status: 'Tidak Layak' },
-        { time: '26 Feb 2026, 10:00:00', device: 'Toren Air', ph: 6.5, turbidity: '5 NTU', temp: '25.0°C', tds: '310 ppm', status: 'Tidak Layak' },
-        { time: '26 Feb 2026, 09:45:00', device: 'Pipa Distribusi', ph: 7.0, turbidity: '1 NTU', temp: '23.5°C', tds: '125 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 09:30:00', device: 'Toren Air', ph: 8.8, turbidity: '2 NTU', temp: '24.0°C', tds: '160 ppm', status: 'Tidak Layak' },
-        { time: '26 Feb 2026, 09:15:00', device: 'Toren Air', ph: 7.1, turbidity: '2 NTU', temp: '24.0°C', tds: '155 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 09:00:00', device: 'Pipa Distribusi', ph: 7.2, turbidity: '2 NTU', temp: '24.5°C', tds: '150 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 08:45:00', device: 'Toren Air', ph: 7.0, turbidity: '1 NTU', temp: '23.5°C', tds: '145 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 08:30:00', device: 'Toren Air', ph: 7.2, turbidity: '2 NTU', temp: '24.0°C', tds: '145 ppm', status: 'Layak Pakai' },
-        { time: '26 Feb 2026, 08:15:00', device: 'Pipa Distribusi', ph: '14+', turbidity: '2 NTU', temp: '24.0°C', tds: '145 ppm', status: 'Out of Range' },
-    ];
-
-    const waterHistoryData = [
-        ...baseWaterData.map((d, i) => ({ ...d, id: i + 1 })),
-        ...baseWaterData.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-        ...baseWaterData.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` }))
-    ];
-
-    const baseEnergyData = [
-        { time: '26 Feb 2026, 11:30:00', device: 'Power Meter Utama', kwh: '1455.10 kWh', voltage: '220.5 V', current: '4.0 A', power: '850 W', pf: '0.96' },
-        { time: '26 Feb 2026, 11:15:00', device: 'Power Meter Utama', kwh: '1454.67 kWh', voltage: '220.5 V', current: '3.9 A', power: '845 W', pf: '0.95' },
-        { time: '26 Feb 2026, 11:00:00', device: 'Power Meter Utama', kwh: '1454.25 kWh', voltage: '221.0 V', current: '2.1 A', power: '450 W', pf: '0.97' },
-        { time: '26 Feb 2026, 10:45:00', device: 'Power Meter Utama', kwh: '1454.02 kWh', voltage: '220.2 V', current: '2.0 A', power: '440 W', pf: '0.96' },
-        { time: '26 Feb 2026, 10:30:00', device: 'Power Meter Utama', kwh: '1453.80 kWh', voltage: '219.5 V', current: '1.9 A', power: '420 W', pf: '0.95' },
-        { time: '26 Feb 2026, 10:15:00', device: 'Power Meter Utama', kwh: '1453.59 kWh', voltage: '221.1 V', current: '1.8 A', power: '390 W', pf: '0.94' },
-        { time: '26 Feb 2026, 10:00:00', device: 'Power Meter Utama', kwh: '1453.39 kWh', voltage: '220.8 V', current: '1.7 A', power: '380 W', pf: '0.95' },
-        { time: '26 Feb 2026, 09:45:00', device: 'Power Meter Utama', kwh: '1453.20 kWh', voltage: '221.5 V', current: '1.6 A', power: '350 W', pf: '0.93' },
-        { time: '26 Feb 2026, 09:30:00', device: 'Power Meter Utama', kwh: '1453.02 kWh', voltage: '222.0 V', current: '1.4 A', power: '310 W', pf: '0.92' },
-        { time: '26 Feb 2026, 09:15:00', device: 'Power Meter Utama', kwh: '1452.86 kWh', voltage: '221.8 V', current: '1.4 A', power: '300 W', pf: '0.92' },
-        { time: '26 Feb 2026, 09:00:00', device: 'Power Meter Utama', kwh: '1452.71 kWh', voltage: '222.2 V', current: '1.3 A', power: '280 W', pf: '0.91' },
-        { time: '26 Feb 2026, 08:45:00', device: 'Power Meter Utama', kwh: '1452.57 kWh', voltage: '222.5 V', current: '1.2 A', power: '250 W', pf: '0.90' },
-        { time: '26 Feb 2026, 08:30:00', device: 'Power Meter Utama', kwh: '1452.44 kWh', voltage: '222.1 V', current: '1.1 A', power: '240 W', pf: '0.90' },
-        { time: '26 Feb 2026, 08:15:00', device: 'Power Meter Utama', kwh: '1452.32 kWh', voltage: '221.9 V', current: '1.1 A', power: '230 W', pf: '0.89' },
-    ];
-
-    const energyHistoryData = [
-        ...baseEnergyData.map((d, i) => ({ ...d, id: i + 1 })),
-        ...baseEnergyData.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-        ...baseEnergyData.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` }))
-    ];
-
-    const baseDeviceLogData = [
-        { time: '26 Feb 2026, 11:30:00', room: 'R1 - Ruang Keluarga', actuator: 'Smart TV', status: 'OFF', trigger: 'Manual (Web)' },
-        { time: '26 Feb 2026, 11:15:00', room: 'R3 - Dapur', actuator: 'Smart Plug (Kulkas)', status: 'ON', trigger: 'Jadwal Otomatis' },
-        { time: '26 Feb 2026, 11:00:00', room: 'R5 - Ruang Produksi', actuator: 'Lampu Utama', status: 'OFF', trigger: 'Manual (Web)' },
-        { time: '26 Feb 2026, 10:45:00', room: 'R5 - Ruang Produksi', actuator: 'Kipas Exhaust', status: 'OFF', trigger: 'Otomasi (Suhu 24°C)' },
-        { time: '26 Feb 2026, 10:30:00', room: 'R2 - Kamar Tidur', actuator: 'AC Split', status: 'OFF', trigger: 'Manual (Web)' },
-        { time: '26 Feb 2026, 10:15:00', room: 'Toren Air', actuator: 'Pompa Air', status: 'ON', trigger: 'Otomasi (Level Air Rendah)' },
-        { time: '26 Feb 2026, 10:00:00', room: 'R3 - Dapur', actuator: 'Smart Plug (Microwave)', status: 'ON', trigger: 'Manual (Fisik)' },
-        { time: '26 Feb 2026, 09:45:00', room: 'R5 - Ruang Produksi', actuator: 'Kipas Exhaust', status: 'ON', trigger: 'Otomasi (Suhu > 31°C)' },
-        { time: '26 Feb 2026, 09:30:00', room: 'R4 - Garasi', actuator: 'Lampu Garasi', status: 'OFF', trigger: 'Jadwal Otomatis' },
-        { time: '26 Feb 2026, 09:15:00', room: 'R4 - Teras', actuator: 'Lampu Taman', status: 'OFF', trigger: 'Sensor Cahaya' },
-        { time: '26 Feb 2026, 09:00:00', room: 'R2 - Kamar Tidur', actuator: 'Lampu Kamar', status: 'ON', trigger: 'Jadwal Otomatis' },
-        { time: '26 Feb 2026, 08:45:00', room: 'R5 - Ruang Produksi', actuator: 'Mesin Sterilisasi', status: 'ON', trigger: 'Manual (Web)' },
-        { time: '26 Feb 2026, 08:30:00', room: 'R1 - Ruang Keluarga', actuator: 'AC Split', status: 'ON', trigger: 'Manual (Web)' },
-        { time: '26 Feb 2026, 08:15:00', room: 'R3 - Dapur', actuator: 'Coffee Maker', status: 'ON', trigger: 'Jadwal Otomatis' },
-    ];
-
-    const deviceLogHistoryData = [
-        ...baseDeviceLogData.map((d, i) => ({ ...d, id: i + 1 })),
-        ...baseDeviceLogData.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-        ...baseDeviceLogData.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` }))
-    ];
-
-    const baseAlertData = [
-        { time: '26 Feb 2026, 11:30:00', category: 'Keamanan', room: 'R1 - Pintu Utama', status: 'Waspada', message: 'Pintu utama dibuka menggunakan akses PIN.' },
-        { time: '26 Feb 2026, 11:15:00', category: 'Keamanan', room: 'R4 - Garasi', status: 'Bahaya', message: 'Terdeteksi pergerakan tidak wajar di area garasi!' },
-        { time: '26 Feb 2026, 11:00:00', category: 'Suhu', room: 'R5 - Ruang Produksi', status: 'Info', message: 'Suhu stabil di 24°C. Kipas Exhaust otomatis dimatikan.' },
-        { time: '26 Feb 2026, 10:45:00', category: 'Air Sanitasi', room: 'Toren Air', status: 'Bahaya', message: 'Kekeruhan air meningkat drastis (18 NTU). Status: Tidak Layak.' },
-        { time: '26 Feb 2026, 10:30:00', category: 'Keamanan', room: 'R1 - Pintu Utama', status: 'Bahaya', message: 'Pintu utama dibiarkan terbuka lebih dari 10 menit!' },
-        { time: '26 Feb 2026, 10:15:00', category: 'Energi', room: 'Power Meter Utama', status: 'Waspada', message: 'Beban daya melebihi 1000 W. Mendekati batas limit harian.' },
-        { time: '26 Feb 2026, 10:00:00', category: 'Suhu', room: 'R5 - Ruang Produksi', status: 'Bahaya', message: 'Suhu mencapai 31.5°C! Kipas Exhaust otomatis dihidupkan.' },
-        { time: '26 Feb 2026, 09:45:00', category: 'Keamanan', room: 'R1 - Pintu Utama', status: 'Waspada', message: 'Pintu utama dibuka tanpa jadwal (Akses Manual).' },
-        { time: '26 Feb 2026, 09:30:00', category: 'Token PLN', room: 'Power Meter Utama', status: 'Bahaya', message: 'Peringatan: Estimasi sisa Token PLN tersisa kurang dari Rp 20.000.' },
-        { time: '26 Feb 2026, 09:15:00', category: 'Gas', room: 'R3 - Dapur', status: 'Bahaya', message: 'Terdeteksi peningkatan kadar gas. Kualitas udara memburuk.' },
-        { time: '26 Feb 2026, 09:00:00', category: 'Sistem', room: 'Hub Node', status: 'Info', message: 'Sistem BIEON berhasil melakukan restart harian otomatis.' },
-        { time: '26 Feb 2026, 08:45:00', category: 'Keamanan', room: 'R1 - Pintu Belakang', status: 'Waspada', message: 'Pintu belakang dibuka tanpa otoritas (Akses Manual).' },
-        { time: '26 Feb 2026, 08:30:00', category: 'Gas', room: 'R3 - Dapur', status: 'Info', message: 'Status detektor gas kembali normal. Tidak ada kebocoran.' },
-        { time: '26 Feb 2026, 08:15:00', category: 'Air Sanitasi', room: 'Toren Air', status: 'Info', message: 'Siklus pembersihan filter air otomatis selesai.' },
-    ];
-
-    const alertHistoryData = [
-        ...baseAlertData.map((d, i) => ({ ...d, id: i + 1 })),
-        ...baseAlertData.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-        ...baseAlertData.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` }))
-    ];
+    // Reference module-level constants (no re-creation per render)
+    const comfortHistoryData    = COMFORT_HISTORY_DATA;
+    const securityHistoryData   = SECURITY_HISTORY_DATA;
+    const waterHistoryData      = WATER_HISTORY_DATA;
+    const energyHistoryData     = ENERGY_HISTORY_DATA;
+    const deviceLogHistoryData  = DEVICE_LOG_HISTORY_DATA;
+    const alertHistoryData      = ALERT_HISTORY_DATA;
 
     // Logic to process data based on Search, Filter, and Sort
     const processedData = useMemo(() => {
@@ -259,7 +234,9 @@ export function HomeownerHistory({ onNavigate }) {
         }
 
         return filtered;
-    }, [activeTab, searchQuery, selectedRoomFilter, sortConfig]);
+    }, [activeTab, searchQuery, selectedRoomFilter, sortConfig,
+        comfortHistoryData, securityHistoryData, waterHistoryData,
+        energyHistoryData, deviceLogHistoryData, alertHistoryData]);
 
     // Available rooms/devices for filter dropdown
     const availableFilters = useMemo(() => {
@@ -330,62 +307,17 @@ export function HomeownerHistory({ onNavigate }) {
         return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-gray-600" /> : <ArrowDown className="w-3.5 h-3.5 text-gray-600" />;
     };
 
-    const getStatusBadge = (status) => {
-        if (!status) return null;
-        if (status === 'Nyaman' || status === 'Aman' || status === 'Layak Pakai' || status === 'ON') {
-            return (
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[13px] font-semibold bg-[#EAFDF3] text-[#169456]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#189F5A]"></span>
-                    {status}
-                </span>
-            );
-        }
-        if (status === 'Tidak Nyaman' || status === 'Bahaya' || status === 'Tidak Layak' || status === 'OFF') {
-            return (
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[13px] font-semibold bg-[#FDEAEB] text-[#D83C43]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D83C43]"></span>
-                    {status}
-                </span>
-            );
-        }
-        if (status === 'Waspada') {
-            return (
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[13px] font-semibold bg-[#FEF9C3] text-[#D97706]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
-                    {status}
-                </span>
-            );
-        }
-        if (status === 'Info') {
-            return (
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[13px] font-semibold bg-[#EFF6FF] text-[#2563EB]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6]"></span>
-                    {status}
-                </span>
-            );
-        }
-        if (status === 'Out of Range') {
-            return (
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[13px] font-semibold bg-[#2B323D] text-white">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                    {status}
-                </span>
-            );
-        }
-        return <span>{status}</span>;
-    };
-
-    const colWidth = ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'w-[14.2%]' : 'w-1/5';
+    // getStatusBadge is now handled by the shared <StatusBadge> component
 
     return (
-        <HomeownerLayout 
-            currentPage="history" 
+        <HomeownerLayout
+            currentPage="history"
             onNavigate={onNavigate}
             hideBottomNav={false}
         >
             {/* Main Content */}
-            <div className="max-w-[1900px] mx-auto px-8 py-8">
-                <h1 className="text-4xl font-bold text-center text-[#235C50] mb-8">Riwayat Aktivitas</h1>
+            <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8">
+                <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#235C50] mb-6 sm:mb-8">Riwayat Aktivitas</h1>
 
                 {/* Export Button Area */}
                 <div className="flex justify-end mb-4">
@@ -397,8 +329,8 @@ export function HomeownerHistory({ onNavigate }) {
 
                 {/* Tabs and Filters Row */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
-                    {/* Tabs Container */}
-                    <div className="flex bg-white rounded-xl border border-gray-200 overflow-x-auto w-full lg:w-auto lg:max-w-[60%] xl:max-w-[65%] shrink shadow-sm scrollbar-hide">
+                    {/* Tabs Container — scrollbar-none for clean mobile experience */}
+                    <div className="flex bg-white rounded-xl border border-gray-200 overflow-x-auto w-full lg:w-auto lg:max-w-[60%] xl:max-w-[65%] shrink shadow-sm scrollbar-none">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
@@ -419,6 +351,7 @@ export function HomeownerHistory({ onNavigate }) {
                             </button>
                         ))}
                     </div>
+
 
                     <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
                         {/* Search Input */}
@@ -666,14 +599,14 @@ export function HomeownerHistory({ onNavigate }) {
 
                                                 {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && activeTab !== 'Notifikasi & Alert' && (
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        {getStatusBadge(item.status)}
+                                                        <StatusBadge status={item.status} />
                                                     </td>
                                                 )}
 
                                                 {activeTab === 'Log Perangkat' && (
                                                     <>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            {getStatusBadge(item.status)}
+                                                            <StatusBadge status={item.status} />
                                                         </td>
                                                         <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.trigger}</td>
                                                     </>
@@ -682,7 +615,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                 {activeTab === 'Notifikasi & Alert' && (
                                                     <>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            {getStatusBadge(item.status)}
+                                                            <StatusBadge status={item.status} />
                                                         </td>
                                                         <td className="px-6 py-4 text-gray-600 min-w-[280px]">
                                                             {item.message}

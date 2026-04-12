@@ -105,7 +105,6 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
   const [showPlnModal, setShowPlnModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('Dashboard');
   const [plnTariff, setPlnTariff] = useState(1445);
   const [newTariff, setNewTariff] = useState(plnTariff);
 
@@ -260,7 +259,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* Charts Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Chart 1: Bar */}
             <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-[2.5rem] p-10 shadow-sm border border-emerald-100 relative overflow-hidden">
                <div className="flex items-center justify-between mb-8 relative z-10">
@@ -482,24 +481,24 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Customer Table Section */}
           <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
-             <div className="p-10 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+             <div className="p-6 md:p-10 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                <h2 className="text-xl font-bold text-gray-800">Daftar Pelanggan Terdaftar</h2>
-               <div className="flex flex-wrap items-center gap-4">
-                 <div className="relative group">
+               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                 <div className="relative group flex-1 md:w-64">
                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#009b7c] transition-colors" />
                    <input 
                      type="text" 
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
                      placeholder="Cari pelanggan..." 
-                     className="pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#009b7c] focus:bg-white text-xs w-64 transition-all"
+                     className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#009b7c] focus:bg-white text-xs transition-all"
                    />
                  </div>
                  <div className="relative">
                    <select 
                      value={statusFilter}
                      onChange={(e) => setStatusFilter(e.target.value)}
-                     className="appearance-none flex items-center justify-between gap-8 px-4 py-3 min-w-[160px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
+                     className="appearance-none px-4 py-3 min-w-[140px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
                    >
                      <option value="Semua Status">Semua Status</option>
                      <option value="Aktif">Aktif</option>
@@ -515,7 +514,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                     filteredCustomers.map(c => [c.id, c.name, c.username, c.email, c.status, c.bieon, c.devices, c.technician]), 
                     "Daftar_Pelanggan"
                   )}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white rounded-xl text-sm font-semibold shadow-sm hover:bg-[#008268] transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white rounded-xl text-sm font-semibold shadow-sm hover:bg-[#008268] transition-all shrink-0"
                  >
                    <Download className="w-4 h-4" /> Download
                  </button>
@@ -523,7 +522,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
              </div>
 
              <div className="overflow-x-auto">
-               <table className="w-full text-left">
+               <table className="w-full text-left min-w-[900px]">
                  <thead className="bg-[#009b7c] text-white">
                    <tr>
                      <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-left">User ID</th>

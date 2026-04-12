@@ -474,7 +474,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
 
                         <div className="p-8 overflow-y-auto space-y-6">
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-gray-700 ml-1">Nama Lengkap</label>
                                     <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" />

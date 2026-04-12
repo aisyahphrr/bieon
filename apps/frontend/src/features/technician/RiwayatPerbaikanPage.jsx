@@ -25,6 +25,167 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
+import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
+
+// Module-level constant — avoids re-creation on every render
+const INITIAL_HISTORY_DATA = [
+  {
+    id: 'TCK-0105',
+    topic: 'Smart Plug kipas exhaust tidak bisa di-ON-kan via web',
+    date: '24 Feb 2026',
+    finishedDate: '26 Feb 2026, 08:15',
+    client: 'Bpk. Johan',
+    location: 'Kartika Wanasari',
+    duration: '2 Jam 15 Menit',
+    rating: { stars: 5, review: "Penanganan sangat cepat and teknisi sangat sopan. Masalah langsung beres!" },
+    category: 'Kenyamanan',
+    device: 'Smart Plug - Kipas Exhaust',
+    description: 'Kipas exhaust di ruang produksi tidak merespon saat diaktifkan melalui dashboard web, lampu indikator pada smart plug berkedip merah.',
+    clientInfo: {
+      name: 'Bpk. Johan',
+      email: 'johan.p@email.com',
+      phone: '0812-3456-7890',
+      address: 'Kartika Wanasari Blok A1 No. 5, Bogor',
+      idBieon: 'BIE-10294'
+    },
+    technicianInfo: {
+      name: 'Teknisi BPJS',
+      phone: '0855-1234-5678',
+      targetDate: '26 Feb 2026, 12:00'
+    },
+    status: 'Selesai',
+    sla: 'On Track',
+    files: [
+      { name: 'plug_error.jpg', url: 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=200&h=200&fit=crop' }
+    ],
+    timeline: [
+      { time: '26 Feb 2026, 08:15', desc: 'Pengaduan diselesaikan dan telah dikonfirmasi oleh pelanggan.', status: 'Selesai' },
+      { time: '26 Feb 2026, 08:00', desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Menunggu Konfirmasi' },
+      { time: '26 Feb 2026, 06:15', desc: 'Teknisi melakukan penggantian unit Smart Plug dan melakukan re-pairing ke Hub.', status: 'Diproses' },
+      { time: '25 Feb 2026, 14:00', desc: 'Permintaan data log dikonfirmasi oleh SuperAdmin.', status: 'Baru' },
+    ]
+  },
+  {
+    id: 'TCK-0085',
+    topic: 'Notifikasi Door Sensor sering telat masuk',
+    date: '18 Feb 2026',
+    finishedDate: '20 Feb 2026, 09:15',
+    client: 'Ibu Rina',
+    location: 'Jl. Melati Bogor',
+    duration: '1 Hari 4 Jam',
+    rating: { stars: 4, review: "Sudah oke sekarang, notifikasi muncul cepat. Thanks BIEON." },
+    category: 'Keamanan',
+    device: 'Door Sensor - Pintu Utama',
+    description: 'Notifikasi saat pintu terbuka sering masuk 5-10 menit setelah kejadian, padahal internet stabil.',
+    clientInfo: {
+      name: 'Ibu Rina',
+      email: 'rina.sari@email.com',
+      phone: '0813-9988-7766',
+      address: 'Jl. Melati IV No. 12, Cluster Melati, Bogor',
+      idBieon: 'BIE-88392'
+    },
+    technicianInfo: {
+      name: 'Teknisi BPJS',
+      phone: '0855-1234-5678',
+      targetDate: '20 Feb 2026, 10:00'
+    },
+    status: 'Selesai',
+    sla: 'On Track',
+    timeline: [
+      { time: '20 Feb 2026, 09:15', desc: 'Selesai dengan konfigurasi ulang firmware hub.', status: 'Selesai' }
+    ]
+  },
+  {
+    id: 'TCK-0102',
+    topic: 'Angka PM2.5 udara selalu stuck di angka 0',
+    date: '23 Feb 2026',
+    finishedDate: '25 Feb 2026, 14:30',
+    client: 'Bpk. Andi',
+    location: 'Perum Dramaga',
+    duration: '45 Menit',
+    rating: { stars: 3, review: "Lama ya nunggunya, tapi akhirnya dibenerin juga." },
+    category: 'Kenyamanan',
+    device: 'Air Quality Center',
+    description: 'Sensor PM2.5 tidak menunjukkan perubahan angka meskipun ada asap di dekat sensor.',
+    clientInfo: {
+      name: 'Bpk. Andi',
+      email: 'andi.h@email.com',
+      phone: '0877-6655-4433',
+      address: 'Perum Dramaga Hijau Blok B3, Bogor',
+      idBieon: 'BIE-77621'
+    },
+    technicianInfo: {
+      name: 'Teknisi BPJS',
+      phone: '0855-1234-5678',
+      targetDate: '25 Feb 2026, 17:00'
+    },
+    status: 'Selesai',
+    sla: 'Delayed',
+    timeline: [
+      { time: '25 Feb 2026, 14:30', desc: 'Pembersihan sensor PM2.5 berhasil dilakukan.', status: 'Selesai' }
+    ]
+  },
+  {
+    id: 'TCK-0070',
+    topic: 'Ingin memindahkan posisi sensor gas agak ke kanan',
+    date: '14 Feb 2026',
+    finishedDate: '15 Feb 2026, 16:45',
+    client: 'Ibu Siti',
+    location: 'Sentul City',
+    duration: '5 Jam 30 Menit',
+    rating: { stars: 2, review: "Masang nya agak miring sih, tapi ya sudahlah." },
+    category: 'Keamanan',
+    device: 'Gas Detector',
+    description: 'Relokasi sensor gas karena ada perubahan layout kitchen set.',
+    clientInfo: {
+      name: 'Ibu Siti',
+      email: 'siti.w@email.com',
+      phone: '0812-1122-3344',
+      address: 'Green Mountain Sentul City, Bogor',
+      idBieon: 'BIE-55443'
+    },
+    technicianInfo: {
+      name: 'Teknisi BPJS',
+      phone: '0855-1234-5678',
+      targetDate: '15 Feb 2026, 15:00'
+    },
+    status: 'Selesai',
+    sla: 'Delayed',
+    timeline: [
+      { time: '15 Feb 2026, 16:45', desc: 'Relokasi selesai.', status: 'Selesai' }
+    ]
+  },
+  {
+    id: 'TCK-0098',
+    topic: 'Nilai tegangan Power Meter tiba-tiba hilang',
+    date: '22 Feb 2026',
+    finishedDate: '24 Feb 2026, 10:00',
+    client: 'Bpk. Budi',
+    location: 'Cibinong',
+    duration: '1 Hari 2 Jam',
+    rating: { stars: 5, review: "Mantap pak teknisi, gesit banget." },
+    category: 'Konsumsi Energi',
+    device: 'Power Meter Utama',
+    description: 'Pembacaan voltase di dashboard menunjukkan 0V padahal listrik di rumah nyala.',
+    clientInfo: {
+      name: 'Bpk. Budi',
+      email: 'budi.t@email.com',
+      phone: '0811-2233-4455',
+      address: 'Jl. Raya Cibinong No. 45, Bogor',
+      idBieon: 'BIE-99001'
+    },
+    technicianInfo: {
+      name: 'Teknisi BPJS',
+      phone: '0855-1234-5678',
+      targetDate: '24 Feb 2026, 12:00'
+    },
+    status: 'Selesai',
+    sla: 'On Track',
+    timeline: [
+      { time: '24 Feb 2026, 10:00', desc: 'Koneksi kabel CT diperbaiki.', status: 'Selesai' }
+    ]
+  }
+];
 
 export function RiwayatPerbaikanPage() {
   // States
@@ -111,165 +272,7 @@ export function RiwayatPerbaikanPage() {
     }
   };
 
-  // Dummy Data
-  const historyData = [
-    {
-      id: 'TCK-0105',
-      topic: 'Smart Plug kipas exhaust tidak bisa di-ON-kan via web',
-      date: '24 Feb 2026',
-      finishedDate: '26 Feb 2026, 08:15',
-      client: 'Bpk. Johan',
-      location: 'Kartika Wanasari',
-      duration: '2 Jam 15 Menit',
-      rating: { stars: 5, review: "Penanganan sangat cepat dan teknisi sangat sopan. Masalah langsung beres!" },
-      category: 'Kenyamanan',
-      device: 'Smart Plug - Kipas Exhaust',
-      description: 'Kipas exhaust di ruang produksi tidak merespon saat diaktifkan melalui dashboard web, lampu indikator pada smart plug berkedip merah.',
-      clientInfo: {
-        name: 'Bpk. Johan',
-        email: 'johan.p@email.com',
-        phone: '0812-3456-7890',
-        address: 'Kartika Wanasari Blok A1 No. 5, Bogor',
-        idBieon: 'BIE-10294'
-      },
-      technicianInfo: {
-        name: 'Teknisi BPJS',
-        phone: '0855-1234-5678',
-        targetDate: '26 Feb 2026, 12:00'
-      },
-      status: 'Selesai',
-      sla: 'On Track',
-      files: [
-        { name: 'plug_error.jpg', url: 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=200&h=200&fit=crop' }
-      ],
-      timeline: [
-        { time: '26 Feb 2026, 08:15', desc: 'Pengaduan diselesaikan dan telah dikonfirmasi oleh pelanggan.', status: 'Selesai' },
-        { time: '26 Feb 2026, 08:00', desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Menunggu Konfirmasi' },
-        { time: '26 Feb 2026, 06:15', desc: 'Teknisi melakukan penggantian unit Smart Plug dan melakukan re-pairing ke Hub.', status: 'Diproses' },
-        { time: '25 Feb 2026, 14:00', desc: 'Permintaan data log dikonfirmasi oleh SuperAdmin.', status: 'Baru' },
-      ]
-    },
-    {
-      id: 'TCK-0085',
-      topic: 'Notifikasi Door Sensor sering telat masuk',
-      date: '18 Feb 2026',
-      finishedDate: '20 Feb 2026, 09:15',
-      client: 'Ibu Rina',
-      location: 'Jl. Melati Bogor',
-      duration: '1 Hari 4 Jam',
-      rating: { stars: 4, review: "Sudah oke sekarang, notifikasi muncul cepat. Thanks BIEON." },
-      category: 'Keamanan',
-      device: 'Door Sensor - Pintu Utama',
-      description: 'Notifikasi saat pintu terbuka sering masuk 5-10 menit setelah kejadian, padahal internet stabil.',
-      clientInfo: {
-        name: 'Ibu Rina',
-        email: 'rina.sari@email.com',
-        phone: '0813-9988-7766',
-        address: 'Jl. Melati IV No. 12, Cluster Melati, Bogor',
-        idBieon: 'BIE-88392'
-      },
-      technicianInfo: {
-        name: 'Teknisi BPJS',
-        phone: '0855-1234-5678',
-        targetDate: '20 Feb 2026, 10:00'
-      },
-      status: 'Selesai',
-      sla: 'On Track',
-      timeline: [
-        { time: '20 Feb 2026, 09:15', desc: 'Selesai dengan konfigurasi ulang firmware hub.', status: 'Selesai' }
-      ]
-    },
-    {
-      id: 'TCK-0102',
-      topic: 'Angka PM2.5 udara selalu stuck di angka 0',
-      date: '23 Feb 2026',
-      finishedDate: '25 Feb 2026, 14:30',
-      client: 'Bpk. Andi',
-      location: 'Perum Dramaga',
-      duration: '45 Menit',
-      rating: { stars: 3, review: "Lama ya nunggunya, tapi akhirnya dibenerin juga." },
-      category: 'Kenyamanan',
-      device: 'Air Quality Center',
-      description: 'Sensor PM2.5 tidak menunjukkan perubahan angka meskipun ada asap di dekat sensor.',
-      clientInfo: {
-        name: 'Bpk. Andi',
-        email: 'andi.h@email.com',
-        phone: '0877-6655-4433',
-        address: 'Perum Dramaga Hijau Blok B3, Bogor',
-        idBieon: 'BIE-77621'
-      },
-      technicianInfo: {
-        name: 'Teknisi BPJS',
-        phone: '0855-1234-5678',
-        targetDate: '25 Feb 2026, 17:00'
-      },
-      status: 'Selesai',
-      sla: 'Delayed',
-      timeline: [
-        { time: '25 Feb 2026, 14:30', desc: 'Pembersihan sensor PM2.5 berhasil dilakukan.', status: 'Selesai' }
-      ]
-    },
-    {
-      id: 'TCK-0070',
-      topic: 'Ingin memindahkan posisi sensor gas agak ke kanan',
-      date: '14 Feb 2026',
-      finishedDate: '15 Feb 2026, 16:45',
-      client: 'Ibu Siti',
-      location: 'Sentul City',
-      duration: '5 Jam 30 Menit',
-      rating: { stars: 2, review: "Masang nya agak miring sih, tapi ya sudahlah." },
-      category: 'Keamanan',
-      device: 'Gas Detector',
-      description: 'Relokasi sensor gas karena ada perubahan layout kitchen set.',
-      clientInfo: {
-        name: 'Ibu Siti',
-        email: 'siti.w@email.com',
-        phone: '0812-1122-3344',
-        address: 'Green Mountain Sentul City, Bogor',
-        idBieon: 'BIE-55443'
-      },
-      technicianInfo: {
-        name: 'Teknisi BPJS',
-        phone: '0855-1234-5678',
-        targetDate: '15 Feb 2026, 15:00'
-      },
-      status: 'Selesai',
-      sla: 'Delayed',
-      timeline: [
-        { time: '15 Feb 2026, 16:45', desc: 'Relokasi selesai.', status: 'Selesai' }
-      ]
-    },
-    {
-      id: 'TCK-0098',
-      topic: 'Nilai tegangan Power Meter tiba-tiba hilang',
-      date: '22 Feb 2026',
-      finishedDate: '24 Feb 2026, 10:00',
-      client: 'Bpk. Budi',
-      location: 'Cibinong',
-      duration: '1 Hari 2 Jam',
-      rating: { stars: 5, review: "Mantap pak teknisi, gesit banget." },
-      category: 'Konsumsi Energi',
-      device: 'Power Meter Utama',
-      description: 'Pembacaan voltase di dashboard menunjukkan 0V padahal listrik di rumah nyala.',
-      clientInfo: {
-        name: 'Bpk. Budi',
-        email: 'budi.t@email.com',
-        phone: '0811-2233-4455',
-        address: 'Jl. Raya Cibinong No. 45, Bogor',
-        idBieon: 'BIE-99001'
-      },
-      technicianInfo: {
-        name: 'Teknisi BPJS',
-        phone: '0855-1234-5678',
-        targetDate: '24 Feb 2026, 12:00'
-      },
-      status: 'Selesai',
-      sla: 'On Track',
-      timeline: [
-        { time: '24 Feb 2026, 10:00', desc: 'Koneksi kabel CT diperbaiki.', status: 'Selesai' }
-      ]
-    }
-  ];
+  const historyData = INITIAL_HISTORY_DATA;
 
   // Filter & Sort Logic
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -301,7 +304,7 @@ export function RiwayatPerbaikanPage() {
 
       return matchesSearch && matchesCategory && matchesDate;
     });
-  }, [searchQuery, selectedCategory, dateRange]);
+  }, [historyData, searchQuery, selectedCategory, dateRange]);
 
   const processedData = useMemo(() => {
     let filtered = [...filteredData];
@@ -373,34 +376,7 @@ export function RiwayatPerbaikanPage() {
     doc.save(`BIEON_Riwayat_Teknisi_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  const getStatusBadge = (status, sla, rating) => {
-    const getStyles = () => {
-      switch (status) {
-        case 'Baru':
-        case 'Menunggu Respons':
-          return { bg: 'bg-red-50', text: 'text-[#D83C43]', dot: 'bg-[#D83C43]', label: 'Baru' };
-        case 'Diproses':
-        case 'Sedang Diproses':
-        case 'Diproses Teknisi':
-          return { bg: 'bg-blue-50', text: 'text-[#2563EB]', dot: 'bg-[#2563EB]', label: 'Diproses' };
-        case 'Menunggu Konfirmasi':
-          return { bg: 'bg-amber-50', text: 'text-[#D97706]', dot: 'bg-[#D97706]', label: 'Menunggu Konfirmasi' };
-        case 'Selesai':
-          return { bg: 'bg-emerald-50', text: 'text-[#169456]', dot: 'bg-[#169456]', label: 'Selesai' };
-        default:
-          return { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400', label: status };
-      }
-    };
-
-    const style = getStyles();
-
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold ${style.bg} ${style.text} whitespace-nowrap`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
-        {style.label}
-      </span>
-    );
-  };
+  // getStatusBadge replaced by shared TicketStatusBadge component
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/10 to-teal-50/10 p-4 md:p-8">
@@ -736,7 +712,7 @@ export function RiwayatPerbaikanPage() {
             <p className="font-bold text-emerald-900 text-sm mb-1">Riwayat Selesai</p>
             <p className="text-xs text-emerald-700 leading-relaxed px-2">Tiket ini telah diselesaikan dan dikonfirmasi oleh pelanggan.</p>
             <button
-              onClick={() => alert('Fitur Ekspor PDF Riwayat...')}
+              onClick={handleExportPDF}
               className="mt-4 w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-xs hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" /> Ekspor Riwayat (PDF)
