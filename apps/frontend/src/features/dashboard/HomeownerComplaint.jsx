@@ -28,9 +28,9 @@ import {
 } from 'lucide-react';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import NotificationPopup from '../../components/NotificationPopup';
+import HomeownerLayout from './HomeownerLayout';
 
 export function HomeownerComplaint({ onNavigate }) {
-    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState(null);
@@ -381,7 +381,7 @@ export function HomeownerComplaint({ onNavigate }) {
         if (ratingStars === 0) return;
 
         const now = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':');
-        
+
         const updated = complaints.map(c => {
             if (c.id === ratingTargetId) {
                 const updatedTicket = {
@@ -412,67 +412,11 @@ export function HomeownerComplaint({ onNavigate }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/20 to-teal-50/20 pb-20">
-            {/* Header Navigasi */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-                <div className="max-w-[1900px] mx-auto px-8 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <img src="/logo_bieon.png" alt="BIEON" className="h-10 object-contain" />
-                        </div>
-
-                        <nav className="hidden md:flex items-center gap-10">
-                            <button onClick={() => onNavigate && onNavigate('dashboard')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Beranda</button>
-                            <button onClick={() => onNavigate && onNavigate('kendali')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</button>
-                            <button onClick={() => onNavigate && onNavigate('history')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Riwayat</button>
-                        </nav>
-
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => onNavigate && onNavigate('pengaduan')} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
-                                <MessageSquare className="w-4 h-4" />
-                                Ajukan Pengaduan
-                            </button>
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowNotifications(!showNotifications)}
-                                    className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    <Bell className="w-5 h-5 text-gray-600" />
-                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                                </button>
-                                <NotificationPopup 
-                                    isOpen={showNotifications} 
-                                    onClose={() => setShowNotifications(false)} 
-                                    role="homeowner" 
-                                />
-                            </div>
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                                    className="flex items-center gap-2 hover:bg-gray-50 p-1.5 rounded-lg transition-all"
-                                >
-                                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
-                                    <div className="text-left">
-                                        <div className="text-xs font-semibold text-gray-900">Hi, Aisyah!</div>
-                                        <div className="text-xs text-gray-500">Homeowner</div>
-                                    </div>
-                                    <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
-                                </button>
-                                {showRoleDropdown && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
-                                        <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
-                                        <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
-                                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content Area */}
+        <HomeownerLayout 
+            currentPage="pengaduan" 
+            onNavigate={onNavigate}
+            hideBottomNav={isFormOpen || !!selectedTicket || !!ratingTargetId}
+        >
             <div className="max-w-[1900px] mx-auto px-4 md:px-8 py-8">
                 {/* Title Section */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
@@ -697,13 +641,13 @@ export function HomeownerComplaint({ onNavigate }) {
                         <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
                             <span>Rows per page:</span>
                             <div className="relative">
-                                <button 
+                                <button
                                     onClick={() => setShowRowsDropdown(!showRowsDropdown)}
                                     className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all shadow-sm"
                                 >
                                     {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                 </button>
-                                
+
                                 {showRowsDropdown && (
                                     <>
                                         <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
@@ -745,36 +689,48 @@ export function HomeownerComplaint({ onNavigate }) {
 
             {/* MODAL: FORM PENGADUAN BARU */}
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden">
-                        <div className="px-8 py-6 border-b border-gray-100 shrink-0">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <FileText className="w-5 h-5" /> Buat Pengaduan Baru
-                            </h2>
-                            <p className="text-gray-500 text-sm mt-1">Ceritakan kendala perangkat Anda, teknisi kami siap membantu.</p>
+                <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-t-[2rem] sm:rounded-[24px] shadow-2xl w-full max-w-3xl flex flex-col h-[85vh] sm:h-auto sm:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom sm:zoom-in duration-500 mt-[10vh] sm:mt-0 relative">
+                        {/* Header Section */}
+                        <div className="px-8 pt-10 pb-6 text-left shrink-0">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-teal-800">
+                                        <FileText className="w-7 h-7" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Buat Pengaduan Baru</h2>
+                                        <p className="text-gray-500 font-medium mt-1">Ceritakan kendala perangkat Anda, teknisi kami siap membantu.</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsFormOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="p-8 flex-1 overflow-y-auto">
-                            <form onSubmit={handleSubmitComplaint} className="space-y-6">
+                        {/* Body */}
+                        <div className="p-8 flex-1 overflow-y-auto custom-scrollbar">
+                            <form id="complaintForm" onSubmit={handleSubmitComplaint} className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-800 mb-2.5">Kategori <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Kategori <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
                                                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                                className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${showCategoryDropdown ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-gray-200'}`}
+                                                className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showCategoryDropdown ? 'bg-white border-teal-500 ring-4 ring-teal-500/10' : 'hover:bg-gray-100'}`}
                                             >
                                                 <span className={formData.category ? 'text-gray-900' : 'text-gray-400'}>
                                                     {formData.category || 'Pilih kategori pengaduan'}
                                                 </span>
-                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180 text-emerald-500' : ''}`} />
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
                                             </button>
 
                                             {showCategoryDropdown && (
                                                 <>
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowCategoryDropdown(false)}></div>
-                                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[70] animate-in fade-in zoom-in-95 duration-200 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
                                                         {['Energi & Kelistrikan', 'Kualitas Air', 'Keamanan', 'Kenyamanan & Udara', 'Perangkat Aktuator', 'Lainnya'].map((cat) => (
                                                             <button
                                                                 key={cat}
@@ -783,7 +739,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                     setFormData({ ...formData, category: cat });
                                                                     setShowCategoryDropdown(false);
                                                                 }}
-                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-emerald-600 bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                             >
                                                                 {cat}
                                                             </button>
@@ -795,23 +751,23 @@ export function HomeownerComplaint({ onNavigate }) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-800 mb-2.5">Pilih Ruangan & Perangkat <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Pilih Ruangan & Perangkat <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
                                                 onClick={() => setShowDeviceDropdown(!showDeviceDropdown)}
-                                                className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${showDeviceDropdown ? 'border-emerald-500 ring-4 ring-emerald-500/10' : 'border-gray-200'}`}
+                                                className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showDeviceDropdown ? 'bg-white border-teal-500 ring-4 ring-teal-500/10' : 'hover:bg-gray-100'}`}
                                             >
                                                 <span className={formData.device ? 'text-gray-900' : 'text-gray-400'}>
                                                     {formData.device || 'Pilih Ruangan & Perangkat'}
                                                 </span>
-                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDeviceDropdown ? 'rotate-180 text-emerald-500' : ''}`} />
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDeviceDropdown ? 'rotate-180' : ''}`} />
                                             </button>
 
                                             {showDeviceDropdown && (
                                                 <>
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowDeviceDropdown(false)}></div>
-                                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[70] animate-in fade-in zoom-in-95 duration-200 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
                                                         {[
                                                             'R3 Kitchen - Smart Plug (Exhaust)',
                                                             'R3 Kitchen - Gas Detector',
@@ -826,7 +782,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                     setFormData({ ...formData, device: dev });
                                                                     setShowDeviceDropdown(false);
                                                                 }}
-                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === dev ? 'text-emerald-600 bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === dev ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                             >
                                                                 {dev}
                                                             </button>
@@ -839,95 +795,97 @@ export function HomeownerComplaint({ onNavigate }) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-800 mb-2">Topik Kendala <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Topik Kendala <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="text"
                                         value={formData.topic}
                                         onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
                                         placeholder="Contoh: Sensor pH air tidak terbaca di dashboard"
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-teal-500 focus:outline-none font-medium transition-all placeholder:text-gray-400"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-800 mb-2">Deskripsi Detail <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Deskripsi Detail <span className="text-red-500">*</span></label>
                                     <textarea
                                         required
                                         rows={4}
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         placeholder="Jelaskan kronologi atau detail kendala yang Anda alami agar teknisi kami dapat menganalisis lebih cepat..."
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-teal-500 focus:outline-none font-medium transition-all resize-none placeholder:text-gray-400"
                                     />
                                 </div>
 
-                                {/* File Upload / Drag Drop */}
-                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 relative hover:bg-gray-100 transition-colors">
-                                    <input
-                                        type="file"
-                                        multiple
-                                        disabled
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                                        ref={fileInputRef}
-                                        onChange={handleFileChange}
-                                        accept="image/*"
-                                        title="Preview sementara menggunakan tombol di bawahnya"
-                                    />
-                                    <UploadCloud className="w-8 h-8 mx-auto text-gray-400 mb-3" />
-                                    <p className="text-sm text-gray-500 mb-4">Unggah foto alat yang bermasalah atau screenshot dashboard (Maks. 5MB)</p>
-                                    <button
-                                        type="button"
-                                        onClick={() => fileInputRef.current.click()}
-                                        className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 z-10 relative cursor-pointer"
-                                    >
-                                        Choose Files
-                                    </button>
-
-                                    {/* Preview Thumbnails */}
-                                    {formFiles.length > 0 && (
-                                        <div className="flex flex-wrap gap-3 mt-6 justify-center">
-                                            {formFiles.map((f, idx) => (
-                                                <div key={idx} className="relative w-16 h-16 rounded-md overflow-hidden border border-gray-200 shadow-sm z-20">
-                                                    <img src={f.previewUrl} alt={f.name} className="w-full h-full object-cover" />
-                                                    <button type="button" onClick={() => removeFile(idx)} className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-md w-5 h-5 flex items-center justify-center">
-                                                        <X className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                {/* File Upload Section */}
+                                <div>
+                                    <div className="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center bg-white relative hover:border-teal-500 transition-all group">
+                                        <input
+                                            type="file"
+                                            multiple
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            accept="image/*"
+                                        />
+                                        <div className="flex flex-col items-center pointer-events-none">
+                                            <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
+                                            <p className="text-sm font-medium text-gray-500 mb-4">Unggah foto alat yang bermasalah atau screenshot dashboard (Maks. 5MB)</p>
+                                            <button type="button" className="px-6 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 transition-colors pointer-events-auto">
+                                                Choose Files
+                                            </button>
                                         </div>
-                                    )}
+
+                                        {formFiles.length > 0 && (
+                                            <div className="flex flex-wrap gap-4 mt-8 justify-center relative z-10">
+                                                {formFiles.map((f, idx) => (
+                                                    <div key={idx} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-md">
+                                                        <img src={f.previewUrl} alt={f.name} className="w-full h-full object-cover" />
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={(e) => { e.stopPropagation(); removeFile(idx); }} 
+                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Info Warning */}
-                                <div className="flex items-start gap-3 p-4 bg-white border border-gray-200 rounded-xl text-sm text-gray-600">
-                                    <AlertCircle className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                                <div className="flex items-center gap-4 p-5 bg-white border border-gray-100 rounded-xl text-sm font-medium text-gray-500">
+                                    <AlertCircle className="w-6 h-6 text-gray-400 shrink-0" />
                                     <p>Pastikan deskripsi dan foto yang dilampirkan sudah sesuai agar teknisi dapat menangani kendala Anda lebih cepat.</p>
                                 </div>
-
-                                <div className="flex gap-4 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsFormOpen(false)}
-                                        className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 py-3.5 bg-[#4B8378] text-white font-bold rounded-xl hover:bg-[#3d6b62] transition-colors shadow-md"
-                                    >
-                                        Kirim Pengajuan
-                                    </button>
-                                </div>
                             </form>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-8 flex gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setIsFormOpen(false)}
+                                className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                form="complaintForm"
+                                type="submit"
+                                className="flex-[2] py-3.5 bg-[#558580] text-white font-bold rounded-xl hover:opacity-90 transition-all active:scale-95"
+                            >
+                                Kirim Pengaduan
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
             {/* MODAL: DETAIL PENGADUAN (Shared Component) */}
-            <ComplaintDetailModal 
+            <ComplaintDetailModal
                 isOpen={!!selectedTicket}
                 onClose={() => setSelectedTicket(null)}
                 ticket={selectedTicket}
@@ -941,7 +899,7 @@ export function HomeownerComplaint({ onNavigate }) {
                             </div>
                             <button
                                 onClick={() => handleSelesaikanTiket(selectedTicket.id)}
-                                className="w-full py-3.5 bg-[#4B8378] text-white rounded-xl font-bold text-sm shadow-lg hover:bg-[#3d6b62] transition-all hover:shadow-xl active:scale-95"
+                                className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-emerald-700 transition-all hover:shadow-xl active:scale-95"
                             >
                                 Selesaikan Tiket
                             </button>
@@ -953,70 +911,67 @@ export function HomeownerComplaint({ onNavigate }) {
 
             {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {ratingTargetId && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-                    <div className="bg-[#489C74] rounded-[2rem] p-8 max-w-lg w-full text-center relative mt-16 shadow-2xl">
-                        {/* Emoji Display Header */}
-                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-32 h-32 flex items-center justify-center">
-                            <span className="text-[6rem] leading-none drop-shadow-xl" style={{ textShadow: "0 10px 15px rgba(0,0,0,0.2)" }}>😍</span>
-                        </div>
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
+                    <div className="bg-[#489C74] rounded-[2.5rem] sm:rounded-[3rem] p-8 max-w-lg w-full text-center relative shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-y-auto max-h-[90vh] custom-scrollbar">
+                        <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-8 sm:hidden" />
                         
-                        <h2 className="text-2xl font-bold text-white mt-8 mb-3">Konfirmasi & Beri Penilaian</h2>
-                        <p className="text-white/90 text-sm mb-8 leading-relaxed px-4">
-                            Bagaimana hasil perbaikan dari teknisi kami? Penilaian Anda sangat membantu kami dalam menjaga kualitas layanan PT Matra.
+                        {/* Emoji Display Header */}
+                        <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <span className="text-5xl leading-none">😍</span>
+                        </div>
+
+                        <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Perbaikan Selesai!</h2>
+                        <p className="text-emerald-50/80 text-sm mb-10 leading-relaxed font-bold italic">
+                            Bantu kami menjaga kualitas layanan BIEON
                         </p>
 
-                        <div className="flex justify-center gap-2 mb-6">
+                        <div className="flex justify-center gap-3 mb-10">
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <button
                                     key={star}
                                     onMouseEnter={() => setHoverStars(star)}
                                     onMouseLeave={() => setHoverStars(0)}
                                     onClick={() => setRatingStars(star)}
-                                    className="focus:outline-none transition-transform hover:scale-110 p-1"
+                                    className="focus:outline-none transition-transform hover:scale-125 duration-300"
                                 >
-                                    <Star 
-                                        className={`w-12 h-12 ${
-                                            (hoverStars || ratingStars) >= star 
-                                                ? "fill-[#FCD34D] text-[#FCD34D]" 
-                                                : "fill-gray-300 text-gray-300 opacity-50"
-                                        } drop-shadow-md`} 
+                                    <Star
+                                        className={`w-10 h-10 ${(hoverStars || ratingStars) >= star
+                                                ? "fill-[#FCD34D] text-[#FCD34D]"
+                                                : "fill-white/20 text-white/20"
+                                            } drop-shadow-lg`}
                                     />
                                 </button>
                             ))}
                         </div>
 
-                        <p className="text-white/80 text-xs italic mb-6 px-6">
-                            "Penilaian Anda mencakup keseluruhan dari kecepatan respons, kecepatan perbaikan, komunikasi dan keramahan teknisi kami."
-                        </p>
-
-                        <div className="text-left mb-6">
-                            <label className="block text-white text-sm font-medium mb-2">Tuliskan Ulasan Anda</label>
+                        <div className="text-left mb-10">
+                            <label className="block text-white/60 text-[10px] font-black uppercase tracking-widest mb-3">Pesan untuk Teknisi</label>
                             <textarea
                                 value={ratingReview}
                                 onChange={(e) => setRatingReview(e.target.value)}
-                                placeholder="Contoh: Teknisi datang tepat waktu, masalah kipas exhaust sudah beres dan berfungsi normal."
-                                className="w-full bg-white/10 border border-white/20 rounded-xl p-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none h-28 text-sm"
+                                placeholder="Contoh: Sangat membantu, tepat waktu!"
+                                className="w-full bg-white/10 border border-white/20 rounded-2xl p-6 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none h-32 text-sm font-bold"
                             />
                         </div>
 
-                        <div className="flex justify-center gap-4">
+                        <div className="flex gap-4">
                             <button
                                 onClick={() => { setRatingTargetId(null); setRatingStars(0); setHoverStars(0); setRatingReview(''); }}
-                                className="px-6 py-3 bg-white/10 text-white font-bold rounded-xl w-full max-w-[120px] hover:bg-white/20 transition-colors"
+                                className="flex-1 py-4 text-white/60 font-black uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={submitRating}
                                 disabled={ratingStars === 0}
-                                className={`px-6 py-3 bg-white text-[#489C74] font-bold rounded-xl w-full max-w-[150px] transition-all shadow-lg ${ratingStars === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 hover:shadow-xl'}`}
+                                className={`flex-[2] py-4 bg-white text-[#489C74] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl ${ratingStars === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95'}`}
                             >
-                                Submit
+                                Kirim Review
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </HomeownerLayout>
     );
 }

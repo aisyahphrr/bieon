@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ArrowLeft, Bell, AlertTriangle, Briefcase, 
   User, Award, Hourglass, Server, Activity, 
-  Fan, Flame, Zap, Lock, LogIn, CheckCircle
+  Fan, Flame, Zap, Lock, LogIn, CheckCircle, CheckCheck
 } from 'lucide-react';
 
 const notificationData = {
@@ -114,6 +114,47 @@ const notificationData = {
       message: 'Pintu depan terbuka tanpa otoritas',
       time: '15 min ago',
       icon: Lock,
+    },
+    // Duplicated dummy data to test scrolling
+    {
+      id: 6,
+      type: 'purple',
+      title: 'Motion Detected (Archive)',
+      message: 'Gerakan terdeteksi di ruang tamu',
+      time: '2 hours ago',
+      icon: Activity,
+    },
+    {
+      id: 7,
+      type: 'info',
+      title: 'Suhu Tinggi (Archive)',
+      message: 'Suhu ruang produksi 31°C, kipas otomatis menyala',
+      time: '3 hours ago',
+      icon: Fan,
+    },
+    {
+      id: 8,
+      type: 'danger',
+      title: 'Gas Berbahaya (Archive)',
+      message: 'Konsentrasi gas di dapur melebihi batas',
+      time: '4 hours ago',
+      icon: AlertTriangle,
+    },
+    {
+      id: 9,
+      type: 'warning',
+      title: 'Tagihan Air',
+      message: 'Tagihan air PDAM bulan ini Rp125.000',
+      time: '1 day ago',
+      icon: Zap,
+    },
+    {
+      id: 10,
+      type: 'success',
+      title: 'Sistem Optimal',
+      message: 'Semua sistem berjalan dengan normal dan optimal hari ini.',
+      time: '1 day ago',
+      icon: CheckCircle,
     }
   ]
 };
@@ -121,33 +162,33 @@ const notificationData = {
 const typeStyles = {
   danger: {
     border: 'border-[#ff3b30]',
-    bg: 'bg-red-50/60',
+    bg: 'bg-red-50',
     iconText: 'text-[#ff3b30]',
     iconBg: 'bg-red-100'
   },
   warning: {
     border: 'border-[#ff9500]',
-    bg: 'bg-orange-50/60',
+    bg: 'bg-orange-50',
     iconText: 'text-[#ff9500]',
-    iconBg: 'bg-amber-100/80'
+    iconBg: 'bg-amber-100'
   },
   info: {
     border: 'border-[#007aff]',
-    bg: 'bg-blue-50/60',
+    bg: 'bg-blue-50',
     iconText: 'text-[#007aff]',
-    iconBg: 'bg-blue-100/80'
+    iconBg: 'bg-blue-100'
   },
   success: {
     border: 'border-[#34c759]',
-    bg: 'bg-green-50/60',
+    bg: 'bg-green-50',
     iconText: 'text-[#34c759]',
     iconBg: 'bg-green-100'
   },
   purple: {
     border: 'border-[#af52de]',
-    bg: 'bg-purple-50/60',
+    bg: 'bg-purple-50',
     iconText: 'text-[#af52de]',
-    iconBg: 'bg-purple-100/80'
+    iconBg: 'bg-purple-100'
   }
 };
 
@@ -156,16 +197,26 @@ const NotificationPopup = ({
   onClose, 
   role = 'homeowner' // 'technician', 'admin', 'homeowner'
 }) => {
+  const [isAllRead, setIsAllRead] = useState(false);
+  const [readIds, setReadIds] = useState(new Set());
+
   if (!isOpen) return null;
 
   const notifications = notificationData[role] || [];
 
+  const isRead = (id) => isAllRead || readIds.has(id);
+  const handleRead = (id) => {
+    if (!isAllRead) {
+      setReadIds(prev => new Set(prev).add(id));
+    }
+  };
+
   return (
-    <div className="absolute right-0 top-14 sm:top-16 z-50 w-full sm:w-[420px] max-w-[100vw] h-[calc(100vh-100px)] sm:max-h-[600px] bg-white rounded-none sm:rounded-[24px] shadow-2xl flex flex-col border border-gray-100 overflow-hidden" 
+    <div className="fixed right-0 top-[56px] md:top-[73px] z-[40] w-full sm:w-[420px] max-w-[100vw] h-[calc(100vh-56px)] md:h-[calc(100vh-73px)] bg-white/80 backdrop-blur-md shadow-2xl flex flex-col border-l border-gray-100 overflow-hidden rounded-l-[24px] sm:rounded-l-[32px] animate-in slide-in-from-right-8 duration-300" 
          style={{ filter: 'drop-shadow(0px 10px 40px rgba(0,0,0,0.08))'}}>
       
       {/* Header */}
-      <div className="px-5 py-4 flex items-center justify-between border-b border-gray-50 flex-shrink-0 bg-white z-10">
+      <div className="px-5 py-4 flex items-center justify-between border-b border-gray-50 flex-shrink-0 bg-transparent z-10">
         <div className="flex items-center gap-3">
           <button 
             onClick={onClose} 
@@ -178,13 +229,19 @@ const NotificationPopup = ({
             <h2 className="text-gray-900 font-bold text-[17px] tracking-tight">Notifikasi & Alert</h2>
           </div>
         </div>
-        <button className="text-[13px] text-[#059669] font-medium tracking-wide hover:text-emerald-700 transition-colors">
-          Tandai semua dibaca
-        </button>
+        {!isAllRead && (
+          <button 
+            onClick={() => setIsAllRead(true)}
+            className="text-[13px] text-[#059669] font-medium tracking-wide hover:text-emerald-700 transition-colors"
+          >
+            Tandai semua dibaca
+          </button>
+        )}
       </div>
 
       {/* Content / List Items */}
-      <div className="flex-1 overflow-y-auto w-full p-4 space-y-4 bg-[#fcfcfc] sm:bg-white custom-scrollbar pb-6 hidden-scrollbar">
+      {/* Added pb-[90px] on mobile to prevent bottom nav from covering the last item */}
+      <div className="flex-1 overflow-y-auto w-full p-4 space-y-4 bg-transparent custom-scrollbar pb-[90px] md:pb-6 hidden-scrollbar">
         {notifications.map((notif) => {
           const style = typeStyles[notif.type] || typeStyles.info;
           const Icon = notif.icon;
@@ -192,11 +249,17 @@ const NotificationPopup = ({
           return (
             <div 
               key={notif.id}
-              className={`relative flex items-start gap-4 p-4 rounded-2xl ${style.bg} border-l-[5px] ${style.border} transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm group cursor-pointer`}
+              onClick={() => handleRead(notif.id)}
+              className={`relative flex items-start gap-4 p-4 rounded-2xl border-l-[5px] transition-all duration-300 group cursor-pointer shadow-sm
+                ${!isRead(notif.id) 
+                  ? `${style.bg} ${style.border} hover:-translate-y-0.5 hover:shadow-md` 
+                  : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 border-l-gray-300'
+                }`}
             >
               {/* Icon Container */}
-              <div className={`shrink-0 w-11 h-11 rounded-[14px] flex items-center justify-center ${style.iconBg}`}>
-                <Icon className={`w-5 h-5 stroke-[2px] ${style.iconText}`} />
+              <div className={`shrink-0 w-11 h-11 rounded-[14px] flex items-center justify-center transition-colors duration-300
+                ${!isRead(notif.id) ? style.iconBg : 'bg-gray-200'} `}>
+                <Icon className={`w-5 h-5 stroke-[2px] transition-colors duration-300 ${!isRead(notif.id) ? style.iconText : 'text-gray-500'} `} />
               </div>
 
               {/* Text Content */}

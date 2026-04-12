@@ -43,6 +43,7 @@ import { PengaduanKlienPage } from './PengaduanKlienPage';
 import { KonfigurasiPerangkatPage } from './KonfigurasiPerangkatPage';
 import { RiwayatPerbaikanPage } from './RiwayatPerbaikanPage';
 import { TechnicianProfilePage } from './profileteknisi';
+import TechnicianLayout from './TechnicianLayout';
 
 const mockClients = [
   {
@@ -301,7 +302,6 @@ export function TechnicianDashboard({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -645,88 +645,11 @@ export function TechnicianDashboard({ onNavigate }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F5FFFC] via-[#F5FFFC] to-[#F5FFFC] pb-20 font-sans">
-      {/* Top Bar Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-        <div className="max-w-[1900px] mx-auto px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <img src="/logo_bieon.png" alt="BIEON" className="h-10 object-contain" />
-            </div>
-
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center gap-10">
-              <button 
-                onClick={() => setActiveMenu('dashboard')} 
-                className={`font-semibold pb-1 border-b-2 transition-colors ${activeMenu === 'dashboard' ? 'text-teal-700 border-teal-700' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}>
-                Beranda
-              </button>
-              <button 
-                onClick={() => setActiveMenu('konfigurasi')} 
-                className={`font-semibold pb-1 border-b-2 transition-colors ${activeMenu === 'konfigurasi' ? 'text-teal-700 border-teal-700' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}>
-                Kendali Perangkat
-              </button>
-              <button 
-                onClick={() => setActiveMenu('riwayat')} 
-                className={`font-semibold pb-1 border-b-2 transition-colors ${activeMenu === 'riwayat' ? 'text-teal-700 border-teal-700' : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'}`}>
-                Riwayat
-              </button>
-            </nav>
-
-            {/* Profile & Actions */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setActiveMenu('pengaduan')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Pengaduan
-              </button>
-              
-              <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              </button>
-              
-              <div className="relative">
-                <button
-                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                  className="flex items-center gap-2 hover:bg-gray-50 p-1.5 rounded-lg transition-all"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                    TB
-                  </div>
-                  <div className="text-left hidden md:block">
-                    <div className="text-xs font-semibold text-gray-900">Teknisi BPJS</div>
-                    <div className="text-xs text-gray-500">Teknisi</div>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
-                </button>
-                {showRoleDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                    <button 
-                       onClick={() => { setActiveMenu('profile'); setShowRoleDropdown(false); }} 
-                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-bold transition-colors border-b border-gray-100"
-                    >
-                      Lihat Profil Saya
-                    </button>
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-1">Ganti Role (Demo)</div>
-                    <button onClick={() => onNavigate && onNavigate("dashboard")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Homeowner</button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Teknisi</button>
-                    <button onClick={() => onNavigate && onNavigate("admin")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <TechnicianLayout activeMenu={activeMenu} setActiveMenu={setActiveMenu} onNavigate={onNavigate}>
       {/* Main Content Area */}
-      <main className="max-w-[1900px] mx-auto px-8">
+      <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8">
           {renderContent()}
-        </main>
+      </div>
 
       {/* Detail Modal */}
       {selectedClient && (
@@ -899,6 +822,6 @@ export function TechnicianDashboard({ onNavigate }) {
           </div>
         </div>
       )}
-    </div>
+    </TechnicianLayout>
   );
 }

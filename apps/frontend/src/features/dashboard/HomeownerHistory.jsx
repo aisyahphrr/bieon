@@ -12,6 +12,7 @@ import {
     ChevronDown
 } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
+import HomeownerLayout from './HomeownerLayout';
 
 export function HomeownerHistory({ onNavigate }) {
     const [activeTab, setActiveTab] = useState('Kenyamanan');
@@ -377,66 +378,11 @@ export function HomeownerHistory({ onNavigate }) {
     const colWidth = ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'w-[14.2%]' : 'w-1/5';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/20 to-teal-50/20">
-            {/* Header */}
-            <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-                <div className="max-w-[1900px] mx-auto px-8 py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img src="/logo_bieon.png" alt="BIEON" className="h-10 object-contain" />
-                    </div>
-
-                    <nav className="hidden md:flex items-center gap-10">
-                      <button onClick={() => onNavigate && onNavigate('dashboard')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Beranda</button>
-                      <button onClick={() => onNavigate && onNavigate('kendali')} className="text-teal-700 font-semibold hover:text-teal-900 transition-colors pb-1 border-b-2 border-transparent hover:border-teal-700">Kendali Perangkat</button>
-                      <button onClick={() => onNavigate && onNavigate('history')} className="text-teal-700 font-semibold border-b-2 border-teal-700 pb-1">Riwayat</button>
-                    </nav>
-
-                    <div className="flex items-center gap-4">
-                      <button onClick={() => onNavigate && onNavigate('pengaduan')} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
-                        <MessageSquare className="w-4 h-4" />
-                        Ajukan Pengaduan
-                      </button>
-                      <div className="relative">
-                        <button 
-                          onClick={() => setShowNotifications(!showNotifications)}
-                          className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <Bell className="w-5 h-5 text-gray-600" />
-                          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                        </button>
-                        <NotificationPopup 
-                          isOpen={showNotifications} 
-                          onClose={() => setShowNotifications(false)} 
-                          role="homeowner" 
-                        />
-                      </div>
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                          className="flex items-center gap-2 hover:bg-gray-50 p-1.5 rounded-lg transition-all"
-                        >
-                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full"></div>
-                          <div className="text-left">
-                            <div className="text-xs font-semibold text-gray-900">Hi, Aisyah!</div>
-                            <div className="text-xs text-gray-500">Homeowner</div>
-                          </div>
-                          <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
-                        </button>
-                        {showRoleDropdown && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                            <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
-                            <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
-                            <button onClick={() => onNavigate && onNavigate("teknisi")} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
-                            <button onClick={() => onNavigate && onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-            </header>
-
+        <HomeownerLayout 
+            currentPage="history" 
+            onNavigate={onNavigate}
+            hideBottomNav={false}
+        >
             {/* Main Content */}
             <div className="max-w-[1900px] mx-auto px-8 py-8">
                 <h1 className="text-4xl font-bold text-center text-[#235C50] mb-8">Riwayat Aktivitas</h1>
@@ -826,6 +772,6 @@ export function HomeownerHistory({ onNavigate }) {
                     )}
                 </div>
             </div>
-        </div>
+        </HomeownerLayout>
     );
 }
