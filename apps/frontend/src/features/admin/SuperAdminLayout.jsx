@@ -105,7 +105,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-white/10 shrink-0">
           <button
-            onClick={() => handleNavigate('login')}
+            onClick={() => handleNavigate('landing')}
             className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center'} py-3 rounded-2xl hover:bg-white/10 text-white/70 transition-all group font-medium`}
           >
             <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 group-hover:text-red-300" />

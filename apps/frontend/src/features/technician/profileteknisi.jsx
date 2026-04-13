@@ -22,7 +22,8 @@ import {
     Target,
     Activity,
     BookOpen,
-    MapPinned
+    MapPinned,
+    LogOut
 } from 'lucide-react';
 
 
@@ -151,14 +152,11 @@ const mockProfile = {
     ]
 };
 
-export function TechnicianProfilePage() {
+export function TechnicianProfilePage({ onNavigate }) {
     const [profile, setProfile] = useState(mockProfile);
     const [isEditingPersonal, setIsEditingPersonal] = useState(false);
-    const [isEditingProfessional, setIsEditingProfessional] = useState(false);
     const [isEditingCertifications, setIsEditingCertifications] = useState(false);
     const [isEditingTrainings, setIsEditingTrainings] = useState(false);
-    const [isEditingSkills, setIsEditingSkills] = useState(false);
-    const [isEditingSchedule, setIsEditingSchedule] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     const [editedProfile, setEditedProfile] = useState(profile);
@@ -178,15 +176,7 @@ export function TechnicianProfilePage() {
         setIsEditingPersonal(false);
     };
 
-    const handleSaveProfessional = () => {
-        setProfile(editedProfile);
-        setIsEditingProfessional(false);
-    };
 
-    const handleCancelProfessional = () => {
-        setEditedProfile(profile);
-        setIsEditingProfessional(false);
-    };
 
     const handleSaveCertifications = () => {
         setProfile(editedProfile);
@@ -208,25 +198,9 @@ export function TechnicianProfilePage() {
         setIsEditingTrainings(false);
     };
 
-    const handleSaveSkills = () => {
-        setProfile(editedProfile);
-        setIsEditingSkills(false);
-    };
 
-    const handleCancelSkills = () => {
-        setEditedProfile(profile);
-        setIsEditingSkills(false);
-    };
 
-    const handleSaveSchedule = () => {
-        setProfile(editedProfile);
-        setIsEditingSchedule(false);
-    };
 
-    const handleCancelSchedule = () => {
-        setEditedProfile(profile);
-        setIsEditingSchedule(false);
-    };
 
     const handleChangePassword = () => {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -250,35 +224,35 @@ export function TechnicianProfilePage() {
         <div className="w-full max-w-7xl mx-auto py-8">
             <div className="w-full">
                 {/* Header with Cover Photo */}
-                <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl shadow-xl mb-6 overflow-hidden relative h-48">
+                <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl shadow-xl mb-6 overflow-hidden relative h-32 sm:h-48">
                     <div className="absolute inset-0 bg-black/10"></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                 </div>
 
                 {/* Profile Header Card */}
-                <div className="bg-white rounded-3xl shadow-xl -mt-24 mb-6 relative z-10">
-                    <div className="p-8">
-                        <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
+                <div className="bg-white rounded-3xl shadow-xl -mt-16 sm:-mt-24 mb-6 relative z-10">
+                    <div className="p-5 sm:p-8">
+                        <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
                             {/* Photo */}
-                            <div className="relative group">
-                                <div className="w-40 h-40 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl flex items-center justify-center text-white shadow-2xl border-4 border-white">
+                            <div className="relative group -mt-10 md:mt-0">
+                                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl flex items-center justify-center text-white shadow-2xl border-4 border-white overflow-hidden">
                                     {profile.photoUrl ? (
-                                        <img src={profile.photoUrl} alt={profile.fullName} className="w-full h-full object-cover rounded-3xl" />
+                                        <img src={profile.photoUrl} alt={profile.fullName} className="w-full h-full object-cover" />
                                     ) : (
-                                        <span className="text-6xl font-bold">BSS</span>
+                                        <span className="text-5xl sm:text-6xl font-bold">BSS</span>
                                     )}
                                 </div>
-                                <button className="absolute bottom-2 right-2 w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Camera className="w-5 h-5" />
+                                <button className="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </button>
                             </div>
 
                             {/* Basic Info */}
-                            <div className="flex-1">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <h1 className="text-3xl font-bold text-gray-900 mb-2">{profile.fullName}</h1>
-                                        <p className="text-lg text-emerald-600 font-semibold mb-2">{profile.position}</p>
+                            <div className="flex-1 w-full">
+                                <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-4 gap-3">
+                                    <div className="flex flex-col items-center md:items-start">
+                                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{profile.fullName}</h1>
+                                        <p className="text-base sm:text-lg text-emerald-600 font-semibold mb-2">{profile.position}</p>
                                         <div className="flex items-center gap-2 text-gray-600">
                                             <span className="text-sm">@{profile.username}</span>
                                             <span className="text-gray-400">•</span>
@@ -294,6 +268,7 @@ export function TechnicianProfilePage() {
                                         {profile.availabilityStatus}
                                     </div>
                                 </div>
+
 
                                 {/* Quick Stats */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -332,7 +307,7 @@ export function TechnicianProfilePage() {
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     {/* Left Column */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Personal Information */}
@@ -513,75 +488,24 @@ export function TechnicianProfilePage() {
                                         <p className="text-sm text-gray-600">Data karir dan keahlian</p>
                                     </div>
                                 </div>
-                                {!isEditingProfessional ? (
-                                    <button
-                                        onClick={() => setIsEditingProfessional(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
-                                    >
-                                        <Edit3 className="w-4 h-4" />
-                                        <span className="text-sm font-semibold">Edit</span>
-                                    </button>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleSaveProfessional}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
-                                        >
-                                            <Save className="w-4 h-4" />
-                                            <span className="text-sm font-semibold">Simpan</span>
-                                        </button>
-                                        <button
-                                            onClick={handleCancelProfessional}
-                                            className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            <span className="text-sm font-semibold">Batal</span>
-                                        </button>
-                                    </div>
-                                )}
+
                             </div>
 
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Posisi</label>
-                                        {isEditingProfessional ? (
-                                            <input
-                                                type="text"
-                                                value={editedProfile.position}
-                                                onChange={(e) => setEditedProfile({ ...editedProfile, position: e.target.value })}
-                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        ) : (
-                                            <p className="text-gray-900 font-medium">{profile.position}</p>
-                                        )}
+                                        <p className="text-gray-900 font-medium">{profile.position}</p>
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">Pengalaman (Tahun)</label>
-                                        {isEditingProfessional ? (
-                                            <input
-                                                type="number"
-                                                value={editedProfile.experienceYears}
-                                                onChange={(e) => setEditedProfile({ ...editedProfile, experienceYears: parseInt(e.target.value) || 0 })}
-                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        ) : (
-                                            <p className="text-gray-900 font-medium">{profile.experienceYears} tahun</p>
-                                        )}
+                                        <p className="text-gray-900 font-medium">{profile.experienceYears} tahun</p>
                                     </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-3">Spesialisasi (Pisahkan dengan koma)</label>
-                                    {isEditingProfessional ? (
-                                        <input
-                                            type="text"
-                                            value={editedProfile.specialization.join(', ')}
-                                            onChange={(e) => setEditedProfile({ ...editedProfile, specialization: e.target.value.split(',').map(s => s.trim()) })}
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    ) : (
                                         <div className="flex flex-wrap gap-2">
                                             {profile.specialization.map((spec, index) => (
                                                 <span
@@ -592,19 +516,10 @@ export function TechnicianProfilePage() {
                                                 </span>
                                             ))}
                                         </div>
-                                    )}
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-3">Area Coverage (Pisahkan dengan koma)</label>
-                                    {isEditingProfessional ? (
-                                        <input
-                                            type="text"
-                                            value={editedProfile.coverageAreas.join(', ')}
-                                            onChange={(e) => setEditedProfile({ ...editedProfile, coverageAreas: e.target.value.split(',').map(s => s.trim()) })}
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        />
-                                    ) : (
                                         <div className="flex flex-wrap gap-2">
                                             {profile.coverageAreas.map((area, index) => (
                                                 <span
@@ -616,7 +531,6 @@ export function TechnicianProfilePage() {
                                                 </span>
                                             ))}
                                         </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -697,93 +611,10 @@ export function TechnicianProfilePage() {
                                         <p className="text-sm text-gray-600">Tingkat keahlian teknis</p>
                                     </div>
                                 </div>
-                                {!isEditingSkills ? (
-                                    <button
-                                        onClick={() => setIsEditingSkills(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-colors"
-                                    >
-                                        <Edit3 className="w-4 h-4" />
-                                        <span className="text-sm font-semibold">Edit</span>
-                                    </button>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleSaveSkills}
-                                            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-colors"
-                                        >
-                                            <Save className="w-4 h-4" />
-                                            <span className="text-sm font-semibold">Simpan</span>
-                                        </button>
-                                        <button
-                                            onClick={handleCancelSkills}
-                                            className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            <span className="text-sm font-semibold">Batal</span>
-                                        </button>
-                                    </div>
-                                )}
+
                             </div>
 
                             <div className="space-y-4">
-                                {isEditingSkills ? (
-                                    <>
-                                        {editedProfile.skills.map((skill, index) => (
-                                            <div key={index} className="flex flex-col md:flex-row gap-3 p-3 bg-gray-50 rounded-xl border-2 border-gray-100 group relative">
-                                                <button 
-                                                    onClick={() => {
-                                                        const newSkills = editedProfile.skills.filter((_, i) => i !== index);
-                                                        setEditedProfile({ ...editedProfile, skills: newSkills });
-                                                    }}
-                                                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                                <div className="flex-1">
-                                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Nama Skill</label>
-                                                    <input 
-                                                        type="text" 
-                                                        value={skill.name} 
-                                                        onChange={(e) => {
-                                                            const newSkills = [...editedProfile.skills];
-                                                            newSkills[index].name = e.target.value;
-                                                            setEditedProfile({ ...editedProfile, skills: newSkills });
-                                                        }}
-                                                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none h-10"
-                                                    />
-                                                </div>
-                                                <div className="w-full md:w-32">
-                                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Level (1-5)</label>
-                                                    <input 
-                                                        type="number" 
-                                                        min="1" 
-                                                        max="5"
-                                                        value={skill.level} 
-                                                        onChange={(e) => {
-                                                            const newSkills = [...editedProfile.skills];
-                                                            newSkills[index].level = parseInt(e.target.value) || 1;
-                                                            setEditedProfile({ ...editedProfile, skills: newSkills });
-                                                        }}
-                                                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none h-10 text-center"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <button 
-                                            onClick={() => {
-                                                setEditedProfile({ 
-                                                    ...editedProfile, 
-                                                    skills: [...editedProfile.skills, { name: '', level: 1 }] 
-                                                });
-                                            }}
-                                            className="w-full py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-bold hover:border-orange-500 hover:text-orange-500 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <Save className="w-4 h-4" />
-                                            <span>Tambah Skill Baru</span>
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
                                         {profile.skills.map((skill, index) => (
                                             <div key={index}>
                                                 <div className="flex items-center justify-between mb-2">
@@ -798,8 +629,6 @@ export function TechnicianProfilePage() {
                                                 </div>
                                             </div>
                                         ))}
-                                    </>
-                                )}
                             </div>
                         </div>
 
@@ -819,10 +648,10 @@ export function TechnicianProfilePage() {
                                 {profile.recentWork.map((work) => (
                                     <div
                                         key={work.id}
-                                        className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors"
+                                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors gap-4"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${work.type === 'Installation'
+                                        <div className="flex items-start sm:items-center gap-4">
+                                            <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${work.type === 'Installation'
                                                     ? 'bg-emerald-100'
                                                     : work.type === 'Repair'
                                                         ? 'bg-orange-100'
@@ -841,16 +670,16 @@ export function TechnicianProfilePage() {
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-gray-900">{work.clientName}</p>
-                                                <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
-                                                    <span className="font-medium">{work.type}</span>
-                                                    <span>•</span>
-                                                    <span>{work.location}</span>
-                                                    <span>•</span>
-                                                    <span>{work.date}</span>
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-gray-600 mt-1">
+                                                    <span className="font-medium text-emerald-600">{work.type}</span>
+                                                    <span className="hidden sm:inline">•</span>
+                                                    <span className="line-clamp-1">{work.location}</span>
+                                                    <span className="hidden sm:inline">•</span>
+                                                    <span className="whitespace-nowrap">{work.date}</span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-3 self-start sm:self-auto shrink-0 pl-16 sm:pl-0">
                                             {work.rating && (
                                                 <div className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-lg">
                                                     <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
@@ -963,56 +792,10 @@ export function TechnicianProfilePage() {
                                         <p className="text-sm text-gray-600">Jam operasional</p>
                                     </div>
                                 </div>
-                                {!isEditingSchedule ? (
-                                    <button
-                                        onClick={() => setIsEditingSchedule(true)}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors"
-                                    >
-                                        <Edit3 className="w-4 h-4" />
-                                        <span className="text-sm font-semibold">Edit</span>
-                                    </button>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleSaveSchedule}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors"
-                                        >
-                                            <Save className="w-4 h-4" />
-                                            <span className="text-sm font-semibold">Simpan</span>
-                                        </button>
-                                        <button
-                                            onClick={handleCancelSchedule}
-                                            className="flex items-center gap-2 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors"
-                                        >
-                                            <X className="w-4 h-4" />
-                                            <span className="text-sm font-semibold">Batal</span>
-                                        </button>
-                                    </div>
-                                )}
+
                             </div>
 
                             <div className="space-y-2">
-                                {isEditingSchedule ? (
-                                    <>
-                                        {editedProfile.workSchedule.map((schedule, index) => (
-                                            <div key={index} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-xl border-2 border-gray-100">
-                                                <span className="text-xs font-bold text-gray-400 uppercase">{schedule.day}</span>
-                                                <input 
-                                                    type="text" 
-                                                    value={schedule.hours} 
-                                                    onChange={(e) => {
-                                                        const newSchedule = [...editedProfile.workSchedule];
-                                                        newSchedule[index].hours = e.target.value;
-                                                        setEditedProfile({ ...editedProfile, workSchedule: newSchedule });
-                                                    }}
-                                                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-10"
-                                                    placeholder="Contoh: 08:00 - 17:00 atau Off"
-                                                />
-                                            </div>
-                                        ))}
-                                    </>
-                                ) : (
-                                    <>
                                         {profile.workSchedule.map((schedule, index) => (
                                             <div
                                                 key={index}
@@ -1028,8 +811,6 @@ export function TechnicianProfilePage() {
                                                 </span>
                                             </div>
                                         ))}
-                                    </>
-                                )}
                             </div>
                         </div>
 
@@ -1314,6 +1095,34 @@ export function TechnicianProfilePage() {
                                     </>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Account Actions Section */}
+                        <div className="bg-white rounded-3xl shadow-lg p-6 border-2 border-red-50">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center">
+                                    <LogOut className="w-6 h-6 text-red-600" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900">Akun</h2>
+                                    <p className="text-sm text-gray-600">Manajemen sesi</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    if (onNavigate) {
+                                        onNavigate('landing');
+                                        setTimeout(() => {
+                                            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                                        }, 0);
+                                    }
+                                }}
+                                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-2xl transition-all duration-300 font-bold group shadow-sm hover:shadow-red-200"
+                            >
+                                <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                                <span>Logout dari Sistem</span>
+                            </button>
                         </div>
                     </div>
                 </div>

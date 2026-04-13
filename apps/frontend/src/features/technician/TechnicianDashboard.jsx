@@ -335,7 +335,7 @@ export function TechnicianDashboard({ onNavigate }) {
       case 'riwayat':
         return <RiwayatPerbaikanPage />;
       case 'profile':
-        return <TechnicianProfilePage />;
+        return <TechnicianProfilePage onNavigate={onNavigate} />;
       default:
         return (
           <div className="py-8">

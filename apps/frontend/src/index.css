@@ -188,3 +188,43 @@ html {
   font-size: var(--font-size);
   scroll-behavior: smooth;
 }
+
+@keyframes slideInRight { 
+     from { 
+         transform: translateX(100px); 
+         opacity: 0; 
+     } 
+     to { 
+         transform: translateX(0); 
+         opacity: 1; 
+     } 
+ } 
+ 
+ @keyframes fadeInUp { 
+     from { 
+         transform: translateY(30px); 
+         opacity: 0; 
+     } 
+     to { 
+         transform: translateY(0); 
+         opacity: 1; 
+     } 
+ } 
+ 
+ .animate-slide-in-right { 
+     animation: slideInRight 0.8s ease-out forwards; 
+ } 
+ 
+ .animate-fade-in-up { 
+     animation: fadeInUp 0.8s ease-out forwards; 
+ } 
+ 
+ .reveal { 
+     opacity: 0; 
+     transition: all 0.8s ease-out; 
+ } 
+ 
+ .reveal.active { 
+     opacity: 1; 
+     transform: translateY(0) translateX(0); 
+ } 

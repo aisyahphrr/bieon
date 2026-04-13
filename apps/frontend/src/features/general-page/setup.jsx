@@ -145,10 +145,12 @@ const Setup = ({ onNavigate }) => {
     };
 
     return (
-        <div className="min-h-screen bg-white flex font-sans">
+        <div className="min-h-[100dvh] bg-slate-50 flex font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[50%] bg-emerald-300/40 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_8s_ease-in-out_infinite] z-0 pointer-events-none"></div>
 
             {/* Left Pane - Setup Form */}
-            <div className="flex-1 flex flex-col px-6 md:px-16 py-10 overflow-y-auto">
+            <div className="flex-1 flex flex-col px-6 md:px-16 py-10 overflow-y-auto relative z-10 bg-white/60 backdrop-blur-xl">
                 {/* Logo */}
                 <div className="mb-14">
                     <img src="/logo_bieon.png" alt="BIEON" className="h-[30px] object-contain" />
@@ -158,11 +160,11 @@ const Setup = ({ onNavigate }) => {
                     {/* Stepper */}
                     {/* Aligned to the center context somewhat */}
                     <div className="flex items-center ml-4 md:ml-12 max-w-[280px] mb-12">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step === 1 ? 'bg-[#7fc78d] text-white' : 'bg-[#b8dfc1] text-transparent'}`}>{step === 1 ? '1' : ''}</div>
-                        <div className="h-[1px] flex-1 bg-gray-300 mx-2"></div>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step === 2 ? 'bg-[#7fc78d] text-white' : 'bg-[#b8dfc1] text-transparent'}`}>{step === 2 ? '2' : ''}</div>
-                        <div className="h-[1px] flex-1 bg-gray-300 mx-2"></div>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step === 3 ? 'bg-[#7fc78d] text-white' : 'bg-[#b8dfc1] text-transparent'}`}>{step === 3 ? '3' : ''}</div>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step === 1 ? 'bg-[#009b7c] text-white shadow-[0_0_15px_rgba(0,155,124,0.4)] scale-110' : 'bg-slate-200 text-transparent'}`}>{step === 1 ? '1' : ''}</div>
+                        <div className="h-[2px] flex-1 bg-slate-200 mx-2 rounded-full"></div>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step === 2 ? 'bg-[#009b7c] text-white shadow-[0_0_15px_rgba(0,155,124,0.4)] scale-110' : 'bg-slate-200 text-transparent'}`}>{step === 2 ? '2' : ''}</div>
+                        <div className="h-[2px] flex-1 bg-slate-200 mx-2 rounded-full"></div>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step === 3 ? 'bg-[#009b7c] text-white shadow-[0_0_15px_rgba(0,155,124,0.4)] scale-110' : 'bg-slate-200 text-transparent'}`}>{step === 3 ? '3' : ''}</div>
                     </div>
 
                     {/* Form Content */}
@@ -174,44 +176,44 @@ const Setup = ({ onNavigate }) => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">First Name</label>
-                                        <input type="text" placeholder="Asri" className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" />
+                                        <label className="block text-[13px] font-bold text-slate-700">First Name</label>
+                                        <input type="text" placeholder="Asri" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">Last Name</label>
-                                        <input type="text" placeholder="Aisah" className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" />
+                                        <label className="block text-[13px] font-bold text-slate-700">Last Name</label>
+                                        <input type="text" placeholder="Aisah" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
                                 </div>
 
                                 <div className="mb-4 space-y-2">
-                                    <label className="block text-[13px] font-bold text-[#111827]">Username</label>
-                                    <input type="text" placeholder="asrisarassufi" className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium" />
+                                    <label className="block text-[13px] font-bold text-slate-700">Username</label>
+                                    <input type="text" placeholder="asrisarassufi" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">Phone no</label>
-                                        <div className="flex border border-gray-200 rounded-lg overflow-hidden focus-within:border-[#00B482] focus-within:ring-1 focus-within:ring-[#00B482] transition-all bg-white">
-                                            <div className="bg-[#FAFBFB] flex items-center gap-1.5 px-3 border-r border-gray-200 text-[13px] text-gray-600">
+                                        <label className="block text-[13px] font-bold text-slate-700">Phone no</label>
+                                        <div className="flex border border-slate-200 rounded-xl overflow-hidden focus-within:border-[#009b7c] focus-within:ring-4 focus-within:ring-[#009b7c]/10 transition-all bg-slate-50/50 focus-within:bg-white shadow-sm">
+                                            <div className="bg-slate-100 flex items-center gap-1.5 px-3 border-r border-slate-200 text-[13px] text-slate-600 font-medium">
                                                 <FlagId />
-                                                +62 <ChevronDownIcon /> {/* Reusing chevron but static here intentionally for mock */}
-                                                <svg className="w-3 h-3 text-gray-400 ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                +62
+                                                <svg className="w-3 h-3 text-slate-400 ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                             </div>
-                                            <input type="text" placeholder="812345678" className="flex-1 w-full px-3 py-3 text-[13px] text-gray-700 focus:outline-none placeholder-gray-400" />
+                                            <input type="text" placeholder="812345678" className="flex-1 w-full bg-transparent px-4 py-3.5 text-[13px] text-slate-800 focus:outline-none placeholder-slate-400 font-medium" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">Date of birth</label>
+                                        <label className="block text-[13px] font-bold text-slate-700">Date of birth</label>
                                         <div className="relative">
                                             <button
                                                 type="button"
                                                 onClick={() => setShowCalendar(!showCalendar)}
-                                                className={`w-full flex items-center justify-between px-4 py-3 bg-white border rounded-xl text-sm font-medium transition-all ${showCalendar ? 'border-[#00B482] ring-4 ring-emerald-500/10 shadow-sm' : 'border-gray-200 hover:bg-gray-50/50'}`}
+                                                className={`w-full flex items-center justify-between px-4 py-3.5 border rounded-xl text-sm font-medium transition-all shadow-sm ${showCalendar ? 'border-[#009b7c] ring-4 ring-[#009b7c]/10 bg-white' : 'border-slate-200 bg-slate-50/50 hover:bg-white'}`}
                                             >
-                                                <span className={selectedDate ? 'text-gray-900' : 'text-gray-400 text-[13px]'}>
+                                                <span className={selectedDate ? 'text-slate-800' : 'text-slate-400 text-[13px]'}>
                                                     {selectedDate || 'Select Date of Birth'}
                                                 </span>
-                                                <Calendar className={`w-4 h-4 text-gray-400 transition-colors ${showCalendar ? 'text-[#00B482]' : ''}`} />
+                                                <Calendar className={`w-4 h-4 text-slate-400 transition-colors ${showCalendar ? 'text-[#009b7c]' : ''}`} />
                                             </button>
 
                                             {showCalendar && (
@@ -300,18 +302,15 @@ const Setup = ({ onNavigate }) => {
                                 </div>
 
                                 <div className="mb-10 space-y-2">
-                                    <label className="block text-[13px] font-bold text-[#111827]">Address</label>
-                                    <input type="text" placeholder="Masukkan Alamat Lengkap disini" className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors" />
+                                    <label className="block text-[13px] font-bold text-slate-700">Address</label>
+                                    <input type="text" placeholder="Masukkan Alamat Lengkap disini" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all shadow-sm font-medium" />
                                 </div>
 
-                                <div className="flex items-center gap-3 mb-10 pl-1">
-                                    <input
-                                        type="checkbox"
-                                        checked={isTermsAccepted}
-                                        onChange={openTermsModal}
-                                        className="w-[18px] h-[18px] rounded-sm border-gray-300 text-[#00B482] focus:ring-[#00B482] cursor-pointer"
-                                    />
-                                    <span onClick={openTermsModal} className="text-[12px] font-medium text-[#111827] cursor-pointer hover:underline">
+                                <div className="flex items-center gap-3 mb-10 pl-1 group cursor-pointer" onClick={openTermsModal}>
+                                    <div className={`w-[18px] h-[18px] rounded-[4px] border ${isTermsAccepted ? 'bg-[#009b7c] border-[#009b7c]' : 'bg-white border-slate-300 group-hover:border-[#009b7c]'} flex items-center justify-center transition-colors shadow-sm`}>
+                                        {isTermsAccepted && <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                    </div>
+                                    <span className="text-[13px] font-bold text-slate-700 group-hover:text-[#009b7c] cursor-pointer transition-colors">
                                         I have read and accept BIEON's Terms and Conditions
                                     </span>
                                 </div>
@@ -320,7 +319,7 @@ const Setup = ({ onNavigate }) => {
                                     <button
                                         disabled={!isTermsAccepted}
                                         onClick={() => setStep(2)}
-                                        className={`w-[200px] md:mx-auto font-bold py-3 px-6 rounded-lg text-sm transition-colors flex justify-center items-center ${isTermsAccepted ? 'bg-[#009b7c] hover:bg-[#008268] text-white' : 'bg-[#009b7c]/50 text-white cursor-not-allowed'}`}>
+                                        className={`w-[200px] md:mx-auto font-bold py-3.5 px-6 rounded-xl text-[14px] transition-all flex justify-center items-center ${isTermsAccepted ? 'bg-[#009b7c] hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
                                         Selanjutnya
                                     </button>
                                 </div>
@@ -336,27 +335,27 @@ const Setup = ({ onNavigate }) => {
 
                                 <div className="space-y-6 mb-12">
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">Nama Sistem / Rumah</label>
-                                        <input type="text" placeholder='misal "Rumah Utama" atau "Kontrakan"' className="w-full border border-gray-200 rounded-lg px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors" />
+                                        <label className="block text-[13px] font-bold text-slate-700">Nama Sistem / Rumah</label>
+                                        <input type="text" placeholder='misal "Rumah Utama" atau "Kontrakan"' className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[14px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">ID BIEON</label>
-                                        <input type="text" placeholder="ID ini bisa dilihat di belakang perangkat Master BIEON kamu." className="w-full border border-gray-200 rounded-lg px-4 py-3.5 text-[13px] text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00B482] focus:ring-1 focus:ring-[#00B482] transition-colors" />
+                                        <label className="block text-[13px] font-bold text-slate-700">ID BIEON</label>
+                                        <input type="text" placeholder="ID ini bisa dilihat di belakang perangkat Master BIEON kamu." className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[14px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="block text-[13px] font-bold text-[#111827]">Pilih Golongan Tarif PLN</label>
+                                        <label className="block text-[13px] font-bold text-slate-700">Pilih Golongan Tarif PLN</label>
                                         <div className="relative">
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPlnDropdown(!showPlnDropdown)}
-                                                className={`w-full flex items-center justify-between px-4 py-3.5 bg-white border rounded-xl text-sm font-medium transition-all ${showPlnDropdown ? 'border-[#00B482] ring-4 ring-emerald-500/10 shadow-sm' : 'border-gray-200 hover:bg-gray-50/50'}`}
+                                                className={`w-full flex items-center justify-between px-4 py-3.5 border rounded-xl text-sm font-medium transition-all shadow-sm ${showPlnDropdown ? 'border-[#009b7c] ring-4 ring-[#009b7c]/10 bg-white' : 'border-slate-200 bg-slate-50/50 hover:bg-white'}`}
                                             >
-                                                <span className={selectedPln ? 'text-gray-900' : 'text-gray-400 text-[13px]'}>
+                                                <span className={selectedPln ? 'text-slate-800' : 'text-slate-400 text-[13px]'}>
                                                     {selectedPln || 'Pilih Tarif Listrik'}
                                                 </span>
-                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-all ${showPlnDropdown ? 'rotate-180 text-[#00B482]' : ''}`} />
+                                                <ChevronDown className={`w-4 h-4 transition-all ${showPlnDropdown ? 'rotate-180 text-[#009b7c]' : 'text-slate-400'}`} />
                                             </button>
 
                                             {showPlnDropdown && (
@@ -391,11 +390,11 @@ const Setup = ({ onNavigate }) => {
                                     </div>
                                 </div>
 
-                                <div className="flex gap-4 max-w-sm ml-4 md:ml-10">
-                                    <button onClick={() => setStep(1)} className="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-600 font-bold py-3 px-6 rounded-lg text-sm transition-colors flex justify-center items-center">
+                                <div className="flex gap-4 max-w-sm mx-auto md:ml-0">
+                                    <button onClick={() => setStep(1)} className="flex-1 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3.5 px-6 rounded-xl text-[14px] transition-all flex justify-center items-center shadow-sm">
                                         Kembali
                                     </button>
-                                    <button onClick={() => setStep(3)} className="flex-1 bg-[#009b7c] hover:bg-[#008268] text-white font-bold py-3 px-6 rounded-lg text-sm transition-colors flex justify-center items-center">
+                                    <button onClick={() => setStep(3)} className="flex-1 bg-[#009b7c] hover:bg-emerald-600 text-white font-bold py-3.5 px-6 rounded-xl text-[14px] transition-all flex justify-center items-center shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5">
                                         Selanjutnya
                                     </button>
                                 </div>

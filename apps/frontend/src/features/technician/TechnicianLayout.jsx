@@ -133,7 +133,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
       </main>
 
       {/* Mobile Bottom Navigation Bar - Floating Pill Design */}
-      <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white/80 backdrop-blur-md border border-gray-100 z-[60] flex justify-between items-center px-6 py-2 shadow-2xl rounded-[2rem] pb-safe">
+      <nav className="md:hidden fixed bottom-6 left-4 right-4 bg-white/90 backdrop-blur-xl border border-gray-200/50 z-[60] flex justify-between items-center px-2 py-2 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.1)] rounded-[2.5rem] pb-safe">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeMenu === item.id;
@@ -141,12 +141,12 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
             <button
               key={item.id}
               onClick={() => setActiveMenu(item.id)}
-              className={`flex flex-col items-center justify-center min-w-[64px] transition-all duration-200 ${isActive ? 'text-teal-600 scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 flex flex-col items-center justify-center transition-all duration-300 ${isActive ? 'text-[#009270] scale-105' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              <div className={`p-1.5 rounded-full mb-1 transition-all ${isActive ? 'bg-teal-50 shadow-inner' : 'bg-transparent'}`}>
-                <Icon className={`w-6 h-6 stroke-[2] ${isActive ? 'fill-teal-50' : ''}`} />
+              <div className={`p-2 rounded-2xl mb-1 transition-all duration-300 ${isActive ? 'bg-[#009270]/10 shadow-sm' : 'bg-transparent'}`}>
+                <Icon className={`w-5 h-5 stroke-[2.5] ${isActive ? 'text-[#009270]' : ''}`} />
               </div>
-              <span className={`text-[10px] sm:text-xs font-semibold ${isActive ? 'font-bold' : ''}`}>
+              <span className={`text-[10px] font-bold tracking-tight ${isActive ? 'text-[#009270]' : 'text-gray-400'}`}>
                 {item.label}
               </span>
             </button>

@@ -23,8 +23,32 @@ import {
     CheckCircle,
     Zap,
     ArrowRight,
-    ShieldCheck
+    ShieldCheck,
+    LogOut,
+    Award,
+    Briefcase,
+    Clock,
+    BookOpen,
+    Calendar as CalendarIcon
 } from 'lucide-react';
+
+const SPECIFICATION_OPTIONS = [
+    'IoT Systems',
+    'Smart Home Integration',
+    'Network Configuration',
+    'Electrical Systems',
+    'CCTV & Security',
+    'Solar Energy',
+    'System Architecture',
+    'Repair & Maintenance'
+];
+
+const CITY_AREAS = {
+    'Bandung': ['Bandung Kota', 'Bandung Timur', 'Bandung Barat', 'Bandung Selatan', 'Bandung Pusat', 'Cimahi', 'Kabupaten Bandung'],
+    'Jakarta': ['Jakarta Pusat', 'Jakarta Selatan', 'Jakarta Utara', 'Jakarta Timur', 'Jakarta Barat'],
+    'Surabaya': ['Surabaya Pusat', 'Surabaya Utara', 'Surabaya Timur', 'Surabaya Selatan', 'Surabaya Barat'],
+    'Lainnya': ['Area Luar Kota', 'Nasional']
+};
 
 // Mock data teknisi
 const mockTechnicians = [
@@ -34,7 +58,7 @@ const mockTechnicians = [
         email: 'budi.santoso@bieon.id',
         phone: '+62 812-3456-7890',
         address: 'Jl. Sudirman No. 45, Jakarta Pusat',
-        workArea: 'Jakarta & Bandung',
+        workArea: 'Bandung',
         status: 'aktif',
         clientsCount: 3,
         color: '#3b82f6', // blue
@@ -42,7 +66,20 @@ const mockTechnicians = [
             { id: 'C001', name: 'Ahmad Fauzi', location: 'Bandung, Jawa Barat', lat: -6.9175, lng: 107.6191, bieonDevices: 4, smartDevices: 28, status: 'online' },
             { id: 'C003', name: 'Budi Santoso', location: 'Surabaya, Jawa Timur', lat: -7.2575, lng: 112.7521, bieonDevices: 5, smartDevices: 34, status: 'warning' },
             { id: 'C005', name: 'Rizki Pratama', location: 'Semarang, Jawa Tengah', lat: -6.9932, lng: 110.4203, bieonDevices: 3, smartDevices: 22, status: 'offline' },
-        ]
+        ],
+        position: 'Senior Technician',
+        experience: 8,
+        specializations: ['Smart Automation', 'Industrial IoT', 'System Architecture'],
+        coverageAreas: ['Bandung Pusat', 'Cimahi', 'Sumedang'],
+        workSchedule: {
+            'Senin': '08:00 - 17:00',
+            'Selasa': '08:00 - 17:00',
+            'Rabu': '08:00 - 17:00',
+            'Kamis': '08:00 - 17:00',
+            'Jumat': '08:00 - 17:00',
+            'Sabtu': '09:00 - 14:00',
+            'Minggu': 'Off'
+        }
     },
     {
         id: 'TECH002',
@@ -50,7 +87,7 @@ const mockTechnicians = [
         email: 'andi.wijaya@bieon.id',
         phone: '+62 813-2456-8901',
         address: 'Jl. Gatot Subroto No. 88, Jakarta Selatan',
-        workArea: 'Jakarta & Yogyakarta',
+        workArea: 'Jakarta',
         status: 'aktif',
         clientsCount: 3,
         color: '#10b981', // green
@@ -66,7 +103,7 @@ const mockTechnicians = [
         email: 'siti.rahmawati@bieon.id',
         phone: '+62 815-3456-9012',
         address: 'Jl. Ahmad Yani No. 123, Surabaya',
-        workArea: 'Surabaya & Malang',
+        workArea: 'Surabaya',
         status: 'nonaktif',
         clientsCount: 0,
         color: '#f59e0b', // yellow
@@ -75,6 +112,7 @@ const mockTechnicians = [
 ];
 
 export function ManajemenTeknisiPage({ onNavigate }) {
+    const [technicians, setTechnicians] = useState(mockTechnicians);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -94,20 +132,71 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         address: '',
         password: '',
         workArea: '',
-        status: 'aktif'
+        status: 'aktif',
+        position: 'Senior Technician',
+        experience: 5,
+        workArea: 'Bandung',
+        specializations: [],
+        coverageAreas: [],
+        workSchedule: {
+            'Senin': '08:00 - 17:00',
+            'Selasa': '08:00 - 17:00',
+            'Rabu': '08:00 - 17:00',
+            'Kamis': '08:00 - 17:00',
+            'Jumat': '08:00 - 17:00',
+            'Sabtu': '09:00 - 14:00',
+            'Minggu': 'Off'
+        }
     });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleCityChange = (e) => {
+        const { value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            workArea: value,
+            coverageAreas: [] // Reset sub-areas when city changes
+        }));
+    };
+
+    const handleScheduleChange = (day, value) => {
+        setFormData(prev => ({
+            ...prev,
+            workSchedule: {
+                ...prev.workSchedule,
+                [day]: value
+            }
+        }));
+    };
+
+    const toggleOption = (field, option) => {
+        setFormData(prev => {
+            const current = Array.isArray(prev[field]) ? prev[field] : [];
+            const updated = current.includes(option)
+                ? current.filter(item => item !== option)
+                : [...current, option];
+            return { ...prev, [field]: updated };
+        });
+    };
 
     const handleNavigate = (id) => {
         if (onNavigate) onNavigate(id);
     };
 
     // Filter technicians
-    const filteredTechnicians = mockTechnicians.filter(tech => {
+    const filteredTechnicians = technicians.filter(tech => {
         const matchesSearch =
             tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             tech.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             tech.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            tech.workArea.toLowerCase().includes(searchQuery.toLowerCase());
+            (tech.workArea && tech.workArea.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const matchesStatus = filterStatus === 'all' || tech.status === filterStatus;
 
@@ -115,14 +204,45 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     });
 
     // Calculate stats
-    const totalTechnicians = mockTechnicians.length;
-    const activeTechnicians = mockTechnicians.filter(t => t.status === 'aktif').length;
-    const totalClients = mockTechnicians.reduce((sum, t) => sum + t.clientsCount, 0);
-    const avgClientsPerTech = totalClients > 0 ? (totalClients / activeTechnicians).toFixed(1) : 0;
+    const totalTechnicians = technicians.length;
+    const activeTechnicians = technicians.filter(t => t.status === 'aktif').length;
+    const totalClients = technicians.reduce((sum, t) => sum + (t.clientsCount || 0), 0);
+    const avgClientsPerTech = totalClients > 0 && activeTechnicians > 0 ? (totalClients / activeTechnicians).toFixed(1) : 0;
 
     const handleAddTechnician = () => {
-        alert('Teknisi berhasil ditambahkan!');
+        const newTech = {
+            ...formData,
+            id: `TECH${String(technicians.length + 1).padStart(3, '0')}`,
+            clientsCount: 0,
+            color: '#6366f1', // default indigo
+            clients: []
+        };
+        
+        setTechnicians(prev => [...prev, newTech]);
         setIsAddModalOpen(false);
+        // Reset form data
+        setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            password: '',
+            status: 'aktif',
+            position: 'Senior Technician',
+            experience: 5,
+            workArea: 'Bandung',
+            specializations: [],
+            coverageAreas: [],
+            workSchedule: {
+                'Senin': '08:00 - 17:00',
+                'Selasa': '08:00 - 17:00',
+                'Rabu': '08:00 - 17:00',
+                'Kamis': '08:00 - 17:00',
+                'Jumat': '08:00 - 17:00',
+                'Sabtu': '09:00 - 14:00',
+                'Minggu': 'Off'
+            }
+        });
     };
 
     const handleDeleteTechnician = (tech) => {
@@ -131,14 +251,40 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     };
 
     const confirmDeleteTechnician = () => {
-        alert(`Berhasil menghapus teknisi ${selectedTechnician.name}`);
+        setTechnicians(prev => prev.filter(t => t.id !== selectedTechnician.id));
         setIsDeleteModalOpen(false);
         setDeleteReason('');
+        setSelectedTechnician(null);
     };
 
     const handleViewDetail = (tech) => {
         setSelectedTechnician(tech);
         setIsDetailModalOpen(true);
+    };
+
+    const handleEditTechnician = (tech) => {
+        setSelectedTechnician(tech);
+        
+        // Find a valid city key from CITY_AREAS that might be part of the tech.workArea string
+        const validCities = Object.keys(CITY_AREAS);
+        let mappedCity = validCities.find(city => tech.workArea.includes(city)) || 'Lainnya';
+        
+        setFormData({
+            ...tech,
+            workArea: mappedCity,
+            specializations: Array.isArray(tech.specializations) ? tech.specializations : (tech.specializations ? tech.specializations.split(', ') : []),
+            coverageAreas: Array.isArray(tech.coverageAreas) ? tech.coverageAreas : (tech.coverageAreas ? tech.coverageAreas.split(', ') : []),
+            password: '' // Don't pre-fill password for editing
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleSaveEdit = () => {
+        setTechnicians(prev => prev.map(t => 
+            t.id === selectedTechnician.id ? { ...t, ...formData } : t
+        ));
+        setIsEditModalOpen(false);
+        setSelectedTechnician(null);
     };
 
     return (
@@ -294,8 +440,16 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <button
                                                     onClick={() => handleViewDetail(tech)}
                                                     className="p-2 bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 rounded-lg transition-all"
+                                                    title="Lihat Detail"
                                                 >
                                                     <Eye className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEditTechnician(tech)}
+                                                    className="p-2 bg-emerald-50 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg transition-all"
+                                                    title="Edit Data"
+                                                >
+                                                    <Edit3 className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteTechnician(tech)}
@@ -335,50 +489,215 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             </button>
                         </div>
 
-                        <div className="p-8 overflow-y-auto space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700">Nama Teknisi <span className="text-red-500">*</span></label>
-                                    <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="Budi Santoso" />
+                        <div className="p-8 overflow-y-auto space-y-8 max-h-full">
+                            {/* Section: Akun & Kontak */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Akun & Kontak</h3>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700">Email <span className="text-red-500">*</span></label>
-                                    <input type="email" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="budi.santoso@bieon.id" />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Nama Teknisi <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            type="text" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="Budi Santoso" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Email <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleInputChange}
+                                            type="email" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="budi.santoso@bieon.id" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Nomor Telepon <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
+                                            type="text" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="+62 812-3456-7890" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Password <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="password"
+                                            value={formData.password}
+                                            onChange={handleInputChange}
+                                            type="password" 
+                                            placeholder="********" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                        />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Alamat <span className="text-red-500">*</span></label>
+                                        <textarea 
+                                            name="address"
+                                            value={formData.address}
+                                            onChange={handleInputChange}
+                                            rows="2" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="Jl. Sudirman No. 45, Jakarta Pusat"
+                                        ></textarea>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700">Nomor Telepon <span className="text-red-500">*</span></label>
-                                    <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="+62 812-3456-7890" />
+                            {/* Section: Informasi Profesional */}
+                            <div className="space-y-4 pt-2">
+                                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                        <Briefcase className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Informasi Profesional</h3>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700">Password <span className="text-red-500">*</span></label>
-                                    <input type="password" placeholder="********" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Posisi <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="position"
+                                            value={formData.position}
+                                            onChange={handleInputChange}
+                                            type="text" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="Senior Technician" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Pengalaman (Tahun) <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="experience"
+                                            value={formData.experience}
+                                            onChange={handleInputChange}
+                                            type="number" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="5" 
+                                        />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-3">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Spesialisasi (Pilih yang sesuai) <span className="text-red-500">*</span></label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {SPECIFICATION_OPTIONS.map(spec => {
+                                                const isSelected = formData.specializations.includes(spec);
+                                                return (
+                                                    <button
+                                                        key={spec}
+                                                        type="button"
+                                                        onClick={() => toggleOption('specializations', spec)}
+                                                        className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
+                                                            isSelected 
+                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100' 
+                                                            : 'bg-white text-gray-500 ring-gray-200 hover:ring-emerald-300 hover:bg-emerald-50'
+                                                        }`}
+                                                    >
+                                                        {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
+                                                        {spec}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 relative">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
+                                        <select 
+                                            name="workArea"
+                                            value={formData.workArea}
+                                            onChange={handleCityChange}
+                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
+                                        >
+                                            <option value="">Pilih Kota</option>
+                                            {Object.keys(CITY_AREAS).map(city => (
+                                                <option key={city} value={city}>{city}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                    </div>
+                                    <div className="space-y-2 relative">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
+                                        <select 
+                                            name="status"
+                                            value={formData.status}
+                                            onChange={handleInputChange}
+                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
+                                        >
+                                            <option value="aktif">Aktif</option>
+                                            <option value="nonaktif">Nonaktif</option>
+                                        </select>
+                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-3">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">
+                                            Area Coverage Detail (Pilih Wilayah di {formData.workArea || 'Kota Selected'}) <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.workArea ? (
+                                                (CITY_AREAS[formData.workArea] || []).map(area => {
+                                                    const isSelected = formData.coverageAreas.includes(area);
+                                                    return (
+                                                        <button
+                                                            key={area}
+                                                            type="button"
+                                                            onClick={() => toggleOption('coverageAreas', area)}
+                                                            className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
+                                                                isSelected 
+                                                                ? 'bg-blue-500 text-white ring-blue-500 shadow-md shadow-blue-100' 
+                                                                : 'bg-white text-gray-500 ring-gray-200 hover:ring-blue-300 hover:bg-blue-50'
+                                                            }`}
+                                                        >
+                                                            {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
+                                                            {area}
+                                                        </button>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="w-full py-4 text-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 text-xs font-medium">
+                                                    Silakan pilih Wilayah Kerja Standar terlebih dahulu
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700">Alamat <span className="text-red-500">*</span></label>
-                                <textarea rows="3" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="Jl. Sudirman No. 45, Jakarta Pusat"></textarea>
+                            {/* Section: Jadwal Kerja */}
+                            <div className="space-y-4 pt-2">
+                                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                        <Clock className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Jadwal Kerja</h3>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                    {Object.entries(formData.workSchedule).map(([day, hours]) => (
+                                        <div key={day} className="space-y-1.5">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase">{day}</label>
+                                            <input 
+                                                type="text" 
+                                                value={hours}
+                                                onChange={(e) => handleScheduleChange(day, e.target.value)}
+                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium" 
+                                                placeholder="08:00 - 17:00"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-gray-700">Wilayah Kerja <span className="text-red-500">*</span></label>
-                                    <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" placeholder="Jakarta & Bandung" />
-                                </div>
-                                <div className="space-y-2 relative">
-                                    <label className="text-sm font-bold text-gray-700">Status Teknisi <span className="text-red-500">*</span></label>
-                                    <select className="appearance-none w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer">
-                                        <option value="aktif">Aktif</option>
-                                        <option value="nonaktif">Nonaktif</option>
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 bottom-3.5 pointer-events-none" />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 pt-2">
+                            <div className="flex items-center gap-4 pt-4 shrink-0">
                                 <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
                                 <button onClick={handleAddTechnician} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
@@ -414,59 +733,96 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         <div className="p-8 overflow-y-auto space-y-8 bg-white">
                             
                             {/* Cards Row */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Informasi Teknisi */}
-                                <div className="bg-[#eff6ff] rounded-2xl p-6 border border-blue-100/50">
-                                    <h3 className="text-base font-bold text-gray-800 mb-5">Informasi Teknisi</h3>
+                                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                            <Mail className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Kontak & Alamat</h3>
+                                    </div>
                                     <div className="space-y-4">
-                                        <div className="flex gap-3">
-                                            <Mail className="w-5 h-5 text-blue-500 mt-0.5" />
+                                        <div className="flex items-start gap-3">
+                                            <Mail className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500">Email</p>
-                                                <p className="text-sm font-bold text-gray-800">{selectedTechnician.email}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Email</p>
+                                                <p className="text-sm font-semibold text-gray-800">{selectedTechnician.email}</p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3">
-                                            <Phone className="w-5 h-5 text-blue-500 mt-0.5" />
+                                        <div className="flex items-start gap-3">
+                                            <Phone className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500">Nomor Kontak</p>
-                                                <p className="text-sm font-bold text-gray-800">{selectedTechnician.phone}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Nomor Kontak</p>
+                                                <p className="text-sm font-semibold text-gray-800">{selectedTechnician.phone}</p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3">
-                                            <MapPin className="w-5 h-5 text-blue-500 mt-0.5" />
+                                        <div className="flex items-start gap-3">
+                                            <MapPin className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500">Alamat</p>
-                                                <p className="text-sm font-bold text-gray-800">{selectedTechnician.address}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Alamat</p>
+                                                <p className="text-sm font-semibold text-gray-800 leading-relaxed">{selectedTechnician.address}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Detail Pekerjaan */}
-                                <div className="bg-[#ecfdf5] rounded-2xl p-6 border border-emerald-100/50 flex flex-col">
-                                    <h3 className="text-base font-bold text-gray-800 mb-5">Detail Pekerjaan</h3>
-                                    <div className="space-y-4 flex-1">
-                                        <div className="flex gap-3">
-                                            <MapPin className="w-5 h-5 text-[#009b7c] mt-0.5" />
+                                {/* Detail Profesional */}
+                                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                            <Briefcase className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Keahlian & Karir</h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-start gap-3">
+                                            <Award className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500">Wilayah Kerja</p>
-                                                <p className="text-sm font-bold text-gray-800">{selectedTechnician.workArea}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Posisi & Pengalaman</p>
+                                                <p className="text-sm font-semibold text-gray-800">{selectedTechnician.position || 'Technician'} • {selectedTechnician.experience || 0} Tahun</p>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3">
-                                            <Users className="w-5 h-5 text-[#009b7c] mt-0.5" />
+                                        <div className="flex items-start gap-3">
+                                            <Zap className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-xs font-medium text-gray-500">Jumlah Pelanggan Ditangani</p>
-                                                <p className="text-sm font-bold text-gray-800">{selectedTechnician.clientsCount} Pelanggan</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Spesialisasi</p>
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {(selectedTechnician.specializations || []).map((s, i) => (
+                                                        <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold">{s}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <MapIcon className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
+                                            <div>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Area Coverage</p>
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {(selectedTechnician.coverageAreas || []).map((a, i) => (
+                                                        <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold">{a}</span>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-4">
-                                        <p className="text-xs font-medium text-gray-500 mb-1">Status</p>
-                                        <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase inline-flex items-center gap-1.5 ${selectedTechnician.status === 'aktif' ? 'bg-[#10b981] text-white' : 'bg-red-500 text-white'}`}>
-                                            {selectedTechnician.status}
-                                        </span>
+                                </div>
+
+                                {/* Jadwal Kerja */}
+                                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                            <Clock className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Jadwal Mingguan</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                        {Object.entries(selectedTechnician.workSchedule || {}).map(([day, hours]) => (
+                                            <div key={day} className="flex flex-col">
+                                                <span className="text-[9px] font-bold text-gray-400 uppercase">{day}</span>
+                                                <span className={`text-[11px] font-bold ${hours === 'Off' ? 'text-red-400' : 'text-gray-700'}`}>{hours}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -682,6 +1038,238 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <Save className="w-4 h-4" />
                                 Simpan Penugasan
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal (Reuse Add Modal UI) */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
+                    <div className="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
+                        <div className="px-6 py-5 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <Edit3 className="w-6 h-6" /> Edit Data Teknisi
+                            </h2>
+                            <button onClick={() => setIsEditModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
+                                <X className="w-5 h-5 text-white" />
+                            </button>
+                        </div>
+
+                        <div className="p-8 overflow-y-auto space-y-8 max-h-full">
+                            {/* Section: Akun & Kontak */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Akun & Kontak</h3>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase">Nama Teknisi</label>
+                                        <input 
+                                            name="name"
+                                            value={formData.name}
+                                            disabled={true}
+                                            type="text" 
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
+                                            placeholder="Budi Santoso" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
+                                        <input 
+                                            name="email"
+                                            value={formData.email}
+                                            disabled={true}
+                                            type="email" 
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
+                                            placeholder="budi.santoso@bieon.id" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase">Nomor Telepon</label>
+                                        <input 
+                                            name="phone"
+                                            value={formData.phone}
+                                            disabled={true}
+                                            type="text" 
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
+                                            placeholder="+62 812-3456-7890" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase">Password</label>
+                                        <input 
+                                            name="password"
+                                            value="••••••••"
+                                            disabled={true}
+                                            type="password" 
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 cursor-not-allowed outline-none" 
+                                        />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-2">
+                                        <label className="text-xs font-bold text-gray-400 uppercase">Alamat</label>
+                                        <textarea 
+                                            name="address"
+                                            value={formData.address}
+                                            disabled={true}
+                                            rows="2" 
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
+                                            placeholder="Jl. Sudirman No. 45, Jakarta Pusat"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Informasi Profesional */}
+                            <div className="space-y-4 pt-2">
+                                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                        <Briefcase className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Informasi Profesional</h3>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Posisi <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="position"
+                                            value={formData.position}
+                                            onChange={handleInputChange}
+                                            type="text" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="Senior Technician" 
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Pengalaman (Tahun) <span className="text-red-500">*</span></label>
+                                        <input 
+                                            name="experience"
+                                            value={formData.experience}
+                                            onChange={handleInputChange}
+                                            type="number" 
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            placeholder="5" 
+                                        />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-3">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Spesialisasi (Pilih yang sesuai) <span className="text-red-500">*</span></label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {SPECIFICATION_OPTIONS.map(spec => {
+                                                const isSelected = formData.specializations.includes(spec);
+                                                return (
+                                                    <button
+                                                        key={spec}
+                                                        type="button"
+                                                        onClick={() => toggleOption('specializations', spec)}
+                                                        className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
+                                                            isSelected 
+                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100' 
+                                                            : 'bg-white text-gray-500 ring-gray-200 hover:ring-emerald-300 hover:bg-emerald-50'
+                                                        }`}
+                                                    >
+                                                        {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
+                                                        {spec}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2 relative">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
+                                        <select 
+                                            name="workArea"
+                                            value={formData.workArea}
+                                            onChange={handleCityChange}
+                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
+                                        >
+                                            <option value="">Pilih Kota</option>
+                                            {Object.keys(CITY_AREAS).map(city => (
+                                                <option key={city} value={city}>{city}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                    </div>
+                                    <div className="space-y-2 relative">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
+                                        <select 
+                                            name="status"
+                                            value={formData.status}
+                                            onChange={handleInputChange}
+                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
+                                        >
+                                            <option value="aktif">Aktif</option>
+                                            <option value="nonaktif">Nonaktif</option>
+                                        </select>
+                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                    </div>
+                                    <div className="sm:col-span-2 space-y-3">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">
+                                            Area Coverage Detail (Pilih Wilayah di {formData.workArea || 'Kota Selected'}) <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {formData.workArea ? (
+                                                (CITY_AREAS[formData.workArea] || []).map(area => {
+                                                    const isSelected = formData.coverageAreas.includes(area);
+                                                    return (
+                                                        <button
+                                                            key={area}
+                                                            type="button"
+                                                            onClick={() => toggleOption('coverageAreas', area)}
+                                                            className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
+                                                                isSelected 
+                                                                ? 'bg-blue-500 text-white ring-blue-500 shadow-md shadow-blue-100' 
+                                                                : 'bg-white text-gray-500 ring-gray-200 hover:ring-blue-300 hover:bg-blue-50'
+                                                            }`}
+                                                        >
+                                                            {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
+                                                            {area}
+                                                        </button>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="w-full py-4 text-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 text-xs font-medium">
+                                                    Silakan pilih Wilayah Kerja Standar terlebih dahulu
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Jadwal Kerja */}
+                            <div className="space-y-4 pt-2">
+                                <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                        <Clock className="w-4 h-4" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Jadwal Kerja</h3>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                    {Object.entries(formData.workSchedule).map(([day, hours]) => (
+                                        <div key={day} className="space-y-1.5">
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase">{day}</label>
+                                            <input 
+                                                type="text" 
+                                                value={hours}
+                                                onChange={(e) => handleScheduleChange(day, e.target.value)}
+                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium" 
+                                                placeholder="08:00 - 17:00"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 pt-4 shrink-0">
+                                <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
+                                <button onClick={handleSaveEdit} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group">
+                                    <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
+                                    Simpan Perubahan
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

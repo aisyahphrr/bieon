@@ -420,12 +420,12 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         </td>
                                         <td className="px-6 py-5">
                                             <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border flex items-center gap-2 w-fit ${ho.status === 'aktif' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                    ho.status === 'warning' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                        'bg-red-50 text-red-600 border-red-100'
+                                                ho.status === 'warning' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                    'bg-red-50 text-red-600 border-red-100'
                                                 }`}>
                                                 <span className={`w-2 h-2 rounded-full ${ho.status === 'aktif' ? 'bg-emerald-600' :
-                                                        ho.status === 'warning' ? 'bg-amber-600' :
-                                                            'bg-red-600'
+                                                    ho.status === 'warning' ? 'bg-amber-600' :
+                                                        'bg-red-600'
                                                     }`}></span>
                                                 {ho.status}
                                             </span>
@@ -620,7 +620,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 <div className="flex items-center justify-between text-sm pb-4 border-b border-emerald-100/50">
                                                     <p className="text-gray-500 font-medium">Status Sistem</p>
                                                     <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase ${selectedHomeowner.status === 'aktif' ? 'bg-[#009b7c] text-white' :
-                                                            selectedHomeowner.status === 'warning' ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'
+                                                        selectedHomeowner.status === 'warning' ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'
                                                         }`}>{selectedHomeowner.status}</span>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
@@ -789,8 +789,8 @@ export function ManajemenAkunPage({ onNavigate }) {
             {/* Custom Delete Modal */}
             {isDeleteModalOpen && selectedHomeowner && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
-                        <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between shrink-0">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full flex flex-col overflow-hidden border border-white/20">
+                        <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Trash2 className="w-6 h-6" /> Hapus Pelanggan
                             </h2>
@@ -798,7 +798,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="p-8 space-y-6 overflow-y-auto">
+                        <div className="p-8 space-y-6">
                             <div className="bg-red-50/50 p-5 rounded-2xl">
                                 <p className="text-sm font-medium text-gray-600 mb-2">Anda akan menghapus pelanggan:</p>
                                 <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedHomeowner.fullName}</h3>
@@ -819,11 +819,11 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-900">Alasan Penghapusan <span className="text-red-500">*</span></label>
-                                <textarea 
-                                    rows="3" 
+                                <textarea
+                                    rows="3"
                                     value={deleteReason}
                                     onChange={(e) => setDeleteReason(e.target.value)}
-                                    placeholder="Masukkan alasan mengapa akun ini perlu dihapus..." 
+                                    placeholder="Masukkan alasan mengapa akun ini perlu dihapus..."
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all shadow-sm"
                                 ></textarea>
                             </div>
@@ -833,21 +833,16 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </p>
                         </div>
 
-                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-between gap-4 shrink-0">
-                            <button 
+                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-between gap-4">
+                            <button
                                 onClick={() => setIsDeleteModalOpen(false)}
                                 className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
                             >
                                 Batal
                             </button>
-                            <button 
+                            <button
                                 onClick={confirmDeleteHomeowner}
-                                disabled={!deleteReason.trim()}
-                                className={`flex-1 py-3 text-white rounded-2xl text-sm font-bold transition-all shadow-lg ${
-                                    deleteReason.trim() 
-                                    ? 'bg-[#dc2626] hover:bg-[#b91c1c] shadow-red-100 cursor-pointer' 
-                                    : 'bg-[#fca5a5] cursor-not-allowed shadow-none opacity-80'
-                                }`}
+                                className="flex-1 py-3 bg-[#e47377] text-white rounded-2xl text-sm font-bold hover:bg-[#d55b5f] transition-all shadow-lg shadow-red-100"
                             >
                                 Ya, Hapus
                             </button>
