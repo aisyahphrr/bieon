@@ -49,7 +49,7 @@ const StatCard = ({ icon: Icon, target, label, suffix = "+", colorClass = "text-
     let start = 0;
     const duration = 2000; // 2 seconds
     const increment = target / (duration / 16);
-    
+
     const timer = setInterval(() => {
       start += increment;
       if (start >= target) {
@@ -64,11 +64,10 @@ const StatCard = ({ icon: Icon, target, label, suffix = "+", colorClass = "text-
   }, [isVisible, target]);
 
   return (
-    <div 
+    <div
       ref={cardRef}
-      className={`flex items-center gap-6 p-6 transition-all duration-1000 transform ${
-        isVisible ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"
-      }`}
+      className={`flex items-center gap-6 p-6 transition-all duration-1000 transform ${isVisible ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"
+        }`}
     >
       <div className={`w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 shrink-0 ${colorClass}`}>
         <Icon size={32} />
@@ -141,7 +140,7 @@ const LandingPage = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-[#eefcf8] font-sans text-slate-800 selection:bg-[#009b7c] selection:text-white overflow-hidden">
-      
+
       {/* Background Ambient Glow */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-300 rounded-full mix-blend-multiply filter blur-[150px] opacity-[0.25] animate-[pulse_6s_ease-in-out_infinite]"></div>
@@ -152,7 +151,7 @@ const LandingPage = ({ onNavigate }) => {
       {/* Modern SaaS Header */}
       <header className={`fixed w-full flex justify-between items-center px-6 md:px-12 lg:px-16 py-3 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-white/50 shadow-sm' : 'bg-transparent'}`}>
         <Logo className="hover:scale-105 transition-transform duration-300" />
-        
+
         <div className="flex items-center gap-8 lg:gap-12">
           <nav className="hidden md:flex gap-8 items-center list-none font-bold text-[13px] tracking-wide text-slate-600">
             <a href="#home" className="hover:text-emerald-600 transition-colors">Home</a>
@@ -160,7 +159,7 @@ const LandingPage = ({ onNavigate }) => {
             <a href="#about" className="hover:text-emerald-600 transition-colors">About</a>
             <a href="#contact" className="hover:text-emerald-600 transition-colors">Contact</a>
           </nav>
-          
+
           <div className="flex items-center gap-4">
             <div className="hidden lg:flex items-center gap-2 text-sm font-bold text-slate-600 border border-slate-200 rounded-lg px-3 py-1 bg-white/50">
               <span className="text-[#009b7c]">ID</span>
@@ -179,25 +178,30 @@ const LandingPage = ({ onNavigate }) => {
       <main className="relative z-10">
         {/* High-Converting Hero Section */}
         <section id="home" className="pt-24 pb-8 px-6 md:px-12 lg:px-16 flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full max-w-[1440px] mx-auto">
-          
+
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
             <div className="inline-flex items-center justify-center bg-white/80 backdrop-blur-sm border border-emerald-200/60 text-[#009b7c] px-4 py-1.5 rounded-sm text-[15px] font-bold tracking-widest mb-8 shadow-sm">
               BIEON
             </div>
-            
+
             <h1 className="text-5xl lg:text-[4rem] font-extrabold text-slate-900 leading-[1.05] tracking-tight mb-6">
-              Smart Green Living <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#009b7c] to-teal-800">Monitoring System</span>
+              Smart Green Living <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#009b7c] to-teal-800">Monitoring System</span>
             </h1>
-            
+
             <p className="text-xl lg:text-2xl text-slate-800 mb-6 font-bold">
               Monitor Today, Sustain Tomorrow.
             </p>
-            
-            <p className="text-lg lg:text-xl text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
-              BIEON mengintegrasikan pemantauan lingkungan, kontrol perangkat otomatis, dan efisiensi listrik ke dalam satu dashboard pintar. Kendalikan kenyamanan dan keamanan ruang hidup Anda dari mana saja, kapan saja.
-            </p>
-            
+
+            <div className="text-sm text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium space-y-4">
+              <p>
+                Di era modern, keberlanjutan bukan lagi pilihan—tetapi kebutuhan. Smart Green Living Monitoring System dari BIEON hadir sebagai solusi untuk membantu Anda memantau, memahami, dan mengelola kehidupan Anda secara real-time melalui teknologi cerdas berbasis data.
+              </p>
+              <p>
+                Dengan sistem monitoring terintegrasi, Anda dapat mengukur berbagai parameter penting seperti energi, kualitas air, lingkungan, dan efisiensi penggunaan sumber daya, sehingga setiap keputusan yang diambil menjadi lebih tepat, efisien, dan berdampak positif bagi lingkungan.
+              </p>
+            </div>
+
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
               <button onClick={() => onNavigate && onNavigate('signup')} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-full font-bold transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2">
                 Mulai Sekarang <ArrowRight className="w-4 h-4" />
@@ -206,23 +210,23 @@ const LandingPage = ({ onNavigate }) => {
                 <PlayCircle className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform" /> Lihat Demo
               </button>
             </div>
-            
+
             {/* Social Proof */}
             <div className="mt-12 pt-8 border-t border-slate-200/60 flex items-center gap-6 justify-center lg:justify-start">
-               <div className="flex -space-x-4">
-                 <img src="https://i.pravatar.cc/100?img=1" alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
-                 <img src="https://i.pravatar.cc/100?img=3" alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
-                 <img src="https://i.pravatar.cc/100?img=5" alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
-                 <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-emerald-50 flex items-center justify-center text-emerald-700 font-bold text-[10px]">
-                   +2k
-                 </div>
-               </div>
-               <div className="text-sm font-medium text-slate-500">
-                 Dipercaya oleh <span className="font-bold text-slate-800">2,000+</span> Homeowners.
-               </div>
+              <div className="flex -space-x-4">
+                <img src="https://i.pravatar.cc/100?img=1" alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                <img src="https://i.pravatar.cc/100?img=3" alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                <img src="https://i.pravatar.cc/100?img=5" alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-emerald-50 flex items-center justify-center text-emerald-700 font-bold text-[10px]">
+                  +2k
+                </div>
+              </div>
+              <div className="text-sm font-medium text-slate-500">
+                Dipercaya oleh <span className="font-bold text-slate-800">2,000+</span> Homeowners.
+              </div>
             </div>
           </Reveal>
-          
+
           {/* Right Floating Live Mockup */}
           <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:block">
             {/* Primary Dashboard Card */}
@@ -233,11 +237,11 @@ const LandingPage = ({ onNavigate }) => {
                   <p className="text-xs text-emerald-600 font-bold flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online & Syncing</p>
                 </div>
                 <div className="flex items-center gap-2">
-                   <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><Activity size={16} /></div>
-                   <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><ShieldCheck size={16} /></div>
+                  <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><Activity size={16} /></div>
+                  <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><ShieldCheck size={16} /></div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div className="bg-orange-50/50 border border-orange-100 rounded-2xl p-3 flex flex-col items-center justify-center">
                   <ThermometerSun className="text-orange-500 mb-1" size={20} />
@@ -287,15 +291,15 @@ const LandingPage = ({ onNavigate }) => {
               </div>
             </div>
 
-             {/* Floating widget 2 */}
-             <div className="absolute bottom-12 -right-8 z-30 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-48 p-4 flex items-center justify-between mx-auto" style={{ animation: 'bounce 5s infinite 1s' }}>
+            {/* Floating widget 2 */}
+            <div className="absolute bottom-12 -right-8 z-30 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-48 p-4 flex items-center justify-between mx-auto" style={{ animation: 'bounce 5s infinite 1s' }}>
               <div>
                 <p className="text-[10px] font-bold text-slate-400">Security Ring</p>
                 <p className="text-sm font-black text-white">Armed</p>
               </div>
-               <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]"></div>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]"></div>
             </div>
-            
+
             {/* Background Blob behind mockup */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-emerald-200/40 to-teal-200/40 blur-3xl -z-10 rounded-full mix-blend-multiply"></div>
           </Reveal>
@@ -307,45 +311,45 @@ const LandingPage = ({ onNavigate }) => {
             <div className="absolute top-[-20%] left-[-10%] w-[40%] h-[100%] bg-emerald-50 blur-[100px] rounded-full"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[100%] bg-teal-50 blur-[100px] rounded-full"></div>
           </div>
-          
+
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
               <p className="text-[#009b7c] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">Telah Dipercaya Oleh</p>
               <h2 className="text-3xl font-black text-slate-800 mb-12">Mitra Kami</h2>
             </Reveal>
-            
+
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
-               {/* 1. Matra Kreasi */}
-               <Reveal delay="0.1s" className="flex flex-col items-center group">
-                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-4 mb-2 group-hover:scale-110 transition-transform duration-300">
-                    <Activity className="text-slate-400 group-hover:text-[#009b7c] transition-colors" size={32} />
-                 </div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Matra Kreasi</span>
-               </Reveal>
+              {/* 1. Matra Kreasi */}
+              <Reveal delay="0.1s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-4 mb-2 group-hover:scale-110 transition-transform duration-300">
+                  <Activity className="text-slate-400 group-hover:text-[#009b7c] transition-colors" size={32} />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Matra Kreasi</span>
+              </Reveal>
 
-               {/* 2. SV IPB */}
-               <Reveal delay="0.2s" className="flex flex-col items-center group">
-                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-3 mb-2 group-hover:scale-110 transition-transform duration-300">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/Logo_Institut_Pertanian_Bogor.png" alt="IPB" className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all" />
-                 </div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">SV IPB</span>
-               </Reveal>
-               
-               {/* 3. BPJS */}
-               <Reveal delay="0.3s" className="flex flex-col items-center group">
-                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-3 mb-2 group-hover:scale-110 transition-transform duration-300">
-                    <ShieldCheck className="text-slate-400 group-hover:text-blue-600 transition-colors" size={32} />
-                 </div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">BPJS</span>
-               </Reveal>
+              {/* 2. SV IPB */}
+              <Reveal delay="0.2s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-3 mb-2 group-hover:scale-110 transition-transform duration-300">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/Logo_Institut_Pertanian_Bogor.png" alt="IPB" className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all" />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">SV IPB</span>
+              </Reveal>
 
-               {/* 4. BIEON CORE */}
-               <Reveal delay="0.4s" className="flex flex-col items-center group">
-                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-4 mb-2 group-hover:scale-110 transition-transform duration-300">
-                    <Wind className="text-slate-400 group-hover:text-cyan-500 transition-colors" size={32} />
-                 </div>
-                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">BIEON CORE</span>
-               </Reveal>
+              {/* 3. BPJS */}
+              <Reveal delay="0.3s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-3 mb-2 group-hover:scale-110 transition-transform duration-300">
+                  <ShieldCheck className="text-slate-400 group-hover:text-blue-600 transition-colors" size={32} />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">BPJS</span>
+              </Reveal>
+
+              {/* 4. BIEON CORE */}
+              <Reveal delay="0.4s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-4 mb-2 group-hover:scale-110 transition-transform duration-300">
+                  <Wind className="text-slate-400 group-hover:text-cyan-500 transition-colors" size={32} />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">BIEON CORE</span>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -353,27 +357,27 @@ const LandingPage = ({ onNavigate }) => {
         {/* Section Statistik Animasi */}
         <section className="bg-[#050B0F] py-20 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5"></div>
-          
+
           <div className="w-full max-w-[1440px] mx-auto px-6 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 justify-items-center">
-               <StatCard 
-                 icon={Users} 
-                 target={500} 
-                 label="Homeowner" 
-                 colorClass="text-emerald-400"
-               />
-               <StatCard 
-                 icon={Boxes} 
-                 target={1000} 
-                 label="BIEON Device" 
-                 colorClass="text-cyan-400"
-               />
-               <StatCard 
-                 icon={Wrench} 
-                 target={50} 
-                 label="Teknisi Handal" 
-                 colorClass="text-teal-400"
-               />
+              <StatCard
+                icon={Users}
+                target={500}
+                label="Homeowner"
+                colorClass="text-emerald-400"
+              />
+              <StatCard
+                icon={Boxes}
+                target={1000}
+                label="BIEON Device"
+                colorClass="text-cyan-400"
+              />
+              <StatCard
+                icon={Wrench}
+                target={50}
+                label="Teknisi Handal"
+                colorClass="text-teal-400"
+              />
             </div>
           </div>
         </section>
@@ -390,53 +394,53 @@ const LandingPage = ({ onNavigate }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
+
             {/* Feature Card 1 */}
             <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
-               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
-                  <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/feature_1.png" alt="Kontrol Intuitif" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-               </div>
-               <div className="px-4 pb-6 text-center">
-                 <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
-                    <Smartphone size={18} /> Kontrol Intuitif
-                 </h3>
-                 <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
-                   Dirancang dengan antarmuka web yang modern dan mudah digunakan. BIEON memungkinkan Anda memantau seluruh sudut ruang dan mengontrol perangkat secara praktis tanpa konfigurasi yang rumit.
-                 </p>
-               </div>
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/feature_1.png" alt="Kontrol Intuitif" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
+                  <Smartphone size={18} /> Kontrol Intuitif
+                </h3>
+                <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
+                  Dirancang dengan antarmuka web yang modern dan mudah digunakan. BIEON memungkinkan Anda memantau seluruh sudut ruang dan mengontrol perangkat secara praktis tanpa konfigurasi yang rumit.
+                </p>
+              </div>
             </Reveal>
 
             {/* Feature Card 2 */}
             <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-amber-900/10 hover:-translate-y-2 transition-all duration-300">
-               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
-                  <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/feature_2.png" alt="Monitoring Real-Time" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-               </div>
-               <div className="px-4 pb-6 text-center">
-                 <h3 className="text-lg font-bold text-amber-500 mb-4 flex items-center justify-center gap-2">
-                    <Zap size={18} /> Monitoring Real-Time
-                 </h3>
-                 <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
-                   Sistem IoT kami bekerja tanpa henti untuk menampilkan data kondisi lingkungan dan status perangkat secara real-time, membantu Anda mengambil keputusan cepat saat terjadi penyimpangan.
-                 </p>
-               </div>
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/feature_2.png" alt="Monitoring Real-Time" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-amber-500 mb-4 flex items-center justify-center gap-2">
+                  <Zap size={18} /> Monitoring Real-Time
+                </h3>
+                <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
+                  Sistem IoT kami bekerja tanpa henti untuk menampilkan data kondisi lingkungan dan status perangkat secara real-time, membantu Anda mengambil keputusan cepat saat terjadi penyimpangan.
+                </p>
+              </div>
             </Reveal>
 
             {/* Feature Card 3 */}
             <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-500/20 hover:-translate-y-2 transition-all duration-300">
-               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
-                  <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/feature_3.png" alt="Ekosistem Terintegrasi" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-               </div>
-               <div className="px-4 pb-6 text-center">
-                 <h3 className="text-lg font-bold text-slate-600 mb-4 flex items-center justify-center gap-2">
-                    <Cpu size={18} /> Ekosistem Terintegrasi
-                 </h3>
-                 <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
-                   Menghubungkan berbagai perangkat cerdas ke dalam satu dashboard sentral. Menciptakan ekosistem smart living yang efisien, responsif, dan saling terhubung.
-                 </p>
-               </div>
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/feature_3.png" alt="Ekosistem Terintegrasi" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-slate-600 mb-4 flex items-center justify-center gap-2">
+                  <Cpu size={18} /> Ekosistem Terintegrasi
+                </h3>
+                <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
+                  Menghubungkan berbagai perangkat cerdas ke dalam satu dashboard sentral. Menciptakan ekosistem smart living yang efisien, responsif, dan saling terhubung.
+                </p>
+              </div>
             </Reveal>
 
           </div>
@@ -444,89 +448,89 @@ const LandingPage = ({ onNavigate }) => {
 
         {/* About Solutions Section */}
         <section id="about" className="py-12 relative bg-slate-900 border-t border-slate-800">
-           {/* Dark background styling */}
-           <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-900/20 to-transparent pointer-events-none"></div>
+          {/* Dark background styling */}
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-900/20 to-transparent pointer-events-none"></div>
 
-           <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16">
-              <div className="flex flex-col lg:flex-row gap-16 items-center">
-                 
-                 <Reveal animation="animate-slide-in-right" className="flex-1 w-full text-center lg:text-left">
-                    <div className="inline-flex py-1 px-3 rounded-full bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)] text-emerald-400 font-bold text-[11px] uppercase tracking-widest mb-6">
-                      About BIEON
+          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16">
+            <div className="flex flex-col lg:flex-row gap-16 items-center">
+
+              <Reveal animation="animate-slide-in-right" className="flex-1 w-full text-center lg:text-left">
+                <div className="inline-flex py-1 px-3 rounded-full bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)] text-emerald-400 font-bold text-[11px] uppercase tracking-widest mb-6">
+                  About BIEON
+                </div>
+                <h2 className="text-3xl lg:text-4xl font-extrabold text-white mb-6">
+                  BIEON System
+                </h2>
+                <p className="text-slate-400 text-[15px] leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
+                  BIEON hadir sebagai solusi Smart Green Living terpadu berbasis web. Kami memadukan pemantauan kualitas lingkungan, efisiensi konsumsi energi, dan kendali perangkat pintar untuk mendukung gaya hidup yang lebih sehat dan berkelanjutan.
+                </p>
+
+                <h3 className="text-xl font-bold text-white mb-4 mt-8 flex items-center justify-center lg:justify-start gap-3">
+                  <div className="w-8 h-8 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400 shrink-0">
+                    <CheckCircle2 size={16} />
+                  </div>
+                  Kolaborasi Industri & Akademisi
+                </h3>
+                <p className="text-slate-400 text-[15px] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+                  Sistem BIEON lahir dari kolaborasi inovatif antara <strong>PT Matra Kreasi Mandiri</strong> sebagai mitra industri dan project owner, bersama <strong>BPJS</strong> —tim pengembang dari mahasiswa Teknologi Rekayasa Komputer, Sekolah Vokasi IPB University.
+                </p>
+              </Reveal>
+
+              {/* Futuristic diagram mockup */}
+              <Reveal animation="animate-slide-in-right" delay="0.2s" className="flex-1 w-full">
+                <div className="relative mx-auto max-w-sm">
+                  <div className="absolute inset-0 bg-emerald-500 rounded-full blur-[100px] opacity-20"></div>
+
+                  {/* Diagram Container */}
+                  <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 relative shadow-2xl">
+
+                    <div className="flex items-center gap-4 bg-slate-900/80 p-4 border border-slate-700/50 rounded-2xl relative mb-4">
+                      <Cpu className="text-amber-400" size={28} />
+                      <div>
+                        <h4 className="text-slate-200 font-bold text-sm">BIEON Hub Node</h4>
+                        <p className="text-slate-500 text-xs">Edge Processing Unit</p>
+                      </div>
+                      <div className="absolute right-4 w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
                     </div>
-                    <h2 className="text-3xl lg:text-4xl font-extrabold text-white mb-6">
-                      BIEON System
-                    </h2>
-                    <p className="text-slate-400 text-[15px] leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
-                      BIEON hadir sebagai solusi Smart Green Living terpadu berbasis web. Kami memadukan pemantauan kualitas lingkungan, efisiensi konsumsi energi, dan kendali perangkat pintar untuk mendukung gaya hidup yang lebih sehat dan berkelanjutan.
-                    </p>
-                    
-                    <h3 className="text-xl font-bold text-white mb-4 mt-8 flex items-center justify-center lg:justify-start gap-3">
-                       <div className="w-8 h-8 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400 shrink-0">
-                         <CheckCircle2 size={16} />
-                       </div>
-                       Kolaborasi Industri & Akademisi
-                    </h3>
-                    <p className="text-slate-400 text-[15px] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
-                      Sistem BIEON lahir dari kolaborasi inovatif antara <strong>PT Matra Kreasi Mandiri</strong> sebagai mitra industri dan project owner, bersama <strong>BPJS</strong> —tim pengembang dari mahasiswa Teknologi Rekayasa Komputer, Sekolah Vokasi IPB University.
-                    </p>
-                 </Reveal>
 
-                 {/* Futuristic diagram mockup */}
-                 <Reveal animation="animate-slide-in-right" delay="0.2s" className="flex-1 w-full">
-                    <div className="relative mx-auto max-w-sm">
-                      <div className="absolute inset-0 bg-emerald-500 rounded-full blur-[100px] opacity-20"></div>
-                      
-                      {/* Diagram Container */}
-                      <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 relative shadow-2xl">
-                        
-                        <div className="flex items-center gap-4 bg-slate-900/80 p-4 border border-slate-700/50 rounded-2xl relative mb-4">
-                          <Cpu className="text-amber-400" size={28} />
-                          <div>
-                            <h4 className="text-slate-200 font-bold text-sm">BIEON Hub Node</h4>
-                            <p className="text-slate-500 text-xs">Edge Processing Unit</p>
-                          </div>
-                          <div className="absolute right-4 w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
-                        </div>
+                    <div className="flex justify-center my-2 text-slate-600">
+                      <Activity size={20} className="animate-pulse" />
+                    </div>
 
-                        <div className="flex justify-center my-2 text-slate-600">
-                          <Activity size={20} className="animate-pulse" />
-                        </div>
-
-                        <div className="flex items-center gap-4 bg-[#009b7c]/20 p-4 border border-[#009b7c]/30 rounded-2xl relative mb-4 transform scale-105 shadow-[0_0_30px_rgba(0,155,124,0.15)]">
-                           <div className="w-10 h-10 bg-[#009b7c] rounded-xl flex items-center justify-center">
-                             <img src="/logo_bieon.png" className="h-4 brightness-0 invert" alt="B" />
-                           </div>
-                          <div>
-                            <h4 className="text-white font-bold text-sm">BIEON Cloud Platform</h4>
-                            <p className="text-emerald-300 text-xs">AI & Data Aggregation</p>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center px-6 mt-6">
-                           <div className="flex flex-col items-center">
-                             <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-slate-300 mb-2">
-                               <Smartphone size={16} />
-                             </div>
-                             <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Mobile</span>
-                           </div>
-                           <div className="w-full border-t border-dashed border-slate-600 mx-2 relative">
-                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 px-2 text-[10px] text-emerald-400 font-mono rounded">sync</div>
-                           </div>
-                           <div className="flex flex-col items-center">
-                             <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-slate-300 mb-2">
-                               <BarChart3 size={16} />
-                             </div>
-                             <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Web App</span>
-                           </div>
-                        </div>
-
+                    <div className="flex items-center gap-4 bg-[#009b7c]/20 p-4 border border-[#009b7c]/30 rounded-2xl relative mb-4 transform scale-105 shadow-[0_0_30px_rgba(0,155,124,0.15)]">
+                      <div className="w-10 h-10 bg-[#009b7c] rounded-xl flex items-center justify-center">
+                        <img src="/logo_bieon.png" className="h-4 brightness-0 invert" alt="B" />
+                      </div>
+                      <div>
+                        <h4 className="text-white font-bold text-sm">BIEON Cloud Platform</h4>
+                        <p className="text-emerald-300 text-xs">AI & Data Aggregation</p>
                       </div>
                     </div>
-                 </Reveal>
 
-              </div>
-           </div>
+                    <div className="flex justify-between items-center px-6 mt-6">
+                      <div className="flex flex-col items-center">
+                        <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-slate-300 mb-2">
+                          <Smartphone size={16} />
+                        </div>
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Mobile</span>
+                      </div>
+                      <div className="w-full border-t border-dashed border-slate-600 mx-2 relative">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 px-2 text-[10px] text-emerald-400 font-mono rounded">sync</div>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-slate-300 mb-2">
+                          <BarChart3 size={16} />
+                        </div>
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Web App</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </Reveal>
+
+            </div>
+          </div>
         </section>
       </main>
 
@@ -538,7 +542,7 @@ const LandingPage = ({ onNavigate }) => {
             <img src="/logo_bieon_footer.png" alt="BIEON Footer" className="max-w-[280px] w-full h-auto object-contain mb-4 md:ml-[32px] drop-shadow-sm" />
             <p className="text-[14px] text-white/90 mb-8 leading-relaxed font-medium md:ml-[32px]">
               Sistem pemantauan gaya hidup cerdas<br className="hidden md:block" />
-              berbasis IoT. Mewujudkan lingkungan tempat<br className="hidden md:block"/>
+              berbasis IoT. Mewujudkan lingkungan tempat<br className="hidden md:block" />
               tinggal yang lebih sehat, aman, dan efisien.
             </p>
             <div className="flex gap-4 items-center md:ml-[32px]">
@@ -575,7 +579,7 @@ const LandingPage = ({ onNavigate }) => {
                   <MapPin size={18} className="shrink-0 mt-0.5 text-white/60 group-hover:text-white transition-colors" />
                   <span className="leading-[1.6]">
                     Jl. Permata Cimanggu No.3 Blok A, RT.008/<br className="hidden xl:block" />
-                    RW.007, Kedungbadak, Tanah Sareal,<br className="hidden xl:block"/>
+                    RW.007, Kedungbadak, Tanah Sareal,<br className="hidden xl:block" />
                     Kota Bogor, Jawa Barat 16164
                   </span>
                 </li>

@@ -46,7 +46,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
     <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-gray-900">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[55] lg:hidden animate-in fade-in duration-200"
           onClick={() => setIsMobileMenuOpen(false)}
         />
@@ -86,11 +86,11 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                 key={item.name}
                 onClick={() => {
                   handleNavigate(item.id);
-                  if(window.innerWidth < 1024) setIsMobileMenuOpen(false);
+                  if (window.innerWidth < 1024) setIsMobileMenuOpen(false);
                 }}
                 className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center px-0'} py-3.5 rounded-2xl transition-all group relative overflow-hidden ${isActive
-                    ? 'bg-white/20 text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-white/20 backdrop-blur-md'
-                    : 'hover:bg-white/10 text-white/70 hover:text-white'
+                  ? 'bg-white/20 text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-white/20 backdrop-blur-md'
+                  : 'hover:bg-white/10 text-white/70 hover:text-white'
                   }`}
               >
                 <item.icon className={`w-5 h-5 flex-shrink-0 transition-all ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
@@ -131,7 +131,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
 
             <div className="flex items-center gap-3 sm:gap-5">
               <div className="relative z-50">
-                <button 
+                <button
                   onClick={() => setShowNotifications(!showNotifications)}
                   className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5 hidden sm:block"
                 >
@@ -140,7 +140,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-3 w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-50 text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="fixed top-[82px] right-0 w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-[70] text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between p-4 border-b border-gray-50 mb-2">
                       <div className="flex items-center gap-3">
                         <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -149,7 +149,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                         <Bell className="w-5 h-5 text-[#009b7c]" />
                         <h3 className="font-bold text-gray-900">Notifikasi & Alert</h3>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setNotificationsRead(true)}
                         className={`text-xs font-bold ${notificationsRead ? 'text-gray-400 cursor-not-allowed' : 'text-[#009b7c] hover:underline'}`}
                         disabled={notificationsRead}
@@ -157,7 +157,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                         Tandai semua dibaca
                       </button>
                     </div>
-                    
+
                     <div className="space-y-2 max-h-[60vh] overflow-y-auto px-2 pb-2 custom-scrollbar">
                       {/* Card 1: SLA Violation */}
                       <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-red-50/50 border-red-100 border-l-4 border-l-red-500 hover:bg-red-50/80'}`}>
@@ -170,7 +170,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                           <p className="text-[10px] font-bold text-gray-400">10 Menit yang lalu</p>
                         </div>
                       </div>
-                      
+
                       {/* Card 2: Delete confirmation */}
                       <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-amber-50/50 border-amber-100 border-l-4 border-l-amber-500 hover:bg-amber-50/80'}`}>
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-amber-100'}`}>
@@ -217,7 +217,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   className="flex items-center gap-3 bg-white/10 hover:bg-white/20 p-1.5 pr-4 rounded-2xl transition-all border border-white/5"
                 >
                   <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
-                     <ShieldCheck className="w-5 h-5 text-white" />
+                    <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left hidden md:block">
                     <div className="text-sm font-bold text-white leading-none mb-1">Hi, Admin!</div>

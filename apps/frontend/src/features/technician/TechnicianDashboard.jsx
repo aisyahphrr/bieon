@@ -286,21 +286,71 @@ const statusPerangkatTrendData = [
   { bulan: 'Des', online: 264, offline: 17, error: 5 }
 ];
 
+// Refined Custom 3D Bar Component to match user's image exactly
+const ThreeDBar = (props) => {
+  const { x, y, width, height, fill } = props;
+  if (!height || height <= 0) return null;
+
+  const depth = 6; // Reduced depth for cleaner spacing
+
+  return (
+    <g>
+      {/* Subtle Drop Shadow behind the bar */}
+      <rect
+        x={x + 3}
+        y={y + height - depth}
+        width={width + depth}
+        height={depth}
+        fill="rgba(0,0,0,0.1)"
+        className="blur-[4px]"
+      />
+
+      {/* 3D Side Face (Right) - Darkened */}
+      <path
+        d={`M ${x + width} ${y} L ${x + width + depth} ${y - depth} L ${x + width + depth} ${y + height - depth} L ${x + width} ${y + height} Z`}
+        fill={fill}
+        style={{ filter: 'brightness(0.75)' }}
+      />
+
+      {/* 3D Top Face - Brightened */}
+      <path
+        d={`M ${x} ${y} L ${x + depth} ${y - depth} L ${x + width + depth} ${y - depth} L ${x + width} ${y} Z`}
+        fill={fill}
+        style={{ filter: 'brightness(1.25)' }}
+      />
+
+      {/* Front Face - Main bar with gradient handled by Recharts 'fill' */}
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={fill}
+      />
+
+      {/* Edge Highlight (Inner Top) */}
+      <line
+        x1={x} y1={y} x2={x + width} y2={y}
+        stroke="rgba(255,255,255,0.3)" strokeWidth="1"
+      />
+    </g>
+  );
+};
+
 const MENU_ITEMS = [
-  { id: 'dashboard',    icon: LayoutDashboard, label: 'Dashboard'              },
-  { id: 'monitoring',  icon: Monitor,         label: 'Monitoring Klien'       },
-  { id: 'pengaduan',   icon: MessageSquare,   label: 'Pengaduan Klien'        },
-  { id: 'konfigurasi', icon: Settings,        label: 'Konfigurasi Perangkat'  },
-  { id: 'riwayat',     icon: History,         label: 'Riwayat Perbaikan'      },
-  { id: 'profile',     icon: User,            label: 'Profil Teknisi'         },
+  { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { id: 'monitoring', icon: Monitor, label: 'Monitoring Klien' },
+  { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan Klien' },
+  { id: 'konfigurasi', icon: Settings, label: 'Konfigurasi Perangkat' },
+  { id: 'riwayat', icon: History, label: 'Riwayat Perbaikan' },
+  { id: 'profile', icon: User, label: 'Profil Teknisi' },
 ];
 
 function Toast({ message, type = 'success' }) {
   return (
     <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-top-4 duration-500">
-      <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-3 ${
-        type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-gray-800/90 border-gray-700 text-white'
-      }`}>
+      <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-3 ${type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-gray-800/90 border-gray-700 text-white'
+        }`}>
         {type === 'success' && <CheckCircle2 className="w-5 h-5" />}
         <span className="text-sm font-bold tracking-wide">{message}</span>
       </div>
@@ -401,7 +451,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     <Filter className="w-4 h-4" />
                     <span className="text-sm font-semibold">Filter</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => triggerToast('Laporan monitoring sedang diproses...')}
                     className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white hover:bg-teal-700 rounded-xl transition-colors shadow-sm"
                   >
@@ -441,10 +491,10 @@ export function TechnicianDashboard({ onNavigate }) {
                         <td className="px-6 py-4 text-sm text-gray-600">{client.lokasi}</td>
                         <td className="px-6 py-4 text-center">
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${client.status === 'online'
-                              ? 'bg-green-100 text-green-700'
-                              : client.status === 'offline'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-green-100 text-green-700'
+                            : client.status === 'offline'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-yellow-100 text-yellow-700'
                             }`}>
                             {client.status === 'online' ? 'Online' : client.status === 'offline' ? 'Offline' : 'Warning'}
                           </span>
@@ -493,16 +543,18 @@ export function TechnicianDashboard({ onNavigate }) {
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={bieonPerMonthData}>
+                  <BarChart data={bieonPerMonthData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" vertical={false} />
                     <XAxis
                       dataKey="bulan"
                       tick={{ fontSize: 11, fill: '#6b7280' }}
                       axisLine={{ stroke: '#d1fae5' }}
+                      padding={{ left: 0, right: 0 }}
                     />
                     <YAxis
                       tick={{ fontSize: 11, fill: '#6b7280' }}
                       axisLine={{ stroke: '#d1fae5' }}
+                      width={30}
                     />
                     <Tooltip
                       contentStyle={{
@@ -515,7 +567,8 @@ export function TechnicianDashboard({ onNavigate }) {
                     <Bar
                       dataKey="jumlah"
                       fill="url(#colorBieon)"
-                      radius={[8, 8, 0, 0]}
+                      shape={<ThreeDBar />}
+                      barSize={30}
                       name="Instalasi BIEON"
                     />
                     <defs>
@@ -658,9 +711,9 @@ export function TechnicianDashboard({ onNavigate }) {
     <TechnicianLayout activeMenu={activeMenu} setActiveMenu={setActiveMenu} onNavigate={onNavigate}>
       {/* Main Content Area */}
       <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8">
-          {renderContent()}
+        {renderContent()}
       </div>
-      
+
       {toast && <Toast message={toast.message} type={toast.type} />}
 
       {/* Detail Modal */}
@@ -693,10 +746,10 @@ export function TechnicianDashboard({ onNavigate }) {
                   <p className="text-gray-600 text-sm">{selectedClient.id}</p>
                 </div>
                 <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${selectedClient.status === 'online'
-                    ? 'bg-green-100 text-green-700'
-                    : selectedClient.status === 'offline'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700'
+                  ? 'bg-green-100 text-green-700'
+                  : selectedClient.status === 'offline'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-yellow-100 text-yellow-700'
                   }`}>
                   <Activity className="w-4 h-4 mr-2" />
                   {selectedClient.status === 'online' ? 'Online' : selectedClient.status === 'offline' ? 'Offline' : 'Warning'}
