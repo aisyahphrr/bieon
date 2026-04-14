@@ -41,9 +41,9 @@ export function ComplaintDetailModal({
             case 'Diproses Teknisi':
             case 'Diproses':
                 return (
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-row items-center gap-2">
                         <span className={`${baseClasses} bg-teal-50 text-teal-600 border-teal-100`}>Diproses</span>
-                        <span className="text-[9px] font-bold text-teal-500 bg-teal-50/50 px-2 rounded border border-teal-100/50">SLA: {sla || 'N/A'}</span>
+                        <span className="text-[9px] font-bold text-teal-500 bg-teal-50/50 px-2 py-0.5 rounded border border-teal-100/50 whitespace-nowrap">SLA: {sla || 'N/A'}</span>
                     </div>
                 );
             case 'Selesai':
@@ -65,7 +65,7 @@ export function ComplaintDetailModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
             <div className="w-full max-w-[1200px] h-full max-h-[95vh] flex flex-col relative animate-in fade-in zoom-in duration-300">
 
                 {/* HEADER AREA */}
@@ -213,17 +213,17 @@ export function ComplaintDetailModal({
 
                                         return (
                                             <>
-                                                <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+                                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4 mb-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
+                                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 shrink-0">
                                                             <User className="w-5 h-5 text-gray-400" />
                                                         </div>
                                                         <div>
-                                                            <h3 className="text-base font-bold text-gray-900 leading-tight">{ticket.technicianInfo.name || ticket.client}</h3>
+                                                            <h3 className="text-base font-bold text-gray-900 leading-tight">{ticket.technicianInfo?.name || ticket.client || ticket.clientInfo?.name || 'User'}</h3>
                                                             <p className="text-[11px] text-gray-400 font-medium mt-0.5">Rate: {stars}/5</p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-0.5">
+                                                    <div className="flex items-center gap-0.5 pl-13 md:pl-0 mt-1 md:mt-0">
                                                         {[1, 2, 3, 4, 5].map((s) => (
                                                             <Star key={s} className={`w-4 h-4 ${s <= stars ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200'}`} />
                                                         ))}

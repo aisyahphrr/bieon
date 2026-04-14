@@ -417,6 +417,12 @@ export function HomeownerComplaint({ onNavigate }) {
             onNavigate={onNavigate}
             hideBottomNav={isFormOpen || !!selectedTicket || !!ratingTargetId}
         >
+            <style>{`
+                .custom-scrollbar-x::-webkit-scrollbar { height: 8px; }
+                .custom-scrollbar-x::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            `}</style>
             <div className="max-w-[1900px] mx-auto px-4 md:px-8 py-8">
                 {/* Title Section */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
@@ -577,26 +583,26 @@ export function HomeownerComplaint({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-600 whitespace-nowrap min-w-[1000px]">
+                    <div className="hidden md:block w-full overflow-x-auto pb-4 custom-scrollbar-x">
+                        <table className="w-full text-left text-sm text-gray-600 whitespace-nowrap min-w-max">
                             <thead className="text-gray-500 border-b border-gray-100">
                                 <tr>
-                                    <th className="font-medium pb-4 pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('id')}>
+                                    <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('id')}>
                                         <div className="flex items-center gap-1">ID Tiket {sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
-                                    <th className="font-medium pb-4 pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('date')}>
+                                    <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('date')}>
                                         <div className="flex items-center gap-1">Tanggal Dibuat {sortConfig.key === 'date' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
-                                    <th className="font-medium pb-4 pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('topic')}>
+                                    <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('topic')}>
                                         <div className="flex items-center gap-1">Topik Kendala {sortConfig.key === 'topic' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
-                                    <th className="font-medium pb-4 pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('device')}>
+                                    <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('device')}>
                                         <div className="flex items-center gap-1">Perangkat & Ruangan {sortConfig.key === 'device' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
-                                    <th className="font-medium pb-4 pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('technician')}>
+                                    <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('technician')}>
                                         <div className="flex items-center gap-1">Teknisi {sortConfig.key === 'technician' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
-                                    <th className="font-medium pb-4 pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('status')}>
+                                    <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('status')}>
                                         <div className="flex items-center gap-1">Status {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
                                     <th className="font-medium pb-4 text-center">Aksi</th>
@@ -606,13 +612,13 @@ export function HomeownerComplaint({ onNavigate }) {
                                 {currentComplaints.length > 0 ? (
                                     currentComplaints.map(ticket => (
                                         <tr key={ticket.id} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="py-4 pr-4 font-bold text-gray-900">{ticket.id}</td>
-                                            <td className="py-4 pr-4">{ticket.date}</td>
-                                            <td className="py-4 pr-4 truncate max-w-[200px]" title={ticket.topic}>{ticket.topic}</td>
-                                            <td className="py-4 pr-4">{ticket.device}</td>
-                                            <td className={`py-4 pr-4 ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'font-medium text-gray-900'}`}>{ticket.technician}</td>
-                                            <td className="py-4 pr-4">{getStatusBadge(ticket.status)}</td>
-                                            <td className="py-4 text-center">
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4 font-bold text-gray-900">{ticket.id}</td>
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.date}</td>
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4 truncate max-w-[200px]" title={ticket.topic}>{ticket.topic}</td>
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.device}</td>
+                                            <td className={`py-3 md:py-4 pr-2 md:pr-4 ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'font-medium text-gray-900'}`}>{ticket.technician}</td>
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4">{getStatusBadge(ticket.status)}</td>
+                                            <td className="py-3 md:py-4 text-center">
                                                 {ticket.status === 'Menunggu Konfirmasi' ? (
                                                     <button
                                                         onClick={() => setSelectedTicket(ticket)}

@@ -192,7 +192,7 @@ export function RiwayatPerbaikanPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua Kategori');
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
   const [showRowsDropdown, setShowRowsDropdown] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -387,45 +387,35 @@ export function RiwayatPerbaikanPage() {
 
         {/* FILTERS & ACTIONS */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
-          <div className="flex flex-col sm:flex-row w-full lg:w-auto mt-2 lg:mt-0 gap-3">
-            {/* Search Input & Mobile Export Wrapper */}
-            <div className="flex w-full sm:w-auto gap-3">
-              <div className="relative flex-1 sm:w-[240px] group">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
-                <input
-                  type="text"
-                  placeholder="Cari ID Tiket atau Pelanggan..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all shadow-sm"
-                />
-              </div>
-              
-              <button
-                onClick={handleExportPDF}
-                className="flex lg:hidden items-center justify-center px-4 py-2 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-all shadow-sm active:scale-95 shrink-0"
-              >
-                <Download className="w-4 h-4" />
-              </button>
+          <div className="flex flex-row w-full lg:w-auto mt-2 lg:mt-0 gap-2 items-center">
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[100px] sm:w-[240px] group">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="Cari Tiket..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all shadow-sm"
+              />
             </div>
-
-            {/* Kategori & Rentang Waktu mobile grid */}
-            <div className="grid grid-cols-2 sm:flex gap-3 w-full sm:w-auto">
-              {/* Category Dropdown */}
-              <div className="relative w-full sm:w-[200px]">
+            
+            {/* Kategori Dropdown */}
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
               >
-                <span className={selectedCategory !== 'Semua Kategori' ? 'text-gray-900' : 'text-gray-500'}>
-                  {selectedCategory === 'Semua Kategori' ? 'Pilih Kategori' : selectedCategory}
+                <Filter className="w-4 h-4 text-gray-500 sm:hidden" />
+                <span className={`hidden sm:inline-block ${selectedCategory !== 'Semua Kategori' ? 'text-gray-900' : 'text-gray-500'}`}>
+                  {selectedCategory === 'Semua Kategori' ? 'Kategori' : selectedCategory}
                 </span>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-all ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showCategoryDropdown ? 'rotate-180' : ''}`} />
               </button>
               {showCategoryDropdown && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowCategoryDropdown(false)}></div>
-                  <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 min-w-[200px]">
+                  <div className="absolute top-full mt-2 right-0 sm:left-0 w-[200px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
                     {['Semua Kategori', 'Kenyamanan', 'Keamanan', 'Konsumsi Energi', 'Kualitas Air'].map(cat => (
                       <button
                         key={cat}
@@ -441,19 +431,19 @@ export function RiwayatPerbaikanPage() {
             </div>
 
             {/* Rentang Waktu (Dropdown Aktif) */}
-            <div className="relative w-full sm:w-[220px]">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowDateDropdown(!showDateDropdown)}
-                className={`w-full flex items-center justify-between px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm ${showDateDropdown || dateRange.start || dateRange.end ? 'border-teal-500 ring-4 ring-teal-500/10 text-[#235C50]' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm ${showDateDropdown || dateRange.start || dateRange.end ? 'border-teal-500 ring-4 ring-teal-500/10 text-[#235C50]' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
               >
-                <span>{dateRange.start || dateRange.end ? 'Rentang Aktif' : 'Rentang Waktu'}</span>
-                <Calendar className={`w-4 h-4 ${showDateDropdown || dateRange.start || dateRange.end ? 'text-teal-500' : 'text-gray-400'}`} />
+                <Calendar className={`w-4 h-4 ${showDateDropdown || dateRange.start || dateRange.end ? 'text-teal-500' : 'text-gray-600 sm:hidden'}`} />
+                <span className="hidden sm:inline-block">{dateRange.start || dateRange.end ? 'Rentang Aktif' : 'Rentang Waktu'}</span>
               </button>
 
               {showDateDropdown && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => { setShowDateDropdown(false); setActivePicker(null); }}></div>
-                  <div className="absolute top-full mt-2 w-[320px] bg-white border border-gray-200 rounded-2xl shadow-2xl p-5 z-20 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="fixed inset-0 z-[15]" onClick={() => { setShowDateDropdown(false); setActivePicker(null); }}></div>
+                  <div className="absolute top-full mt-2 right-[-48px] sm:right-0 w-[calc(100vw-32px)] max-w-[320px] sm:w-[320px] bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 sm:p-5 z-[20] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                     <div className="space-y-5">
                       {/* Input Trigger Start */}
                       <div>
@@ -565,7 +555,13 @@ export function RiwayatPerbaikanPage() {
                 </>
               )}
             </div>
-            </div>
+            
+            <button
+                onClick={handleExportPDF}
+                className="flex lg:hidden items-center justify-center px-3 sm:px-4 py-2.5 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-all shadow-sm active:scale-95 shrink-0"
+            >
+                <Download className="w-4 h-4" />
+            </button>
           </div>
 
           <button
@@ -576,10 +572,17 @@ export function RiwayatPerbaikanPage() {
           </button>
         </div>
 
+        <style>{`
+          .custom-scrollbar-x::-webkit-scrollbar { height: 8px; }
+          .custom-scrollbar-x::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+          .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+          .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        `}</style>
+
         {/* TABLE AREA */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="hidden md:block overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-            <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-[1000px]">
+          <div className="hidden md:block w-full overflow-x-auto pb-4 custom-scrollbar-x">
+            <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
               <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                 <tr>
                   <th onClick={() => requestSort('id')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
@@ -667,16 +670,16 @@ export function RiwayatPerbaikanPage() {
                   <MapPin className="w-3 h-3 shrink-0" /> <span className="truncate">{item.location}</span>
                 </div>
                 <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
-                <div className="flex items-center gap-5 mb-4 text-[11px] font-bold text-gray-500">
-                  <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-teal-600" /> {item.duration}</div>
-                  <div className="flex items-center gap-1.5 text-amber-500"><Star className="w-3.5 h-3.5 fill-amber-400" /> {item.rating.stars}/5</div>
-                </div>
-                <div className="pt-2 border-t border-gray-50">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                  <div className="flex items-center gap-4 text-[10px] sm:text-[11px] font-bold text-gray-500">
+                    <div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-teal-600" /> <span className="truncate max-w-[80px] sm:max-w-none">{item.duration}</span></div>
+                    <div className="flex items-center gap-1 text-amber-500"><Star className="w-3.5 h-3.5 fill-amber-400" /> {item.rating.stars}/5</div>
+                  </div>
                   <button
                     onClick={() => setSelectedTicket(item)}
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#EDF5F1] text-[#235C50] rounded-xl text-xs font-extrabold hover:bg-[#235C50] hover:text-white transition-all active:scale-95"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all shrink-0"
                   >
-                    Lihat Detail <ChevronRight className="w-4 h-4" />
+                    Detail <ChevronRight className="w-3.5 h-3.5 hidden min-[360px]:block" />
                   </button>
                 </div>
               </div>
@@ -689,22 +692,21 @@ export function RiwayatPerbaikanPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-200 gap-4 bg-white">
-            <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
+          <div className="flex flex-row items-center justify-between text-sm text-gray-500 pt-4 p-6 border-t border-gray-100 gap-2 sm:gap-4 bg-[#FBFDFB]/50">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 font-medium">
               <span className="hidden sm:inline">Rows per page:</span>
               <div className="relative">
                 <button
                   onClick={() => setShowRowsDropdown(!showRowsDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all shadow-sm"
                 >
                   {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                 </button>
-
                 {showRowsDropdown && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
-                    <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
-                      {[5, 10, 15, 20, 30, 50].map(val => (
+                    <div className="absolute bottom-full left-0 mb-2 w-16 sm:w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
+                      {[5, 10, 20].map(val => (
                         <button
                           key={val}
                           onClick={() => {
@@ -723,24 +725,26 @@ export function RiwayatPerbaikanPage() {
               </div>
             </div>
 
-            <div className="text-sm font-medium text-gray-600">
-              {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} items
+            <div className="text-xs sm:text-sm font-medium text-gray-600">
+              {totalItems === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1 || totalItems === 0}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="p-1.5 sm:px-4 sm:py-2 bg-white border border-gray-200 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
-                Previous
+                <span className="hidden sm:inline">Previous</span>
+                <ChevronLeft className="w-4 h-4 sm:hidden" />
               </button>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages || totalItems === 0}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="p-1.5 sm:px-4 sm:py-2 bg-white border border-gray-200 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight className="w-4 h-4 sm:hidden" />
               </button>
             </div>
           </div>

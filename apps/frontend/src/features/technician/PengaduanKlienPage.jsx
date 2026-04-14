@@ -176,7 +176,7 @@ export function PengaduanKlienPage({ onNavigate }) {
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     const [showRowsDropdown, setShowRowsDropdown] = useState(false);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -383,6 +383,12 @@ export function PengaduanKlienPage({ onNavigate }) {
 
     return (
         <div className="w-full">
+            <style>{`
+                .custom-scrollbar-x::-webkit-scrollbar { height: 8px; }
+                .custom-scrollbar-x::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            `}</style>
             {/* Main Content Area */}
             <div className="py-8">
                 {/* Title Section */}
@@ -480,9 +486,9 @@ export function PengaduanKlienPage({ onNavigate }) {
                                 <p className="text-xs text-gray-500 mt-0.5 italic">Pantau status perbaikan Anda secara real-time. Jangan lupa konfirmasi jika tugas sudah selesai.</p>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
                                 {/* Search */}
-                                <div className="relative flex-1 md:w-64 group">
+                                <div className="relative flex-1 sm:w-auto md:w-64 group">
                                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                     <input
                                         type="text"
@@ -493,87 +499,93 @@ export function PengaduanKlienPage({ onNavigate }) {
                                     />
                                 </div>
 
-                                {/* Status Filter */}
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                        className={`flex items-center gap-2 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
-                                    >
-                                        <Filter className="w-4 h-4 text-gray-400" />
-                                        {selectedStatusFilter || 'Semua Status'}
-                                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {showStatusDropdown && (
-                                        <>
-                                            <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
-                                            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 z-20">
-                                                {['', 'Baru', 'Diproses', 'Menunggu Konfirmasi', 'Selesai'].map(s => (
-                                                    <button
-                                                        key={s}
-                                                        onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
-                                                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedStatusFilter === s ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                    >
-                                                        {s || 'Semua Status'}
-                                                    </button>
-                                                ))}
+                                <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                                    {/* Status Filter */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                                            className={`flex items-center justify-center sm:justify-between gap-1.5 md:gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                                        >
+                                            <div className="flex items-center gap-1.5 md:gap-2.5 overflow-hidden">
+                                                <Filter className={`w-4 h-4 shrink-0 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                                <span className={`hidden sm:inline-block truncate ${selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}`}>
+                                                    {selectedStatusFilter || 'Semua Status'}
+                                                </span>
                                             </div>
-                                        </>
-                                    )}
-                                </div>
+                                            <ChevronDown className={`hidden sm:block w-4 h-4 shrink-0 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                                        </button>
+                                        {showStatusDropdown && (
+                                            <>
+                                                <div className="fixed inset-0 z-[10]" onClick={() => setShowStatusDropdown(false)}></div>
+                                                <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-[20] animate-in fade-in zoom-in-95 duration-200">
+                                                    {['', 'Baru', 'Diproses', 'Menunggu Konfirmasi', 'Selesai'].map(s => (
+                                                        <button
+                                                            key={s}
+                                                            onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
+                                                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedStatusFilter === s ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        >
+                                                            {s || 'Semua Status'}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
 
-                                {/* Export */}
-                                <button
-                                    onClick={() => showToast("Mengekspor data pengaduan ke PDF...")}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#E1F2EB] text-[#1E4D40] rounded-lg text-sm font-bold hover:bg-[#d4ece3] transition-colors shadow-sm"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    Export
-                                </button>
+                                    {/* Export */}
+                                    <button
+                                        onClick={() => showToast("Mengekspor data pengaduan ke PDF...")}
+                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent"
+                                    >
+                                        <Download className="w-4 h-4 shrink-0" />
+                                        <span className="hidden sm:inline-block">Export</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Desktop Table (Auto Width with Scroll) */}
-                    <div className="hidden md:block overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                        <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-[1000px]">
+                    <div className="hidden md:block w-full overflow-x-auto pb-4 custom-scrollbar-x">
+                        <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
                             <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                                 <tr>
-                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('id')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('id')}>
                                         <div className="flex items-center gap-1.5">ID Tiket {getSortIcon('id')}</div>
                                     </th>
-                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('date')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('date')}>
                                         <div className="flex items-center gap-1.5">Dibuat {getSortIcon('date')}</div>
                                     </th>
-                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('customer')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('customer')}>
                                         <div className="flex items-center gap-1.5">Pelanggan {getSortIcon('customer')}</div>
                                     </th>
-                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('location')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('location')}>
                                         <div className="flex items-center gap-1.5">Lokasi {getSortIcon('location')}</div>
                                     </th>
-                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap max-w-[400px]" onClick={() => requestSort('topic')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap max-w-[400px]" onClick={() => requestSort('topic')}>
                                         <div className="flex items-center gap-1.5">Topik Kendala {getSortIcon('topic')}</div>
                                     </th>
-                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('status')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap" onClick={() => requestSort('status')}>
                                         <div className="flex items-center gap-1.5">Status {getSortIcon('status')}</div>
                                     </th>
-                                    <th className="px-6 py-4 w-[120px] font-normal whitespace-nowrap text-center text-xs uppercase tracking-wider">Aksi</th>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 w-[120px] font-normal whitespace-nowrap text-center text-xs uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {currentData.length > 0 ? (
                                     currentData.map((item, idx) => (
                                         <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
-                                            <td className="px-6 py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">{item.id}</td>
-                                            <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{item.date}</td>
-                                            <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{item.customer}</td>
-                                            <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{item.location}</td>
-                                            <td className="px-6 py-4 text-gray-600 truncate max-w-[400px]" title={item.topic}>
+                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">{item.id}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-500 whitespace-nowrap">{item.date}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 font-medium text-gray-900 whitespace-nowrap">{item.customer}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-500 whitespace-nowrap">{item.location}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-600 truncate max-w-[400px]" title={item.topic}>
                                                 {item.topic}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
                                                 <TicketStatusBadge status={item.status} sla={item.sla} rating={item.rating} />
                                             </td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-center">
                                                 <button
                                                     onClick={() => setSelectedTicket(item)}
                                                     className="inline-flex items-center gap-1 px-4 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all"
@@ -611,15 +623,15 @@ export function PengaduanKlienPage({ onNavigate }) {
                                         <AlertCircle className="w-3 h-3" /> {item.location}
                                     </div>
                                     <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
-                                    <div className="flex flex-wrap items-center justify-between gap-3 mt-2">
+                                    <div className="flex justify-between items-center mt-2">
                                         <div>
                                             <TicketStatusBadge status={item.status} sla={item.sla} rating={item.rating} />
                                         </div>
                                         <button
                                             onClick={() => setSelectedTicket(item)}
-                                            className="grow sm:grow-0 shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#0D9488] text-white rounded-xl text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all whitespace-nowrap w-full sm:w-auto"
+                                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all shrink-0"
                                         >
-                                            Lihat Detail <ChevronRight className="w-3.5 h-3.5" />
+                                            Detail
                                         </button>
                                     </div>
                                 </div>
@@ -630,22 +642,32 @@ export function PengaduanKlienPage({ onNavigate }) {
                     </div>
 
                     {/* Pagination Footer */}
-                    <div className="p-6 border-t border-gray-100 bg-[#FBFDFB]/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-3 text-sm text-gray-500">
-                            <span>Rows per page:</span>
+                    <div className="flex flex-row items-center justify-between text-sm text-gray-500 pt-4 p-6 border-t border-gray-100 gap-2 sm:gap-4 bg-[#FBFDFB]/50">
+                        <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 font-medium">
+                            <span className="hidden sm:inline">Rows per page:</span>
                             <div className="relative">
                                 <button
                                     onClick={() => setShowRowsDropdown(!showRowsDropdown)}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all"
+                                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all shadow-sm"
                                 >
                                     {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                 </button>
                                 {showRowsDropdown && (
                                     <>
                                         <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
-                                        <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
-                                            {[5, 10, 15, 20, 30, 50].map(v => (
-                                                <button key={v} onClick={() => { setRowsPerPage(v); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === v ? 'bg-teal-50 text-teal-600 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{v}</button>
+                                        <div className="absolute bottom-full left-0 mb-2 w-16 sm:w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
+                                            {[5, 10, 20].map(val => (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => {
+                                                        setRowsPerPage(val);
+                                                        setCurrentPage(1);
+                                                        setShowRowsDropdown(false);
+                                                    }}
+                                                    className={`w-full text-left px-3 sm:px-4 py-1.5 text-xs sm:text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    {val}
+                                                </button>
                                             ))}
                                         </div>
                                     </>
@@ -653,24 +675,26 @@ export function PengaduanKlienPage({ onNavigate }) {
                             </div>
                         </div>
 
-                        <div className="text-sm font-medium text-gray-600">
-                            {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} items
+                        <div className="text-xs sm:text-sm font-medium">
+                            {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1 || totalItems === 0}
-                                className="px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm text-sm"
+                                className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600 shadow-sm"
                             >
-                                Previous
+                                <span className="sm:hidden">&lt;</span>
+                                <span className="hidden sm:inline">Previous</span>
                             </button>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages || totalItems === 0}
-                                className="px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50 disabled:opacity-30 transition-all shadow-sm text-sm"
+                                className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600 shadow-sm"
                             >
-                                Next
+                                <span className="sm:hidden">&gt;</span>
+                                <span className="hidden sm:inline">Next</span>
                             </button>
                         </div>
                     </div>
