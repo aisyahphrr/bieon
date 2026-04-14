@@ -976,67 +976,69 @@ export function HomeownerComplaint({ onNavigate }) {
                         </div>
                     )
                 }
-            />
-
-
+            />            {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {ratingTargetId && (
-                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
-                    <div className="bg-[#489C74] rounded-[2.5rem] sm:rounded-[3rem] p-8 max-w-lg w-full text-center relative shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-y-auto max-h-[90vh] custom-scrollbar">
-                        <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-8 sm:hidden" />
-
-                        {/* Emoji Display Header */}
-                        <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                            <span className="text-5xl leading-none">😍</span>
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
+                    <div className="bg-[#489C74] rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-500 overflow-visible mt-12 sm:mt-16 border border-white/10">
+                        {/* Close Button */}
+                        <button 
+                            onClick={() => setRatingTargetId(null)} 
+                            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors p-1"
+                        >
+                            <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </button>
+                        
+                        {/* Emoji Display Header Overlapping - Simplified to just the emoji as requested */}
+                        <div className="absolute -top-12 sm:-top-16 left-1/2 -translate-x-1/2 flex items-center justify-center">
+                            <span className="text-7xl sm:text-8xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] animate-bounce-slow">😍</span>
                         </div>
 
-                        <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Perbaikan Selesai!</h2>
-                        <p className="text-emerald-50/80 text-sm mb-10 leading-relaxed font-bold italic">
-                            Bantu kami menjaga kualitas layanan BIEON
-                        </p>
+                        <div className="pt-14 sm:pt-20">
+                            <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 tracking-tight leading-tight">Konfirmasi & Beri Penilaian</h2>
+                            <p className="text-white/90 text-sm sm:text-[15px] mb-6 sm:mb-8 leading-relaxed font-medium px-1 sm:px-2">
+                                Bagaimana hasil perbaikan dari teknisi kami? Penilaian Anda sangat membantu kami dalam menjaga kualitas layanan PT Matra.
+                            </p>
 
-                        <div className="flex justify-center gap-3 mb-10">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    onMouseEnter={() => setHoverStars(star)}
-                                    onMouseLeave={() => setHoverStars(0)}
-                                    onClick={() => setRatingStars(star)}
-                                    className="focus:outline-none transition-transform hover:scale-125 duration-300"
-                                >
-                                    <Star
-                                        className={`w-10 h-10 ${(hoverStars || ratingStars) >= star
-                                            ? "fill-[#FCD34D] text-[#FCD34D]"
-                                            : "fill-white/20 text-white/20"
-                                            } drop-shadow-lg`}
-                                    />
-                                </button>
-                            ))}
-                        </div>
+                            <div className="flex justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onMouseEnter={() => setHoverStars(star)}
+                                        onMouseLeave={() => setHoverStars(0)}
+                                        onClick={() => setRatingStars(star)}
+                                        className="focus:outline-none transition-transform hover:scale-125 duration-300"
+                                    >
+                                        <Star
+                                            className={`w-10 h-10 sm:w-12 sm:h-12 ${(hoverStars || ratingStars) >= star
+                                                    ? "fill-[#FCD34D] text-[#FCD34D]"
+                                                    : "fill-white/30 text-white/30"
+                                                } drop-shadow-md`}
+                                        />
+                                    </button>
+                                ))}
+                            </div>
 
-                        <div className="text-left mb-10">
-                            <label className="block text-white/60 text-[10px] font-black uppercase tracking-widest mb-3">Pesan untuk Teknisi</label>
-                            <textarea
-                                value={ratingReview}
-                                onChange={(e) => setRatingReview(e.target.value)}
-                                placeholder="Contoh: Sangat membantu, tepat waktu!"
-                                className="w-full bg-white/10 border border-white/20 rounded-2xl p-6 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none h-32 text-sm font-bold"
-                            />
-                        </div>
+                            <p className="text-white/80 text-xs sm:text-sm mb-5 sm:mb-6 leading-relaxed px-2 sm:px-4 italic">
+                                "Penilaian Anda mencakup keseluruhan dari kecepatan respons, kecepatan perbaikan, komunikasi dan keramahan teknisi kami."
+                            </p>
 
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => { setRatingTargetId(null); setRatingStars(0); setHoverStars(0); setRatingReview(''); }}
-                                className="flex-1 py-4 text-white/60 font-black uppercase tracking-widest rounded-2xl hover:bg-white/10 transition-all"
-                            >
-                                Batal
-                            </button>
+                            <div className="text-left mb-6 sm:mb-8">
+                                <label className="block text-white text-sm sm:text-base font-medium mb-2 sm:mb-3 ml-1">Tuliskan Ulasan Anda</label>
+                                <textarea
+                                    value={ratingReview}
+                                    onChange={(e) => setRatingReview(e.target.value)}
+                                    placeholder="Contoh: Teknisi datang tepat waktu, masalah kipas exhaust sudah beres dan berfungsi normal."
+                                    className="w-full bg-transparent border border-white/40 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-white placeholder-white/60 focus:outline-none focus:border-white resize-none h-24 sm:h-28 text-xs sm:text-sm transition-all"
+                                />
+                            </div>
+
                             <button
                                 onClick={submitRating}
                                 disabled={ratingStars === 0}
-                                className={`flex-[2] py-4 bg-white text-[#489C74] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl ${ratingStars === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-95'}`}
+                                className={`w-40 sm:w-48 mx-auto py-3 sm:py-3.5 bg-white text-[#489C74] font-bold text-base sm:text-[17px] rounded-full transition-all shadow-xl block ${ratingStars === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl hover:-translate-y-0.5 active:scale-95'}`}
                             >
-                                Kirim Review
+                                Submit
                             </button>
                         </div>
                     </div>
