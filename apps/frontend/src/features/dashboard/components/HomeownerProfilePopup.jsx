@@ -46,8 +46,8 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 px-0 sm:px-4">
-      <div className="relative bg-white/90 backdrop-blur-3xl rounded-t-[2rem] sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,155,124,0.3)] w-full sm:max-w-[420px] overflow-hidden flex flex-col h-[85vh] sm:h-auto sm:max-h-[90vh] animate-in slide-in-from-bottom sm:zoom-in duration-500 mt-[10vh] sm:mt-0 border border-white/50">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
+      <div className="relative bg-white/90 backdrop-blur-3xl rounded-[24px] sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,155,124,0.3)] w-full sm:max-w-[420px] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-500 border border-white/50">
         
         {/* Ambient Top Glow */}
         <div className="absolute top-0 left-1/4 right-1/4 h-32 bg-emerald-400/20 blur-[50px] rounded-full pointer-events-none"></div>

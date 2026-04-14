@@ -9,7 +9,9 @@ import {
     ArrowDown,
     ArrowUp,
     ArrowUpDown,
-    ChevronDown
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
@@ -128,7 +130,7 @@ export function HomeownerHistory({ onNavigate }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRoomFilter, setSelectedRoomFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     const [showRowsDropdown, setShowRowsDropdown] = useState(false);
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -137,7 +139,7 @@ export function HomeownerHistory({ onNavigate }) {
         { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Kenyamanan' },
         { id: 'Keamanan',         full: 'Keamanan',         short: 'Keamanan' },
         { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Kualitas Air' },
-        { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Energi' },
+        { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Konsumsi Energi' },
         { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log Perangkat' },
         { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi' }
     ];
@@ -315,19 +317,26 @@ export function HomeownerHistory({ onNavigate }) {
             onNavigate={onNavigate}
             hideBottomNav={false}
         >
+            {/* Custom Scrollbar Styles for horizontal scrolling table */}
+            <style>
+                {`
+                .custom-scrollbar::-webkit-scrollbar { height: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+                .custom-scrollbar::-webkit-scrollbar-button:single-button { background-color: #f1f5f9; display: block; border-radius: 4px; width: 16px; }
+                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='8,2 2,5 8,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
+                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:decrement:hover { background-color: #e2e8f0; }
+                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='2,2 8,5 2,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
+                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:increment:hover { background-color: #e2e8f0; }
+                `}
+            </style>
+
             {/* Main Content */}
             <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8">
                 <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#235C50] mb-6 sm:mb-8">Riwayat Aktivitas</h1>
 
-                {/* Export Button Area */}
-                <div className="flex justify-end mb-4">
-                    <button onClick={handleExport} className="flex items-center gap-2 px-5 py-2.5 bg-[#235C50] text-white rounded-lg hover:bg-teal-900 transition-colors shadow-sm font-medium text-sm">
-                        <Download className="w-4 h-4" />
-                        Export
-                    </button>
-                </div>
-
-                {/* Tabs and Filters Row */}
+                {/* Tabs, Search, Filters, and Export Row */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
                     {/* Tabs Container */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex bg-white rounded-xl border-t border-l border-gray-200 w-full lg:w-auto shrink shadow-sm overflow-hidden">
@@ -353,13 +362,13 @@ export function HomeownerHistory({ onNavigate }) {
                     </div>
 
 
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
                         {/* Search Input */}
-                        <div className="relative w-full sm:w-[100px] md:w-[220px] shrink-0 group">
+                        <div className="relative w-full sm:w-[150px] md:w-[220px] shrink group">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search data..."
+                                placeholder="Search..."
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                                 className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
@@ -367,25 +376,23 @@ export function HomeownerHistory({ onNavigate }) {
                             />
                         </div>
 
-                        <div className="relative w-full sm:w-[180px] md:w-[220px] shrink-0">
+                        <div className="relative shrink-0">
                             <button
                                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                                 disabled={availableFilters.length === 0}
-                                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'} ${availableFilters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`flex items-center justify-center gap-2 sm:px-4 py-2.5 w-10 sm:w-auto bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'} ${availableFilters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                <div className="flex items-center gap-2.5">
-                                    <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-teal-500' : 'text-gray-400'}`} />
-                                    <span className={selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}>
-                                        {selectedRoomFilter || (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Semua Perangkat' : 'Semua Ruangan')}
-                                    </span>
-                                </div>
-                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                                <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                <span className={`hidden sm:inline ${selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}`}>
+                                    {selectedRoomFilter || (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Semua Perangkat' : 'Semua Ruangan')}
+                                </span>
+                                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-teal-500' : ''}`} />
                             </button>
 
                             {showFilterDropdown && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowFilterDropdown(false)}></div>
-                                    <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 min-w-[200px]">
+                                    <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 min-w-[200px]">
                                         <button
                                             onClick={() => {
                                                 setSelectedRoomFilter('');
@@ -413,47 +420,52 @@ export function HomeownerHistory({ onNavigate }) {
                                 </>
                             )}
                         </div>
+                        
+                        <button onClick={handleExport} className="shrink-0 flex items-center justify-center gap-2 w-10 sm:w-auto px-0 sm:px-5 py-2.5 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-colors shadow-sm font-medium text-sm">
+                            <Download className="w-4 h-4" />
+                            <span className="hidden sm:inline">Export</span>
+                        </button>
                     </div>
                 </div>
 
                 {/* Table Area */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-[1000px]">
+                    <div className="overflow-x-auto custom-scrollbar pb-2">
+                        <table className="w-full text-left text-[13px] sm:text-[14px] text-gray-700 table-auto min-w-[600px] lg:min-w-[1000px]">
                             <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                                 <tr>
-                                    <th onClick={() => requestSort('time')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                    <th onClick={() => requestSort('time')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                         <div className="flex items-center gap-1">Waktu {getSortIcon('time')}</div>
                                     </th>
 
                                     {activeTab === 'Notifikasi & Alert' && (
-                                        <th onClick={() => requestSort('category')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => requestSort('category')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">Kategori {getSortIcon('category')}</div>
                                         </th>
                                     )}
 
                                     {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
-                                        <th onClick={() => requestSort('device')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => requestSort('device')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">Perangkat {getSortIcon('device')}</div>
                                         </th>
                                     ) : (
-                                        <th onClick={() => requestSort('room')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => requestSort('room')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">Ruangan {getSortIcon('room')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Log Perangkat' && (
-                                        <th onClick={() => requestSort('actuator')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => requestSort('actuator')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">Perangkat (Aktuator) {getSortIcon('actuator')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Kenyamanan' && (
                                         <>
-                                            <th onClick={() => requestSort('temp')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Suhu {getSortIcon('temp')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('humidity')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('humidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Kelembapan {getSortIcon('humidity')}</div>
                                             </th>
                                         </>
@@ -461,10 +473,10 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Keamanan' && (
                                         <>
-                                            <th onClick={() => requestSort('door')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('door')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Sensor Pintu {getSortIcon('door')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('motion')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('motion')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Sensor Gerak {getSortIcon('motion')}</div>
                                             </th>
                                         </>
@@ -472,16 +484,16 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Kualitas Air' && (
                                         <>
-                                            <th onClick={() => requestSort('ph')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('ph')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">pH {getSortIcon('ph')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('turbidity')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('turbidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Kekeruhan {getSortIcon('turbidity')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('temp')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Suhu {getSortIcon('temp')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('tds')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('tds')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Padatan Terlarut (TDS) {getSortIcon('tds')}</div>
                                             </th>
                                         </>
@@ -489,19 +501,19 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Konsumsi Energi' && (
                                         <>
-                                            <th onClick={() => requestSort('kwh')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('kwh')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">kWh Kumulatif {getSortIcon('kwh')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('voltage')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('voltage')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Voltase {getSortIcon('voltage')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('current')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('current')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Arus {getSortIcon('current')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('power')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('power')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Beban Daya (W) {getSortIcon('power')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('pf')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('pf')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Power Factor {getSortIcon('pf')}</div>
                                             </th>
                                         </>
@@ -509,23 +521,23 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {(!activeTabsConfigured.includes(activeTab)) && (
                                         <>
-                                            <th className="px-6 py-4 font-normal whitespace-nowrap">Kolom 1</th>
-                                            <th className="px-6 py-4 font-normal whitespace-nowrap">Kolom 2</th>
+                                            <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal whitespace-nowrap">Kolom 1</th>
+                                            <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal whitespace-nowrap">Kolom 2</th>
                                         </>
                                     )}
 
                                     {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && activeTab !== 'Notifikasi & Alert' && (
-                                        <th onClick={() => requestSort('status')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">Status {getSortIcon('status')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Log Perangkat' && (
                                         <>
-                                            <th onClick={() => requestSort('status')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Status {getSortIcon('status')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('trigger')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('trigger')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Pemicu (Trigger) {getSortIcon('trigger')}</div>
                                             </th>
                                         </>
@@ -533,10 +545,10 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Notifikasi & Alert' && (
                                         <>
-                                            <th onClick={() => requestSort('status')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Tingkat Bahaya {getSortIcon('status')}</div>
                                             </th>
-                                            <th className="px-6 py-4 font-normal whitespace-nowrap">
+                                            <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal whitespace-nowrap">
                                                 Pesan Detail Alert
                                             </th>
                                         </>
@@ -548,76 +560,76 @@ export function HomeownerHistory({ onNavigate }) {
                                     currentData.length > 0 ? (
                                         currentData.map((item) => (
                                             <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{item.time}</td>
+                                                <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-medium text-gray-900 whitespace-nowrap">{item.time}</td>
 
                                                 {activeTab === 'Notifikasi & Alert' && (
-                                                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.category}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.category}</td>
                                                 )}
 
                                                 {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
-                                                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.device}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.device}</td>
                                                 ) : (
-                                                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.room}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.room}</td>
                                                 )}
 
                                                 {activeTab === 'Kenyamanan' && (
                                                     <>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{Number(item.temp).toFixed(1)} °C</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.humidity}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{Number(item.temp).toFixed(1)} °C</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.humidity}</td>
                                                     </>
                                                 )}
 
                                                 {activeTab === 'Keamanan' && (
                                                     <>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.door}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.motion}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.door}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.motion}</td>
                                                     </>
                                                 )}
 
                                                 {activeTab === 'Kualitas Air' && (
                                                     <>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.ph}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.turbidity}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.temp}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.tds}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.ph}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.turbidity}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.temp}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.tds}</td>
                                                     </>
                                                 )}
 
                                                 {activeTab === 'Konsumsi Energi' && (
                                                     <>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.kwh}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.voltage}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.current}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.power}</td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.pf}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.kwh}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.voltage}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.current}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.power}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.pf}</td>
                                                     </>
                                                 )}
 
                                                 {activeTab === 'Log Perangkat' && (
-                                                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.actuator}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.actuator}</td>
                                                 )}
 
                                                 {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && activeTab !== 'Notifikasi & Alert' && (
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
                                                         <StatusBadge status={item.status} />
                                                     </td>
                                                 )}
 
                                                 {activeTab === 'Log Perangkat' && (
                                                     <>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
                                                             <StatusBadge status={item.status} />
                                                         </td>
-                                                        <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{item.trigger}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.trigger}</td>
                                                     </>
                                                 )}
 
                                                 {activeTab === 'Notifikasi & Alert' && (
                                                     <>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
                                                             <StatusBadge status={item.status} />
                                                         </td>
-                                                        <td className="px-6 py-4 text-gray-600 min-w-[280px]">
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 min-w-[280px]">
                                                             {item.message}
                                                         </td>
                                                     </>
@@ -645,92 +657,15 @@ export function HomeownerHistory({ onNavigate }) {
                         </table>
                     </div>
 
-                    {/* Mobile Card List */}
-                    <div className="md:hidden divide-y divide-gray-100">
-                        {activeTabsConfigured.includes(activeTab) ? (
-                            currentData.length > 0 ? (
-                                currentData.map((item) => (
-                                    <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className="text-[11px] text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{item.time}</span>
-                                            {activeTab !== 'Konsumsi Energi' && (
-                                                <StatusBadge status={item.status} />
-                                            )}
-                                        </div>
-                                        
-                                        <h3 className="font-bold text-gray-900 text-sm mb-3 mt-1">
-                                            {activeTab === 'Notifikasi & Alert' && <span className="text-teal-600 mr-2 font-bold bg-teal-50 px-1.5 py-0.5 rounded text-[11px] border border-teal-100 uppercase translate-y-[-1px] inline-block">{item.category}</span>}
-                                            {item.room || item.device}
-                                        </h3>
-                                        
-                                        <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs text-gray-600 bg-gray-50/80 p-3 rounded-xl border border-gray-100/50">
-                                            {activeTab === 'Kenyamanan' && (
-                                                <>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Suhu</span><span className="font-bold text-gray-800 text-sm">{Number(item.temp).toFixed(1)} °C</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Kelembapan</span><span className="font-bold text-gray-800 text-sm">{item.humidity}</span></div>
-                                                </>
-                                            )}
-                                            {activeTab === 'Keamanan' && (
-                                                <>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Pintu</span><span className="font-bold text-gray-800 truncate block pr-2">{item.door}</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Gerak</span><span className="font-bold text-gray-800 truncate block">{item.motion}</span></div>
-                                                </>
-                                            )}
-                                            {activeTab === 'Kualitas Air' && (
-                                                <>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">pH</span><span className="font-bold text-gray-800">{item.ph}</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Kekeruhan</span><span className="font-bold text-gray-800">{item.turbidity}</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Suhu</span><span className="font-bold text-gray-800">{item.temp}</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">TDS</span><span className="font-bold text-gray-800">{item.tds}</span></div>
-                                                </>
-                                            )}
-                                            {activeTab === 'Konsumsi Energi' && (
-                                                <>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">kWh</span><span className="font-bold text-gray-800">{item.kwh}</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Voltase</span><span className="font-bold text-gray-800">{item.voltage}</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Arus</span><span className="font-bold text-gray-800">{item.current}</span></div>
-                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Daya</span><span className="font-bold text-gray-800">{item.power}</span></div>
-                                                    <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">PF</span><span className="font-bold text-gray-800">{item.pf}</span></div>
-                                                </>
-                                            )}
-                                            {activeTab === 'Log Perangkat' && (
-                                                <>
-                                                    <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Perangkat Aktuator</span><span className="font-bold text-gray-800">{item.actuator}</span></div>
-                                                    <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Pemicu</span><span className="font-bold text-gray-800 bg-teal-50/50 px-2 py-1 rounded inline-block text-teal-800 mt-1">{item.trigger}</span></div>
-                                                </>
-                                            )}
-                                            {activeTab === 'Notifikasi & Alert' && (
-                                                <div className="col-span-2">
-                                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-1">Pesan Detail</span>
-                                                    <span className="font-medium text-gray-700 leading-relaxed text-xs block bg-white p-2 rounded-lg border border-gray-100">{item.message}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="p-10 text-center text-gray-500">
-                                    <Search className="w-8 h-8 opacity-20 mx-auto mb-2" />
-                                    Tidak ada data mencari...
-                                </div>
-                            )
-                        ) : (
-                            <div className="p-10 text-center text-gray-500">
-                                <div className="text-lg font-medium mb-1">Tidak ada data</div>
-                                <div className="text-sm">Data belum tersedia untuk tab {activeTab}.</div>
-                            </div>
-                        )}
-                    </div>
-
                     {/* Pagination */}
                     {activeTabsConfigured.includes(activeTab) && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-200 gap-4">
-                            <div className="flex items-center gap-3 text-sm text-gray-500">
-                                <span>Rows per page:</span>
+                        <div className="flex flex-row items-center justify-between px-3 sm:px-6 py-4 border-t border-gray-200 gap-2 sm:gap-4">
+                            <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
+                                <span className="hidden sm:inline">Rows per page:</span>
                                 <div className="relative">
                                     <button 
                                         onClick={() => setShowRowsDropdown(!showRowsDropdown)}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all"
+                                        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all"
                                     >
                                         {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                     </button>
@@ -738,8 +673,8 @@ export function HomeownerHistory({ onNavigate }) {
                                     {showRowsDropdown && (
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
-                                            <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
-                                                {[5, 10, 15, 20, 30, 50].map(val => (
+                                            <div className="absolute bottom-full left-0 mb-2 w-16 sm:w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
+                                                {[5, 10, 20, 50].map(val => (
                                                     <button
                                                         key={val}
                                                         onClick={() => {
@@ -758,24 +693,26 @@ export function HomeownerHistory({ onNavigate }) {
                                 </div>
                             </div>
 
-                            <div className="text-sm font-medium text-gray-600">
-                                {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} items
+                            <div className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap">
+                                {totalItems === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm">
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1 || totalItems === 0}
-                                    className="px-4 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed"
+                                    className="px-2 sm:px-4 py-1 sm:py-1.5 border border-gray-200 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed flex items-center justify-center"
                                 >
-                                    Previous
+                                    <ChevronLeft className="w-4 h-4 sm:hidden" />
+                                    <span className="hidden sm:inline">Previous</span>
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages || totalItems === 0}
-                                    className="px-4 py-1.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed"
+                                    className="px-2 sm:px-4 py-1 sm:py-1.5 border border-gray-200 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed flex items-center justify-center"
                                 >
-                                    Next
+                                    <span className="hidden sm:inline">Next</span>
+                                    <ChevronRight className="w-4 h-4 sm:hidden" />
                                 </button>
                             </div>
                         </div>

@@ -412,8 +412,8 @@ export function HomeownerComplaint({ onNavigate }) {
     };
 
     return (
-        <HomeownerLayout 
-            currentPage="pengaduan" 
+        <HomeownerLayout
+            currentPage="pengaduan"
             onNavigate={onNavigate}
             hideBottomNav={isFormOpen || !!selectedTicket || !!ratingTargetId}
         >
@@ -426,7 +426,7 @@ export function HomeownerComplaint({ onNavigate }) {
                     </div>
                     <button
                         onClick={() => setIsFormOpen(true)}
-                        className="mt-4 md:mt-0 flex items-center gap-2 px-6 py-3 bg-[#0F9E78] text-white rounded-xl font-bold hover:bg-[#0B8563] shadow-md transition-all"
+                        className="mt-4 md:mt-0 self-end md:self-auto flex items-center gap-2 px-6 py-3 bg-[#0F9E78] text-white rounded-xl font-bold hover:bg-[#0B8563] shadow-md transition-all"
                     >
                         <span className="text-lg leading-none">+</span> Kirim Pengaduan
                     </button>
@@ -522,8 +522,8 @@ export function HomeownerComplaint({ onNavigate }) {
                             <h2 className="text-lg font-bold text-gray-900">Riwayat Pengaduan Saya</h2>
                             <p className="text-sm text-gray-500">Pantau status perbaikan perangkat Anda secara real-time. Jangan lupa untuk mengonfirmasi tiket yang sudah selesai diperbaiki oleh teknisi.</p>
                         </div>
-                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
-                            <div className="relative w-full sm:flex-1 md:w-64 group">
+                        <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
+                            <div className="relative flex-1 sm:w-auto md:w-64 group">
                                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                 <input
                                     type="text"
@@ -533,25 +533,25 @@ export function HomeownerComplaint({ onNavigate }) {
                                     className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 sm:flex items-center gap-3 w-full sm:w-auto">
-                                <div className="relative w-full sm:min-w-[180px] sm:w-auto">
+                            <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                                <div className="relative">
                                     <button
                                         onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                        className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                                        className={`flex items-center justify-center sm:justify-between gap-1.5 md:gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
                                     >
                                         <div className="flex items-center gap-1.5 md:gap-2.5 overflow-hidden">
                                             <Filter className={`w-4 h-4 shrink-0 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
-                                            <span className={`truncate ${selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}`}>
+                                            <span className={`hidden sm:inline-block truncate ${selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}`}>
                                                 {selectedStatusFilter || 'Semua Status'}
                                             </span>
                                         </div>
-                                        <ChevronDown className={`w-4 h-4 shrink-0 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                                        <ChevronDown className={`hidden sm:block w-4 h-4 shrink-0 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
                                     </button>
 
                                     {showStatusDropdown && (
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
-                                            <div className="absolute top-full left-0 mt-2 w-full min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
                                                 {['', 'Menunggu Respons', 'Diproses Teknisi', 'Menunggu Konfirmasi', 'Selesai', 'Ditolak'].map((status) => (
                                                     <button
                                                         key={status}
@@ -569,8 +569,9 @@ export function HomeownerComplaint({ onNavigate }) {
                                         </>
                                     )}
                                 </div>
-                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors w-full sm:w-auto shrink-0 shadow-sm">
-                                    <Download className="w-4 h-4 shrink-0" /> Export
+                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent">
+                                    <Download className="w-4 h-4 shrink-0" />
+                                    <span className="hidden sm:inline-block">Export</span>
                                 </button>
                             </div>
                         </div>
@@ -692,13 +693,13 @@ export function HomeownerComplaint({ onNavigate }) {
                         )}
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-between mt-6 text-sm text-gray-500 pt-4 border-t border-gray-100 gap-4">
-                        <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-                            <span>Rows per page:</span>
+                    <div className="flex flex-row items-center justify-between mt-6 text-sm text-gray-500 pt-4 border-t border-gray-100 gap-2 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 font-medium">
+                            <span className="hidden sm:inline">Rows per page:</span>
                             <div className="relative">
                                 <button
                                     onClick={() => setShowRowsDropdown(!showRowsDropdown)}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all shadow-sm"
+                                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all shadow-sm"
                                 >
                                     {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                 </button>
@@ -706,8 +707,8 @@ export function HomeownerComplaint({ onNavigate }) {
                                 {showRowsDropdown && (
                                     <>
                                         <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
-                                        <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
-                                            {[5, 10, 15, 20].map(val => (
+                                        <div className="absolute bottom-full left-0 mb-2 w-16 sm:w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
+                                            {[5, 10, 20].map(val => (
                                                 <button
                                                     key={val}
                                                     onClick={() => {
@@ -715,7 +716,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                         setCurrentPage(1);
                                                         setShowRowsDropdown(false);
                                                     }}
-                                                    className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                    className={`w-full text-left px-3 sm:px-4 py-1.5 text-xs sm:text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                 >
                                                     {val}
                                                 </button>
@@ -725,18 +726,26 @@ export function HomeownerComplaint({ onNavigate }) {
                                 )}
                             </div>
                         </div>
-                        <div>{totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} items</div>
-                        <div className="flex items-center gap-2">
+                        <div className="text-xs sm:text-sm font-medium">
+                            {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
+                        </div>
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                            >Previous</button>
+                                className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600"
+                            >
+                                <span className="sm:hidden">&lt;</span>
+                                <span className="hidden sm:inline">Previous</span>
+                            </button>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages || totalPages === 0}
-                                className="px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                            >Next</button>
+                                className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600"
+                            >
+                                <span className="sm:hidden">&gt;</span>
+                                <span className="hidden sm:inline">Next</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -744,8 +753,8 @@ export function HomeownerComplaint({ onNavigate }) {
 
             {/* MODAL: FORM PENGADUAN BARU */}
             {isFormOpen && (
-                <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-t-[2rem] sm:rounded-[24px] shadow-2xl w-full max-w-3xl flex flex-col h-[85vh] sm:h-auto sm:max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom sm:zoom-in duration-500 mt-[10vh] sm:mt-0 relative">
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
+                    <div className="relative bg-white/95 backdrop-blur-3xl rounded-[24px] sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,155,124,0.3)] w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in duration-500 border border-white/50">
                         {/* Header Section */}
                         <div className="px-8 pt-10 pb-6 text-left shrink-0">
                             <div className="flex items-start justify-between">
@@ -897,9 +906,9 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 {formFiles.map((f, idx) => (
                                                     <div key={idx} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-md">
                                                         <img src={f.previewUrl} alt={f.name} className="w-full h-full object-cover" />
-                                                        <button 
-                                                            type="button" 
-                                                            onClick={(e) => { e.stopPropagation(); removeFile(idx); }} 
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
                                                             className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
                                                         >
                                                             <X className="w-4 h-4" />
@@ -969,7 +978,7 @@ export function HomeownerComplaint({ onNavigate }) {
                 <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
                     <div className="bg-[#489C74] rounded-[2.5rem] sm:rounded-[3rem] p-8 max-w-lg w-full text-center relative shadow-2xl animate-in slide-in-from-bottom duration-500 overflow-y-auto max-h-[90vh] custom-scrollbar">
                         <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-8 sm:hidden" />
-                        
+
                         {/* Emoji Display Header */}
                         <div className="w-24 h-24 bg-white/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
                             <span className="text-5xl leading-none">😍</span>
@@ -991,8 +1000,8 @@ export function HomeownerComplaint({ onNavigate }) {
                                 >
                                     <Star
                                         className={`w-10 h-10 ${(hoverStars || ratingStars) >= star
-                                                ? "fill-[#FCD34D] text-[#FCD34D]"
-                                                : "fill-white/20 text-white/20"
+                                            ? "fill-[#FCD34D] text-[#FCD34D]"
+                                            : "fill-white/20 text-white/20"
                                             } drop-shadow-lg`}
                                     />
                                 </button>

@@ -49,7 +49,7 @@ export function ComplaintDetailModal({
             case 'Selesai':
                 const ratingStars = rating?.stars || (typeof rating === 'number' ? rating : null);
                 return (
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-row items-center gap-2">
                         <span className={`${baseClasses} bg-[#E1F2EB] text-[#1E4D40] border-[#BEE3D1]`}>Selesai</span>
                         {ratingStars && (
                             <div className="flex items-center gap-0.5 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
@@ -97,6 +97,18 @@ export function ComplaintDetailModal({
                 {/* MAIN CONTENT AREA (SCROLLABLE) */}
                 <div className="flex-1 overflow-y-auto pb-8 modal-custom-scrollbar">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-1 lg:px-4">
+
+                        {/* MOBILE ONLY: ROLE ACTIONS SLOT (At the very top) */}
+                        {renderActions && (
+                            <div className="lg:hidden bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                                    Aksi Tersedia
+                                </h3>
+                                <div className="space-y-3">
+                                    {renderActions}
+                                </div>
+                            </div>
+                        )}
 
                         {/* LEFT COLUMN (2/3) - Main Ticket Details */}
                         <div className="lg:col-span-2 space-y-6">
@@ -327,9 +339,9 @@ export function ComplaintDetailModal({
                                 )}
                             </div>
 
-                            {/* BOX: ROLE ACTIONS SLOT */}
+                            {/* BOX: ROLE ACTIONS SLOT (DESKTOP) */}
                             {renderActions && (
-                                <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+                                <div className="hidden lg:block bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
                                         Aksi Tersedia
                                     </h3>
