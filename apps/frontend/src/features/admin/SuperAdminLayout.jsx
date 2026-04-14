@@ -43,7 +43,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-gray-900 overflow-x-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] font-sans text-gray-900 overflow-hidden">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
@@ -115,9 +115,9 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex-1 min-w-0 flex flex-col transition-all duration-300 bg-[#F8FAFC] w-full max-w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col h-screen transition-all duration-300 bg-[#F8FAFC] w-full max-w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
         {/* Top Header - Premium Green Style */}
-        <header className="h-[72px] bg-[#009b7c] text-white border-b border-white/10 sticky top-0 z-40 flex items-center shadow-md shadow-emerald-900/10 backdrop-blur-md">
+        <header className="h-[72px] shrink-0 bg-[#009b7c] text-white border-b border-white/10 sticky top-0 z-40 flex items-center shadow-md shadow-emerald-900/10 backdrop-blur-md">
           <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
               <button
@@ -246,7 +246,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-hidden pb-4 lg:pb-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-full overflow-y-auto pb-4 lg:pb-8 custom-scrollbar">
           {children}
         </main>
       </div>

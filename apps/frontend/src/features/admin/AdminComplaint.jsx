@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
     Users,
     Zap,
@@ -217,6 +217,10 @@ export default function AdminComplaint({ onNavigate }) {
     const [selectedTechnician, setSelectedTechnician] = useState('');
     const [selectedPingType, setSelectedPingType] = useState('');
 
+    // --- Scroll Control States ---
+    const tableScrollRef = useRef(null);
+    const [scrollProgress, setScrollProgress] = useState(0);
+
     // --- Dummy Data ---
     const technicians = [
         { id: 'TECH-001', name: 'Budi Santoso', status: 'Standby', activeTickets: 2 },
@@ -382,7 +386,6 @@ export default function AdminComplaint({ onNavigate }) {
             return c;
         }));
 
-        // Update selectedTicket so the modal UI updates immediately
         if (selectedTicket && selectedTicket.id === ticketId) {
             setSelectedTicket(prev => ({
                 ...prev,
@@ -392,31 +395,57 @@ export default function AdminComplaint({ onNavigate }) {
         }
     };
 
+    // --- Scroll Handlers ---
+    const handleTableScroll = (e) => {
+        const { scrollLeft, scrollWidth, clientWidth } = e.target;
+        if (scrollWidth > clientWidth) {
+            setScrollProgress((scrollLeft / (scrollWidth - clientWidth)) * 100);
+        } else {
+            setScrollProgress(0);
+        }
+    };
+
+    const handleRangeChange = (e) => {
+        const value = parseInt(e.target.value);
+        setScrollProgress(value);
+        if (tableScrollRef.current) {
+            const { scrollWidth, clientWidth } = tableScrollRef.current;
+            tableScrollRef.current.scrollLeft = (value / 100) * (scrollWidth - clientWidth);
+        }
+    };
+
+    const scrollTable = (direction) => {
+        if (tableScrollRef.current) {
+            const scrollAmount = tableScrollRef.current.clientWidth * 0.5;
+            tableScrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+        }
+    };
+
     return (
         <SuperAdminLayout activeMenu="Pengaduan" onNavigate={onNavigate} title="Manajemen Pengaduan">
             <div className="space-y-6">
                 {/* Stats Cards - REVISED PER USER REQUEST */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
                     {stats.map((stat, idx) => (
-                        <div key={idx} className={`bg-white p-6 rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden flex flex-col justify-between min-h-[160px] ${stat.color === 'red' ? 'border-red-100 shadow-red-50/50' : 'border-gray-100 shadow-sm'}`}>
-                            <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-emerald-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
+                        <div key={idx} className={`bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden flex flex-col justify-between min-h-[110px] md:min-h-[140px] ${stat.color === 'red' ? 'border-red-100 shadow-red-50/50' : 'border-gray-100 shadow-sm'}`}>
+                            <div className={`absolute top-0 right-0 w-16 h-16 md:w-24 md:h-24 blur-2xl md:blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-emerald-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
 
-                            <div className="relative z-10 space-y-4">
-                                {/* Simbol di Paling Atas Kiri */}
-                                <div className={`p-3 rounded-2xl w-fit ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
-                                    <stat.icon className="w-6 h-6" />
+                            <div className="relative z-10 flex items-center gap-2 md:gap-3 mb-2 md:mb-0">
+                                {/* Simbol */}
+                                <div className={`p-2 md:p-2.5 rounded-lg md:rounded-xl shrink-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+                                    <stat.icon className="w-4 h-4 md:w-5 md:h-5" />
                                 </div>
 
-                                {/* Judul di bawahnya ada spasi */}
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">{stat.label}</p>
+                                {/* Judul */}
+                                <p className="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">{stat.label}</p>
                             </div>
 
-                            <div className="relative z-10 flex items-end justify-between mt-auto">
+                            <div className="relative z-10 flex flex-col items-start md:flex-row md:items-end md:justify-between mt-auto gap-1 md:gap-0 mt-3 md:mt-0">
                                 {/* Angka di Bawah Judul */}
-                                <h3 className="text-4xl font-bold text-gray-900 tracking-tight">{stat.value}{stat.isRating && <span className="text-2xl ml-1 text-amber-400">★</span>}</h3>
+                                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-none">{stat.value}{stat.isRating && <span className="text-xl md:text-2xl ml-1 text-amber-400">★</span>}</h3>
 
-                                {/* Tren di Samping Angka (Kanan Bawah) */}
-                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                {/* Tren di Samping Angka (Kanan Bawah Desktop, Bawah Angka Mobile) */}
+                                <div className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold border transition-colors whitespace-nowrap mt-1 md:mt-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                                     {stat.trend}
                                 </div>
                             </div>
@@ -424,38 +453,44 @@ export default function AdminComplaint({ onNavigate }) {
                     ))}
                 </div>
 
-                {/* Table Control & Table Area - FLATTENED */}
+                {/* Table Control & Table Area */}
                 <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
                     {/* Header & Controls inside the same box */}
-                    <div className="p-8 border-b border-gray-50">
-                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                    <div className="p-5 md:p-8 border-b border-gray-50">
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-6">
                             <div>
                                 <h2 className="text-xl font-bold text-gray-900 leading-tight">Daftar Pengaduan Masuk</h2>
                                 <p className="text-xs text-gray-500 mt-1 italic leading-relaxed">Pantau status laporan serta penugasan teknisi BIEON Smart Monitoring secara real-time.</p>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                            <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto">
                                 {/* Search */}
-                                <div className="relative flex-1 lg:w-72 group">
-                                    <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009B7C] transition-colors" />
+                                <div className="relative flex-1 group min-w-0">
+                                    <Search className="w-4 h-4 md:w-4 md:h-4 absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009B7C] transition-colors" />
                                     <input
                                         type="text"
-                                        placeholder="Cari Tiket, Hub, atau Kendala..."
+                                        placeholder="Cari Tiket, Hub..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-11 pr-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:outline-none focus:border-[#009B7C] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold"
+                                        className="w-full pl-10 md:pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-semibold text-gray-800 placeholder:font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#009B7C] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all truncate"
                                     />
                                 </div>
 
                                 {/* Status Filter */}
-                                <div className="relative">
+                                <div className="relative shrink-0">
                                     <button
                                         onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                        className={`flex items-center gap-2 px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
+                                        className={`flex items-center justify-center gap-2 px-3.5 md:px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
                                     >
                                         <Filter className="w-4 h-4 text-gray-400" />
-                                        {selectedStatusFilter || 'Semua Status'}
-                                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
+                                        <span className="hidden md:block">{selectedStatusFilter || 'Semua Status'}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 hidden md:block transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
+
+                                        {/* Notification dot for mobile if filter is active */}
+                                        {selectedStatusFilter && (
+                                            <span className="md:hidden absolute top-2.5 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+                                        )}
                                     </button>
+
                                     {showStatusDropdown && (
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
@@ -477,16 +512,20 @@ export default function AdminComplaint({ onNavigate }) {
                                 {/* Export Data */}
                                 <button
                                     onClick={() => alert("Eksport PDF...")}
-                                    className="flex items-center gap-3 px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm group"
+                                    className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
                                 >
                                     <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-                                    <span>Export</span>
+                                    <span className="hidden md:block">Export</span>
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                    <div
+                        ref={tableScrollRef}
+                        onScroll={handleTableScroll}
+                        className="overflow-x-auto hide-scrollbar-on-mobile md:scrollbar-thin md:scrollbar-thumb-gray-200 scrollbar-track-transparent snap-x snap-mandatory"
+                    >
                         <table className="w-full text-left min-w-[1000px] table-auto">
                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                 <tr>
@@ -583,16 +622,50 @@ export default function AdminComplaint({ onNavigate }) {
                         </table>
                     </div>
 
-                    {/* Pagination Footer - SYNCED WITH ADMIN HISTORY */}
-                    <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-3">
-                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest text-[10px]">Rows per page:</span>
+                    {/* Indikator Scroll Tabel Interaktif (Mobile Only) */}
+                    <div className="md:hidden bg-white px-2 py-1.5 flex items-center justify-between w-full border-b border-gray-50">
+                        <button
+                            onClick={() => scrollTable('left')}
+                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
+                            aria-label="Scroll Kiri"
+                        >
+                            <ChevronLeft className="w-4 h-4 font-bold" strokeWidth={3} />
+                        </button>
+
+                        <div className="flex-1 px-1.5 relative flex items-center">
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={scrollProgress}
+                                onChange={handleRangeChange}
+                                className="w-full h-[6px] bg-gray-100 rounded-full appearance-none cursor-grab active:cursor-grabbing focus:outline-none"
+                                style={{
+                                    background: `linear-gradient(to right, #009B7C ${scrollProgress}%, #F3F4F6 ${scrollProgress}%)`
+                                }}
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => scrollTable('right')}
+                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
+                            aria-label="Scroll Kanan"
+                        >
+                            <ChevronRight className="w-4 h-4 font-bold" strokeWidth={3} />
+                        </button>
+                    </div>
+
+                    {/* Pagination Footer - REFINED FOR SINGLE LINE MOBILE */}
+                    <div className="bg-gray-50/50 px-5 md:px-8 py-4 md:py-6 border-t border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-6">
+                        {/* Rows per page */}
+                        <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-start">
+                            <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest">Rows per page:</span>
                             <div className="relative">
-                                <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all">
+                                <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all min-w-[70px] justify-between">
                                     {rowsPerPage} <ChevronDown className={`w-3 h-3 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                 </button>
                                 {showRowsDropdown && (
-                                    <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                                    <div className="absolute bottom-full right-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
                                         {[5, 10, 15, 20, 30, 50].map(val => (
                                             <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
                                         ))}
@@ -600,12 +673,16 @@ export default function AdminComplaint({ onNavigate }) {
                                 )}
                             </div>
                         </div>
-                        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                            {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Previous</button>
-                            <button disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)} onClick={() => setCurrentPage(currentPage + 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Next</button>
+
+                        {/* Page Info & Controls in 1 ROW */}
+                        <div className="flex items-center justify-between w-full lg:w-auto gap-2 lg:gap-6">
+                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} className="px-4 md:px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Prev</button>
+
+                            <div className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap">
+                                {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} <span className="hidden sm:inline">of {totalItems}</span>
+                            </div>
+
+                            <button disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)} onClick={() => setCurrentPage(currentPage + 1)} className="px-4 md:px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Next</button>
                         </div>
                     </div>
                 </div>
@@ -711,13 +788,40 @@ export default function AdminComplaint({ onNavigate }) {
                 .modal-custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .modal-custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 999px; }
                 .modal-custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+
+                /* Hide default scrollbar on mobile so our custom one shines */
+                @media (max-width: 768px) {
+                    .hide-scrollbar-on-mobile::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .hide-scrollbar-on-mobile {
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                    }
+                }
+
+                /* Custom Range Slider Styling for Table Scroller */
+                input[type=range]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    height: 8px;
+                    width: 24px;
+                    border-radius: 999px;
+                    background: #009B7C;
+                    cursor: pointer;
+                    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+                    transition: all 0.1s;
+                }
+                input[type=range]:active::-webkit-slider-thumb {
+                    transform: scale(1.1);
+                    background: #00876b;
+                }
             `}</style>
 
             {/* MODAL: ALIHKAN / TUGASKAN TEKNISI */}
             {isAssignModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-                        <div className="p-8 border-b border-gray-50">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
+                        <div className="p-6 md:p-8 border-b border-gray-50 shrink-0">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="p-3 bg-emerald-50 text-[#009B7C] rounded-2xl">
                                     <Users className="w-6 h-6" />
@@ -729,7 +833,7 @@ export default function AdminComplaint({ onNavigate }) {
                             <h3 className="text-xl font-bold text-gray-900 leading-tight">Alihkan / Tugas Teknisi</h3>
                             <p className="text-xs text-gray-500 mt-2">Pilih teknisi yang tersedia untuk menangani tiket <span className="font-bold text-gray-700">#{selectedTicket?.id}</span>.</p>
                         </div>
-                        <div className="p-8 space-y-6">
+                        <div className="p-6 md:p-8 space-y-6 overflow-y-auto modal-custom-scrollbar">
                             <div className="space-y-3">
                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Pilih Teknisi</label>
                                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 modal-custom-scrollbar">
@@ -779,8 +883,8 @@ export default function AdminComplaint({ onNavigate }) {
             {/* MODAL: PING TEKNISI */}
             {isPingModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-                        <div className="p-8 border-b border-gray-50">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
+                        <div className="p-6 md:p-8 border-b border-gray-50 shrink-0">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="p-3 bg-red-50 text-red-500 rounded-2xl">
                                     <Bell className="w-6 h-6" />
@@ -792,7 +896,7 @@ export default function AdminComplaint({ onNavigate }) {
                             <h3 className="text-xl font-bold text-gray-900 leading-tight">Kirim Peringatan (Ping)</h3>
                             <p className="text-xs text-gray-500 mt-2">Kirim notifikasi urgent ke <span className="font-bold text-gray-700">{selectedTicket?.technician}</span> terkait keterlambatan respon.</p>
                         </div>
-                        <div className="p-8 space-y-6">
+                        <div className="p-6 md:p-8 space-y-6 overflow-y-auto modal-custom-scrollbar">
                             <div className="space-y-3">
                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Alasan Peringatan (SLA)</label>
                                 <div className="grid grid-cols-1 gap-2">

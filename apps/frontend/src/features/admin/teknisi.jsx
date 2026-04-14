@@ -125,6 +125,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const [deleteReason, setDeleteReason] = useState('');
     const [selectedTechnician, setSelectedTechnician] = useState(null);
     const [mapFilterTech, setMapFilterTech] = useState('all');
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -350,29 +351,64 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <h2 className="text-xl font-bold text-gray-800">Daftar Teknisi</h2>
                             </div>
                             <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full lg:w-auto">
-                                <div className="relative group col-span-2 lg:w-72">
-                                    <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-all" />
-                                    <input
-                                        type="text"
-                                        placeholder="Cari teknisi..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm group-focus-within:bg-white"
-                                    />
-                                </div>
+                                <div className="col-span-2 flex items-center gap-2">
+                                    <div className="relative group flex-1 lg:w-72">
+                                        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-all" />
+                                        <input
+                                            type="text"
+                                            placeholder="Cari teknisi..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm group-focus-within:bg-white"
+                                        />
+                                    </div>
 
-                                <div className="relative col-span-2 md:col-span-1">
-                                    <Filter className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                                    <select
-                                        value={filterStatus}
-                                        onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="appearance-none w-full md:w-auto pl-11 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-50 focus:border-gray-300 cursor-pointer transition-all hover:bg-gray-50 shadow-sm"
-                                    >
-                                        <option value="all">Semua Status</option>
-                                        <option value="aktif">Aktif</option>
-                                        <option value="nonaktif">Nonaktif</option>
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    {/* Custom Dropdown Filter */}
+                                    <div className="relative shrink-0 flex items-center justify-center relative">
+                                        <button
+                                            onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                                            className="w-[42px] h-[42px] md:w-auto md:h-auto md:pl-11 md:pr-10 md:py-2.5 flex items-center justify-center bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-50 focus:border-gray-300 transition-all shadow-sm relative z-20"
+                                        >
+                                            <Filter className="w-[18px] md:w-4 h-[18px] md:h-4 text-gray-500 md:text-gray-400 md:absolute md:left-4 md:top-1/2 md:-translate-y-1/2" />
+                                            <span className="hidden md:inline-block">
+                                                {filterStatus === 'all' ? 'Semua Status' : filterStatus === 'aktif' ? 'Aktif' : 'Nonaktif'}
+                                            </span>
+                                            <ChevronDown className={`w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 hidden md:block transition-transform duration-200 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
+
+                                            {/* Notification dot for mobile if filter is active */}
+                                            {filterStatus !== 'all' && (
+                                                <span className="md:hidden absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+                                            )}
+                                        </button>
+
+                                        {isFilterDropdownOpen && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-30"
+                                                    onClick={() => setIsFilterDropdownOpen(false)}
+                                                ></div>
+                                                <div className="absolute right-0 top-[calc(100%+8px)] w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-40 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                                    {[
+                                                        { id: 'all', label: 'Semua Status' },
+                                                        { id: 'aktif', label: 'Aktif' },
+                                                        { id: 'nonaktif', label: 'Nonaktif' }
+                                                    ].map((item) => (
+                                                        <button
+                                                            key={item.id}
+                                                            onClick={() => {
+                                                                setFilterStatus(item.id);
+                                                                setIsFilterDropdownOpen(false);
+                                                            }}
+                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors flex items-center justify-between ${filterStatus === item.id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                                                        >
+                                                            {item.label}
+                                                            {filterStatus === item.id && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="col-span-2 grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:flex-row">
@@ -992,29 +1028,46 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-6xl w-full flex flex-col overflow-hidden border border-white/20 h-[85vh]">
                         {/* Header */}
-                        <div className="p-6 bg-[#2563eb] text-white flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
-                                    <MapIcon className="w-6 h-6 text-white" />
+                        <div className="p-5 md:p-6 bg-[#2563eb] text-white flex items-start md:items-center justify-between shrink-0 relative">
+                            <div className="flex flex-row items-start md:items-center gap-3 md:gap-4 pr-10 md:pr-0">
+                                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md shrink-0">
+                                    <MapIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                 </div>
-                                <div>
-                                    <h2 className="text-xl font-bold">Peta Lokasi Pelanggan per Teknisi</h2>
-                                    <p className="text-xs font-medium text-blue-100 mt-1">Visualisasi distribusi pelanggan berdasarkan wilayah teknis</p>
+                                <div className="mt-0.5 md:mt-0">
+                                    <h2 className="text-lg md:text-xl font-bold leading-tight">Peta Lokasi Pelanggan per Teknisi</h2>
+                                    <p className="text-[11px] md:text-xs font-medium text-blue-100 mt-1 md:mt-1.5 leading-snug">Visualisasi distribusi pelanggan berdasarkan wilayah teknis</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsMapModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all">
-                                <X className="w-5 h-5 text-white" />
+                            <button onClick={() => setIsMapModalOpen(false)} className="absolute right-4 top-4 md:static md:w-10 md:h-10 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all shrink-0">
+                                <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
                             </button>
                         </div>
 
                         {/* Body / Map Container */}
                         <div className="p-6 flex flex-col flex-1 overflow-hidden bg-gray-50/50">
+                            {/* Memaksa scrollbar selalu muncul di HP untuk area Peta */}
+                            <style>{`
+                                .always-scroll::-webkit-scrollbar {
+                                    -webkit-appearance: none;
+                                    height: 6px;
+                                    display: block;
+                                }
+                                .always-scroll::-webkit-scrollbar-thumb {
+                                    border-radius: 4px;
+                                    background-color: rgba(0,0,0,.25);
+                                }
+                                .always-scroll::-webkit-scrollbar-track {
+                                    background-color: rgba(0,0,0,.05);
+                                    border-radius: 4px;
+                                }
+                            `}</style>
+
                             {/* Toolbar Map */}
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-bold text-gray-700">Filter Teknisi:</span>
+                            <div className="flex items-center gap-6 mb-4 overflow-x-auto pb-4 snap-x snap-mandatory always-scroll w-full">
+                                <div className="flex items-center gap-3 shrink-0 snap-start">
+                                    <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Filter Teknisi:</span>
                                     <select
-                                        className="py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none"
+                                        className="py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                         value={mapFilterTech}
                                         onChange={(e) => setMapFilterTech(e.target.value)}
                                     >
@@ -1024,20 +1077,25 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-6">
-                                    <span className="text-sm font-bold text-gray-700">Legend:</span>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
-                                            <span className="text-sm text-gray-600">Budi Santoso</span>
+
+                                <div className="w-px h-6 bg-gray-200 shrink-0 hidden md:block"></div>
+
+                                <div className="flex items-center gap-4 shrink-0 snap-end">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Legend:</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-red-600 shadow-sm shadow-red-200"></span>
+                                            <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">Budi Santoso</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                                            <span className="text-sm text-gray-600">Andi Wijaya</span>
+                                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-sm shadow-emerald-200"></span>
+                                            <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">Andi Wijaya</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-                                            <span className="text-sm text-gray-600">Siti Rahmawati</span>
+                                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm shadow-blue-200"></span>
+                                            <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">Siti Rahmawati</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1386,7 +1444,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <h4 className="flex items-center gap-2 text-sm font-bold text-red-600 mb-3">
                                     <AlertCircle className="w-5 h-5" /> Peringatan!
                                 </h4>
-                                <ul className="list-disc list-inside space-y-2 text-xs font-medium text-red-700/80 ml-1">
+                                <ul className="list-disc list-outside space-y-2 text-xs font-medium text-red-700/80 ml-4">
                                     <li>Setelah disetujui Project Owner, proses penghapusan bersifat final dan tidak dapat dibatalkan</li>
                                     <li>Seluruh jadwal delegasi pelanggan teknisi ini akan dialokasikan menjadi "Unassigned"</li>
                                     <li>Riwayat pekerjaan teknisi tetap disimpan secara historis dengan label "(Dihapus)"</li>
