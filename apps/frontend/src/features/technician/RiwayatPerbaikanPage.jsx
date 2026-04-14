@@ -585,58 +585,58 @@ export function RiwayatPerbaikanPage() {
             <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
               <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                 <tr>
-                  <th onClick={() => requestSort('id')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                  <th onClick={() => requestSort('id')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                     <div className="flex items-center gap-1.5">ID Tiket {getSortIcon('id')}</div>
                   </th>
-                  <th onClick={() => requestSort('finishedDate')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                  <th onClick={() => requestSort('finishedDate')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                     <div className="flex items-center gap-1.5">Dibuat {getSortIcon('finishedDate')}</div>
                   </th>
-                  <th onClick={() => requestSort('client')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                  <th onClick={() => requestSort('client')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                     <div className="flex items-center gap-1.5">Pelanggan {getSortIcon('client')}</div>
                   </th>
-                  <th onClick={() => requestSort('location')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                  <th onClick={() => requestSort('location')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                     <div className="flex items-center gap-1.5">Lokasi {getSortIcon('location')}</div>
                   </th>
-                  <th className="px-6 py-4 font-normal whitespace-nowrap max-w-[400px]">
+                  <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap max-w-[400px]">
                     Topik Kendala
                   </th>
-                  <th onClick={() => requestSort('duration')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                  <th onClick={() => requestSort('duration')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                     <div className="flex items-center gap-1.5">Durasi {getSortIcon('duration')}</div>
                   </th>
-                  <th onClick={() => requestSort('stars')} className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                  <th onClick={() => requestSort('stars')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                     <div className="flex items-center gap-1.5">Rating {getSortIcon('stars')}</div>
                   </th>
-                  <th className="px-6 py-4 w-[120px] font-normal whitespace-nowrap text-center text-xs uppercase tracking-wider">Aksi</th>
+                  <th className="px-3 md:px-4 lg:px-6 py-4 w-[120px] font-normal whitespace-nowrap text-center text-xs uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginatedData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-6 py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">
+                    <td className="px-3 md:px-4 lg:px-6 py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">
                       {item.id}
                     </td>
-                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                    <td className="px-3 md:px-4 lg:px-6 py-4 text-gray-500 whitespace-nowrap">
                       {item.finishedDate}
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    <td className="px-3 md:px-4 lg:px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                       {item.client}
                     </td>
-                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                    <td className="px-3 md:px-4 lg:px-6 py-4 text-gray-500 whitespace-nowrap">
                       {item.location}
                     </td>
-                    <td className="px-6 py-4 text-gray-600 truncate max-w-[400px]" title={item.topic}>
+                    <td className="px-3 md:px-4 lg:px-6 py-4 text-gray-600 truncate max-w-[400px]" title={item.topic}>
                       {item.topic}
                     </td>
-                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                    <td className="px-3 md:px-4 lg:px-6 py-4 text-gray-500 whitespace-nowrap">
                       {item.duration}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 md:px-4 lg:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1 text-gray-700">
                         <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         <span className="font-bold">{item.rating.stars}/5</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <td className="px-3 md:px-4 lg:px-6 py-4 text-center whitespace-nowrap">
                       <button
                         onClick={() => setSelectedTicket(item)}
                         className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#EDF5F1] text-[#235C50] border border-[#235C50]/10 rounded-lg text-xs font-bold hover:bg-[#235C50] hover:text-white transition-all active:scale-95"
@@ -648,7 +648,7 @@ export function RiwayatPerbaikanPage() {
                 ))}
                 {paginatedData.length === 0 && (
                   <tr>
-                    <td colSpan="8" className="px-6 py-20 text-center text-gray-400 italic">
+                    <td colSpan="8" className="px-3 md:px-4 lg:px-6 py-20 text-center text-gray-400 italic">
                       Tidak ada riwayat perbaikan yang ditemukan.
                     </td>
                   </tr>

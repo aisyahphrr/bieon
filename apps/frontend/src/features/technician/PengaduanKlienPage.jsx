@@ -398,79 +398,79 @@ export function PengaduanKlienPage({ onNavigate }) {
                 </div>
 
                 {/* Summary Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                     {/* Card 1: Waiting */}
-                    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
-                                <FileText className="w-5 h-5" />
+                    <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                        <div className="flex items-start justify-between mb-2 md:mb-4">
+                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+                                <FileText className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </div>
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px] font-bold border border-red-100">
-                                <AlertCircle className="w-3 h-3" /> Urgent
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50 text-red-600 rounded-full text-[9px] md:text-[10px] font-bold border border-red-100 whitespace-nowrap">
+                                <AlertCircle className="w-2.5 h-2.5 md:w-3 md:h-3" /> Urgent
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs font-medium mb-1 truncate">Menunggu Respons (&lt; 15 menit)</div>
-                            <div className="text-2xl font-bold text-gray-900">{stats.waiting}</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Menunggu Respons</div>
+                            <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.waiting}</div>
                         </div>
-                        <div className="mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
+                        <div className="mt-2 md:mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
                             <div className="h-full bg-red-500 w-1/3 rounded-full"></div>
                         </div>
                     </div>
 
                     {/* Card 2: Processing */}
-                    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                                <Clock className="w-5 h-5" />
+                    <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                        <div className="flex items-start justify-between mb-2 md:mb-4">
+                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                                <Clock className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </div>
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold border border-blue-100">
-                                <ArrowDown className="w-3 h-3" /> +1 Hari
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px] md:text-[10px] font-bold border border-blue-100 whitespace-nowrap">
+                                <ArrowDown className="w-2.5 h-2.5 md:w-3 md:h-3" /> +1 Hari
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs font-medium mb-1 truncate">Sedang Diproses (&lt; 48 jam)</div>
-                            <div className="text-2xl font-bold text-gray-900">{stats.processing}</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Sedang Diproses</div>
+                            <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.processing}</div>
                         </div>
-                        <div className="mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
+                        <div className="mt-2 md:mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
                             <div className="h-full bg-blue-500 w-1/2 rounded-full"></div>
                         </div>
                     </div>
 
                     {/* Card 3: Completed */}
-                    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-                                <CheckCircle2 className="w-5 h-5" />
+                    <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                        <div className="flex items-start justify-between mb-2 md:mb-4">
+                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                                <CheckCircle2 className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </div>
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold border border-emerald-100">
-                                <ArrowUp className="w-3 h-3" /> +12%
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[9px] md:text-[10px] font-bold border border-emerald-100 whitespace-nowrap">
+                                <ArrowUp className="w-2.5 h-2.5 md:w-3 md:h-3" /> +12%
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs font-medium mb-1 truncate">Tiket Selesai (Minggu Ini)</div>
-                            <div className="text-2xl font-bold text-gray-900">{stats.completed}</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Tiket Selesai</div>
+                            <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.completed}</div>
                         </div>
-                        <div className="mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
+                        <div className="mt-2 md:mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
                             <div className="h-full bg-emerald-500 w-[80%] rounded-full"></div>
                         </div>
                     </div>
 
                     {/* Card 4: Rating */}
-                    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
-                                <Star className="w-5 h-5" />
+                    <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                        <div className="flex items-start justify-between mb-2 md:mb-4">
+                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                                <Star className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </div>
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold border border-amber-100">
-                                <Star className="w-3 h-3 fill-current" /> 4.8/5
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[9px] md:text-[10px] font-bold border border-amber-100 whitespace-nowrap">
+                                <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" /> 4.8/5
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs font-medium mb-1 truncate">Rata-Rata Penilaian</div>
-                            <div className="text-2xl font-bold text-gray-900 flex items-center gap-2">{stats.avgRating}</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Rata-Rata Penilaian</div>
+                            <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.avgRating}</div>
                         </div>
-                        <div className="mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
+                        <div className="mt-2 md:mt-4 w-full h-1 bg-gray-50 rounded-full overflow-hidden">
                             <div className="h-full bg-amber-400 w-[95%] rounded-full"></div>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Users,
     Zap,
@@ -200,7 +200,7 @@ export default function AdminComplaint({ onNavigate }) {
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -217,9 +217,6 @@ export default function AdminComplaint({ onNavigate }) {
     const [selectedTechnician, setSelectedTechnician] = useState('');
     const [selectedPingType, setSelectedPingType] = useState('');
 
-    // --- Scroll Control States ---
-    const tableScrollRef = useRef(null);
-    const [scrollProgress, setScrollProgress] = useState(0);
 
     // --- Dummy Data ---
     const technicians = [
@@ -395,34 +392,22 @@ export default function AdminComplaint({ onNavigate }) {
         }
     };
 
-    // --- Scroll Handlers ---
-    const handleTableScroll = (e) => {
-        const { scrollLeft, scrollWidth, clientWidth } = e.target;
-        if (scrollWidth > clientWidth) {
-            setScrollProgress((scrollLeft / (scrollWidth - clientWidth)) * 100);
-        } else {
-            setScrollProgress(0);
-        }
-    };
-
-    const handleRangeChange = (e) => {
-        const value = parseInt(e.target.value);
-        setScrollProgress(value);
-        if (tableScrollRef.current) {
-            const { scrollWidth, clientWidth } = tableScrollRef.current;
-            tableScrollRef.current.scrollLeft = (value / 100) * (scrollWidth - clientWidth);
-        }
-    };
-
-    const scrollTable = (direction) => {
-        if (tableScrollRef.current) {
-            const scrollAmount = tableScrollRef.current.clientWidth * 0.5;
-            tableScrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
-        }
-    };
 
     return (
         <SuperAdminLayout activeMenu="Pengaduan" onNavigate={onNavigate} title="Manajemen Pengaduan">
+            <style>
+                {`
+                .custom-scrollbar-x::-webkit-scrollbar { height: 10px; }
+                .custom-scrollbar-x::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button { background-color: #f1f5f9; display: block; border-radius: 4px; width: 16px; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='8,2 2,5 8,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:decrement:hover { background-color: #e2e8f0; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='2,2 8,5 2,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment:hover { background-color: #e2e8f0; }
+                `}
+            </style>
             <div className="space-y-6">
                 {/* Stats Cards - REVISED PER USER REQUEST */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
@@ -521,63 +506,59 @@ export default function AdminComplaint({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div
-                        ref={tableScrollRef}
-                        onScroll={handleTableScroll}
-                        className="overflow-x-auto hide-scrollbar-on-mobile md:scrollbar-thin md:scrollbar-thumb-gray-200 scrollbar-track-transparent snap-x snap-mandatory"
-                    >
+                    <div className="overflow-x-auto custom-scrollbar-x pb-2">
                         <table className="w-full text-left min-w-[1000px] table-auto">
                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                 <tr>
-                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('id')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('id')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">ID Tiket {getSortIcon('id')}</div>
                                     </th>
-                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('date')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Tanggal Dibuat {getSortIcon('date')}</div>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('date')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Tanggal {getSortIcon('date')}</div>
                                     </th>
-                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('customer')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('customer')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Pelanggan {getSortIcon('customer')}</div>
                                     </th>
-                                    <th className="px-8 py-5 font-normal whitespace-nowrap outline-none">
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap outline-none">
                                         <div className="uppercase tracking-wider text-[11px] font-bold">Topik Kendala</div>
                                     </th>
-                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('technician')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('technician')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Teknisi {getSortIcon('technician')}</div>
                                     </th>
-                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors text-center outline-none" onClick={() => requestSort('rating')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors text-center outline-none" onClick={() => requestSort('rating')}>
                                         <div className="flex items-center justify-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Rating {getSortIcon('rating')}</div>
                                     </th>
-                                    <th className="px-8 py-5 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('status')}>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('status')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status {getSortIcon('status')}</div>
                                     </th>
-                                    <th className="px-8 py-5 w-[140px] font-normal whitespace-nowrap text-center text-[11px] font-bold uppercase tracking-wider">Aksi</th>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap text-center text-[11px] font-bold uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {paginatedData.length > 0 ? (
                                     paginatedData.map((item) => (
                                         <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
-                                            <td className="px-8 py-5 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
-                                            <td className="px-8 py-5 text-[13px] text-gray-500 font-medium whitespace-nowrap">{item.date}</td>
-                                            <td className="px-8 py-5 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
-                                            <td className="px-8 py-5 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
-                                            <td className="px-8 py-5 text-[13px]">
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-gray-500 font-medium whitespace-nowrap">{item.date}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
                                                 <span className={item.technician === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
                                                     {item.technician === 'Unassigned' ? 'Menunggu Teknisi' : item.technician}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-5 text-[13px] text-center">
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-center">
                                                 {item.status === 'Selesai' && item.rating !== '-' ? (
                                                     <div className="inline-flex items-center gap-1 font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
                                                         <Star className="w-3 h-3 fill-amber-500" />
                                                         {item.rating}/5
                                                     </div>
-                                                ) : <span className="text-gray-300 font-bold">0/0</span>}
+                                                ) : <span className="text-gray-300 font-bold">—</span>}
                                             </td>
-                                            <td className="px-8 py-5 text-[13px]">
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
                                                 {getStatusBadge(item.status, item.sla)}
                                             </td>
-                                            <td className="px-8 py-5 text-[13px]">
+                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
                                                 <div className="flex items-center justify-center gap-2">
                                                     {item.status.includes('Overdue') ? (
                                                         <button
@@ -622,51 +603,18 @@ export default function AdminComplaint({ onNavigate }) {
                         </table>
                     </div>
 
-                    {/* Indikator Scroll Tabel Interaktif (Mobile Only) */}
-                    <div className="md:hidden bg-white px-2 py-1.5 flex items-center justify-between w-full border-b border-gray-50">
-                        <button
-                            onClick={() => scrollTable('left')}
-                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
-                            aria-label="Scroll Kiri"
-                        >
-                            <ChevronLeft className="w-4 h-4 font-bold" strokeWidth={3} />
-                        </button>
-
-                        <div className="flex-1 px-1.5 relative flex items-center">
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={scrollProgress}
-                                onChange={handleRangeChange}
-                                className="w-full h-[6px] bg-gray-100 rounded-full appearance-none cursor-grab active:cursor-grabbing focus:outline-none"
-                                style={{
-                                    background: `linear-gradient(to right, #009B7C ${scrollProgress}%, #F3F4F6 ${scrollProgress}%)`
-                                }}
-                            />
-                        </div>
-
-                        <button
-                            onClick={() => scrollTable('right')}
-                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
-                            aria-label="Scroll Kanan"
-                        >
-                            <ChevronRight className="w-4 h-4 font-bold" strokeWidth={3} />
-                        </button>
-                    </div>
-
-                    {/* Pagination Footer - REFINED FOR SINGLE LINE MOBILE */}
-                    <div className="bg-gray-50/50 px-5 md:px-8 py-4 md:py-6 border-t border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-6">
-                        {/* Rows per page */}
-                        <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-start">
-                            <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest">Rows per page:</span>
+                    {/* Pagination Footer */}
+                    <div className="bg-gray-50/50 px-5 md:px-8 py-4 md:py-6 border-t border-gray-100 flex flex-row items-center justify-between gap-2">
+                        {/* Rows per page - Left: hanya kotak di HP, + label di desktop */}
+                        <div className="flex items-center gap-2">
+                            <span className="hidden sm:inline text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows per page:</span>
                             <div className="relative">
-                                <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all min-w-[70px] justify-between">
+                                <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-100 rounded-xl text-[10px] md:text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all min-w-[50px] md:min-w-[70px] justify-between">
                                     {rowsPerPage} <ChevronDown className={`w-3 h-3 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                 </button>
                                 {showRowsDropdown && (
-                                    <div className="absolute bottom-full right-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
-                                        {[5, 10, 15, 20, 30, 50].map(val => (
+                                    <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                                        {[5, 10, 20].map(val => (
                                             <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
                                         ))}
                                     </div>
@@ -674,15 +622,29 @@ export default function AdminComplaint({ onNavigate }) {
                             </div>
                         </div>
 
-                        {/* Page Info & Controls in 1 ROW */}
-                        <div className="flex items-center justify-between w-full lg:w-auto gap-2 lg:gap-6">
-                            <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} className="px-4 md:px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Prev</button>
+                        {/* Page Info - Center: selalu tampil "X-Y of Z", "items" disembunyikan di HP */}
+                        <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap">
+                            {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                        </div>
 
-                            <div className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap">
-                                {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} <span className="hidden sm:inline">of {totalItems}</span>
-                            </div>
-
-                            <button disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)} onClick={() => setCurrentPage(currentPage + 1)} className="px-4 md:px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Next</button>
+                        {/* Pagination Controls - Right: ikon di HP, teks di desktop */}
+                        <div className="flex items-center gap-1.5 md:gap-3">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(currentPage - 1)}
+                                className="p-2 md:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                            >
+                                <ChevronLeft className="w-4 h-4 md:hidden" />
+                                <span className="hidden md:inline">Prev</span>
+                            </button>
+                            <button
+                                disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)}
+                                onClick={() => setCurrentPage(currentPage + 1)}
+                                className="p-2 md:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                            >
+                                <span className="hidden md:inline">Next</span>
+                                <ChevronRight className="w-4 h-4 md:hidden" />
+                            </button>
                         </div>
                     </div>
                 </div>

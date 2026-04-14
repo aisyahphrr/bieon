@@ -25,7 +25,7 @@ export default function AdminHistory({ onNavigate }) {
     const [selectedHub, setSelectedHub] = useState('Semua Hub');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedRoomFilter, setSelectedRoomFilter] = useState('');
 
@@ -433,23 +433,36 @@ export default function AdminHistory({ onNavigate }) {
 
     return (
         <SuperAdminLayout activeMenu="Riwayat" onNavigate={onNavigate} title="Riwayat Aktivitas">
+            <style>
+                {`
+                .custom-scrollbar-x::-webkit-scrollbar { height: 10px; }
+                .custom-scrollbar-x::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button { background-color: #f1f5f9; display: block; border-radius: 4px; width: 16px; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='8,2 2,5 8,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:decrement:hover { background-color: #e2e8f0; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='2,2 8,5 2,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment:hover { background-color: #e2e8f0; }
+                `}
+            </style>
             <div className="space-y-6">
-                    <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 relative overflow-visible">
-                        <div className="flex items-center gap-3 mb-6">
-                            <Filter className="w-5 h-5 text-gray-400" />
-                            <h2 className="text-lg font-bold text-gray-800 tracking-tight">Global Filter Bar</h2>
+                    <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 shadow-sm border border-gray-100 relative overflow-visible">
+                        <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+                            <Filter className="w-4 h-4 md:w-5 md:h-5 text-[#009b7c]" />
+                            <h2 className="text-sm md:text-lg font-bold text-gray-800 tracking-tight">Global Filter Bar</h2>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 items-end">
                             {/* Pilih Pelanggan */}
-                            <div className="space-y-2 relative">
-                                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Pilih Pelanggan / Homeowner</label>
+                            <div className="space-y-1 md:space-y-2 relative">
+                                <label className="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest block truncate">Pelanggan</label>
                                 <button
                                     onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
-                                    className="w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all group"
+                                    className="w-full flex items-center justify-between px-3 md:px-5 py-2.5 md:py-3.5 bg-gray-50 border border-gray-100 rounded-xl md:rounded-2xl text-[11px] md:text-sm font-bold text-gray-700 hover:bg-gray-100 transition-all group"
                                 >
-                                    <span>{selectedCustomer}</span>
-                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCustomerDropdown ? 'rotate-180' : ''}`} />
+                                    <span className="truncate">{selectedCustomer}</span>
+                                    <ChevronDown className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 shrink-0 transition-transform ${showCustomerDropdown ? 'rotate-180' : ''}`} />
                                 </button>
                                 {showCustomerDropdown && (
                                     <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-[70]">
@@ -457,7 +470,7 @@ export default function AdminHistory({ onNavigate }) {
                                             <button
                                                 key={c}
                                                 onClick={() => { setSelectedCustomer(c); setShowCustomerDropdown(false); setCurrentPage(1); }}
-                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${selectedCustomer === c ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                className={`w-full text-left px-5 py-3 text-[11px] md:text-sm transition-colors ${selectedCustomer === c ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
                                                 {c}
                                             </button>
@@ -467,14 +480,14 @@ export default function AdminHistory({ onNavigate }) {
                             </div>
 
                             {/* Pilih ID BIEON */}
-                            <div className="space-y-2 relative">
-                                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Pilih ID BIEON / Hub</label>
+                            <div className="space-y-1 md:space-y-2 relative">
+                                <label className="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest block truncate">ID BIEON / Hub</label>
                                 <button
                                     onClick={() => setShowHubDropdown(!showHubDropdown)}
-                                    className="w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all group"
+                                    className="w-full flex items-center justify-between px-3 md:px-5 py-2.5 md:py-3.5 bg-gray-50 border border-gray-100 rounded-xl md:rounded-2xl text-[11px] md:text-sm font-bold text-gray-700 hover:bg-gray-100 transition-all group"
                                 >
-                                    <span>{selectedHub}</span>
-                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showHubDropdown ? 'rotate-180' : ''}`} />
+                                    <span className="truncate">{selectedHub}</span>
+                                    <ChevronDown className={`w-3 h-3 md:w-4 md:h-4 text-gray-400 shrink-0 transition-transform ${showHubDropdown ? 'rotate-180' : ''}`} />
                                 </button>
                                 {showHubDropdown && (
                                     <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-[70]">
@@ -482,7 +495,7 @@ export default function AdminHistory({ onNavigate }) {
                                             <button
                                                 key={h}
                                                 onClick={() => { setSelectedHub(h); setShowHubDropdown(false); setCurrentPage(1); }}
-                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${selectedHub === h ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                className={`w-full text-left px-5 py-3 text-[11px] md:text-sm transition-colors ${selectedHub === h ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
                                                 {h}
                                             </button>
@@ -492,28 +505,28 @@ export default function AdminHistory({ onNavigate }) {
                             </div>
 
                             {/* Date Filter */}
-                            <div className="space-y-2 relative">
-                                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Pilih Rentang Waktu</label>
+                            <div className="space-y-1 md:space-y-2 relative">
+                                <label className="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest block truncate">Rentang Waktu</label>
                                 <button
                                     onClick={() => setShowDateDropdown(!showDateDropdown)}
-                                    className="w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all group"
+                                    className="w-full flex items-center justify-between px-3 md:px-5 py-2.5 md:py-3.5 bg-gray-50 border border-gray-100 rounded-xl md:rounded-2xl text-[11px] md:text-sm font-bold text-gray-700 hover:bg-gray-100 transition-all group"
                                 >
-                                    <span className={dateRange.start || dateRange.end ? 'text-[#009b7c]' : ''}>{dateRange.start || dateRange.end ? 'Rentang Aktif' : 'Semua Waktu'}</span>
-                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                    <span className={`truncate ${dateRange.start || dateRange.end ? 'text-[#009b7c]' : ''}`}>{dateRange.start || dateRange.end ? 'Berfilter' : 'Semua'}</span>
+                                    <Calendar className="w-3 h-3 md:w-4 md:h-4 text-gray-400 shrink-0" />
                                 </button>
                                 {showDateDropdown && (
-                                    <div className="absolute top-full left-0 mt-2 w-[320px] bg-white border border-gray-100 rounded-[2rem] shadow-2xl p-6 z-[70]">
-                                        <div className="space-y-5">
+                                    <div className="absolute top-full left-[-100%] sm:left-0 mt-2 w-[280px] sm:w-[320px] bg-white border border-gray-100 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl p-4 md:p-6 z-[70]">
+                                        <div className="space-y-4 md:space-y-5">
                                             <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Mulai Dari</label>
-                                                <button onClick={() => setActivePicker(activePicker === 'start' ? null : 'start')} className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border-2 rounded-xl text-sm font-bold transition-all ${activePicker === 'start' ? 'border-[#009b7c] bg-white' : 'border-transparent'}`}>
+                                                <label className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Mulai Dari</label>
+                                                <button onClick={() => setActivePicker(activePicker === 'start' ? null : 'start')} className={`w-full flex items-center justify-between px-4 py-2.5 md:py-3 bg-gray-50 border-2 rounded-xl text-xs md:text-sm font-bold transition-all ${activePicker === 'start' ? 'border-[#009b7c] bg-white' : 'border-transparent'}`}>
                                                     <span className={dateRange.start ? 'text-gray-900' : 'text-gray-400'}>{dateRange.start ? formatDateDisplay(dateRange.start) : 'Pilih Tanggal'}</span>
                                                     <Calendar className="w-4 h-4 text-gray-400" />
                                                 </button>
                                             </div>
                                             <div>
-                                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Sampai Dengan</label>
-                                                <button onClick={() => setActivePicker(activePicker === 'end' ? null : 'end')} className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border-2 rounded-xl text-sm font-bold transition-all ${activePicker === 'end' ? 'border-[#009b7c] bg-white' : 'border-transparent'}`}>
+                                                <label className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Sampai Dengan</label>
+                                                <button onClick={() => setActivePicker(activePicker === 'end' ? null : 'end')} className={`w-full flex items-center justify-between px-4 py-2.5 md:py-3 bg-gray-50 border-2 rounded-xl text-xs md:text-sm font-bold transition-all ${activePicker === 'end' ? 'border-[#009b7c] bg-white' : 'border-transparent'}`}>
                                                     <span className={dateRange.end ? 'text-gray-900' : 'text-gray-400'}>{dateRange.end ? formatDateDisplay(dateRange.end) : 'Pilih Tanggal'}</span>
                                                     <Calendar className="w-4 h-4 text-gray-400" />
                                                 </button>
@@ -522,13 +535,13 @@ export default function AdminHistory({ onNavigate }) {
                                                 <div className="pt-2 border-t border-gray-50">
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div>
-                                                            <span className="text-sm font-bold text-gray-900">{monthNames[viewMonth]}</span>
+                                                            <span className="text-xs md:text-sm font-bold text-gray-900">{monthNames[viewMonth]}</span>
                                                             <div className="relative inline-block ml-2">
                                                                 <button onClick={() => setShowYearDropdown(!showYearDropdown)} className="text-[10px] font-bold text-[#009b7c] flex items-center gap-1">{viewYear} <ChevronDown className="w-2.5 h-2.5" /></button>
                                                                 {showYearDropdown && (
                                                                     <div className="absolute top-full left-0 mt-1 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-20 max-h-40 overflow-y-auto custom-scrollbar">
                                                                         {[2023, 2024, 2025, 2026, 2027].map(yr => (
-                                                                            <button key={yr} onClick={() => { setViewYear(yr); setShowYearDropdown(false); }} className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-gray-500 hover:bg-gray-50">{yr}</button>
+                                                                            <button key={yr} onClick={() => { setViewYear(yr); setShowYearDropdown(false); }} className="w-full text-left px-3 py-1.5 text-[9px] md:text-[10px] font-bold text-gray-500 hover:bg-gray-50">{yr}</button>
                                                                         ))}
                                                                     </div>
                                                                 )}
@@ -540,9 +553,9 @@ export default function AdminHistory({ onNavigate }) {
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-7 gap-1">
-                                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <span key={d} className="text-[10px] font-bold text-gray-400 text-center">{d}</span>)}
+                                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <span key={d} className="text-[9px] md:text-[10px] font-bold text-gray-400 text-center">{d}</span>)}
                                                         {calendarDays.map((d, i) => (
-                                                            <button key={i} onClick={() => handleSelectDate(d)} className={`h-8 flex items-center justify-center rounded-lg text-xs font-bold ${!d.current ? 'text-gray-200' : 'text-gray-700 hover:bg-[#F2F8F5] hover:text-[#009b7c]'} ${(activePicker === 'start' ? dateRange.start : dateRange.end) === `${d.year}-${String(d.month + 1).padStart(2, '0')}-${String(d.day).padStart(2, '0')}` ? 'bg-[#009b7c] text-white' : ''}`}>
+                                                            <button key={i} onClick={() => handleSelectDate(d)} className={`h-7 md:h-8 flex items-center justify-center rounded-lg text-[10px] md:text-xs font-bold ${!d.current ? 'text-gray-200' : 'text-gray-700 hover:bg-[#F2F8F5] hover:text-[#009b7c]'} ${(activePicker === 'start' ? dateRange.start : dateRange.end) === `${d.year}-${String(d.month + 1).padStart(2, '0')}-${String(d.day).padStart(2, '0')}` ? 'bg-[#009b7c] text-white' : ''}`}>
                                                                 {d.day}
                                                             </button>
                                                         ))}
@@ -550,8 +563,8 @@ export default function AdminHistory({ onNavigate }) {
                                                 </div>
                                             )}
                                             <div className="flex gap-3">
-                                                <button onClick={() => { setDateRange({ start: '', end: '' }); setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 py-2 text-xs font-bold text-gray-400 uppercase">Reset</button>
-                                                <button onClick={() => { setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 py-2 bg-[#009b7c] text-white rounded-xl text-xs font-bold uppercase">Apply</button>
+                                                <button onClick={() => { setDateRange({ start: '', end: '' }); setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 py-2 text-[10px] font-bold text-gray-400 uppercase">Reset</button>
+                                                <button onClick={() => { setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 py-2 bg-[#009b7c] text-white rounded-xl text-[10px] font-bold uppercase">Apply</button>
                                             </div>
                                         </div>
                                     </div>
@@ -559,12 +572,12 @@ export default function AdminHistory({ onNavigate }) {
                             </div>
 
                             {/* Export Data */}
-                            <div className="space-y-2 lg:pt-6">
+                            <div className="space-y-1 md:space-y-2">
                                 <button
                                     onClick={() => showToast("Mengekspor data riwayat ke format Excel/PDF...")}
-                                    className="w-full flex items-center justify-center gap-3 px-5 py-3.5 bg-[#009b7c] text-white rounded-2xl text-sm font-bold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 group"
+                                    className="w-full flex items-center justify-center gap-2 md:gap-3 px-3 md:px-5 py-2.5 md:py-3.5 bg-[#009b7c] text-white rounded-xl md:rounded-2xl text-[11px] md:text-sm font-bold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 group"
                                 >
-                                    <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
+                                    <Download className="w-3.5 h-3.5 md:w-4 md:h-4 transition-transform group-hover:-translate-y-0.5" />
                                     <span>Export</span>
                                 </button>
                             </div>
@@ -574,33 +587,23 @@ export default function AdminHistory({ onNavigate }) {
                     {/* Table Section */}
                     <div className="space-y-6">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                            {/* Tabs */}
-                            <div className="flex bg-white rounded-2xl border border-gray-100 p-1.5 shadow-sm w-full lg:w-auto overflow-hidden">
+                            {/* Tabs - SA Premium Style (2 Rows on Mobile) */}
+                            <div className="grid grid-cols-3 lg:flex items-center p-1.5 bg-gray-100/80 rounded-2xl w-full lg:w-fit gap-1 shadow-inner">
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
-                                        onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSelectedRoomFilter(''); }}
-                                        className={`flex-1 lg:flex-none px-3 md:px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all whitespace-nowrap overflow-hidden text-ellipsis ${activeTab === tab.id ? 'bg-[#009b7c] text-white shadow-md shadow-emerald-100' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
+                                        onClick={() => {
+                                            setActiveTab(tab.id);
+                                            setCurrentPage(1);
+                                            setSelectedRoomFilter('');
+                                        }}
+                                        className={`px-5 py-2.5 rounded-[0.95rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap flex-1 sm:flex-none text-center ${activeTab === tab.id
+                                            ? 'bg-[#009b7c] text-white shadow-[0_8px_20px_-6px_rgba(0,155,124,0.4)] scale-[1.02]'
+                                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                                             }`}
-                                        title={tab.full}
                                     >
-                                        {/* Priority: Konsumsi Energi & Notifikasi shorten first, then others, then ellipsis */}
-                                        {tab.id === 'Konsumsi Energi' ? (
-                                            <>
-                                                <span className="hidden xl:inline">{tab.full}</span>
-                                                <span className="inline xl:hidden">{tab.short}</span>
-                                            </>
-                                        ) : tab.id === 'Notifikasi & Alert' ? (
-                                            <>
-                                                <span className="hidden lg:inline">{tab.full}</span>
-                                                <span className="inline lg:hidden">{tab.short}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className="hidden md:inline">{tab.full}</span>
-                                                <span className="inline md:hidden">{tab.short}</span>
-                                            </>
-                                        )}
+                                        <span className="hidden xl:inline">{tab.full}</span>
+                                        <span className="inline xl:hidden">{tab.short}</span>
                                     </button>
                                 ))}
                             </div>
@@ -637,151 +640,151 @@ export default function AdminHistory({ onNavigate }) {
 
                         {/* Main Table */}
                         <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse min-w-[1000px]">
-                                    <thead>
-                                        <tr className="bg-gray-50/50 border-b border-gray-100 text-gray-500 text-[11px] font-normal tracking-widest">
-                                            <th onClick={() => requestSort('time')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                            <div className="overflow-x-auto custom-scrollbar-x pb-2">
+                                <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
+                                    <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
+                                        <tr>
+                                            <th onClick={() => requestSort('time')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-2 font-normal">Waktu {getSortIcon('time')}</div>
                                             </th>
                                             {activeTab === 'Notifikasi & Alert' && (
-                                                <th onClick={() => requestSort('category')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                <th onClick={() => requestSort('category')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                     <div className="flex items-center gap-2 font-normal">Kategori {getSortIcon('category')}</div>
                                                 </th>
                                             )}
                                             {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
-                                                <th onClick={() => requestSort('device')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                <th onClick={() => requestSort('device')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                     <div className="flex items-center gap-2 font-normal">Perangkat {getSortIcon('device')}</div>
                                                 </th>
                                             ) : (
-                                                <th onClick={() => requestSort('room')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                <th onClick={() => requestSort('room')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                     <div className="flex items-center gap-2 font-normal">Ruangan {getSortIcon('room')}</div>
                                                 </th>
                                             )}
                                             {activeTab === 'Log Perangkat' && (
                                                 <>
-                                                    <th onClick={() => requestSort('actuator')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('actuator')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Perangkat (Aktuator) {getSortIcon('actuator')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('status')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('status')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Status {getSortIcon('status')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('trigger')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('trigger')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Pemicu (Trigger) {getSortIcon('trigger')}</div>
                                                     </th>
                                                 </>
                                             )}
                                             {activeTab === 'Kenyamanan' && (
                                                 <>
-                                                    <th onClick={() => requestSort('temp')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('temp')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Suhu {getSortIcon('temp')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('humidity')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('humidity')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Kelembapan {getSortIcon('humidity')}</div>
                                                     </th>
                                                 </>
                                             )}
                                             {activeTab === 'Keamanan' && (
                                                 <>
-                                                    <th onClick={() => requestSort('door')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('door')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Pintu {getSortIcon('door')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('motion')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('motion')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Gerak {getSortIcon('motion')}</div>
                                                     </th>
                                                 </>
                                             )}
                                             {activeTab === 'Kualitas Air' && (
                                                 <>
-                                                    <th onClick={() => requestSort('ph')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('ph')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">pH {getSortIcon('ph')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('turbidity')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('turbidity')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Kekeruhan {getSortIcon('turbidity')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('temp')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('temp')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Suhu {getSortIcon('temp')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('tds')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('tds')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Padatan Terlarut (TDS) {getSortIcon('tds')}</div>
                                                     </th>
                                                 </>
                                             )}
                                             {activeTab === 'Konsumsi Energi' && (
                                                 <>
-                                                    <th onClick={() => requestSort('kwh')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('kwh')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">kWh Kumulatif {getSortIcon('kwh')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('voltage')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('voltage')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Voltase {getSortIcon('voltage')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('current')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('current')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Arus {getSortIcon('current')}</div>
                                                     </th>
-                                                    <th onClick={() => requestSort('power')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                    <th onClick={() => requestSort('power')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                         <div className="flex items-center gap-2 font-normal">Beban Daya (W) {getSortIcon('power')}</div>
                                                     </th>
                                                 </>
                                             )}
                                             {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && (
-                                                <th onClick={() => requestSort('status')} className="px-8 py-5 cursor-pointer hover:bg-gray-100/50 transition-colors whitespace-nowrap">
+                                                <th onClick={() => requestSort('status')} className="px-3 md:px-4 lg:px-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                     <div className="flex items-center gap-2 font-normal">
                                                         {activeTab === 'Notifikasi & Alert' ? 'Tingkat Bahaya' : 'Status'} {getSortIcon('status')}
                                                     </div>
                                                 </th>
                                             )}
-                                            {activeTab === 'Notifikasi & Alert' && <th className="px-8 py-5 whitespace-nowrap font-normal">Pesan Detail Alert</th>}
+                                            {activeTab === 'Notifikasi & Alert' && <th className="px-3 md:px-4 lg:px-6 py-4 whitespace-nowrap font-normal">Pesan Detail Alert</th>}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-50/50">
+                                    <tbody className="divide-y divide-gray-100">
                                         {paginatedData.length > 0 ? paginatedData.map((item) => (
-                                            <tr key={item.id} className="hover:bg-[#F2F8F5]/30 transition-colors group text-[#374151]">
-                                                <td className="px-8 py-5 text-[13px] font-medium text-gray-900 whitespace-nowrap">{item.time}</td>
-                                                {activeTab === 'Notifikasi & Alert' && <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.category}</td>}
-                                                <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.room || item.device}</td>
+                                            <tr key={item.id} className="hover:bg-gray-50 transition-colors group text-[#374151]">
+                                                <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] font-medium text-gray-900 whitespace-nowrap">{item.time}</td>
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.category}</td>}
+                                                <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.room || item.device}</td>
                                                 {activeTab === 'Log Perangkat' && (
                                                     <>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.actuator}</td>
-                                                        <td className="px-8 py-5">
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.actuator}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4">
                                                             <StatusBadge status={item.status} />
                                                         </td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.trigger}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.trigger}</td>
                                                     </>
                                                 )}
                                                 {activeTab === 'Kenyamanan' && (
                                                     <>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.temp.toFixed(1)} °C</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.humidity}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.temp.toFixed(1)} °C</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.humidity}</td>
                                                     </>
                                                 )}
                                                 {activeTab === 'Keamanan' && (
                                                     <>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.door}</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.motion}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.door}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.motion}</td>
                                                     </>
                                                 )}
                                                 {activeTab === 'Kualitas Air' && (
                                                     <>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.ph}</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.turbidity}</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.temp}</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.tds}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.ph}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.turbidity}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.temp}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.tds}</td>
                                                     </>
                                                 )}
                                                 {activeTab === 'Konsumsi Energi' && (
                                                     <>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-600 font-normal">{item.kwh}</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.voltage}</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.current}</td>
-                                                        <td className="px-8 py-5 text-[13px] text-gray-500 font-normal">{item.power}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-600 font-normal">{item.kwh}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.voltage}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.current}</td>
+                                                        <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] text-gray-500 font-normal">{item.power}</td>
                                                     </>
                                                 )}
                                                 {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && (
-                                                    <td className="px-8 py-5">
+                                                    <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4">
                                                         <StatusBadge status={item.status} />
                                                     </td>
                                                 )}
-                                                {activeTab === 'Notifikasi & Alert' && <td className="px-8 py-5 text-[13px] font-normal text-gray-500 max-w-[450px] whitespace-normal leading-relaxed">{item.message}</td>}
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-[13px] font-normal text-gray-500 max-w-[450px] whitespace-normal leading-relaxed">{item.message}</td>}
                                             </tr>
                                         )) : (
                                             <tr>
@@ -801,28 +804,61 @@ export default function AdminHistory({ onNavigate }) {
                             </div>
 
                             {/* Pagination Footer */}
-                            <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest text-[10px]">Rows per page:</span>
+                            <div className="flex flex-row items-center justify-between px-4 sm:px-8 py-5 border-t border-gray-100 gap-2 sm:gap-6 bg-gray-50/50">
+                                <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 font-medium">
+                                    <span className="hidden sm:inline uppercase tracking-widest text-[10px]">Rows per page:</span>
                                     <div className="relative">
-                                        <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all">
-                                            {rowsPerPage} <ChevronDown className={`w-3 h-3 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                                        <button 
+                                            onClick={() => setShowRowsDropdown(!showRowsDropdown)}
+                                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-700 font-semibold transition-all shadow-sm"
+                                        >
+                                            {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                         </button>
+                                        
                                         {showRowsDropdown && (
-                                            <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40">
-                                                {[5, 10, 15, 20, 30, 50].map(val => (
-                                                    <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
-                                                ))}
-                                            </div>
+                                            <>
+                                                <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>
+                                                <div className="absolute bottom-full left-0 mb-2 w-16 sm:w-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 z-20 animate-in fade-in slide-in-from-bottom-2">
+                                                    {[5, 10, 20].map(val => (
+                                                        <button
+                                                            key={val}
+                                                            onClick={() => {
+                                                                setRowsPerPage(val);
+                                                                setCurrentPage(1);
+                                                                setShowRowsDropdown(false);
+                                                            }}
+                                                            className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        >
+                                                            {val}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 </div>
-                                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                                    {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
+
+                                <div className="text-xs sm:text-[11px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                                    {totalItems === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Previous</button>
-                                    <button disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)} onClick={() => setCurrentPage(currentPage + 1)} className="px-6 py-2.5 bg-white border border-gray-100 rounded-xl text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm">Next</button>
+
+                                <div className="flex items-center gap-1 sm:gap-3 text-xs sm:text-[11px]">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1 || totalItems === 0}
+                                        className="px-2 sm:px-6 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest shadow-sm flex items-center justify-center"
+                                    >
+                                        <ChevronLeft className="w-4 h-4 sm:hidden" />
+                                        <span className="hidden sm:inline">Previous</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalItems / rowsPerPage) || 1))}
+                                        disabled={currentPage >= Math.ceil(totalItems / rowsPerPage) || totalItems === 0}
+                                        className="px-2 sm:px-6 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest shadow-sm flex items-center justify-center"
+                                    >
+                                        <span className="hidden sm:inline">Next</span>
+                                        <ChevronRight className="w-4 h-4 sm:hidden" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
