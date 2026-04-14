@@ -76,13 +76,13 @@ export function DeviceControlPage({ onNavigate }) {
   const [showNewRoomInput, setShowNewRoomInput] = useState(false);
   const [configMode, setConfigMode] = useState("sensor");
   const [sensorConfig, setSensorConfig] = useState({
-    temperature: { enabled: false, value: 24, useDefault: true },
-    humidity: { enabled: false, value: 60, useDefault: true },
+    temperature: { enabled: false, value: 27, useDefault: true },
+    humidity: { enabled: false, value: 70, useDefault: true },
     motion: { enabled: false },
     door: { enabled: false },
-    ph: { enabled: false, value: 7, useDefault: true },
-    turbidity: { enabled: false, value: 5, useDefault: true },
-    tds: { enabled: false, value: 100, useDefault: true },
+    ph: { enabled: false, value: 7.0, useDefault: true },
+    turbidity: { enabled: false, value: 25, useDefault: true },
+    tds: { enabled: false, value: 1000, useDefault: true },
     waterTemp: { enabled: false, value: 24, useDefault: true }
   });
   const [scheduleConfig, setScheduleConfig] = useState([]);
@@ -252,13 +252,13 @@ export function DeviceControlPage({ onNavigate }) {
     setSelectedCategory("");
     setSelectedDeviceType("");
     setSensorConfig({
-      temperature: { enabled: false, value: 24, useDefault: true },
-      humidity: { enabled: false, value: 60, useDefault: true },
+      temperature: { enabled: false, value: 27, useDefault: true },
+      humidity: { enabled: false, value: 70, useDefault: true },
       motion: { enabled: false },
       door: { enabled: false },
-      ph: { enabled: false, value: 7, useDefault: true },
-      turbidity: { enabled: false, value: 5, useDefault: true },
-      tds: { enabled: false, value: 100, useDefault: true },
+      ph: { enabled: false, value: 7.0, useDefault: true },
+      turbidity: { enabled: false, value: 25, useDefault: true },
+      tds: { enabled: false, value: 1000, useDefault: true },
       waterTemp: { enabled: false, value: 24, useDefault: true }
     });
     setScheduleConfig([]);
@@ -450,7 +450,7 @@ export function DeviceControlPage({ onNavigate }) {
           }<div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Sistem BIEON Terdaftar</h2>
-              <button 
+              <button
                 onClick={() => setStep("input-id")}
                 className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white rounded-lg font-bold hover:bg-emerald-700 transition-all shadow-md active:scale-95"
               >
@@ -459,15 +459,15 @@ export function DeviceControlPage({ onNavigate }) {
               </button>
             </div>
             <div className="grid grid-cols-1 gap-4">{bieonSystems.map((bieon) => <div
-            key={bieon.id}
-            className="border-2 border-gray-200 rounded-xl p-6 hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer"
-            onClick={() => {
-              setCurrentBieon(bieon);
-              setStep("view-bieon");
-            }}
-          ><div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center"><Home className="w-8 h-8 text-white" /></div><div><h3 className="text-lg font-bold text-gray-900">{bieon.name}</h3><p className="text-sm text-gray-600">ID: {bieon.bieonId}</p><div className="flex items-center gap-4 mt-2"><span className="text-sm text-gray-500">{bieon.totalHubs} Hubs
-          </span><span className="text-sm text-gray-500">•</span><span className="text-sm text-gray-500">{bieon.hubs.flatMap((h) => h.devices).length} Devices
-            </span></div></div></div><ChevronRight className="w-6 h-6 text-gray-400" /></div></div>)}</div></div></div>}</div>}{
+              key={bieon.id}
+              className="border-2 border-gray-200 rounded-xl p-6 hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => {
+                setCurrentBieon(bieon);
+                setStep("view-bieon");
+              }}
+            ><div className="flex items-center justify-between"><div className="flex items-center gap-4"><div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center"><Home className="w-8 h-8 text-white" /></div><div><h3 className="text-lg font-bold text-gray-900">{bieon.name}</h3><p className="text-sm text-gray-600">ID: {bieon.bieonId}</p><div className="flex items-center gap-4 mt-2"><span className="text-sm text-gray-500">{bieon.totalHubs} Hubs
+            </span><span className="text-sm text-gray-500">•</span><span className="text-sm text-gray-500">{bieon.hubs.flatMap((h) => h.devices).length} Devices
+              </span></div></div></div><ChevronRight className="w-6 h-6 text-gray-400" /></div></div>)}</div></div></div>}</div>}{
           /* ==================== MODAL: INPUT BIEON ID ==================== */
         }{step === "input-id" && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"><div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8"><div className="flex items-center justify-between mb-6"><div><h2 className="text-2xl font-bold text-gray-900">Tambah BIEON</h2><p className="text-sm text-gray-600 mt-1">Masukkan ID BIEON Anda</p></div><button
           onClick={() => {
@@ -975,11 +975,11 @@ export function DeviceControlPage({ onNavigate }) {
                                   checked={sensorConfig.temperature.useDefault}
                                   onChange={() => setSensorConfig({
                                     ...sensorConfig,
-                                    temperature: { ...sensorConfig.temperature, useDefault: true, value: 24 }
+                                    temperature: { ...sensorConfig.temperature, useDefault: true, value: 27 }
                                   })}
                                   className="w-4 h-4"
                                 />
-                                <span className="text-sm font-medium text-gray-700">Default (25°C)</span>
+                                <span className="text-sm font-medium text-gray-700">Default (27°C)</span>
                               </label>
                               <label className="flex items-center gap-2">
                                 <input
@@ -1039,11 +1039,11 @@ export function DeviceControlPage({ onNavigate }) {
                                   checked={sensorConfig.humidity.useDefault}
                                   onChange={() => setSensorConfig({
                                     ...sensorConfig,
-                                    humidity: { ...sensorConfig.humidity, useDefault: true, value: 60 }
+                                    humidity: { ...sensorConfig.humidity, useDefault: true, value: 80 }
                                   })}
                                   className="w-4 h-4"
                                 />
-                                <span className="text-sm font-medium text-gray-700">Default (60%)</span>
+                                <span className="text-sm font-medium text-gray-700">Default (80%)</span>
                               </label>
                               <label className="flex items-center gap-2">
                                 <input
@@ -1202,7 +1202,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   checked={sensorConfig.ph.useDefault}
                                   onChange={() => setSensorConfig({
                                     ...sensorConfig,
-                                    ph: { ...sensorConfig.ph, useDefault: true, value: 7 }
+                                    ph: { ...sensorConfig.ph, useDefault: true, value: 7.0 }
                                   })}
                                   className="w-4 h-4"
                                 />
@@ -1266,11 +1266,11 @@ export function DeviceControlPage({ onNavigate }) {
                                   checked={sensorConfig.turbidity.useDefault}
                                   onChange={() => setSensorConfig({
                                     ...sensorConfig,
-                                    turbidity: { ...sensorConfig.turbidity, useDefault: true, value: 5 }
+                                    turbidity: { ...sensorConfig.turbidity, useDefault: true, value: 25 }
                                   })}
                                   className="w-4 h-4"
                                 />
-                                <span className="text-sm font-medium text-gray-700">Default (5 NTU)</span>
+                                <span className="text-sm font-medium text-gray-700">Default (25 NTU)</span>
                               </label>
                               <label className="flex items-center gap-2">
                                 <input
@@ -1329,11 +1329,11 @@ export function DeviceControlPage({ onNavigate }) {
                                   checked={sensorConfig.tds.useDefault}
                                   onChange={() => setSensorConfig({
                                     ...sensorConfig,
-                                    tds: { ...sensorConfig.tds, useDefault: true, value: 100 }
+                                    tds: { ...sensorConfig.tds, useDefault: true, value: 1000 }
                                   })}
                                   className="w-4 h-4"
                                 />
-                                <span className="text-sm font-medium text-gray-700">Default (100 ppm)</span>
+                                <span className="text-sm font-medium text-gray-700">Default (1000 mg/L)</span>
                               </label>
                               <label className="flex items-center gap-2">
                                 <input

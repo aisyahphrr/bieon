@@ -521,7 +521,7 @@ export function HomeownerDashboard({ onNavigate }) {
             <Home className="w-5 h-5 text-emerald-600" />
             <h3 className="font-bold text-gray-900">Pilih Ruangan</h3>
           </div>
-          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex flex-wrap gap-2 sm:gap-3 pb-2">
             {rooms.map((room) => (
               <button
                 key={room.id}
@@ -548,13 +548,7 @@ export function HomeownerDashboard({ onNavigate }) {
                       ? 'Kenyamanan'
                       : 'Keamanan'}
                 </h2>
-                <div
-                  className="grid grid-flow-col gap-3 sm:gap-4 mb-6 overflow-x-auto pb-4 scrollbar-none"
-                  style={{
-                    gridTemplateRows: 'repeat(2, 180px)',
-                    gridAutoColumns: 'minmax(200px, 1fr)'
-                  }}
-                >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-flow-col gap-3 sm:gap-4 mb-6 lg:overflow-x-auto lg:pb-4 lg:scrollbar-none desktop-comfort-grid">
                   {currentSensors.comfort && (
                     <>
                       {currentSensors.comfort.humidity !== null && (
@@ -566,7 +560,7 @@ export function HomeownerDashboard({ onNavigate }) {
                           <div className="mb-3">
                             <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.humidity}%</div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {currentSensors.comfort.humidity < 30 ? 'Kering' : currentSensors.comfort.humidity <= 68 ? 'Lembap' : 'Sangat Lembap'}
+                              {currentSensors.comfort.humidity < 50 ? 'Kering' : currentSensors.comfort.humidity <= 80 ? 'Nyaman' : 'Sangat Lembap'}
                             </div>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -584,7 +578,7 @@ export function HomeownerDashboard({ onNavigate }) {
                           <div className="mb-3">
                             <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.temp}°C</div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {currentSensors.comfort.temp < 20 ? 'Dingin' : currentSensors.comfort.temp < 28 ? 'Sejuk' : 'Panas'}
+                              {currentSensors.comfort.temp < 20.5 ? 'Dingin' : currentSensors.comfort.temp <= 27.1 ? 'Nyaman' : 'Panas'}
                             </div>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -601,9 +595,11 @@ export function HomeownerDashboard({ onNavigate }) {
                             <p className="text-cyan-100 text-sm">Berdasarkan: suhu & kelembapan</p>
                             <p className="text-emerald-100 text-xs mb-1">(Permenkes No. 2 Tahun 2023)</p>
                           </div>
-                          <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1">
+                          <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1 py-4 sm:py-0">
                             <div className="text-2xl font-bold mb-3 flex items-center gap-2">
-                              {currentSensors.comfort.comfortLevel >= 80 ? '😊 Nyaman' : currentSensors.comfort.comfortLevel >= 60 ? '🙂 Cukup Nyaman' : '😕 Kurang Nyaman'}
+                              {currentSensors.comfort.temp >= 20.5 && currentSensors.comfort.temp <= 27.1 && 
+                               currentSensors.comfort.humidity >= 50 && currentSensors.comfort.humidity <= 80 ? 
+                               '😊 Nyaman' : '😕 Tidak Nyaman'}
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3 mt-auto">
@@ -664,7 +660,7 @@ export function HomeownerDashboard({ onNavigate }) {
                             <h3 className="text-2xl font-bold mb-1">Keamanan</h3>
                             <p className="text-purple-100 text-xs">{currentSensors.security.length} sensor aktif</p>
                           </div>
-                          <div className="flex-1 flex flex-col justify-center items-center text-center py-1">
+                          <div className="flex-1 flex flex-col justify-center items-center text-center py-4 sm:py-1">
                             <div className="text-[60px] font-bold leading-none mb-2">
                               {currentSensors.security.every(s =>
                                 s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
@@ -696,13 +692,7 @@ export function HomeownerDashboard({ onNavigate }) {
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Kesehatan Air</h2>
 
-                <div
-                  className="grid grid-flow-col gap-3 sm:gap-4 mb-6 overflow-x-auto pb-4 scrollbar-none"
-                  style={{
-                    gridTemplateRows: 'repeat(2, 180px)',
-                    gridAutoColumns: 'minmax(200px, 1fr)'
-                  }}
-                >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-flow-col gap-3 sm:gap-4 mb-6 lg:overflow-x-auto lg:pb-4 lg:scrollbar-none desktop-water-grid">
                   {/* pH */}
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
@@ -712,7 +702,7 @@ export function HomeownerDashboard({ onNavigate }) {
                     <div className="mb-3">
                       <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.ph}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.waterQuality.ph < 6.5 ? 'Asam' : currentSensors.waterQuality.ph < 8.5 ? 'Normal' : 'Basa'}
+                        {currentSensors.waterQuality.ph < 6.5 ? 'Asam' : currentSensors.waterQuality.ph <= 8.5 ? 'Normal (Aman)' : 'Basa'}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -728,7 +718,9 @@ export function HomeownerDashboard({ onNavigate }) {
                     </div>
                     <div className="mb-3">
                       <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.turbidity}</div>
-                      <div className="text-xs text-gray-500 mt-1">NTU (Tingkat Kejernihan)</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {currentSensors.waterQuality.turbidity <= 25 ? 'Normal (NTU)' : 'Keruh'}
+                      </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
                       <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500" style={{ width: `${Math.min((currentSensors.waterQuality.turbidity / 10) * 100, 100)}%` }}></div>
@@ -743,7 +735,9 @@ export function HomeownerDashboard({ onNavigate }) {
                     </div>
                     <div className="mb-3">
                       <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.tds}</div>
-                      <div className="text-xs text-gray-500 mt-1">ppm (Part per Million)</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {currentSensors.waterQuality.tds <= 1000 ? 'Normal (mg/L)' : 'TDS Tinggi'}
+                      </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
                       <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-600" style={{ width: `${Math.min((currentSensors.waterQuality.tds / 500) * 100, 100)}%` }}></div>
@@ -782,7 +776,7 @@ export function HomeownerDashboard({ onNavigate }) {
 
                       <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1">
                         <div className="text-2xl font-semibold mb-3 flex items-center gap-2 text-white">
-                          {currentSensors.waterQuality.status === 'drinkable' ? '💧 Layak Pakai' : currentSensors.waterQuality.status === 'usable' ? '🚿 Layak Pakai' : '⚠️ Tidak Layak'}
+                          {currentSensors.waterQuality.ph >= 6.5 && currentSensors.waterQuality.ph <= 8.5 && currentSensors.waterQuality.turbidity <= 25 && currentSensors.waterQuality.tds <= 1000 ? '💧 Layak Pakai' : '⚠️ Tidak Layak'}
                         </div>
                       </div>
 
@@ -1046,6 +1040,26 @@ export function HomeownerDashboard({ onNavigate }) {
         <ComplaintModal isOpen={showComplaintModal} onClose={() => setShowComplaintModal(false)} />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .desktop-comfort-grid {
+            grid-template-rows: repeat(2, 180px);
+            grid-auto-columns: minmax(200px, 1fr);
+          }
+          .desktop-water-grid {
+            grid-template-rows: repeat(2, 180px);
+            grid-auto-columns: minmax(200px, 1fr);
+          }
+        }
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-none {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </HomeownerLayout>
   );
 }
