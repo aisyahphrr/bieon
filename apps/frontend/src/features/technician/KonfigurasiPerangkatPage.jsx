@@ -233,20 +233,20 @@ export function KonfigurasiPerangkatPage({ clients = [] }) {
             <div className="border-t border-gray-100 my-8"></div>
 
             {/* Form Actions */}
-            <div className="flex gap-4 w-full">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 w-full mt-2">
               <button 
                 type="button" 
                 onClick={handleReset}
-                className="w-1/2 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
+                className="w-full sm:flex-1 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
               >
                 Reset Form
               </button>
               <button 
                 type="submit"
-                className="w-1/2 py-3.5 bg-[#009270] hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 shadow-md shadow-emerald-600/20"
+                className="w-full sm:flex-1 py-3.5 px-4 bg-[#009270] hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 shadow-md shadow-emerald-600/20"
               >
-                <Save className="w-5 h-5" />
-                Simpan Konfigurasi
+                <Save className="w-5 h-5 shrink-0" />
+                <span className="truncate">Simpan Konfigurasi</span>
               </button>
             </div>
           </form>

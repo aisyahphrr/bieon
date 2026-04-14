@@ -522,59 +522,61 @@ export function HomeownerComplaint({ onNavigate }) {
                             <h2 className="text-lg font-bold text-gray-900">Riwayat Pengaduan Saya</h2>
                             <p className="text-sm text-gray-500">Pantau status perbaikan perangkat Anda secara real-time. Jangan lupa untuk mengonfirmasi tiket yang sudah selesai diperbaiki oleh teknisi.</p>
                         </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-                            <div className="relative flex-1 md:w-64 group">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+                            <div className="relative w-full sm:flex-1 md:w-64 group">
                                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                 <input
                                     type="text"
                                     placeholder="Search..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all font-medium"
+                                    className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
                                 />
                             </div>
-                            <div className="relative min-w-[180px]">
-                                <button
-                                    onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                    className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
-                                >
-                                    <div className="flex items-center gap-2.5">
-                                        <Filter className={`w-4 h-4 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
-                                        <span className={selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}>
-                                            {selectedStatusFilter || 'Semua Status'}
-                                        </span>
-                                    </div>
-                                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
-                                </button>
-
-                                {showStatusDropdown && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
-                                        <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
-                                            {['', 'Menunggu Respons', 'Diproses Teknisi', 'Menunggu Konfirmasi', 'Selesai', 'Ditolak'].map((status) => (
-                                                <button
-                                                    key={status}
-                                                    onClick={() => {
-                                                        setSelectedStatusFilter(status);
-                                                        setCurrentPage(1);
-                                                        setShowStatusDropdown(false);
-                                                    }}
-                                                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedStatusFilter === status ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                >
-                                                    {status || 'Semua Status'}
-                                                </button>
-                                            ))}
+                            <div className="grid grid-cols-2 sm:flex items-center gap-3 w-full sm:w-auto">
+                                <div className="relative w-full sm:min-w-[180px] sm:w-auto">
+                                    <button
+                                        onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                                        className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                                    >
+                                        <div className="flex items-center gap-1.5 md:gap-2.5 overflow-hidden">
+                                            <Filter className={`w-4 h-4 shrink-0 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                            <span className={`truncate ${selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}`}>
+                                                {selectedStatusFilter || 'Semua Status'}
+                                            </span>
                                         </div>
-                                    </>
-                                )}
+                                        <ChevronDown className={`w-4 h-4 shrink-0 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                                    </button>
+
+                                    {showStatusDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
+                                            <div className="absolute top-full left-0 mt-2 w-full min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                                                {['', 'Menunggu Respons', 'Diproses Teknisi', 'Menunggu Konfirmasi', 'Selesai', 'Ditolak'].map((status) => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => {
+                                                            setSelectedStatusFilter(status);
+                                                            setCurrentPage(1);
+                                                            setShowStatusDropdown(false);
+                                                        }}
+                                                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedStatusFilter === status ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                    >
+                                                        {status || 'Semua Status'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors w-full sm:w-auto shrink-0 shadow-sm">
+                                    <Download className="w-4 h-4 shrink-0" /> Export
+                                </button>
                             </div>
-                            <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-[#E6F5F0] text-[#0F9E78] rounded-lg text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0">
-                                <Download className="w-4 h-4" /> Export
-                            </button>
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left text-sm text-gray-600 whitespace-nowrap min-w-[1000px]">
                             <thead className="text-gray-500 border-b border-gray-100">
                                 <tr>
@@ -635,6 +637,59 @@ export function HomeownerComplaint({ onNavigate }) {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Card List */}
+                    <div className="md:hidden divide-y divide-gray-100">
+                        {currentComplaints.length > 0 ? (
+                            currentComplaints.map(ticket => (
+                                <div key={ticket.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">{ticket.id}</span>
+                                        <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{ticket.date}</span>
+                                    </div>
+                                    <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.topic}</h3>
+                                    <div className="text-xs text-gray-500 mb-3 flex items-start gap-1">
+                                        <Cpu className="w-3.5 h-3.5 mt-0.5 text-gray-400" />
+                                        <span>{ticket.device}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100 mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+                                                <User className="w-3.5 h-3.5 text-gray-400" />
+                                            </div>
+                                            <div className="text-xs">
+                                                <div className="text-[10px] text-gray-400 uppercase tracking-wider">Teknisi</div>
+                                                <div className={`font-medium ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'text-gray-900'}`}>{ticket.technician}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <div>{getStatusBadge(ticket.status)}</div>
+                                        {ticket.status === 'Menunggu Konfirmasi' ? (
+                                            <button
+                                                onClick={() => setSelectedTicket(ticket)}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0F9E78] text-white rounded-lg text-xs font-bold hover:bg-[#0B8563] shadow-sm shadow-[#0F9E78]/20 transition-all shrink-0"
+                                            >
+                                                Selesai ✓
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => setSelectedTicket(ticket)}
+                                                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all shrink-0"
+                                            >
+                                                Detail
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-12 text-center text-gray-500">
+                                <Search className="w-8 h-8 opacity-20 mx-auto mb-2" />
+                                Tidak ada pengaduan yang ditemukan.
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-between mt-6 text-sm text-gray-500 pt-4 border-t border-gray-100 gap-4">

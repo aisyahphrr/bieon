@@ -386,22 +386,33 @@ export function RiwayatPerbaikanPage() {
 
 
         {/* FILTERS & ACTIONS */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6 w-full">
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-            {/* Search Input */}
-            <div className="relative w-full sm:w-[240px] group">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Cari ID Tiket atau Pelanggan..."
-                value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all shadow-sm"
-              />
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
+          <div className="flex flex-col sm:flex-row w-full lg:w-auto mt-2 lg:mt-0 gap-3">
+            {/* Search Input & Mobile Export Wrapper */}
+            <div className="flex w-full sm:w-auto gap-3">
+              <div className="relative flex-1 sm:w-[240px] group">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Cari ID Tiket atau Pelanggan..."
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                  className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all shadow-sm"
+                />
+              </div>
+              
+              <button
+                onClick={handleExportPDF}
+                className="flex lg:hidden items-center justify-center px-4 py-2 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-all shadow-sm active:scale-95 shrink-0"
+              >
+                <Download className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Category Dropdown */}
-            <div className="relative w-full sm:w-[200px]">
+            {/* Kategori & Rentang Waktu mobile grid */}
+            <div className="grid grid-cols-2 sm:flex gap-3 w-full sm:w-auto">
+              {/* Category Dropdown */}
+              <div className="relative w-full sm:w-[200px]">
               <button
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                 className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
@@ -554,11 +565,12 @@ export function RiwayatPerbaikanPage() {
                 </>
               )}
             </div>
+            </div>
           </div>
 
           <button
             onClick={handleExportPDF}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#235C50] text-white rounded-xl font-bold text-sm hover:bg-teal-900 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className="hidden lg:flex items-center gap-2 px-6 py-2.5 bg-[#235C50] text-white rounded-xl font-bold text-sm hover:bg-teal-900 transition-all shadow-sm active:scale-95 whitespace-nowrap"
           >
             <Download className="w-4 h-4" /> Export
           </button>
@@ -566,7 +578,7 @@ export function RiwayatPerbaikanPage() {
 
         {/* TABLE AREA */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          <div className="hidden md:block overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
             <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-[1000px]">
               <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                 <tr>
@@ -640,6 +652,40 @@ export function RiwayatPerbaikanPage() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card List */}
+          <div className="md:hidden divide-y divide-gray-100 pb-2">
+            {paginatedData.map((item) => (
+              <div key={item.id} className="p-5 active:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-100">{item.id}</span>
+                  <span className="text-[11px] text-gray-400 font-bold">{item.finishedDate}</span>
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 mb-1">{item.client}</h3>
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-500 mb-3">
+                  <MapPin className="w-3 h-3 shrink-0" /> <span className="truncate">{item.location}</span>
+                </div>
+                <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
+                <div className="flex items-center gap-5 mb-4 text-[11px] font-bold text-gray-500">
+                  <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-teal-600" /> {item.duration}</div>
+                  <div className="flex items-center gap-1.5 text-amber-500"><Star className="w-3.5 h-3.5 fill-amber-400" /> {item.rating.stars}/5</div>
+                </div>
+                <div className="pt-2 border-t border-gray-50">
+                  <button
+                    onClick={() => setSelectedTicket(item)}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#EDF5F1] text-[#235C50] rounded-xl text-xs font-extrabold hover:bg-[#235C50] hover:text-white transition-all active:scale-95"
+                  >
+                    Lihat Detail <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {paginatedData.length === 0 && (
+              <div className="p-10 text-center text-gray-400 font-medium text-sm">
+                Tidak ada riwayat perbaikan yang ditemukan.
+              </div>
+            )}
           </div>
 
           {/* Pagination */}

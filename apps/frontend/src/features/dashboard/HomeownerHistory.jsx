@@ -329,8 +329,8 @@ export function HomeownerHistory({ onNavigate }) {
 
                 {/* Tabs and Filters Row */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
-                    {/* Tabs Container — scrollbar-none for clean mobile experience */}
-                    <div className="flex bg-white rounded-xl border border-gray-200 overflow-x-auto w-full lg:w-auto lg:max-w-[60%] xl:max-w-[65%] shrink shadow-sm scrollbar-none">
+                    {/* Tabs Container */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex bg-white rounded-xl border-t border-l border-gray-200 w-full lg:w-auto shrink shadow-sm overflow-hidden">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
@@ -341,7 +341,7 @@ export function HomeownerHistory({ onNavigate }) {
                                     setSelectedRoomFilter('');
                                     setSortConfig({ key: null, direction: 'asc' });
                                 }}
-                                className={`whitespace-nowrap px-3 md:px-4 lg:px-4 xl:px-5 py-2 md:py-2.5 text-xs md:text-[13px] font-semibold transition-colors border-r border-gray-200 last:border-r-0 ${activeTab === tab.id
+                                className={`px-2 sm:px-3 lg:px-4 xl:px-5 py-2.5 text-[11px] sm:text-xs md:text-[13px] font-semibold transition-colors border-b border-r border-gray-200 ${activeTab === tab.id
                                     ? 'bg-[#EDF5F1] text-[#235C50]'
                                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                     }`}
@@ -418,7 +418,7 @@ export function HomeownerHistory({ onNavigate }) {
 
                 {/* Table Area */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-[1000px]">
                             <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                                 <tr>
@@ -643,6 +643,83 @@ export function HomeownerHistory({ onNavigate }) {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Card List */}
+                    <div className="md:hidden divide-y divide-gray-100">
+                        {activeTabsConfigured.includes(activeTab) ? (
+                            currentData.length > 0 ? (
+                                currentData.map((item) => (
+                                    <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="text-[11px] text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{item.time}</span>
+                                            {activeTab !== 'Konsumsi Energi' && (
+                                                <StatusBadge status={item.status} />
+                                            )}
+                                        </div>
+                                        
+                                        <h3 className="font-bold text-gray-900 text-sm mb-3 mt-1">
+                                            {activeTab === 'Notifikasi & Alert' && <span className="text-teal-600 mr-2 font-bold bg-teal-50 px-1.5 py-0.5 rounded text-[11px] border border-teal-100 uppercase translate-y-[-1px] inline-block">{item.category}</span>}
+                                            {item.room || item.device}
+                                        </h3>
+                                        
+                                        <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs text-gray-600 bg-gray-50/80 p-3 rounded-xl border border-gray-100/50">
+                                            {activeTab === 'Kenyamanan' && (
+                                                <>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Suhu</span><span className="font-bold text-gray-800 text-sm">{Number(item.temp).toFixed(1)} °C</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Kelembapan</span><span className="font-bold text-gray-800 text-sm">{item.humidity}</span></div>
+                                                </>
+                                            )}
+                                            {activeTab === 'Keamanan' && (
+                                                <>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Pintu</span><span className="font-bold text-gray-800 truncate block pr-2">{item.door}</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Gerak</span><span className="font-bold text-gray-800 truncate block">{item.motion}</span></div>
+                                                </>
+                                            )}
+                                            {activeTab === 'Kualitas Air' && (
+                                                <>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">pH</span><span className="font-bold text-gray-800">{item.ph}</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Kekeruhan</span><span className="font-bold text-gray-800">{item.turbidity}</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Suhu</span><span className="font-bold text-gray-800">{item.temp}</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">TDS</span><span className="font-bold text-gray-800">{item.tds}</span></div>
+                                                </>
+                                            )}
+                                            {activeTab === 'Konsumsi Energi' && (
+                                                <>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">kWh</span><span className="font-bold text-gray-800">{item.kwh}</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Voltase</span><span className="font-bold text-gray-800">{item.voltage}</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Arus</span><span className="font-bold text-gray-800">{item.current}</span></div>
+                                                    <div><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Daya</span><span className="font-bold text-gray-800">{item.power}</span></div>
+                                                    <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">PF</span><span className="font-bold text-gray-800">{item.pf}</span></div>
+                                                </>
+                                            )}
+                                            {activeTab === 'Log Perangkat' && (
+                                                <>
+                                                    <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Perangkat Aktuator</span><span className="font-bold text-gray-800">{item.actuator}</span></div>
+                                                    <div className="col-span-2"><span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-0.5">Pemicu</span><span className="font-bold text-gray-800 bg-teal-50/50 px-2 py-1 rounded inline-block text-teal-800 mt-1">{item.trigger}</span></div>
+                                                </>
+                                            )}
+                                            {activeTab === 'Notifikasi & Alert' && (
+                                                <div className="col-span-2">
+                                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 block mb-1">Pesan Detail</span>
+                                                    <span className="font-medium text-gray-700 leading-relaxed text-xs block bg-white p-2 rounded-lg border border-gray-100">{item.message}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-10 text-center text-gray-500">
+                                    <Search className="w-8 h-8 opacity-20 mx-auto mb-2" />
+                                    Tidak ada data mencari...
+                                </div>
+                            )
+                        ) : (
+                            <div className="p-10 text-center text-gray-500">
+                                <div className="text-lg font-medium mb-1">Tidak ada data</div>
+                                <div className="text-sm">Data belum tersedia untuk tab {activeTab}.</div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Pagination */}

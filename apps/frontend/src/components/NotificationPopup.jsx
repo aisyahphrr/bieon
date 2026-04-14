@@ -212,8 +212,7 @@ const NotificationPopup = ({
   };
 
   return (
-    <div className="fixed right-0 top-[56px] md:top-[73px] z-[40] w-full sm:w-[420px] max-w-[100vw] h-[calc(100vh-56px)] md:h-[calc(100vh-73px)] bg-white/80 backdrop-blur-md shadow-2xl flex flex-col border-l border-gray-100 overflow-hidden rounded-l-[24px] sm:rounded-l-[32px] animate-in slide-in-from-right-8 duration-300" 
-         style={{ filter: 'drop-shadow(0px 10px 40px rgba(0,0,0,0.08))'}}>
+    <div className="fixed right-3 sm:right-0 top-[68px] sm:top-[56px] md:top-[73px] z-[50] w-[calc(100vw-24px)] sm:w-[420px] max-h-[75vh] sm:max-h-none sm:h-[calc(100vh-56px)] md:h-[calc(100vh-73px)] bg-white/95 sm:bg-white/80 backdrop-blur-md shadow-2xl sm:shadow-[-10px_0_40px_rgba(0,0,0,0.08)] flex flex-col border border-gray-100 sm:border-y-0 sm:border-r-0 sm:border-l overflow-hidden rounded-[24px] sm:rounded-none sm:rounded-l-[32px] animate-in fade-in zoom-in-95 sm:slide-in-from-right-8 sm:zoom-in-100 duration-300" >
       
       {/* Header */}
       <div className="px-5 py-4 flex items-center justify-between border-b border-gray-50 flex-shrink-0 bg-transparent z-10">
@@ -240,8 +239,7 @@ const NotificationPopup = ({
       </div>
 
       {/* Content / List Items */}
-      {/* Added pb-[90px] on mobile to prevent bottom nav from covering the last item */}
-      <div className="flex-1 overflow-y-auto w-full p-4 space-y-4 bg-transparent custom-scrollbar pb-[90px] md:pb-6 hidden-scrollbar">
+      <div className="flex-1 overflow-y-auto w-full p-4 space-y-4 bg-transparent custom-scrollbar pb-6 hidden-scrollbar">
         {notifications.map((notif) => {
           const style = typeStyles[notif.type] || typeStyles.info;
           const Icon = notif.icon;

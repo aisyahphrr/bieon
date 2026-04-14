@@ -521,7 +521,7 @@ export function HomeownerDashboard({ onNavigate }) {
             <Home className="w-5 h-5 text-emerald-600" />
             <h3 className="font-bold text-gray-900">Pilih Ruangan</h3>
           </div>
-          <div className="flex flex-wrap gap-2 sm:gap-3 pb-2">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-none">
             {rooms.map((room) => (
               <button
                 key={room.id}
@@ -549,7 +549,11 @@ export function HomeownerDashboard({ onNavigate }) {
                       : 'Keamanan'}
                 </h2>
                 <div
-                  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-6"
+                  className="grid grid-flow-col gap-3 sm:gap-4 mb-6 overflow-x-auto pb-4 scrollbar-none"
+                  style={{
+                    gridTemplateRows: 'repeat(2, 180px)',
+                    gridAutoColumns: 'minmax(200px, 1fr)'
+                  }}
                 >
                   {currentSensors.comfort && (
                     <>
@@ -589,7 +593,7 @@ export function HomeownerDashboard({ onNavigate }) {
                         </div>
                       )}
 
-                      <div className="sm:row-span-2 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl shadow-xl p-5 text-white relative overflow-hidden flex flex-col">
+                      <div className="row-span-2 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl shadow-xl p-5 text-white relative overflow-hidden flex flex-col">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
                         <div className="relative flex flex-col h-full">
                           <div className="mb-1">
@@ -653,7 +657,7 @@ export function HomeownerDashboard({ onNavigate }) {
                         </div>
                       ))}
 
-                      <div className="sm:row-span-2 bg-gradient-to-br flex flex-col from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-5 text-white relative overflow-hidden">
+                      <div className="row-span-2 bg-gradient-to-br flex flex-col from-purple-500 to-indigo-600 rounded-2xl shadow-xl p-5 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
                         <div className="relative flex flex-col h-full">
                           <div className="mb-1">
@@ -693,7 +697,11 @@ export function HomeownerDashboard({ onNavigate }) {
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Kesehatan Air</h2>
 
                 <div
-                  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-6"
+                  className="grid grid-flow-col gap-3 sm:gap-4 mb-6 overflow-x-auto pb-4 scrollbar-none"
+                  style={{
+                    gridTemplateRows: 'repeat(2, 180px)',
+                    gridAutoColumns: 'minmax(200px, 1fr)'
+                  }}
                 >
                   {/* pH */}
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
@@ -760,7 +768,7 @@ export function HomeownerDashboard({ onNavigate }) {
                   </div>
 
                   {/* Big Card - Water Status - row-span-2 */}
-                  <div className="sm:row-span-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-5 text-white relative overflow-hidden flex flex-col min-w-full sm:min-w-[280px]">
+                  <div className="row-span-2 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-xl p-5 text-white relative overflow-hidden flex flex-col min-w-[280px]">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
                     <div className="relative h-full flex flex-col">
                       <div className="mb-1">

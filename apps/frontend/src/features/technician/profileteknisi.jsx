@@ -312,7 +312,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                     <div className="lg:col-span-2 space-y-6">
                         {/* Personal Information */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
                                         <User className="w-6 h-6 text-white" />
@@ -325,13 +325,13 @@ export function TechnicianProfilePage({ onNavigate }) {
                                 {!isEditingPersonal ? (
                                     <button
                                         onClick={() => setIsEditingPersonal(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors"
+                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors self-end sm:self-auto"
                                     >
                                         <Edit3 className="w-4 h-4" />
                                         <span className="text-sm font-semibold">Edit</span>
                                     </button>
                                 ) : (
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2 justify-end self-end sm:self-auto">
                                         <button
                                             onClick={handleSavePersonal}
                                             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors"
@@ -478,7 +478,7 @@ export function TechnicianProfilePage({ onNavigate }) {
 
                         {/* Professional Information */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
                                         <Briefcase className="w-6 h-6 text-white" />
@@ -601,7 +601,7 @@ export function TechnicianProfilePage({ onNavigate }) {
 
                         {/* Skills */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">
                                         <Target className="w-6 h-6 text-white" />
@@ -782,7 +782,7 @@ export function TechnicianProfilePage({ onNavigate }) {
 
                         {/* Work Schedule */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
                                         <Calendar className="w-6 h-6 text-white" />
@@ -816,7 +816,7 @@ export function TechnicianProfilePage({ onNavigate }) {
 
                         {/* Certifications */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl flex items-center justify-center">
                                         <Award className="w-6 h-6 text-white" />
@@ -829,13 +829,13 @@ export function TechnicianProfilePage({ onNavigate }) {
                                 {!isEditingCertifications ? (
                                     <button
                                         onClick={() => setIsEditingCertifications(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors"
+                                        className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors self-end sm:self-auto"
                                     >
                                         <Edit3 className="w-4 h-4" />
                                         <span className="text-sm font-semibold">Edit</span>
                                     </button>
                                 ) : (
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2 justify-end self-end sm:self-auto">
                                         <button
                                             onClick={handleSaveCertifications}
                                             className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-colors"
@@ -969,7 +969,7 @@ export function TechnicianProfilePage({ onNavigate }) {
 
                         {/* Training History */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center">
                                         <BookOpen className="w-6 h-6 text-white" />
@@ -982,13 +982,13 @@ export function TechnicianProfilePage({ onNavigate }) {
                                 {!isEditingTrainings ? (
                                     <button
                                         onClick={() => setIsEditingTrainings(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-colors"
+                                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-colors self-end sm:self-auto"
                                     >
                                         <Edit3 className="w-4 h-4" />
                                         <span className="text-sm font-semibold">Edit</span>
                                     </button>
                                 ) : (
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2 justify-end self-end sm:self-auto">
                                         <button
                                             onClick={handleSaveTrainings}
                                             className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-colors"

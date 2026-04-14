@@ -313,13 +313,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Chart 1: Bar */}
           <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-[2.5rem] p-10 shadow-sm border border-emerald-100 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8 relative z-10">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">Jumlah Instalasi BIEON</h3>
-                <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100">
-                <Box className="w-6 h-6" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100 shrink-0">
+                  <Box className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Jumlah Instalasi BIEON</h3>
+                  <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
+                </div>
               </div>
             </div>
             <div className="h-72 relative z-10">
@@ -343,13 +345,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 2: Bar */}
           <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-[2.5rem] p-10 shadow-sm border border-emerald-100 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8 relative z-10">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">Jumlah Hub Node</h3>
-                <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100">
-                <Activity className="w-6 h-6" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100 shrink-0">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Jumlah Hub Node</h3>
+                  <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
+                </div>
               </div>
             </div>
             <div className="h-72 relative z-10">
@@ -373,10 +377,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 3: Area */}
           <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-[2.5rem] p-10 shadow-sm border border-blue-100 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8 relative z-10">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">Jumlah Smart Device</h3>
-                <p className="text-sm text-gray-600 mt-1">Akumulasi pertumbuhan per bulan</p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-100 shrink-0">
+                  <Monitor className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Jumlah Smart Device</h3>
+                  <p className="text-sm text-gray-600 mt-1">Akumulasi pertumbuhan per bulan</p>
+                </div>
               </div>
               <button
                 onClick={() => handleDownloadPDF(
@@ -385,7 +394,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   smartDeviceTrend.map(d => [d.name, d.value]),
                   "SmartDevice_Report"
                 )}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
               >
                 <Download className="w-4 h-4" /> Export
               </button>
@@ -415,27 +424,27 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 4: Line */}
           <div className="bg-gradient-to-br from-white to-purple-50/50 rounded-[2.5rem] p-10 shadow-sm border border-purple-100 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8 relative z-10">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">Jumlah Pelanggan</h3>
-                <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
-              </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => handleDownloadPDF(
-                    "Laporan Jumlah Pelanggan",
-                    ["Bulan", "Jumlah Pelanggan"],
-                    pelangganTrend.map(d => [d.name, d.value]),
-                    "Pelanggan_Report"
-                  )}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
-                >
-                  <Download className="w-4 h-4" /> Export
-                </button>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-purple-100">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-purple-100 shrink-0">
                   <Users className="w-6 h-6" />
                 </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Jumlah Pelanggan</h3>
+                  <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
+                </div>
               </div>
+              <button
+                onClick={() => handleDownloadPDF(
+                  "Laporan Jumlah Pelanggan",
+                  ["Bulan", "Jumlah Pelanggan"],
+                  pelangganTrend.map(d => [d.name, d.value]),
+                  "Pelanggan_Report"
+                )}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
+              >
+                <Download className="w-4 h-4" /> Export
+              </button>
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
@@ -458,13 +467,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 5: Line */}
           <div className="bg-gradient-to-br from-white to-orange-50/50 rounded-[2.5rem] p-10 shadow-sm border border-orange-100 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8 relative z-10">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">Jumlah Teknisi</h3>
-                <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-100">
-                <User className="w-6 h-6" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-100 shrink-0">
+                  <User className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Jumlah Teknisi</h3>
+                  <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
+                </div>
               </div>
             </div>
             <div className="h-72 relative z-10">
@@ -488,27 +499,27 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 6: Line */}
           <div className="bg-gradient-to-br from-white to-amber-50/50 rounded-[2.5rem] p-10 shadow-sm border border-amber-100 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8 relative z-10">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800">Jumlah Pengaduan Pelanggan</h3>
-                <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
-              </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => handleDownloadPDF(
-                    "Laporan Pengaduan Pelanggan",
-                    ["Bulan", "Jumlah Pengaduan"],
-                    pengaduanTrend.map(d => [d.name, d.value]),
-                    "Pengaduan_Report"
-                  )}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
-                >
-                  <Download className="w-4 h-4" /> Export
-                </button>
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-100">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-100 shrink-0">
                   <MessageSquare className="w-6 h-6" />
                 </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Jumlah Pengaduan Pelanggan</h3>
+                  <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
+                </div>
               </div>
+              <button
+                onClick={() => handleDownloadPDF(
+                  "Laporan Pengaduan Pelanggan",
+                  ["Bulan", "Jumlah Pengaduan"],
+                  pengaduanTrend.map(d => [d.name, d.value]),
+                  "Pengaduan_Report"
+                )}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
+              >
+                <Download className="w-4 h-4" /> Export
+              </button>
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
@@ -534,8 +545,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
         <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 md:p-10 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-gray-800">Daftar Pelanggan Terdaftar</h2>
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              <div className="relative group flex-1 md:w-64">
+            <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full md:w-auto">
+              <div className="relative group col-span-2 md:w-64">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#009b7c] transition-colors" />
                 <input
                   type="text"
@@ -545,11 +556,11 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#009b7c] focus:bg-white text-xs transition-all"
                 />
               </div>
-              <div className="relative">
+              <div className="relative col-span-1">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="appearance-none px-4 py-3 min-w-[140px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
+                  className="appearance-none w-full md:w-auto px-4 py-3 min-w-[140px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
                 >
                   <option value="Semua Status">Semua Status</option>
                   <option value="Aktif">Aktif</option>
@@ -565,14 +576,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   filteredCustomers.map(c => [c.id, c.name, c.username, c.email, c.status, c.bieon, c.devices, c.technician]),
                   "Daftar_Pelanggan"
                 )}
-                className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white rounded-xl text-sm font-semibold shadow-sm hover:bg-[#008268] transition-all shrink-0"
+                className="flex items-center justify-center col-span-1 gap-2 px-4 py-3 md:py-2 bg-[#009b7c] text-white rounded-xl text-sm font-semibold shadow-sm hover:bg-[#008268] transition-all shrink-0"
               >
                 <Download className="w-4 h-4" /> Download
               </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-left min-w-[900px]">
               <thead className="bg-[#009b7c] text-white">
                 <tr>
@@ -644,12 +655,73 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </table>
           </div>
 
-          <div className="p-10 bg-gray-50/50 flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          {/* Mobile View - Cards */}
+          <div className="md:hidden divide-y divide-gray-100">
+            {filteredCustomers.length > 0 ? (
+              filteredCustomers.map((cust) => (
+                <div key={cust.id} className="p-5 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900">{cust.name}</h3>
+                      <p className="text-xs text-gray-500">{cust.username}</p>
+                    </div>
+                    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                      cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
+                      cust.status === 'Warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
+                      'bg-[#FEF2F2] text-[#ef4444]'
+                    }`}>
+                      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
+                      {cust.status}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs border-y border-gray-50 py-3">
+                    <div>
+                      <p className="text-gray-500 mb-0.5">User ID</p>
+                      <p className="font-semibold text-gray-900">{cust.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 mb-0.5">Email</p>
+                      <p className="font-semibold text-gray-900 truncate">{cust.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 mb-0.5">BIEON / Devices</p>
+                      <p className="font-semibold text-gray-900">{cust.bieon} / {cust.devices}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 mb-0.5">Teknisi</p>
+                      <p className="font-semibold text-gray-900 truncate">{cust.technician}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (onNavigate) {
+                        onNavigate('admin-pelanggan');
+                        setTimeout(() => {
+                          window.dispatchEvent(new CustomEvent('openHomeownerDetail', { detail: cust.name }));
+                        }, 100);
+                      }
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
+                  >
+                    <Eye className="w-4 h-4" /> Detail Pelanggan
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="px-6 py-12 text-center text-gray-500 text-sm font-medium">
+                Tidak ada pelanggan yang cocok dengan pencarian Anda.
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 md:p-10 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center md:text-left">
               Menampilkan {filteredCustomers.length} dari {customers.length} Pelanggan
             </span>
-            <div className="flex items-center gap-3">
-              <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Previous</button>
+            <div className="flex flex-wrap justify-center items-center gap-2 md:gap-3">
+              <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Prev</button>
               <button className="w-12 h-12 bg-[#009b7c] text-white rounded-2xl text-[10px] font-black shadow-lg shadow-emerald-100 flex items-center justify-center">1</button>
               <button className="w-12 h-12 bg-white border border-gray-100 text-gray-400 rounded-2xl text-[10px] font-black hover:bg-gray-50 flex items-center justify-center">2</button>
               <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Next</button>
@@ -712,19 +784,19 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-6 border-t border-gray-50">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-50">
                 <button
                   onClick={() => setShowPlnModal(false)}
-                  className="flex-1 py-3.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+                  className="w-full sm:flex-1 py-3.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   onClick={handleUpdateTariff}
-                  className="flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-lg shadow-orange-100 hover:shadow-orange-200 transition-all flex items-center justify-center gap-2"
+                  className="w-full sm:flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-lg shadow-orange-100 hover:shadow-orange-200 transition-all flex items-center justify-center gap-2"
                 >
-                  <Save className="w-5 h-5" />
-                  Simpan Perubahan
+                  <Save className="w-5 h-5 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Simpan Perubahan</span>
                 </button>
               </div>
             </div>

@@ -855,7 +855,7 @@ export function DeviceControlPage({ onNavigate }) {
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
               >{selectedCategory === "sensor" ? "Simpan" : "Lanjut ke Konfigurasi"}</button></div></div></div></div>}{
           /* ==================== MODAL: CONFIGURE (ACTUATORS ONLY) ==================== */
-        }{step === "configure" && selectedCategory !== "sensor" && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"><div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-8 my-8"><div className="flex items-center justify-between mb-6"><div><h2 className="text-2xl font-bold text-gray-900">Pilih Metode Pengaturan</h2><p className="text-sm text-gray-600 mt-1">Parameter sensor atau jadwal otomatis</p></div><button
+        }{step === "configure" && selectedCategory !== "sensor" && <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center z-50 p-4 overflow-y-auto"><div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-8 my-4 sm:my-8"><div className="flex items-center justify-between mb-6"><div><h2 className="text-2xl font-bold text-gray-900">Pilih Metode Pengaturan</h2><p className="text-sm text-gray-600 mt-1">Parameter sensor atau jadwal otomatis</p></div><button
           onClick={() => setStep("add-device-form")}
           className="p-2 hover:bg-gray-100 rounded-lg transition-all"
         ><X className="w-6 h-6 text-gray-500" /></button></div>{
@@ -866,7 +866,7 @@ export function DeviceControlPage({ onNavigate }) {
           ><Settings className="w-8 h-8 text-emerald-600 mb-3" /><h3 className="font-bold text-gray-900 mb-1">Parameter Sensor</h3><p className="text-sm text-gray-600">Atur berdasarkan kondisi lingkungan & keamanan</p></button><button
             onClick={() => setConfigMode("schedule")}
             className={`p-6 rounded-xl border-2 transition-all ${configMode === "schedule" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
-          ><Calendar className="w-8 h-8 text-emerald-600 mb-3" /><h3 className="font-bold text-gray-900 mb-1">Jadwal Otomatis</h3><p className="text-sm text-gray-600">Atur jadwal harian/mingguan</p></button></div>
+          ><Calendar className="w-8 h-8 text-emerald-600 mb-3" /><h3 className="font-bold text-gray-900 mb-1">Jadwal Otomatis</h3><p className="text-sm text-gray-600">Atur jadwal harian dan mingguan</p></button></div>
           {configMode === "sensor" ? (
             <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
               {!activeSensorAspect ? (

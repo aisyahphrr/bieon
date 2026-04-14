@@ -611,15 +611,15 @@ export function PengaduanKlienPage({ onNavigate }) {
                                         <AlertCircle className="w-3 h-3" /> {item.location}
                                     </div>
                                     <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="shrink-0">
+                                    <div className="flex flex-wrap items-center justify-between gap-3 mt-2">
+                                        <div>
                                             <TicketStatusBadge status={item.status} sla={item.sla} rating={item.rating} />
                                         </div>
                                         <button
                                             onClick={() => setSelectedTicket(item)}
-                                            className="grow inline-flex items-center justify-center gap-1 px-4 py-2 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all"
+                                            className="grow sm:grow-0 shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#0D9488] text-white rounded-xl text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all whitespace-nowrap w-full sm:w-auto"
                                         >
-                                            Lihat Detail <ChevronRight className="w-3 h-3" />
+                                            Lihat Detail <ChevronRight className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 </div>

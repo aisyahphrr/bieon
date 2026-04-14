@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import {
     Users,
+    User,
     UserCheck,
     Home,
     TrendingUp,
@@ -217,7 +218,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             color: '#6366f1', // default indigo
             clients: []
         };
-        
+
         setTechnicians(prev => [...prev, newTech]);
         setIsAddModalOpen(false);
         // Reset form data
@@ -264,11 +265,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
     const handleEditTechnician = (tech) => {
         setSelectedTechnician(tech);
-        
+
         // Find a valid city key from CITY_AREAS that might be part of the tech.workArea string
         const validCities = Object.keys(CITY_AREAS);
         let mappedCity = validCities.find(city => tech.workArea.includes(city)) || 'Lainnya';
-        
+
         setFormData({
             ...tech,
             workArea: mappedCity,
@@ -280,7 +281,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     };
 
     const handleSaveEdit = () => {
-        setTechnicians(prev => prev.map(t => 
+        setTechnicians(prev => prev.map(t =>
             t.id === selectedTechnician.id ? { ...t, ...formData } : t
         ));
         setIsEditModalOpen(false);
@@ -348,24 +349,24 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             <div>
                                 <h2 className="text-xl font-bold text-gray-800">Daftar Teknisi</h2>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="relative group">
+                            <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full lg:w-auto">
+                                <div className="relative group col-span-2 lg:w-72">
                                     <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-all" />
                                     <input
                                         type="text"
                                         placeholder="Cari teknisi..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-56 pl-10 pr-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        className="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm group-focus-within:bg-white"
                                     />
                                 </div>
 
-                                <div className="relative">
+                                <div className="relative col-span-2 md:col-span-1">
                                     <Filter className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                                     <select
                                         value={filterStatus}
                                         onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="appearance-none pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none cursor-pointer transition-all hover:bg-gray-50 min-w-[150px]"
+                                        className="appearance-none w-full md:w-auto pl-11 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-50 focus:border-gray-300 cursor-pointer transition-all hover:bg-gray-50 shadow-sm"
                                     >
                                         <option value="all">Semua Status</option>
                                         <option value="aktif">Aktif</option>
@@ -374,27 +375,30 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                                 </div>
 
-                                <button
-                                    onClick={() => setIsMapModalOpen(true)}
-                                    className="px-5 py-2.5 mx-1 bg-[#1d4ed8] text-white rounded-xl text-sm font-semibold hover:bg-blue-800 transition-all flex items-center gap-2 group"
-                                >
-                                    <MapIcon className="w-4 h-4" />
-                                    Lihat Peta
-                                </button>
+                                <div className="col-span-2 grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:flex-row">
+                                    <button
+                                        onClick={() => setIsMapModalOpen(true)}
+                                        className="px-4 md:px-5 py-2.5 bg-[#1d4ed8] text-white rounded-xl text-xs md:text-sm font-semibold hover:bg-blue-800 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-blue-100"
+                                    >
+                                        <MapIcon className="w-4 h-4 shrink-0" />
+                                        <span className="truncate">Lihat Peta</span>
+                                    </button>
 
-                                <button
-                                    onClick={() => setIsAddModalOpen(true)}
-                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all flex items-center gap-2 group"
-                                >
-                                    <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
-                                    Tambah Teknisi
-                                </button>
+                                    <button
+                                        onClick={() => setIsAddModalOpen(true)}
+                                        className="px-4 md:px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-xs md:text-sm font-semibold hover:bg-[#008268] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-emerald-100"
+                                    >
+                                        <Plus className="w-4 h-4 shrink-0 transition-transform group-hover:rotate-90" />
+                                        <span className="truncate">Tambah Teknisi</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left table-auto">
+                    <div className="overflow-x-auto md:overflow-visible p-4 md:p-0">
+                        {/* Desktop Table View */}
+                        <table className="w-full text-left table-auto hidden md:table">
                             <thead>
                                 <tr className="bg-[#009b7c] text-white text-sm font-semibold text-left">
                                     <th className="px-8 py-4 rounded-tl-xl">ID Teknisi</th>
@@ -472,6 +476,57 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 ))}
                             </tbody>
                         </table>
+
+                        {/* Mobile Cards View */}
+                        <div className="md:hidden flex flex-col gap-4">
+                            {filteredTechnicians.map((tech) => (
+                                <div key={tech.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+                                    <div className="p-4 border-b border-gray-50 flex justify-between items-start">
+                                        <div className="flex gap-3 items-center">
+                                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0">
+                                                <User className="w-5 h-5 text-gray-500" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 text-sm">{tech.name}</h3>
+                                                <p className="text-xs text-gray-500">{tech.email}</p>
+                                            </div>
+                                        </div>
+                                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 ${tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600'}`}></span>
+                                            {tech.status.charAt(0).toUpperCase() + tech.status.slice(1)}
+                                        </span>
+                                    </div>
+
+                                    <div className="p-4 bg-gray-50/50 flex flex-col gap-2.5">
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <span className="font-semibold text-gray-500 w-16">ID:</span>
+                                            <span className="font-bold text-gray-900">{tech.id}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <span className="font-semibold text-gray-500 w-16">Lokasi:</span>
+                                            <span className="font-semibold text-gray-700 truncate">{tech.workArea}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <span className="font-semibold text-gray-500 w-16">Kontak:</span>
+                                            <span className="font-semibold text-gray-700">{tech.phone}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <span className="font-semibold text-gray-500 w-16">Klien:</span>
+                                            <span className="font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-md">{tech.clientsCount} Pelanggan</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3 border-t border-gray-50 flex items-center justify-between gap-2">
+                                        <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">Detail</button>
+                                        <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-xl hover:bg-emerald-100 transition-all text-center">Edit</button>
+                                        <button onClick={() => { setMapFilterTech(tech.id); setIsMapModalOpen(true); }} className="flex-1 py-2 bg-cyan-50 text-cyan-600 font-bold text-xs rounded-xl hover:bg-cyan-100 transition-all text-center">Peta</button>
+                                        <button onClick={() => handleDeleteTechnician(tech)} className="w-[45px] flex items-center justify-center py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all shrink-0">
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -501,56 +556,56 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Nama Teknisi <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="name"
                                             value={formData.name}
                                             onChange={handleInputChange}
-                                            type="text" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
-                                            placeholder="Budi Santoso" 
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            placeholder="Budi Santoso"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Email <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="email"
                                             value={formData.email}
                                             onChange={handleInputChange}
-                                            type="email" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
-                                            placeholder="budi.santoso@bieon.id" 
+                                            type="email"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            placeholder="budi.santoso@bieon.id"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Nomor Telepon <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleInputChange}
-                                            type="text" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
-                                            placeholder="+62 812-3456-7890" 
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            placeholder="+62 812-3456-7890"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Password <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="password"
                                             value={formData.password}
                                             onChange={handleInputChange}
-                                            type="password" 
-                                            placeholder="********" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            type="password"
+                                            placeholder="********"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Alamat <span className="text-red-500">*</span></label>
-                                        <textarea 
+                                        <textarea
                                             name="address"
                                             value={formData.address}
                                             onChange={handleInputChange}
-                                            rows="2" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
+                                            rows="2"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
                                             placeholder="Jl. Sudirman No. 45, Jakarta Pusat"
                                         ></textarea>
                                     </div>
@@ -568,24 +623,24 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Posisi <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="position"
                                             value={formData.position}
                                             onChange={handleInputChange}
-                                            type="text" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
-                                            placeholder="Senior Technician" 
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            placeholder="Senior Technician"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Pengalaman (Tahun) <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="experience"
                                             value={formData.experience}
                                             onChange={handleInputChange}
-                                            type="number" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
-                                            placeholder="5" 
+                                            type="number"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            placeholder="5"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
@@ -598,11 +653,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                         key={spec}
                                                         type="button"
                                                         onClick={() => toggleOption('specializations', spec)}
-                                                        className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
-                                                            isSelected 
-                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100' 
+                                                        className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${isSelected
+                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100'
                                                             : 'bg-white text-gray-500 ring-gray-200 hover:ring-emerald-300 hover:bg-emerald-50'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
                                                         {spec}
@@ -613,7 +667,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
-                                        <select 
+                                        <select
                                             name="workArea"
                                             value={formData.workArea}
                                             onChange={handleCityChange}
@@ -628,7 +682,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
-                                        <select 
+                                        <select
                                             name="status"
                                             value={formData.status}
                                             onChange={handleInputChange}
@@ -652,11 +706,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                             key={area}
                                                             type="button"
                                                             onClick={() => toggleOption('coverageAreas', area)}
-                                                            className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
-                                                                isSelected 
-                                                                ? 'bg-blue-500 text-white ring-blue-500 shadow-md shadow-blue-100' 
+                                                            className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${isSelected
+                                                                ? 'bg-blue-500 text-white ring-blue-500 shadow-md shadow-blue-100'
                                                                 : 'bg-white text-gray-500 ring-gray-200 hover:ring-blue-300 hover:bg-blue-50'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
                                                             {area}
@@ -685,11 +738,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     {Object.entries(formData.workSchedule).map(([day, hours]) => (
                                         <div key={day} className="space-y-1.5">
                                             <label className="text-[10px] font-bold text-gray-400 uppercase">{day}</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={hours}
                                                 onChange={(e) => handleScheduleChange(day, e.target.value)}
-                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium" 
+                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium"
                                                 placeholder="08:00 - 17:00"
                                             />
                                         </div>
@@ -701,7 +754,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
                                 <button onClick={handleAddTechnician} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                    Simpan Teknisi
+                                    Simpan
                                 </button>
                             </div>
                         </div>
@@ -712,7 +765,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {isDetailModalOpen && selectedTechnician && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden max-h-[95vh]">
-                        
+
                         {/* Header */}
                         <div className="p-6 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
@@ -731,7 +784,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                         {/* Body Container */}
                         <div className="p-8 overflow-y-auto space-y-8 bg-white">
-                            
+
                             {/* Cards Row */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Informasi Teknisi */}
@@ -829,18 +882,19 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                             {/* Table Pelanggan section */}
                             <div>
-                                <div className="flex items-center justify-between mb-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                                     <h3 className="text-lg font-bold text-gray-800">Daftar Pelanggan yang Ditangani</h3>
-                                    <button 
+                                    <button
                                         onClick={() => setIsAddClientModalOpen(true)}
-                                        className="px-4 py-2 bg-[#009b7c] text-white rounded-lg text-sm font-semibold hover:bg-[#008268] transition-all flex items-center gap-2"
+                                        className="px-4 py-2 bg-[#009b7c] text-white rounded-lg text-sm font-semibold hover:bg-[#008268] transition-all flex items-center justify-center gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
                                         Tambah Pelanggan
                                     </button>
                                 </div>
-                                <div className="overflow-hidden rounded-xl border border-gray-200">
-                                    <table className="w-full text-left table-auto bg-white">
+                                <div className="overflow-hidden rounded-xl md:border border-gray-200">
+                                    {/* Desktop Table */}
+                                    <table className="w-full text-left table-auto bg-white hidden md:table">
                                         <thead>
                                             <tr className="bg-[#009b7c] text-white text-sm font-semibold">
                                                 <th className="px-6 py-4">Nama Pelanggan</th>
@@ -867,14 +921,12 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                             <span className="text-sm text-gray-800 font-medium">{client.smartDevices}</span>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${
-                                                                client.status === 'online' ? 'bg-green-50 text-green-600' :
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${client.status === 'online' ? 'bg-green-50 text-green-600' :
                                                                 client.status === 'warning' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600'
-                                                            }`}>
-                                                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                                                    client.status === 'online' ? 'bg-green-600' :
+                                                                }`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${client.status === 'online' ? 'bg-green-600' :
                                                                     client.status === 'warning' ? 'bg-yellow-500' : 'bg-red-600'
-                                                                }`}></span>
+                                                                    }`}></span>
                                                                 {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
                                                             </span>
                                                         </td>
@@ -889,6 +941,44 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             )}
                                         </tbody>
                                     </table>
+
+                                    {/* Mobile Cards */}
+                                    <div className="md:hidden flex flex-col gap-3">
+                                        {selectedTechnician.clients && selectedTechnician.clients.length > 0 ? (
+                                            selectedTechnician.clients.map(client => (
+                                                <div key={client.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-3">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <span className="font-bold text-gray-800 text-sm block">{client.name}</span>
+                                                            <span className="text-xs text-gray-500">{client.location}</span>
+                                                        </div>
+                                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${client.status === 'online' ? 'bg-green-50 text-green-600' :
+                                                            client.status === 'warning' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600'
+                                                            }`}>
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${client.status === 'online' ? 'bg-green-600' :
+                                                                client.status === 'warning' ? 'bg-yellow-500' : 'bg-red-600'
+                                                                }`}></span>
+                                                            {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <div className="flex-1 bg-gray-50 p-2 rounded-lg text-center border border-gray-100">
+                                                            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Jml BIEON</p>
+                                                            <p className="text-sm font-bold text-gray-800 mt-0.5">{client.bieonDevices}</p>
+                                                        </div>
+                                                        <div className="flex-1 bg-gray-50 p-2 rounded-lg text-center border border-gray-100">
+                                                            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Jml Device</p>
+                                                            <p className="text-sm font-bold text-gray-800 mt-0.5">{client.smartDevices}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="py-6 text-center text-gray-500 text-sm italic bg-white rounded-xl border border-gray-100">
+                                                Tidak ada pelanggan yang ditangani saat ini.
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -923,7 +1013,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm font-bold text-gray-700">Filter Teknisi:</span>
-                                    <select 
+                                    <select
                                         className="py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none"
                                         value={mapFilterTech}
                                         onChange={(e) => setMapFilterTech(e.target.value)}
@@ -956,16 +1046,16 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             {/* Map Box Placeholder */}
                             <div className="relative w-full flex-1 rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-gray-100 flex items-center justify-center">
                                 {/* Simulate Map Iframe */}
-                                <iframe 
-                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126907.01427506978!2d106.749001!3d-6.229728!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x100c5c76da35150!2sJakarta%2C%20Daerah%2C%20Khusus%20Ibukota%20Jakarta!5e0!3m2!1sid!2sid!4v1703080000000!5m2!1sid!2sid" 
-                                    width="100%" 
-                                    height="100%" 
-                                    style={{ border: 0 }} 
-                                    allowFullScreen="" 
-                                    loading="lazy" 
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126907.01427506978!2d106.749001!3d-6.229728!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x100c5c76da35150!2sJakarta%2C%20Daerah%2C%20Khusus%20Ibukota%20Jakarta!5e0!3m2!1sid!2sid!4v1703080000000!5m2!1sid!2sid"
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    allowFullScreen=""
+                                    loading="lazy"
                                     referrerPolicy="no-referrer-when-downgrade"
                                 ></iframe>
-                                
+
                                 {/* Overlay mock markers */}
                                 <div className="absolute top-[30%] left-[40%] flex flex-col items-center animate-bounce">
                                     <MapPin className="w-8 h-8 text-red-600 fill-white" />
@@ -998,10 +1088,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <X className="w-5 h-5 text-white" />
                             </button>
                         </div>
-                        
+
                         <div className="p-6 overflow-y-auto space-y-4 flex-1">
                             <p className="text-sm font-bold text-gray-700">Pilih dari pelanggan yang tersedia (Homeowner):</p>
-                            
+
                             <div className="space-y-3">
                                 {[
                                     { id: 'C007', name: 'Budi Handoko', loc: 'Semarang, Jawa Tengah', status: 'Baru' },
@@ -1022,13 +1112,13 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         </div>
 
                         <div className="p-6 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-gray-50">
-                            <button 
+                            <button
                                 onClick={() => setIsAddClientModalOpen(false)}
                                 className="px-6 py-2.5 text-sm font-bold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all bg-white"
                             >
                                 Batal
                             </button>
-                            <button 
+                            <button
                                 onClick={() => {
                                     alert('Berhasil menyimpan tambahan pelanggan ke ' + selectedTechnician.name);
                                     setIsAddClientModalOpen(false);
@@ -1068,55 +1158,55 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-400 uppercase">Nama Teknisi</label>
-                                        <input 
+                                        <input
                                             name="name"
                                             value={formData.name}
                                             disabled={true}
-                                            type="text" 
-                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
-                                            placeholder="Budi Santoso" 
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
+                                            placeholder="Budi Santoso"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
-                                        <input 
+                                        <input
                                             name="email"
                                             value={formData.email}
                                             disabled={true}
-                                            type="email" 
-                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
-                                            placeholder="budi.santoso@bieon.id" 
+                                            type="email"
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
+                                            placeholder="budi.santoso@bieon.id"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-400 uppercase">Nomor Telepon</label>
-                                        <input 
+                                        <input
                                             name="phone"
                                             value={formData.phone}
                                             disabled={true}
-                                            type="text" 
-                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
-                                            placeholder="+62 812-3456-7890" 
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
+                                            placeholder="+62 812-3456-7890"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-400 uppercase">Password</label>
-                                        <input 
+                                        <input
                                             name="password"
                                             value="••••••••"
                                             disabled={true}
-                                            type="password" 
-                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 cursor-not-allowed outline-none" 
+                                            type="password"
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 cursor-not-allowed outline-none"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
                                         <label className="text-xs font-bold text-gray-400 uppercase">Alamat</label>
-                                        <textarea 
+                                        <textarea
                                             name="address"
                                             value={formData.address}
                                             disabled={true}
-                                            rows="2" 
-                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none" 
+                                            rows="2"
+                                            className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
                                             placeholder="Jl. Sudirman No. 45, Jakarta Pusat"
                                         ></textarea>
                                     </div>
@@ -1134,24 +1224,24 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Posisi <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="position"
                                             value={formData.position}
                                             onChange={handleInputChange}
-                                            type="text" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
-                                            placeholder="Senior Technician" 
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            placeholder="Senior Technician"
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Pengalaman (Tahun) <span className="text-red-500">*</span></label>
-                                        <input 
+                                        <input
                                             name="experience"
                                             value={formData.experience}
                                             onChange={handleInputChange}
-                                            type="number" 
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all" 
-                                            placeholder="5" 
+                                            type="number"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            placeholder="5"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
@@ -1164,11 +1254,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                         key={spec}
                                                         type="button"
                                                         onClick={() => toggleOption('specializations', spec)}
-                                                        className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
-                                                            isSelected 
-                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100' 
+                                                        className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${isSelected
+                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100'
                                                             : 'bg-white text-gray-500 ring-gray-200 hover:ring-emerald-300 hover:bg-emerald-50'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
                                                         {spec}
@@ -1179,7 +1268,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
-                                        <select 
+                                        <select
                                             name="workArea"
                                             value={formData.workArea}
                                             onChange={handleCityChange}
@@ -1194,7 +1283,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
-                                        <select 
+                                        <select
                                             name="status"
                                             value={formData.status}
                                             onChange={handleInputChange}
@@ -1218,11 +1307,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                             key={area}
                                                             type="button"
                                                             onClick={() => toggleOption('coverageAreas', area)}
-                                                            className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${
-                                                                isSelected 
-                                                                ? 'bg-blue-500 text-white ring-blue-500 shadow-md shadow-blue-100' 
+                                                            className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${isSelected
+                                                                ? 'bg-blue-500 text-white ring-blue-500 shadow-md shadow-blue-100'
                                                                 : 'bg-white text-gray-500 ring-gray-200 hover:ring-blue-300 hover:bg-blue-50'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
                                                             {area}
@@ -1251,11 +1339,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     {Object.entries(formData.workSchedule).map(([day, hours]) => (
                                         <div key={day} className="space-y-1.5">
                                             <label className="text-[10px] font-bold text-gray-400 uppercase">{day}</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={hours}
                                                 onChange={(e) => handleScheduleChange(day, e.target.value)}
-                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium" 
+                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium"
                                                 placeholder="08:00 - 17:00"
                                             />
                                         </div>
@@ -1267,7 +1355,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
                                 <button onClick={handleSaveEdit} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                    Simpan Perubahan
+                                    Simpan
                                 </button>
                             </div>
                         </div>
@@ -1308,11 +1396,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-900">Alasan Penghapusan <span className="text-red-500">*</span></label>
-                                <textarea 
-                                    rows="3" 
+                                <textarea
+                                    rows="3"
                                     value={deleteReason}
                                     onChange={(e) => setDeleteReason(e.target.value)}
-                                    placeholder="Masukkan alasan mengapa akun teknisi ini perlu dihapus..." 
+                                    placeholder="Masukkan alasan mengapa akun teknisi ini perlu dihapus..."
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all shadow-sm"
                                 ></textarea>
                             </div>
@@ -1323,20 +1411,19 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         </div>
 
                         <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-between gap-4 shrink-0">
-                            <button 
+                            <button
                                 onClick={() => setIsDeleteModalOpen(false)}
                                 className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
                             >
                                 Batal
                             </button>
-                            <button 
+                            <button
                                 onClick={confirmDeleteTechnician}
                                 disabled={!deleteReason.trim()}
-                                className={`flex-1 py-3 text-white rounded-2xl text-sm font-bold transition-all shadow-lg ${
-                                    deleteReason.trim() 
-                                    ? 'bg-[#dc2626] hover:bg-[#b91c1c] shadow-red-100 cursor-pointer' 
+                                className={`flex-1 py-3 text-white rounded-2xl text-sm font-bold transition-all shadow-lg ${deleteReason.trim()
+                                    ? 'bg-[#dc2626] hover:bg-[#b91c1c] shadow-red-100 cursor-pointer'
                                     : 'bg-[#fca5a5] cursor-not-allowed shadow-none opacity-80'
-                                }`}
+                                    }`}
                             >
                                 Ya, Hapus Teknisi
                             </button>

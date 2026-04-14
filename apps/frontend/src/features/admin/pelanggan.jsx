@@ -330,8 +330,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <h2 className="text-xl font-bold text-gray-900 tracking-tight">Daftar Akun Homeowner</h2>
                                 <p className="text-sm font-medium text-gray-500 mt-1">Manajemen akun, monitoring konsumsi, dan kontrol akses klien BIEON</p>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="relative group flex-1 lg:w-72">
+                            <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full lg:w-auto">
+                                <div className="relative group col-span-2 lg:w-72">
                                     <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009b7c] transition-all" />
                                     <input
                                         type="text"
@@ -342,11 +342,11 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     />
                                 </div>
 
-                                <div className="relative">
+                                <div className="relative col-span-1">
                                     <select
                                         value={filterStatus}
                                         onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="appearance-none flex items-center justify-between gap-8 px-4 py-2.5 min-w-[150px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
+                                        className="appearance-none flex items-center justify-between gap-8 px-4 py-2.5 w-full md:min-w-[150px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
                                     >
                                         <option value="all">Semua Status</option>
                                         <option value="aktif">Aktif</option>
@@ -363,7 +363,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         filteredHomeowners.map(h => [h.id, h.fullName, h.username, h.email, h.phone, h.status.toUpperCase(), h.assignedTechnician]),
                                         "Homeowner_Report"
                                     )}
-                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center gap-2 group"
+                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group col-span-1"
                                 >
                                     <Download className="w-4 h-4" /> Download
                                 </button>
@@ -372,8 +372,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left table-auto">
+                    <div className="overflow-x-auto hidden md:block">
+                        <table className="w-full text-left table-auto min-w-[900px]">
                             <thead>
                                 <tr className="bg-[#009b7c] text-white text-xs font-semibold uppercase tracking-wider">
                                     <th className="px-6 py-4">Identitas</th>
@@ -389,7 +389,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <tr key={ho.id} className="hover:bg-gray-50/50 transition-all group">
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold">
+                                                <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
                                                     {ho.fullName.charAt(0)}
                                                 </div>
                                                 <div>
@@ -406,26 +406,26 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         </td>
                                         <td className="px-6 py-5">
                                             <div className="flex flex-wrap gap-2">
-                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-semibold border border-emerald-100">{ho.totalBieonDevices} Hub</span>
-                                                <span className="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-lg text-xs font-semibold border border-purple-100">{ho.totalSmartDevices} Node</span>
+                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">{ho.totalBieonDevices} Hub</span>
+                                                <span className="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-lg text-[10px] font-bold border border-purple-100">{ho.totalSmartDevices} Node</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
                                                     <UserCog className="w-4 h-4 text-gray-500" />
                                                 </div>
                                                 <span className="text-sm font-semibold text-gray-700">{ho.assignedTechnician}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <span className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border flex items-center gap-2 w-fit ${ho.status === 'aktif' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                ho.status === 'warning' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    'bg-red-50 text-red-600 border-red-100'
+                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit ${ho.status === 'aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
+                                                ho.status === 'warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
+                                                    'bg-[#FEF2F2] text-[#ef4444]'
                                                 }`}>
-                                                <span className={`w-2 h-2 rounded-full ${ho.status === 'aktif' ? 'bg-emerald-600' :
-                                                    ho.status === 'warning' ? 'bg-amber-600' :
-                                                        'bg-red-600'
+                                                <span className={`w-1.5 h-1.5 rounded-full ${ho.status === 'aktif' ? 'bg-[#10b981]' :
+                                                    ho.status === 'warning' ? 'bg-[#f59e0b]' :
+                                                        'bg-[#ef4444]'
                                                     }`}></span>
                                                 {ho.status}
                                             </span>
@@ -436,13 +436,13 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
                                                     className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-[#009b7c] hover:border-[#009b7c] hover:bg-emerald-50 rounded-xl transition-all shadow-sm group/btn"
                                                 >
-                                                    <Eye className="w-4 h-4 transition-transform gap-2" />
+                                                    <Eye className="w-4 h-4 gap-2" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteHomeowner(ho)}
                                                     className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm group/btn"
                                                 >
-                                                    <Trash2 className="w-4 h-4 transition-transform" />
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </td>
@@ -450,6 +450,77 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile View - Cards */}
+                    <div className="md:hidden divide-y divide-gray-100">
+                        {filteredHomeowners.length > 0 ? (
+                            filteredHomeowners.map((ho) => (
+                                <div key={ho.id} className="p-5 space-y-4">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
+                                                {ho.fullName.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-900 leading-tight">{ho.fullName}</p>
+                                                <p className="text-[11px] font-semibold text-[#009b7c]">ID: {ho.id}</p>
+                                            </div>
+                                        </div>
+                                        <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 ${ho.status === 'aktif' ? 'bg-[#EAFDF5] text-[#10b981]' : ho.status === 'warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' : 'bg-[#FEF2F2] text-[#ef4444]'}`}>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                            {ho.status}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-2 text-xs">
+                                        <div className="flex flex-col">
+                                            <span className="text-gray-500 font-medium mb-0.5">Email & Kontak</span>
+                                            <span className="font-semibold text-gray-900 truncate">{ho.email}</span>
+                                            <span className="font-semibold text-gray-900 mt-0.5">{ho.phone}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 text-xs border-y border-gray-50 py-3">
+                                        <div>
+                                            <span className="text-gray-500 font-medium block mb-1">Hardware</span>
+                                            <div className="flex flex-col gap-1.5 items-start">
+                                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold border border-emerald-100">{ho.totalBieonDevices} Hub</span>
+                                                <span className="px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[10px] font-bold border border-purple-100">{ho.totalSmartDevices} Node</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 font-medium block mb-1">Teknisi</span>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                                                    <UserCog className="w-3 h-3 text-gray-500" />
+                                                </div>
+                                                <span className="font-semibold text-gray-900 truncate">{ho.assignedTechnician}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                        <button
+                                            onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
+                                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-[#009b7c] hover:border-[#009b7c] hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                                        >
+                                            <Eye className="w-4 h-4" /> Lihat Detail
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteHomeowner(ho)}
+                                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-xl text-xs font-bold transition-all shadow-sm"
+                                        >
+                                            <Trash2 className="w-4 h-4" /> Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="px-6 py-12 text-center text-gray-500 text-sm font-medium">
+                                Tidak ada data yang ditemukan.
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -538,14 +609,14 @@ export function ManajemenAkunPage({ onNavigate }) {
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[700] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
                     <div className="bg-white rounded-[2rem] shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
                         {/* Header */}
-                        <div className="px-8 py-6 bg-[#009b7c] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                            <div className="flex items-center gap-5">
-                                <div className="w-16 h-16 bg-white/20 rounded-[1.25rem] flex items-center justify-center backdrop-blur-md shadow-inner">
-                                    <UserCog className="w-8 h-8 text-white" />
+                        <div className="px-6 md:px-8 py-6 bg-[#009b7c] flex items-start sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 sm:gap-5">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center backdrop-blur-md shadow-inner shrink-0">
+                                    <UserCog className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                                 </div>
-                                <div className="text-white">
-                                    <h2 className="text-2xl font-bold tracking-tight">{selectedHomeowner.fullName}</h2>
-                                    <p className="text-white/80 text-sm font-medium mt-1">ID: {selectedHomeowner.id} • {selectedHomeowner.email}</p>
+                                <div className="text-white pr-2">
+                                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight">{selectedHomeowner.fullName}</h2>
+                                    <p className="text-white/80 text-[11px] sm:text-sm font-medium mt-1 leading-snug">ID: {selectedHomeowner.id} • <br className="sm:hidden" />{selectedHomeowner.email}</p>
                                 </div>
                             </div>
                             <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all group shrink-0">
@@ -789,8 +860,8 @@ export function ManajemenAkunPage({ onNavigate }) {
             {/* Custom Delete Modal */}
             {isDeleteModalOpen && selectedHomeowner && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full flex flex-col overflow-hidden border border-white/20">
-                        <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
+                        <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Trash2 className="w-6 h-6" /> Hapus Pelanggan
                             </h2>
@@ -798,7 +869,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="p-8 space-y-6">
+                        <div className="p-8 space-y-6 flex-1 overflow-y-auto">
                             <div className="bg-red-50/50 p-5 rounded-2xl">
                                 <p className="text-sm font-medium text-gray-600 mb-2">Anda akan menghapus pelanggan:</p>
                                 <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedHomeowner.fullName}</h3>
@@ -833,7 +904,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </p>
                         </div>
 
-                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-between gap-4">
+                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-between gap-4 shrink-0">
                             <button
                                 onClick={() => setIsDeleteModalOpen(false)}
                                 className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
@@ -842,7 +913,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </button>
                             <button
                                 onClick={confirmDeleteHomeowner}
-                                className="flex-1 py-3 bg-[#e47377] text-white rounded-2xl text-sm font-bold hover:bg-[#d55b5f] transition-all shadow-lg shadow-red-100"
+                                disabled={!deleteReason.trim()}
+                                className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all shadow-sm ${!deleteReason.trim() ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#dc2626] text-white hover:bg-red-700 shadow-lg shadow-red-200'}`}
                             >
                                 Ya, Hapus
                             </button>

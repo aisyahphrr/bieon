@@ -43,7 +43,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-gray-900">
+    <div className="flex min-h-screen bg-[#F8FAFC] font-sans text-gray-900 overflow-x-hidden">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
@@ -115,21 +115,21 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex-1 min-w-0 flex flex-col transition-all duration-300 bg-[#F8FAFC] w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col transition-all duration-300 bg-[#F8FAFC] w-full max-w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
         {/* Top Header - Premium Green Style */}
         <header className="h-[72px] bg-[#009b7c] text-white border-b border-white/10 sticky top-0 z-40 flex items-center shadow-md shadow-emerald-900/10 backdrop-blur-md">
-          <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            <div className="flex items-center gap-3 md:gap-4">
+          <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 hover:bg-white/10 rounded-xl transition-all text-white/90"
+                className="lg:hidden p-2 -ml-2 hover:bg-white/10 rounded-xl transition-all text-white/90 shrink-0"
               >
                 <Menu className="w-6 h-6" />
               </button>
-              <h1 className="text-lg md:text-xl font-bold tracking-tight truncate max-w-[200px] sm:max-w-xs">{title}</h1>
+              <h1 className="text-lg md:text-xl font-bold tracking-tight truncate" title={title}>{title}</h1>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-5">
+            <div className="flex items-center gap-3 sm:gap-5 shrink-0">
               <div className="relative z-50">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -214,16 +214,16 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
               <div className="relative z-50">
                 <button
                   onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                  className="flex items-center gap-3 bg-white/10 hover:bg-white/20 p-1.5 pr-4 rounded-2xl transition-all border border-white/5"
+                  className="flex items-center gap-2 sm:gap-3 bg-white/10 hover:bg-white/20 p-1.5 pr-3 sm:pr-4 rounded-2xl transition-all border border-white/5"
                 >
-                  <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner">
+                  <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner shrink-0">
                     <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left hidden md:block">
                     <div className="text-sm font-bold text-white leading-none mb-1">Hi, Admin!</div>
                     <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest leading-none">Super Admin</div>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${showRoleDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-white/50 transition-transform shrink-0 ${showRoleDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showRoleDropdown && (
