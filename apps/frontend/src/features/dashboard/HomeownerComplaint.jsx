@@ -979,8 +979,8 @@ export function HomeownerComplaint({ onNavigate }) {
             />            {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {ratingTargetId && (
-                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
-                    <div className="bg-[#489C74] rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-500 overflow-visible mt-12 sm:mt-16 border border-white/10">
+                <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 pb-12 overflow-y-auto animate-in fade-in duration-300">
+                    <div className="bg-[#489C74] rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-500 max-h-[90vh] flex flex-col border border-white/10">
                         {/* Close Button */}
                         <button 
                             onClick={() => setRatingTargetId(null)} 
@@ -990,27 +990,27 @@ export function HomeownerComplaint({ onNavigate }) {
                         </button>
                         
                         {/* Emoji Display Header Overlapping - Simplified to just the emoji as requested */}
-                        <div className="absolute -top-12 sm:-top-16 left-1/2 -translate-x-1/2 flex items-center justify-center">
-                            <span className="text-7xl sm:text-8xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] animate-bounce-slow">😍</span>
+                        <div className="absolute -top-10 sm:-top-14 left-1/2 -translate-x-1/2 flex items-center justify-center">
+                            <span className="text-6xl sm:text-7xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] animate-bounce-slow">😍</span>
                         </div>
 
-                        <div className="pt-14 sm:pt-20">
-                            <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 tracking-tight leading-tight">Konfirmasi & Beri Penilaian</h2>
-                            <p className="text-white/90 text-sm sm:text-[15px] mb-6 sm:mb-8 leading-relaxed font-medium px-1 sm:px-2">
+                        <div className="pt-8 sm:pt-14 overflow-y-auto custom-scrollbar pr-2">
+                            <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 tracking-tight leading-tight">Konfirmasi & Beri Penilaian</h2>
+                            <p className="text-white/90 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed font-medium px-1 sm:px-2">
                                 Bagaimana hasil perbaikan dari teknisi kami? Penilaian Anda sangat membantu kami dalam menjaga kualitas layanan PT Matra.
                             </p>
 
-                            <div className="flex justify-center gap-1.5 sm:gap-2 mb-6 sm:mb-8">
+                            <div className="flex justify-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <button
                                         key={star}
                                         onMouseEnter={() => setHoverStars(star)}
                                         onMouseLeave={() => setHoverStars(0)}
                                         onClick={() => setRatingStars(star)}
-                                        className="focus:outline-none transition-transform hover:scale-125 duration-300"
+                                        className="focus:outline-none transition-transform hover:scale-110 duration-300"
                                     >
                                         <Star
-                                            className={`w-10 h-10 sm:w-12 sm:h-12 ${(hoverStars || ratingStars) >= star
+                                            className={`w-8 h-8 sm:w-10 sm:h-10 ${(hoverStars || ratingStars) >= star
                                                     ? "fill-[#FCD34D] text-[#FCD34D]"
                                                     : "fill-white/30 text-white/30"
                                                 } drop-shadow-md`}
@@ -1019,17 +1019,17 @@ export function HomeownerComplaint({ onNavigate }) {
                                 ))}
                             </div>
 
-                            <p className="text-white/80 text-xs sm:text-sm mb-5 sm:mb-6 leading-relaxed px-2 sm:px-4 italic">
+                            <p className="text-white/80 text-[10px] sm:text-xs mb-4 sm:mb-5 leading-relaxed px-2 sm:px-4 italic">
                                 "Penilaian Anda mencakup keseluruhan dari kecepatan respons, kecepatan perbaikan, komunikasi dan keramahan teknisi kami."
                             </p>
 
-                            <div className="text-left mb-6 sm:mb-8">
-                                <label className="block text-white text-sm sm:text-base font-medium mb-2 sm:mb-3 ml-1">Tuliskan Ulasan Anda</label>
+                            <div className="text-left mb-4 sm:mb-6">
+                                <label className="block text-white text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ml-1">Tuliskan Ulasan Anda</label>
                                 <textarea
                                     value={ratingReview}
                                     onChange={(e) => setRatingReview(e.target.value)}
                                     placeholder="Contoh: Teknisi datang tepat waktu, masalah kipas exhaust sudah beres dan berfungsi normal."
-                                    className="w-full bg-transparent border border-white/40 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-white placeholder-white/60 focus:outline-none focus:border-white resize-none h-24 sm:h-28 text-xs sm:text-sm transition-all"
+                                    className="w-full bg-transparent border border-white/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white placeholder-white/60 focus:outline-none focus:border-white resize-none h-20 sm:h-24 text-[11px] sm:text-xs transition-all"
                                 />
                             </div>
 

@@ -444,6 +444,15 @@ export default function AdminHistory({ onNavigate }) {
                 .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:decrement:hover { background-color: #e2e8f0; }
                 .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='2,2 8,5 2,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
                 .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment:hover { background-color: #e2e8f0; }
+
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .no-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+                
                 `}
             </style>
             <div className="space-y-6">
@@ -588,7 +597,7 @@ export default function AdminHistory({ onNavigate }) {
                     <div className="space-y-6">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                             {/* Tabs - SA Premium Style (2 Rows on Mobile) */}
-                            <div className="grid grid-cols-3 lg:flex items-center p-1.5 bg-gray-100/80 rounded-2xl w-full lg:w-fit gap-1 shadow-inner">
+                            <div className="grid grid-cols-2 lg:flex items-center p-1.5 bg-gray-100/80 rounded-2xl w-full lg:w-fit gap-1 shadow-inner">
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
@@ -610,7 +619,7 @@ export default function AdminHistory({ onNavigate }) {
 
                             {/* Sub-filters and Search */}
                             <div className="flex items-center gap-3 w-full lg:w-auto">
-                                <div className="relative flex-1 lg:w-80">
+                                <div className="relative flex-1 lg:w-40 xl:w-48">
                                     <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input
                                         type="text"
@@ -621,7 +630,7 @@ export default function AdminHistory({ onNavigate }) {
                                     />
                                 </div>
                                 <div className="relative">
-                                    <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-medium ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}>
+                                    <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center gap-2 px-3 md:px-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-medium ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}>
                                         <Filter className="w-4 h-4" />
                                         {selectedRoomFilter || (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Perangkat' : 'Ruangan')}
                                         <ChevronDown className="w-4 h-4" />

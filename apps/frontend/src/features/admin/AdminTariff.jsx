@@ -124,37 +124,7 @@ export default function AdminTariff({ onNavigate }) {
         setDragStartX(null);
     };
 
-    // --- TABLE SCROLL PROGRESS HANDLERS ---
-    const tableContainerRef = useRef(null);
-    const [tableScrollProgress, setTableScrollProgress] = useState(0);
 
-    const handleTableScroll = () => {
-        if (!tableContainerRef.current) return;
-        const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
-        const maxScroll = scrollWidth - clientWidth;
-        if (maxScroll > 0) {
-            setTableScrollProgress((scrollLeft / maxScroll) * 100);
-        } else {
-            setTableScrollProgress(0);
-        }
-    };
-
-    const handleTableRangeChange = (e) => {
-        const val = e.target.value;
-        setTableScrollProgress(val);
-        if (tableContainerRef.current) {
-            const { scrollWidth, clientWidth } = tableContainerRef.current;
-            const maxScroll = scrollWidth - clientWidth;
-            tableContainerRef.current.scrollLeft = (val / 100) * maxScroll;
-        }
-    };
-
-    const scrollTable = (dir) => {
-        if (tableContainerRef.current) {
-            const amount = dir === 'left' ? -300 : 300;
-            tableContainerRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-        }
-    };
 
     // --- Form States ---
     const [formGolongan, setFormGolongan] = useState('');
@@ -797,9 +767,7 @@ export default function AdminTariff({ onNavigate }) {
                         </div>
 
                         <div 
-                            className="overflow-x-auto custom-scrollbar hide-scrollbar-on-mobile scroll-smooth"
-                            ref={tableContainerRef}
-                            onScroll={handleTableScroll}
+                            className="overflow-x-auto custom-scrollbar-x scroll-smooth pb-4 px-4"
                         >
                             <table className="w-full text-left min-w-[800px]">
                                 <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
@@ -865,38 +833,6 @@ export default function AdminTariff({ onNavigate }) {
                             </table>
                         </div>
 
-                        {/* Indikator Scroll Tabel Interaktif (Mobile Only) */}
-                        <div className="md:hidden bg-white px-2 py-1.5 flex items-center justify-between w-full border-t border-gray-100">
-                            <button 
-                                onClick={() => scrollTable('left')}
-                                className="p-1.5 hover:bg-emerald-50 rounded-[1rem] active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
-                                aria-label="Scroll Kiri"
-                            >
-                                <ChevronLeft className="w-5 h-5 font-bold" strokeWidth={3} />
-                            </button>
-
-                            <div className="flex-1 px-1.5 relative flex items-center">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={tableScrollProgress}
-                                    onChange={handleTableRangeChange}
-                                    className="w-full h-[6px] bg-gray-100 rounded-full appearance-none cursor-grab active:cursor-grabbing focus:outline-none"
-                                    style={{
-                                        background: `linear-gradient(to right, #009B7C ${tableScrollProgress}%, #F3F4F6 ${tableScrollProgress}%)`
-                                    }}
-                                />
-                            </div>
-
-                            <button 
-                                onClick={() => scrollTable('right')}
-                                className="p-1.5 hover:bg-emerald-50 rounded-[1rem] active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
-                                aria-label="Scroll Kanan"
-                            >
-                                <ChevronRight className="w-5 h-5 font-bold" strokeWidth={3} />
-                            </button>
-                        </div>
                     </div>
 
                 </div>
@@ -912,9 +848,32 @@ export default function AdminTariff({ onNavigate }) {
                 .modal-custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .modal-custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 999px; }
                 .modal-custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
-                .custom-scrollbar::-webkit-scrollbar { height: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 999px; }
+                
+                .custom-scrollbar-x::-webkit-scrollbar { height: 16px; }
+                .custom-scrollbar-x::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; border: 3px solid #f1f5f9; }
+                .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:single-button { 
+                    background-color: #f8fafc; 
+                    display: block; 
+                    border-radius: 6px; 
+                    width: 32px;
+                    height: 16px;
+                }
+                .custom-scrollbar-x::-webkit-scrollbar-button:horizontal:decrement { 
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='16 19 9 12 16 5'%3E%3C/polyline%3E%3C/svg%3E");
+                    background-size: 10px 10px;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                }
+                .custom-scrollbar-x::-webkit-scrollbar-button:horizontal:decrement:hover { background-color: #f1f5f9; }
+                .custom-scrollbar-x::-webkit-scrollbar-button:horizontal:increment { 
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='8 19 15 12 8 5'%3E%3C/polyline%3E%3C/svg%3E");
+                    background-size: 10px 10px;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                }
+                .custom-scrollbar-x::-webkit-scrollbar-button:horizontal:increment:hover { background-color: #f1f5f9; }
 
                 @media (max-width: 768px) {
                     .hide-scrollbar-on-mobile::-webkit-scrollbar {
@@ -924,27 +883,6 @@ export default function AdminTariff({ onNavigate }) {
                         -ms-overflow-style: none;
                         scrollbar-width: none;
                     }
-                }
-                
-                input[type=range]::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 24px;
-                    height: 10px;
-                    background: #009B7C;
-                    border-radius: 999px;
-                    cursor: pointer;
-                    border: 1px solid #008268;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                }
-                input[type=range]::-moz-range-thumb {
-                    width: 24px;
-                    height: 10px;
-                    background: #009B7C;
-                    border-radius: 999px;
-                    cursor: pointer;
-                    border: 1px solid #008268;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
                 }
             `}</style>
             
