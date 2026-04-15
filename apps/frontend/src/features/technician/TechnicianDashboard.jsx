@@ -20,7 +20,9 @@ import {
   Package,
   Activity,
   CheckCircle2,
-  FileDown
+  FileDown,
+  Radio,
+  ShieldCheck
 } from 'lucide-react';
 import {
   BarChart,
@@ -363,6 +365,8 @@ export function TechnicianDashboard({ onNavigate }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
   const [toast, setToast] = useState(null);
+  const [inputToken, setInputToken] = useState("");
+  const [tokenError, setTokenError] = useState("");
 
   const triggerToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -381,7 +385,7 @@ export function TechnicianDashboard({ onNavigate }) {
       case 'pengaduan':
         return <PengaduanKlienPage />;
       case 'konfigurasi':
-        return <KonfigurasiPerangkatPage clients={mockClients} />;
+        return <KonfigurasiPerangkatPage clients={mockClients} onNavigate={onNavigate} triggerToast={triggerToast} />;
       case 'riwayat':
         return <RiwayatPerbaikanPage />;
       case 'profile':

@@ -1,278 +1,153 @@
 import React, { useState } from 'react';
-import { Info, Save, X, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Radio, AlertCircle, Info, ChevronRight } from 'lucide-react';
 
-export function KonfigurasiPerangkatPage({ clients = [] }) {
-  const [formData, setFormData] = useState({
-    pelangganId: '',
-    idBieon: '',
-    hubNode: '',
-    namaDevice: '',
-    tipeDevice: '',
-    lokasiDevice: '',
-    ruangan: ''
-  });
+export function KonfigurasiPerangkatPage({ onNavigate, triggerToast }) {
+  const [inputToken, setInputToken] = useState("");
+  const [tokenError, setTokenError] = useState("");
 
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-
-  // Handle form changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear err on type
-    if (errorMessage) setErrorMessage('');
-  };
-
-  const handleReset = () => {
-    setFormData({
-      pelangganId: '',
-      idBieon: '',
-      hubNode: '',
-      namaDevice: '',
-      tipeDevice: '',
-      lokasiDevice: '',
-      ruangan: ''
-    });
-    setErrorMessage('');
-  };
-
-  const handleSimpan = (e) => {
+  const handleVerifyToken = (e) => {
     e.preventDefault();
-    
-    // Basic validation check
-    const requiredFields = Object.values(formData);
-    if (requiredFields.some(field => field.trim() === '')) {
-      setErrorMessage('Mohon lengkapi seluruh kolom yang bertanda bintang (*).');
+    if (!inputToken) {
+      setTokenError("Silakan masukkan kode akses.");
       return;
     }
 
-    // Success logic
-    setShowSuccessModal(true);
-  };
-
-  const closeSuccessAndReset = () => {
-    setShowSuccessModal(false);
-    handleReset();
+    const activeToken = localStorage.getItem('bieon_active_token');
+    
+    // For demo/prototype purposes, we verify against localStorage
+    if (inputToken === activeToken && activeToken !== null) {
+      localStorage.setItem('bieon_tech_access', 'true');
+      localStorage.removeItem('bieon_active_token'); // One-time use
+      
+      if (triggerToast) {
+        triggerToast("Akses Diterima! Mengalihkan ke sistem Homeowner...");
+      }
+      
+      setTimeout(() => {
+        if (onNavigate) {
+          onNavigate('kendali');
+        }
+      }, 1500);
+    } else {
+      setTokenError("Token tidak valid atau sudah kedaluwarsa. Mohon minta token baru dari homeowner.");
+      if (triggerToast) {
+        triggerToast("Gagal memproses token!", "error");
+      }
+    }
   };
 
   return (
-    <div className="py-8 w-full max-w-5xl mx-auto">
+    <div className="py-8 w-full max-w-4xl mx-auto px-4">
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Konfigurasi Perangkat</h1>
-        <p className="text-gray-500 mt-1">Tambah atau konfigurasi device untuk pelanggan</p>
+      <div className="mb-8 text-center sm:text-left">
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Konfigurasi Perangkat</h1>
+        <p className="text-gray-500 mt-2 font-medium">Masuk ke sistem Homeowner untuk pendaftaran perangkat baru</p>
       </div>
 
-      {/* Info Alert Box */}
-      <div className="bg-[#FFFDF4] border border-[#FBE6A2] rounded-xl p-5 flex items-start gap-3 mb-8 shadow-sm">
-        <Info className="w-6 h-6 text-orange-500 flex-shrink-0" />
+      {/* Info Alert Box - Premium Styled */}
+      <div className="bg-gradient-to-r from-[#FFFDF4] to-[#FFF9E6] border border-[#FBE6A2] rounded-3xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-10 shadow-sm">
+        <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center shrink-0">
+          <Info className="w-6 h-6 text-orange-600" />
+        </div>
         <div>
-          <h3 className="font-bold text-gray-800 text-sm">Akses Teknisi</h3>
-          <p className="text-gray-600 text-sm mt-1 leading-relaxed">
-            Teknisi hanya memiliki akses konfigurasi perangkat tanpa dapat mengontrol perangkat secara langsung. Semua perubahan akan tercatat dalam sistem untuk keperluan audit.
+          <h3 className="font-bold text-gray-800 text-base mb-1">Penting: Akses Teknisi Terbatas</h3>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            Sesuai kebijakan keamanan BIEON, teknisi memerlukan **Token Akses** dari Homeowner untuk masuk. 
+            Dalam mode ini, Anda **HANYA** diizinkan untuk menambahkan perangkat baru tanpa hak akses konfigurasi mendalam atau kontrol operasional.
           </p>
         </div>
       </div>
 
-      {/* Main Form Card */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        {/* Form Header */}
-        <div className="bg-[#009270] p-6 text-white min-h-[90px] flex flex-col justify-center">
-          <h2 className="text-xl font-bold">Form Konfigurasi Device</h2>
-          <p className="text-emerald-100 text-sm mt-1">Lengkapi semua informasi device yang akan dikonfigurasi</p>
-        </div>
-
-        {/* Form Body */}
-        <div className="p-8">
-          {errorMessage && (
-            <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm font-semibold rounded-lg border border-red-100">
-              {errorMessage}
+      {/* Token Verification Portal */}
+      <div className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden relative group">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#009270] via-emerald-400 to-[#009270] bg-[length:200%_auto] animate-gradient-x"></div>
+        
+        <div className="p-8 sm:p-12">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mb-10 border border-emerald-100/50 shadow-inner group-hover:scale-110 transition-transform duration-500">
+              <ShieldCheck className="w-12 h-12 text-emerald-600" />
             </div>
-          )}
 
-          <form onSubmit={handleSimpan}>
-            {/* Pilih Pelanggan - Full Width */}
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-gray-800 mb-2">
-                Pilih Pelanggan <span className="text-red-500">*</span>
-              </label>
-              <select 
-                name="pelangganId"
-                value={formData.pelangganId}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700 bg-white"
-              >
-                <option value="" disabled>Pilih Pelanggan...</option>
-                {clients && clients.map(client => (
-                  <option key={client.id} value={client.id}>{client.nama} - {client.id}</option>
-                ))}
-                {(!clients || clients.length === 0) && (
-                  <>
-                    <option value="dummy-1">Aisyah Putri - C001</option>
-                    <option value="dummy-2">Budi Santoso - C002</option>
-                    <option value="dummy-3">Citra Lestari - C003</option>
-                  </>
+            <form onSubmit={handleVerifyToken} className="w-full max-w-md space-y-8">
+              <div className="space-y-4">
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2rem]">Kode Akses Homeowner</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="XXXXXX"
+                    value={inputToken}
+                    onChange={(e) => {
+                      setInputToken(e.target.value.toUpperCase());
+                      setTokenError("");
+                    }}
+                    className={`w-full text-center text-5xl font-black tracking-[1rem] py-8 border-3 rounded-[2rem] focus:outline-none transition-all duration-300 ${
+                      tokenError 
+                        ? 'border-red-200 bg-red-50 text-red-600 shake' 
+                        : 'border-gray-100 bg-gray-50/50 text-emerald-700 focus:border-emerald-500 focus:bg-white focus:shadow-xl'
+                    }`}
+                  />
+                  {inputToken && (
+                    <div className="absolute top-1/2 -translate-y-1/2 right-6">
+                      <Radio className="w-6 h-6 text-emerald-500 animate-pulse" />
+                    </div>
+                  )}
+                </div>
+                {tokenError && (
+                  <div className="flex items-center justify-center gap-2 text-red-500 animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <p className="text-sm font-bold">{tokenError}</p>
+                  </div>
                 )}
-              </select>
-            </div>
-
-            {/* Grid 2 Columns for details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-              
-              {/* ID BIEON */}
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-2">
-                  ID BIEON <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  type="text"
-                  name="idBieon"
-                  value={formData.idBieon}
-                  onChange={handleChange}
-                  placeholder="Contoh: BIEON-001"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700"
-                />
-                <p className="text-[11px] text-gray-400 mt-1.5 ml-1">Format: BIEON-XXX</p>
               </div>
 
-              {/* Hub Node */}
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-2">
-                  Hub Node <span className="text-red-500">*</span>
-                </label>
-                <select 
-                  name="hubNode"
-                  value={formData.hubNode}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700 bg-white"
-                >
-                  <option value="" disabled>Pilih hub node...</option>
-                  <option value="hub-utama">Hub Utama (Living Room)</option>
-                  <option value="hub-kamar">Hub Kamar Utama</option>
-                  <option value="hub-dapur">Hub Dapur</option>
-                </select>
-              </div>
-
-              {/* Nama Device */}
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-2">
-                  Nama Device <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  type="text"
-                  name="namaDevice"
-                  value={formData.namaDevice}
-                  onChange={handleChange}
-                  placeholder="Contoh: AC Kamar Tidur"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700"
-                />
-              </div>
-
-              {/* Tipe Device */}
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-2">
-                  Tipe Device <span className="text-red-500">*</span>
-                </label>
-                <select 
-                  name="tipeDevice"
-                  value={formData.tipeDevice}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700 bg-white"
-                >
-                  <option value="" disabled>Pilih tipe device...</option>
-                  <option value="ac">Air Conditioner (AC)</option>
-                  <option value="lamp">Smart Lamp</option>
-                  <option value="cctv">IP Camera / CCTV</option>
-                  <option value="door">Smart Door Lock</option>
-                  <option value="sensor">Motion Sensor</option>
-                </select>
-              </div>
-
-              {/* Lokasi Device */}
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-2">
-                  Lokasi Device <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  type="text"
-                  name="lokasiDevice"
-                  value={formData.lokasiDevice}
-                  onChange={handleChange}
-                  placeholder="Contoh: Dinding sebelah kanan pintu"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700"
-                />
-                <p className="text-[11px] text-gray-400 mt-1.5 ml-1">Deskripsi posisi fisik device</p>
-              </div>
-
-              {/* Ruangan */}
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-2">
-                  Ruangan <span className="text-red-500">*</span>
-                </label>
-                <select 
-                  name="ruangan"
-                  value={formData.ruangan}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-700 bg-white"
-                >
-                  <option value="" disabled>Pilih ruangan...</option>
-                  <option value="ruangTamu">Ruang Tamu</option>
-                  <option value="kamarUtama">Kamar Utama</option>
-                  <option value="dapur">Dapur</option>
-                  <option value="garasi">Garasi</option>
-                  <option value="taman">Taman</option>
-                </select>
-              </div>
-
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-gray-100 my-8"></div>
-
-            {/* Form Actions */}
-            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 w-full mt-2">
-              <button 
-                type="button" 
-                onClick={handleReset}
-                className="w-full sm:flex-1 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl transition-colors"
-              >
-                Reset Form
-              </button>
-              <button 
+              <button
                 type="submit"
-                className="w-full sm:flex-1 py-3.5 px-4 bg-[#009270] hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex justify-center items-center gap-2 shadow-md shadow-emerald-600/20"
+                className="group relative w-full py-6 bg-gray-900 overflow-hidden rounded-[1.5rem] font-bold text-white transition-all hover:bg-black active:scale-[0.98] shadow-2xl"
               >
-                <Save className="w-5 h-5 shrink-0" />
-                <span className="truncate">Simpan Konfigurasi</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative flex items-center justify-center gap-3 text-lg">
+                  <span>Verifikasi & Ambil Akses</span>
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </div>
               </button>
+            </form>
+
+            <div className="mt-12 flex items-center gap-6 py-4 px-6 bg-gray-50 rounded-2xl border border-gray-100">
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-gray-500 text-left font-medium max-w-[200px]">
+                Keamanan enkripsi berlapis BIEON aktif memantau sesi ini.
+              </p>
             </div>
-          </form>
+          </div>
         </div>
       </div>
 
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Sukses!</h3>
-            <p className="text-gray-600 mb-8">
-              Perangkat berhasil disimpan dan telah ditambahkan ke sistem Homeowner yang bersangkutan.
-            </p>
-            <button
-              onClick={closeSuccessAndReset}
-              className="w-full py-3 bg-[#009270] hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors"
-            >
-              Tutup & Kembali
-            </button>
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        @keyframes gradient-x {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-x {
+          animation: gradient-x 3s ease infinite;
+        }
+        .shake {
+          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -28,7 +28,7 @@ const CATEGORY_LABELS = {
     'remote': 'Remote',
 };
 
-export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
+export function EditHubNodePage({ device, bieonSystem, onSave, onCancel, isTechnicianMode = false }) {
     // ==================== STATE MANAGEMENT ====================
     const [formData, setFormData] = useState({
         name: device.name,
@@ -37,6 +37,7 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
         category: device.category,
         deviceType: device.deviceType,
         notes: device.notes,
+        controlMode: device.controlMode || (device.category === 'sensor' ? 'sensor' : 'schedule'),
     });
 
     const [showConfirmation, setShowConfirmation] = useState(false);
@@ -97,6 +98,7 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
             category: formData.category,
             deviceType: formData.deviceType,
             notes: formData.notes,
+            controlMode: formData.controlMode,
             lastActivity: new Date().toISOString(),
         };
 
@@ -130,14 +132,22 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
                 </button>
 
                 <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl">
-                            <Settings className="w-6 h-6 text-white" />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl">
+                                <Settings className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">Setting Hub Node</h1>
+                                <p className="text-gray-600">Edit dan konfigurasi ulang device Anda</p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Setting Hub Node</h1>
-                            <p className="text-gray-600">Edit dan konfigurasi ulang device Anda</p>
-                        </div>
+                        {isTechnicianMode && (
+                            <div className="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2">
+                                <Radio className="w-4 h-4 text-amber-600 animate-pulse" />
+                                <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Mode Teknisi (Limited Access)</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -190,8 +200,9 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
                                 id="device-name"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                disabled={isTechnicianMode}
                                 placeholder="Contoh: AC Ruang Tamu"
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className={`w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 ${isTechnicianMode ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : ''}`}
                             />
                         </div>
 
@@ -201,7 +212,8 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
                             <select 
                                 value={formData.hubId} 
                                 onChange={(e) => setFormData({ ...formData, hubId: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                disabled={isTechnicianMode}
+                                className={`w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 ${isTechnicianMode ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white'}`}
                             >
                                 <option value="">Pilih hub...</option>
                                 {bieonSystem.hubs.map((hub) => (
@@ -224,7 +236,8 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
                             <select 
                                 value={formData.location} 
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                disabled={isTechnicianMode}
+                                className={`w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 ${isTechnicianMode ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white'}`}
                             >
                                 <option value="">Pilih ruangan...</option>
                                 {['R1', 'R2', 'R3', 'R4'].map((room) => (
@@ -239,7 +252,8 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
                             <select 
                                 value={formData.category} 
                                 onChange={handleCategoryChange}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                disabled={isTechnicianMode}
+                                className={`w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 ${isTechnicianMode ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white'}`}
                             >
                                 <option value="">Pilih kategori...</option>
                                 {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -260,8 +274,8 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
                             <select
                                 value={formData.deviceType}
                                 onChange={(e) => setFormData({ ...formData, deviceType: e.target.value })}
-                                disabled={!formData.category}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100"
+                                disabled={!formData.category || isTechnicianMode}
+                                className={`w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 ${(!formData.category || isTechnicianMode) ? 'bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200' : 'bg-white'}`}
                             >
                                 <option value="">{formData.category ? "Pilih tipe device..." : "Pilih kategori terlebih dahulu"}</option>
                                 {formData.category && CATEGORY_DEVICES[formData.category]?.map((deviceType) => (
@@ -274,6 +288,38 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel }) {
                                     Tipe device berubah: {device.deviceType} → {formData.deviceType}
                                 </p>
                             )}
+                        </div>
+                        
+                        {/* Control Mode Selection - NEW SECTION */}
+                        <div className="pt-4 border-t border-gray-100">
+                            <label className="text-gray-900 font-black text-sm mb-4 block uppercase tracking-wider">Metode Kontrol Perangkat <span className="text-emerald-600">*</span></label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => setFormData({ ...formData, controlMode: 'sensor' })}
+                                    className={`p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${formData.controlMode === 'sensor' ? 'border-emerald-500 bg-emerald-50 shadow-md' : 'border-gray-100 bg-gray-50 hover:border-emerald-200'}`}
+                                >
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${formData.controlMode === 'sensor' ? 'bg-emerald-500 text-white' : 'bg-white text-gray-400'}`}>
+                                        <Radio className="w-6 h-6" />
+                                    </div>
+                                    <div className="text-left">
+                                        <h4 className={`font-bold ${formData.controlMode === 'sensor' ? 'text-emerald-900' : 'text-gray-700'}`}>Parameter Sensor</h4>
+                                        <p className="text-xs text-gray-500">Aktif berdasarkan trigger sensor</p>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => setFormData({ ...formData, controlMode: 'schedule' })}
+                                    className={`p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${formData.controlMode === 'schedule' ? 'border-purple-500 bg-purple-50 shadow-md' : 'border-gray-100 bg-gray-50 hover:border-purple-200'}`}
+                                >
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${formData.controlMode === 'schedule' ? 'bg-purple-500 text-white' : 'bg-white text-gray-400'}`}>
+                                        <Power className="w-6 h-6" />
+                                    </div>
+                                    <div className="text-left">
+                                        <h4 className={`font-bold ${formData.controlMode === 'schedule' ? 'text-purple-900' : 'text-gray-700'}`}>Jadwal Otomatis</h4>
+                                        <p className="text-xs text-gray-500">Aktif berdasarkan waktu rutin</p>
+                                    </div>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Notes */}
