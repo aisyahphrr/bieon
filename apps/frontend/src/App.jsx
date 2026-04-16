@@ -36,6 +36,14 @@ function LoadingScreen() {
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
 
+  // Enforce technician mode restriction
+  React.useEffect(() => {
+    const techAccess = localStorage.getItem('bieon_tech_access');
+    if (techAccess === 'true' && !['kendali', 'teknisi'].includes(currentPage)) {
+      setCurrentPage('kendali');
+    }
+  }, [currentPage]);
+
   return (
     <Suspense fallback={<LoadingScreen />}>
       {currentPage === 'landing' && <LandingPage onNavigate={setCurrentPage} />}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown } from 'lucide-react';
+import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown, ShieldAlert } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerProfilePopup from './components/HomeownerProfilePopup';
 
@@ -14,7 +14,27 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
   const [showNotif, setShowNotif] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [isTechnicianMode, setIsTechnicianMode] = useState(false);
   const roleDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const techAccess = localStorage.getItem('bieon_tech_access');
+    if (techAccess === 'true') {
+      setIsTechnicianMode(true);
+    }
+  }, []);
+
+  const handleExitTechnicianMode = () => {
+    localStorage.removeItem('bieon_tech_access');
+    setIsTechnicianMode(false);
+    if (onNavigate) {
+      onNavigate('teknisi');
+    }
+  };
+
+  const filteredNavItems = isTechnicianMode 
+    ? NAV_ITEMS.filter(item => item.id === 'kendali')
+    : NAV_ITEMS;
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -47,13 +67,13 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
             {/* Desktop Navigation — generated from NAV_ITEMS array */}
             <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 lg:gap-10">
-              {NAV_ITEMS.map(({ id, label }) => (
+              {filteredNavItems.map(({ id, label }) => (
                 <button
                   key={id}
                   onClick={() => onNavigate && onNavigate(id)}
                   className={`font-semibold pb-1 border-b-2 transition-all ${
                     currentPage === id
-                      ? 'text-teal-700 border-transparent cursor-default'
+                      ? 'text-teal-700 border-teal-700 cursor-default'
                       : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
                   }`}
                 >
@@ -64,25 +84,29 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
             {/* Actions (Desktop & Mobile combined) shrink-0 to prevent compression */}
             <div className="flex items-center gap-3 lg:gap-4 shrink-0">
-              {/* Pengaduan Button (Responsive Text) */}
-              <button
-                onClick={() => onNavigate && onNavigate('pengaduan')}
-                className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                title="Ajukan Pengaduan"
-              >
-                <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
-                <span className="hidden xl:block ml-2">Ajukan Pengaduan</span>
-                <span className="hidden lg:block xl:hidden ml-2">Pengaduan</span>
-              </button>
-
-              {/* Notification */}
-              <div className="relative flex">
-                <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+              {/* Pengaduan Button (Responsive Text) - Hidden in Tech Mode */}
+              {!isTechnicianMode && (
+                <button
+                  onClick={() => onNavigate && onNavigate('pengaduan')}
+                  className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                  title="Ajukan Pengaduan"
+                >
+                  <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
+                  <span className="hidden xl:block ml-2">Ajukan Pengaduan</span>
+                  <span className="hidden lg:block xl:hidden ml-2">Pengaduan</span>
                 </button>
-                <NotificationPopup isOpen={showNotif} onClose={() => setShowNotif(false)} role="homeowner" />
-              </div>
+              )}
+
+              {/* Notification - Hidden in Tech Mode */}
+              {!isTechnicianMode && (
+                <div className="relative flex">
+                  <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <Bell className="w-5 h-5 text-gray-600" />
+                    <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  </button>
+                  <NotificationPopup isOpen={showNotif} onClose={() => setShowNotif(false)} role="homeowner" />
+                </div>
+              )}
 
               {/* Profile Dropdown */}
               <div className="relative" ref={roleDropdownRef}>
@@ -101,16 +125,23 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
                 {showRoleDropdown && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                    <button 
-                       onClick={() => { setShowProfilePopup(true); setShowRoleDropdown(false); }} 
-                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-bold transition-colors border-b border-gray-100 pb-3 mb-1"
+                    <button
+                      disabled={isTechnicianMode}
+                      onClick={() => { setShowProfilePopup(true); setShowRoleDropdown(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm font-bold transition-colors border-b border-gray-100 pb-3 mb-1 ${
+                        isTechnicianMode ? 'text-gray-400 cursor-not-allowed opacity-50' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
                       Lihat Profil Saya
                     </button>
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
-                    <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
-                    <button onClick={() => onNavigate && onNavigate('teknisi')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
-                    <button onClick={() => onNavigate && onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
+                    {!isTechnicianMode && (
+                      <>
+                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
+                        <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
+                        <button onClick={() => onNavigate && onNavigate('teknisi')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
+                        <button onClick={() => onNavigate && onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -122,22 +153,46 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       {/* Main Content Area */}
       {/* pb-20 padding added for mobile so bottom nav doesn't cover content */}
       <main className={`flex-1 ${hideBottomNav ? '' : 'pb-20'} md:pb-0 relative`}>
+        {isTechnicianMode && (
+          <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8 mt-6">
+            <div className="bg-orange-600 rounded-2xl p-4 text-white flex items-center justify-between shadow-lg animate-pulse border-b-4 border-orange-800">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-xl">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold">MODE TEKNISI AKTIF</h3>
+                  <p className="text-xs text-orange-100 italic">Anda masuk menggunakan akses token terbatas. Hanya diizinkan menambah perangkat.</p>
+                </div>
+              </div>
+              <button
+                onClick={handleExitTechnicianMode}
+                className="px-4 py-2 bg-white text-orange-600 font-bold rounded-xl text-sm hover:bg-orange-50 transition-colors shadow-sm"
+              >
+                Keluar Sesi
+              </button>
+            </div>
+          </div>
+        )}
         {children}
       </main>
 
       {/* Profile Popup - Placed at root of layout */}
-      <HomeownerProfilePopup 
-         isOpen={showProfilePopup} 
-         onClose={() => setShowProfilePopup(false)} 
-         onNavigate={onNavigate} 
+      <HomeownerProfilePopup
+        isOpen={showProfilePopup}
+        onClose={() => setShowProfilePopup(false)}
+        onNavigate={item => {
+          if (isTechnicianMode && item !== 'kendali') return;
+          onNavigate && onNavigate(item);
+        }}
       />
 
       {/* Mobile Bottom Navigation Bar */}
       {!hideBottomNav && (
         <nav className="md:hidden fixed bottom-1 left-4 right-4 bg-white/80 backdrop-blur-md border border-gray-100 z-[60] flex justify-between items-center px-6 py-2 shadow-xl pb-safe rounded-[2rem]">
           {[
-            ...NAV_ITEMS.map(({ id, label, mobileIcon }) => ({ id, icon: mobileIcon, label })),
-            { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan' },
+            ...filteredNavItems.map(({ id, label, mobileIcon }) => ({ id, icon: mobileIcon, label })),
+            ...(!isTechnicianMode ? [{ id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan' }] : []),
           ].map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;

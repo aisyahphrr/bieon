@@ -113,6 +113,7 @@ export function DeviceControlPage({ onNavigate }) {
   const [isTechnicianMode, setIsTechnicianMode] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [generatedToken, setGeneratedToken] = useState("");
+  const [isEditingDevice, setIsEditingDevice] = useState(null);
 
   useEffect(() => {
     const techAccess = localStorage.getItem('bieon_tech_access');
@@ -132,7 +133,7 @@ export function DeviceControlPage({ onNavigate }) {
   const handleExitTechnicianMode = () => {
     localStorage.removeItem('bieon_tech_access');
     setIsTechnicianMode(false);
-    onNavigate('landing'); 
+    onNavigate('teknisi');
   };
 
   useEffect(() => {
@@ -231,18 +232,27 @@ export function DeviceControlPage({ onNavigate }) {
       alert("Mohon lengkapi nama device dan lokasi!");
       return;
     }
+
+    // Khusus sensor, langsung arahkan ke aspek yang relevan
+    if (selectedCategory === "sensor") {
+      if (selectedDeviceType === "Sensor Kualitas Air") setActiveSensorAspect("kualitasAir");
+      else if (selectedDeviceType === "Sensor Kenyamanan" || selectedDeviceType === "Humidity Sensor") setActiveSensorAspect("kenyamanan");
+      else if (selectedDeviceType === "Sensor Keamanan" || selectedDeviceType === "Motion Sensor") setActiveSensorAspect("keamanan");
+      else if (selectedDeviceType === "Door Sensor") setActiveSensorAspect("keamananPintu");
+    }
+
     setStep("configure");
   };
-
-  const handleDirectSave = () => {
+  const handleDirectSave = (forcedMode = null) => {
     if (!deviceForm.name || !deviceForm.location) {
       alert("Mohon lengkapi nama device dan lokasi!");
       return;
     }
 
     if (!currentBieon || !selectedHub) return;
-    const newDevice = {
-      id: `dev-${Date.now()}`,
+
+    // Build the device object
+    const deviceData = {
       name: deviceForm.name,
       deviceType: selectedDeviceType,
       category: selectedCategory,
@@ -250,36 +260,54 @@ export function DeviceControlPage({ onNavigate }) {
       notes: deviceForm.notes,
       hubId: selectedHub.id,
       bieonId: currentBieon.bieonId,
-      status: "OFF",
-      installedDate: new Date().toISOString(),
       lastActivity: new Date().toISOString(),
-      controlMode: selectedCategory === "sensor" ? "sensor" : "manual"
+      controlMode: forcedMode || (isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : "manual"))
     };
 
     if (selectedCategory !== "sensor") {
-      newDevice.controls = {};
+      deviceData.controls = deviceData.controls || {};
     } else {
-      newDevice.sensorData = generateMockSensorData(selectedDeviceType);
-      newDevice.sensorParams = sensorConfig; // Pakai param default
+      if (!isEditingDevice) {
+        deviceData.sensorData = generateMockSensorData(selectedDeviceType);
+      }
+      if (!isTechnicianMode) {
+        deviceData.sensorParams = sensorConfig;
+      }
     }
 
-    const updatedBieon = {
-      ...currentBieon,
-      hubs: currentBieon.hubs.map(
-        (hub) => hub.id === selectedHub.id ? { ...hub, devices: [...hub.devices, newDevice] } : hub
-      )
-    };
+    let updatedHubs;
+    if (isEditingDevice) {
+      updatedHubs = currentBieon.hubs.map((hub) => {
+        const filteredDevices = hub.devices.filter(d => d.id !== isEditingDevice);
+        if (hub.id === selectedHub.id) {
+          const originalDevice = allDevices.find(d => d.id === isEditingDevice);
+          return { ...hub, devices: [...filteredDevices, { ...originalDevice, ...deviceData }] };
+        }
+        return { ...hub, devices: filteredDevices };
+      });
+    } else {
+      const newDevice = {
+        ...deviceData,
+        id: `dev-${Date.now()}`,
+        status: "OFF",
+        installedDate: new Date().toISOString(),
+      };
+      updatedHubs = currentBieon.hubs.map((hub) =>
+        hub.id === selectedHub.id ? { ...hub, devices: [...hub.devices, newDevice] } : hub
+      );
+    }
 
+    const updatedBieon = { ...currentBieon, hubs: updatedHubs };
     setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
     setCurrentBieon(updatedBieon);
     resetForm();
     setStep("view-bieon");
-    alert("Perangkat berhasil ditambahkan untuk Mode Manual!");
+    alert(isEditingDevice ? "Perangkat berhasil diperbarui!" : "Perangkat berhasil ditambahkan!");
   };
   const handleSaveDevice = () => {
     if (!currentBieon || !selectedHub) return;
-    const newDevice = {
-      id: `dev-${Date.now()}`,
+
+    const deviceData = {
       name: deviceForm.name,
       deviceType: selectedDeviceType,
       category: selectedCategory,
@@ -287,43 +315,57 @@ export function DeviceControlPage({ onNavigate }) {
       notes: deviceForm.notes,
       hubId: selectedHub.id,
       bieonId: currentBieon.bieonId,
-      status: "OFF",
-      installedDate: (/* @__PURE__ */ new Date()).toISOString(),
-      lastActivity: (/* @__PURE__ */ new Date()).toISOString()
+      lastActivity: new Date().toISOString()
     };
 
-    // For actuators, we might have controlMode (sensor/schedule), but for pure sensors we only care about monitoring parameters.
     if (selectedCategory !== "sensor") {
-      newDevice.controlMode = configMode;
-      if (configMode === "sensor") {
-        newDevice.sensorParams = sensorConfig;
-      } else {
-        newDevice.scheduleSettings = scheduleConfig;
+      deviceData.controlMode = isTechnicianMode ? null : configMode;
+      if (!isTechnicianMode) {
+        if (configMode === "sensor") {
+          deviceData.sensorParams = sensorConfig;
+        } else {
+          deviceData.scheduleSettings = scheduleConfig;
+        }
       }
-      newDevice.controls = {};
+      deviceData.controls = deviceData.controls || {};
     } else {
-      newDevice.sensorData = generateMockSensorData(selectedDeviceType);
-      // Simpan parameter untuk threshold/limit batas layak, keamanan, dsb.
-      newDevice.sensorParams = sensorConfig;
+      if (!isEditingDevice) {
+        deviceData.sensorData = generateMockSensorData(selectedDeviceType);
+      }
+      deviceData.controlMode = isTechnicianMode ? null : "sensor";
+      if (!isTechnicianMode) {
+        deviceData.sensorParams = sensorConfig;
+      }
     }
 
-    const updatedBieon = {
-      ...currentBieon,
-      hubs: currentBieon.hubs.map(
-        (hub) => hub.id === selectedHub.id ? { ...hub, devices: [...hub.devices, newDevice] } : hub
-      )
-    };
+    let updatedHubs;
+    if (isEditingDevice) {
+      updatedHubs = currentBieon.hubs.map((hub) => {
+        const filteredDevices = hub.devices.filter(d => d.id !== isEditingDevice);
+        if (hub.id === selectedHub.id) {
+          const originalDevice = allDevices.find(d => d.id === isEditingDevice);
+          return { ...hub, devices: [...filteredDevices, { ...originalDevice, ...deviceData }] };
+        }
+        return { ...hub, devices: filteredDevices };
+      });
+    } else {
+      const newDevice = {
+        ...deviceData,
+        id: `dev-${Date.now()}`,
+        status: "OFF",
+        installedDate: new Date().toISOString(),
+      };
+      updatedHubs = currentBieon.hubs.map((hub) =>
+        hub.id === selectedHub.id ? { ...hub, devices: [...hub.devices, newDevice] } : hub
+      );
+    }
+
+    const updatedBieon = { ...currentBieon, hubs: updatedHubs };
     setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
     setCurrentBieon(updatedBieon);
     resetForm();
     setStep("view-bieon");
-
-    if (selectedCategory === "sensor") {
-      alert("Device Sensor berhasil ditambahkan dengan parameter konfigurasinya!");
-    } else {
-      const modeText = configMode === "sensor" ? "Parameter Sensor" : "Jadwal Otomatis";
-      alert(`Berhasil! Perangkat Aktuator ditambahkan dengan mode ${modeText}.`);
-    }
+    alert(isEditingDevice ? "Perangkat berhasil diperbarui!" : "Perangkat berhasil ditambahkan!");
   };
   const generateMockSensorData = (deviceType) => {
     const data = {
@@ -365,6 +407,7 @@ export function DeviceControlPage({ onNavigate }) {
     setScheduleConfig([]);
     setConfigMode("sensor");
     setActiveSensorAspect(null);
+    setIsEditingDevice(null);
   };
   const toggleDevicePower = (deviceId) => {
     const updatedSystems = bieonSystems.map((system) => ({
@@ -427,8 +470,52 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
   const handleEditDevice = (device) => {
-    setEditingDevice(device);
-    setShowEditPage(true);
+    setIsEditingDevice(device.id);
+
+    // Populate Basic Info
+    setDeviceForm({
+      name: device.name,
+      location: device.location,
+      notes: device.notes || ""
+    });
+    setSelectedCategory(device.category);
+    setSelectedDeviceType(device.deviceType);
+
+    // Find and set hub
+    const hub = currentBieon.hubs.find(h => h.id === device.hubId);
+    setSelectedHub(hub);
+
+    // Populate Config
+    if (device.category === "sensor" || device.controlMode === "sensor") {
+      setConfigMode("sensor");
+
+      // Khusus sensor saat edit, tentukan aspeknya secara otomatis
+      if (device.category === "sensor") {
+        const type = device.deviceType;
+        if (type === "Sensor Kualitas Air") setActiveSensorAspect("kualitasAir");
+        else if (type === "Sensor Kenyamanan" || type === "Humidity Sensor") setActiveSensorAspect("kenyamanan");
+        else if (type === "Sensor Keamanan" || type === "Motion Sensor") setActiveSensorAspect("keamanan");
+        else if (type === "Door Sensor") setActiveSensorAspect("keamananPintu");
+      }
+      // Untuk Actuator di mode sensor, buka aspek yang sedang aktif tapi tetap izinkan ganti aspek
+      else if (device.controlMode === "sensor" && device.sensorParams) {
+        if (device.sensorParams.temperature?.enabled || device.sensorParams.humidity?.enabled) setActiveSensorAspect("kenyamanan");
+        else if (device.sensorParams.motion?.enabled) setActiveSensorAspect("keamanan");
+        else if (device.sensorParams.door?.enabled) setActiveSensorAspect("keamananPintu");
+        else if (device.sensorParams.ph?.enabled || device.sensorParams.turbidity?.enabled || device.sensorParams.tds?.enabled) setActiveSensorAspect("kualitasAir");
+      }
+
+      if (device.sensorParams) {
+        setSensorConfig({ ...sensorConfig, ...device.sensorParams });
+      }
+    } else {
+      setConfigMode(device.controlMode || "manual");
+      if (device.scheduleSettings) {
+        setScheduleConfig([...device.scheduleSettings]);
+      }
+    }
+
+    setStep("add-device-form");
   };
   const handleSaveEditedDevice = (updatedDevice) => {
     const updatedSystems = bieonSystems.map((system) => ({
@@ -488,7 +575,11 @@ export function DeviceControlPage({ onNavigate }) {
   const getAllDevices = () => allDevices;
 
   const getFilteredDevices = () => {
-    const devices = currentBieon ? currentBieon.hubs.flatMap((hub) => hub.devices) : getAllDevices();
+    let devices = currentBieon ? currentBieon.hubs.flatMap((hub) => hub.devices) : getAllDevices();
+
+    // Urutkan berdasarkan tanggal instalasi terbaru di atas
+    devices = [...devices].sort((a, b) => new Date(b.installedDate) - new Date(a.installedDate));
+
     if (selectedRoom === "all") return devices;
     return devices.filter((device) => device.location === selectedRoom);
   };
@@ -515,25 +606,6 @@ export function DeviceControlPage({ onNavigate }) {
       hideBottomNav={isModalOpen}
     >
       <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
-        {isTechnicianMode && (
-          <div className="mb-6 bg-orange-600 rounded-2xl p-4 text-white flex items-center justify-between shadow-lg animate-pulse border-b-4 border-orange-800">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-xl">
-                <ShieldAlert className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold">MODE TEKNISI AKTIF</h3>
-                <p className="text-xs text-orange-100 italic">Anda masuk menggunakan akses token terbatas. Hanya diizinkan menambah perangkat.</p>
-              </div>
-            </div>
-            <button
-              onClick={handleExitTechnicianMode}
-              className="px-4 py-2 bg-white text-orange-600 font-bold rounded-xl text-sm hover:bg-orange-50 transition-colors shadow-sm"
-            >
-              Keluar Sesi
-            </button>
-          </div>
-        )}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6 md:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -575,8 +647,8 @@ export function DeviceControlPage({ onNavigate }) {
             Tambah BIEON Pertama
           </button>
         )}</div> : <div>{
-            /* Stats */
-          }<div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8"><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center"><Home className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">BIEON Systems</p><p className="text-2xl font-bold text-gray-900">{bieonSystems.length}</p></div></div></div><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center"><Wifi className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">Total Hubs</p><p className="text-2xl font-bold text-gray-900">{bieonSystems.reduce((sum, b) => sum + b.totalHubs, 0)}</p></div></div></div><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center"><Settings className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">Total Devices</p><p className="text-2xl font-bold text-gray-900">{getAllDevices().length}</p></div></div></div><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center"><Zap className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">Active Devices</p><p className="text-2xl font-bold text-gray-900">{getAllDevices().filter((d) => d.status === "ON").length}</p></div></div></div></div>{
+          /* Stats */
+        }<div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8"><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center"><Home className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">BIEON Systems</p><p className="text-2xl font-bold text-gray-900">{bieonSystems.length}</p></div></div></div><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center"><Wifi className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">Total Hubs</p><p className="text-2xl font-bold text-gray-900">{bieonSystems.reduce((sum, b) => sum + b.totalHubs, 0)}</p></div></div></div><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center"><Settings className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">Total Devices</p><p className="text-2xl font-bold text-gray-900">{getAllDevices().length}</p></div></div></div><div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center"><Zap className="w-6 h-6 text-white" /></div><div><p className="text-sm text-gray-600">Active Devices</p><p className="text-2xl font-bold text-gray-900">{getAllDevices().filter((d) => d.status === "ON").length}</p></div></div></div></div>{
             /* BIEON Systems List */
           }<div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
@@ -695,138 +767,144 @@ export function DeviceControlPage({ onNavigate }) {
             {/* Expanded Content */}
             {expandedDevice === device.id && (
               <div className="mt-5 pt-5 border-t border-gray-100">
-                {/* Configuration Context Section */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      Mode: <span className={`${(device.category === "sensor" || device.controlMode === "sensor") ? "text-emerald-600 bg-emerald-50" : "text-purple-600 bg-purple-50"} font-bold px-2 py-0.5 rounded capitalize`}>
-                        {(device.category === "sensor" || device.controlMode === "sensor") ? "Parameter Sensor" : "Jadwal Otomatis"}
-                      </span>
-                    </p>
-                  </div>
+                {/* Configuration Context Section - Hidden for Technicians or if no mode */}
+                {!isTechnicianMode && device.controlMode && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        Mode: <span className={`${(device.category === "sensor" || device.controlMode === "sensor") ? "text-emerald-600 bg-emerald-50" : (device.controlMode === "manual" ? "text-blue-600 bg-blue-50" : (device.controlMode ? "text-purple-600 bg-purple-50" : "text-gray-500 bg-gray-100"))} font-bold px-2 py-0.5 rounded capitalize`}>
+                          {device.controlMode === "manual" ? "Mode Manual" : (device.controlMode ? ((device.category === "sensor" || device.controlMode === "sensor") ? "Parameter Sensor" : "Jadwal Otomatis") : "-")}
+                        </span>
+                      </p>
+                    </div>
 
-                  {/* Detailed Configuration Summary */}
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-wrap gap-3">
-                    {device.category === "sensor" || device.controlMode === "sensor" ? (
-                      <>
-                        {device.sensorParams && Object.entries(device.sensorParams).filter(([_, cfg]) => cfg.enabled).length > 0 ? (
-                          Object.entries(device.sensorParams)
-                            .filter(([_, cfg]) => cfg.enabled)
-                            .map(([key, cfg], idx) => (
-                              <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
-                                {key === "temperature" && <Thermometer className="w-4 h-4 text-orange-500" />}
-                                {key === "humidity" && <Droplets className="w-4 h-4 text-blue-500" />}
-                                {key === "motion" && <Eye className="w-4 h-4 text-purple-600" />}
-                                {key === "door" && <Lock className="w-4 h-4 text-red-600" />}
-                                {["ph", "turbidity", "tds", "waterTemp"].includes(key) && <Waves className="w-4 h-4 text-cyan-600" />}
-                                <span className="text-xs font-bold text-gray-700">
-                                  {key === "temperature" ? "Suhu" :
-                                    key === "humidity" ? "Lembap" :
-                                      key === "motion" ? "Gerakan" :
-                                        key === "door" ? "Buka Pintu" :
-                                          key === "ph" ? "pH" :
-                                            key === "turbidity" ? "Kekeruhan" :
-                                              key === "tds" ? "TDS" : "Suhu Air"}:
-                                  {cfg.value !== undefined ? ` > ${cfg.value}${key === "temperature" || key === "waterTemp" ? "°C" : key === "humidity" ? "%" : ""}` : " (Aktif)"}
-                                </span>
-                              </div>
-                            ))
+                    {/* Detailed Configuration Summary */}
+                    {device.controlMode !== "manual" && (
+                      <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-wrap gap-3">
+                        {device.category === "sensor" || device.controlMode === "sensor" ? (
+                          <>
+                            {device.sensorParams && Object.entries(device.sensorParams).filter(([_, cfg]) => cfg.enabled).length > 0 ? (
+                              Object.entries(device.sensorParams)
+                                .filter(([_, cfg]) => cfg.enabled)
+                                .map(([key, cfg], idx) => (
+                                  <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                                    {key === "temperature" && <Thermometer className="w-4 h-4 text-orange-500" />}
+                                    {key === "humidity" && <Droplets className="w-4 h-4 text-blue-500" />}
+                                    {key === "motion" && <Eye className="w-4 h-4 text-purple-600" />}
+                                    {key === "door" && <Lock className="w-4 h-4 text-red-600" />}
+                                    {["ph", "turbidity", "tds", "waterTemp"].includes(key) && <Waves className="w-4 h-4 text-cyan-600" />}
+                                    <span className="text-xs font-bold text-gray-700">
+                                      {key === "temperature" ? "Suhu" :
+                                        key === "humidity" ? "Lembap" :
+                                          key === "motion" ? "Gerakan" :
+                                            key === "door" ? "Buka Pintu" :
+                                              key === "ph" ? "pH" :
+                                                key === "turbidity" ? "Kekeruhan" :
+                                                  key === "tds" ? "TDS" : "Suhu Air"}:
+                                      {cfg.value !== undefined ? ` > ${cfg.value}${key === "temperature" || key === "waterTemp" ? "°C" : key === "humidity" ? "%" : ""}` : " (Aktif)"}
+                                    </span>
+                                  </div>
+                                ))
+                            ) : (
+                              <p className="text-xs text-gray-500 italic">Belum ada sensor yang diaktifkan</p>
+                            )}
+                          </>
                         ) : (
-                          <p className="text-xs text-gray-500 italic">Belum ada sensor yang diaktifkan</p>
+                          <>
+                            {device.scheduleSettings && device.scheduleSettings.length > 0 ? (
+                              device.scheduleSettings.map((sched, idx) => (
+                                <div key={idx} className="flex flex-col gap-1 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full md:w-auto">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-purple-600" />
+                                    <span className="text-xs font-bold text-gray-700">
+                                      Jam {sched.startTime} - {sched.endTime} ({sched.action})
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    {sched.days.map((day, dIdx) => (
+                                      <span key={dIdx} className="text-[9px] bg-purple-50 text-purple-600 px-1 rounded font-medium">{day}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-xs text-gray-500 italic">Belum ada jadwal yang diatur</p>
+                            )}
+                          </>
                         )}
-                      </>
-                    ) : (
-                      <>
-                        {device.scheduleSettings && device.scheduleSettings.length > 0 ? (
-                          device.scheduleSettings.map((sched, idx) => (
-                            <div key={idx} className="flex flex-col gap-1 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full md:w-auto">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-purple-600" />
-                                <span className="text-xs font-bold text-gray-700">
-                                  Jam {sched.startTime} - {sched.endTime} ({sched.action})
-                                </span>
-                              </div>
-                              <div className="flex gap-1">
-                                {sched.days.map((day, dIdx) => (
-                                  <span key={dIdx} className="text-[9px] bg-purple-50 text-purple-600 px-1 rounded font-medium">{day}</span>
-                                ))}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-xs text-gray-500 italic">Belum ada jadwal yang diatur</p>
-                        )}
-                      </>
+                      </div>
                     )}
                   </div>
-                </div>
+                )}
 
-                {/* Quick Controls Section */}
-                <div className="mb-6">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{device.category === "sensor" ? "Status Monitoring" : "Kontrol Manual"}</p>
-                  <div className="flex flex-wrap gap-4 p-3 bg-blue-50/50 rounded-xl border border-blue-50/50">
-                    {device.category !== "sensor" && (
-                      <button
-                        onClick={() => toggleDevicePower(device.id)}
-                        className={`flex-1 min-w-[200px] py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${device.status === "ON" ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-white border border-gray-200 text-gray-700 shadow-sm hover:shadow"}`}
-                      >
-                        <Power className="w-4 h-4 text-gray-500" /> Turn {device.status === "ON" ? "OFF" : "ON"}
-                      </button>
-                    )}
-
-                    {/* Device-specific controls horizontally laid out */}
-                    {device.deviceType === "AC" && device.status === "ON" && (
-                      <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-blue-100 rounded-lg px-4 py-2">
-                        <Thermometer className="w-5 h-5 text-blue-500" />
-                        <span className="text-sm font-medium text-gray-600">Suhu:</span>
-                        <input
-                          type="number"
-                          value={device.controls?.temperature || 24}
-                          onChange={(e) => updateDeviceControl(device.id, "temperature", parseFloat(e.target.value))}
-                          className="w-16 px-2 py-1 border border-gray-200 rounded-md text-sm font-semibold text-center focus:outline-none focus:border-blue-300 focus:ring-1 focus:ring-blue-300"
-                        />
-                        <span className="text-sm text-gray-500 font-medium">°C</span>
-                      </div>
-                    )}
-                    {device.deviceType === "TV" && device.status === "ON" && (
-                      <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-purple-100 rounded-lg px-4 py-2">
-                        <Volume2 className="w-5 h-5 text-purple-500" />
-                        <span className="text-sm font-medium text-gray-600">Volume:</span>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={device.controls?.volume || 50}
-                          onChange={(e) => updateDeviceControl(device.id, "volume", parseFloat(e.target.value))}
-                          className="flex-1 accent-purple-600"
-                        />
-                        <span className="text-sm font-semibold text-gray-700 w-10">{device.controls?.volume || 50}</span>
-                      </div>
-                    )}
-                    {(device.deviceType === "Light" || device.deviceType === "Fan") && device.status === "ON" && (
-                      <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-yellow-100 rounded-lg px-4 py-2">
-                        <Sun className="w-5 h-5 text-yellow-500" />
-                        <span className="text-sm font-medium text-gray-600">Brightness:</span>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={device.controls?.brightness || 100}
-                          onChange={(e) => updateDeviceControl(device.id, "brightness", parseFloat(e.target.value))}
-                          className="flex-1 accent-yellow-500"
-                        />
-                        <span className="text-sm font-semibold text-gray-700 w-12">{device.controls?.brightness || 100}%</span>
-                      </div>
-                    )}
-                    {device.category === "sensor" && !isTechnicianMode && (
-                      <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2">
-                        <button onClick={() => toggleDevicePower(device.id)} className="w-full text-sm font-semibold text-gray-700 flex items-center justify-center gap-2">
-                          <Eye className="w-4 h-4" /> {device.status === "ON" ? "Stop Monitoring" : "Start Monitoring"}
+                {/* Quick Controls Section - Hidden for Technicians */}
+                {!isTechnicianMode && (
+                  <div className="mb-6">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{device.category === "sensor" ? "Status Monitoring" : "Kontrol Manual"}</p>
+                    <div className="flex flex-wrap gap-4 p-3 bg-blue-50/50 rounded-xl border border-blue-50/50">
+                      {device.category !== "sensor" && (
+                        <button
+                          onClick={() => toggleDevicePower(device.id)}
+                          className={`flex-1 min-w-[200px] py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${device.status === "ON" ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-white border border-gray-200 text-gray-700 shadow-sm hover:shadow"}`}
+                        >
+                          <Power className="w-4 h-4 text-gray-500" /> Turn {device.status === "ON" ? "OFF" : "ON"}
                         </button>
-                      </div>
-                    )}
+                      )}
+
+                      {/* Device-specific controls horizontally laid out */}
+                      {device.deviceType === "AC" && device.status === "ON" && (
+                        <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-blue-100 rounded-lg px-4 py-2">
+                          <Thermometer className="w-5 h-5 text-blue-500" />
+                          <span className="text-sm font-medium text-gray-600">Suhu:</span>
+                          <input
+                            type="number"
+                            value={device.controls?.temperature || 24}
+                            onChange={(e) => updateDeviceControl(device.id, "temperature", parseFloat(e.target.value))}
+                            className="w-16 px-2 py-1 border border-gray-200 rounded-md text-sm font-semibold text-center focus:outline-none focus:border-blue-300 focus:ring-1 focus:ring-blue-300"
+                          />
+                          <span className="text-sm text-gray-500 font-medium">°C</span>
+                        </div>
+                      )}
+                      {device.deviceType === "TV" && device.status === "ON" && (
+                        <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-purple-100 rounded-lg px-4 py-2">
+                          <Volume2 className="w-5 h-5 text-purple-500" />
+                          <span className="text-sm font-medium text-gray-600">Volume:</span>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={device.controls?.volume || 50}
+                            onChange={(e) => updateDeviceControl(device.id, "volume", parseFloat(e.target.value))}
+                            className="flex-1 accent-purple-600"
+                          />
+                          <span className="text-sm font-semibold text-gray-700 w-10">{device.controls?.volume || 50}</span>
+                        </div>
+                      )}
+                      {(device.deviceType === "Light" || device.deviceType === "Fan") && device.status === "ON" && (
+                        <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-yellow-100 rounded-lg px-4 py-2">
+                          <Sun className="w-5 h-5 text-yellow-500" />
+                          <span className="text-sm font-medium text-gray-600">Brightness:</span>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={device.controls?.brightness || 100}
+                            onChange={(e) => updateDeviceControl(device.id, "brightness", parseFloat(e.target.value))}
+                            className="flex-1 accent-yellow-500"
+                          />
+                          <span className="text-sm font-semibold text-gray-700 w-12">{device.controls?.brightness || 100}%</span>
+                        </div>
+                      )}
+                      {device.category === "sensor" && !isTechnicianMode && (
+                        <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2">
+                          <button onClick={() => toggleDevicePower(device.id)} className="w-full text-sm font-semibold text-gray-700 flex items-center justify-center gap-2">
+                            <Eye className="w-4 h-4" /> {device.status === "ON" ? "Stop Monitoring" : "Start Monitoring"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Sensor Only Data Block - Single Row Compact Version */}
                 {device.category === "sensor" && device.status === "ON" && device.sensorData && (
@@ -948,13 +1026,15 @@ export function DeviceControlPage({ onNavigate }) {
                       Hapus
                     </button>
                   )}
-                  <button
-                    onClick={() => handleEditDevice(device)}
-                    className="flex-1 px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <Settings className="w-4 h-4" />
-                    Settings
-                  </button>
+                  {!isTechnicianMode && (
+                    <button
+                      onClick={() => handleEditDevice(device)}
+                      className="flex-1 px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -1092,11 +1172,38 @@ export function DeviceControlPage({ onNavigate }) {
           className="w-full p-4 border-2 border-emerald-100 bg-emerald-50 rounded-xl hover:border-emerald-500 hover:shadow-md transition-all text-left flex items-center justify-between group"
         ><div className="flex items-center gap-3"><div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center"><Zap className="w-5 h-5 text-emerald-600" /></div><span className="font-semibold text-gray-900">{device.name}</span></div><Plus className="w-5 h-5 text-emerald-600 opacity-50 group-hover:opacity-100 transition-opacity" /></button>)}</div></div></div>}{
           /* ==================== MODAL: ADD DEVICE FORM ==================== */
-          step === "add-device-form" && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"><div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 my-8"><div className="flex items-center justify-between mb-6"><div><h2 className="text-2xl font-bold text-gray-900">Informasi Device</h2><p className="text-sm text-gray-600 mt-1">
-            Device: <span className="font-semibold">{selectedDeviceType}</span></p></div><button
-              onClick={() => setStep(selectedCategory === "sensor" ? "select-category" : "select-device-type")}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-all"
-            ><X className="w-6 h-6 text-gray-500" /></button></div><div className="space-y-6"><div><label className="block text-sm font-semibold text-gray-700 mb-2">
+        }{step === "add-device-form" && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"><div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 my-8"><div className="flex items-center justify-between mb-6"><div><h2 className="text-2xl font-bold text-gray-900">{isEditingDevice ? "Edit Informasi Device" : "Informasi Device"}</h2><p className="text-sm text-gray-600 mt-1">
+          Device: <span className="font-semibold">{selectedDeviceType}</span></p></div><button
+            onClick={() => {
+              if (isEditingDevice) {
+                setStep("view-bieon");
+                setIsEditingDevice(null);
+              } else {
+                setStep(selectedCategory === "sensor" ? "select-category" : "select-device-type");
+              }
+            }}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-all"
+          ><X className="w-6 h-6 text-gray-500" /></button></div><div className="space-y-5">
+            {isEditingDevice && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih Hub Node <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <select
+                    value={selectedHub?.id || ""}
+                    onChange={(e) => setSelectedHub(currentBieon.hubs.find(h => h.id === e.target.value))}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium text-gray-900 bg-white"
+                  >
+                    {currentBieon.hubs.map((hub) => (
+                      <option key={hub.id} value={hub.id}>
+                        {hub.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+            )}
+            <div><label className="block text-sm font-semibold text-gray-700 mb-2">
               Nama Device <span className="text-red-500">*</span></label><input
                 type="text"
                 value={deviceForm.name}
@@ -1132,38 +1239,38 @@ export function DeviceControlPage({ onNavigate }) {
                 ><X className="w-5 h-5" /></button></div>}</div><div><label className="block text-sm font-semibold text-gray-700 mb-2">
                   Catatan (Optional)
                 </label><textarea
-                  value={deviceForm.notes}
-                  onChange={(e) => setDeviceForm({ ...deviceForm, notes: e.target.value })}
-                  placeholder="Tambahkan catatan..."
-                  rows={3}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                /></div><div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  {isTechnicianMode ? (
+                value={deviceForm.notes}
+                onChange={(e) => setDeviceForm({ ...deviceForm, notes: e.target.value })}
+                placeholder="Tambahkan catatan..."
+                rows={3}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              /></div><div className="flex flex-col sm:flex-row gap-3 pt-4">
+              {isTechnicianMode ? (
+                <button
+                  onClick={() => handleDirectSave("manual")}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
+                >
+                  Simpan
+                </button>
+              ) : (
+                <>
+                  {selectedCategory !== "sensor" && (
                     <button
-                      onClick={handleDirectSave}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
+                      onClick={() => handleDirectSave("manual")}
+                      className="flex-1 px-6 py-3 border-2 border-emerald-500 text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all text-sm sm:text-base"
                     >
-                      Simpan Perangkat
+                      Simpan (Mode Manual)
                     </button>
-                  ) : (
-                    <>
-                      {selectedCategory !== "sensor" && (
-                        <button
-                          onClick={handleDirectSave}
-                          className="flex-1 px-6 py-3 border-2 border-emerald-500 text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-all text-sm sm:text-base"
-                        >
-                          Simpan (Mode Manual)
-                        </button>
-                      )}
-                      <button
-                        onClick={handleSubmitDeviceForm}
-                        className="flex-1 sm:flex-[1.5] px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
-                      >
-                        {selectedCategory === "sensor" ? "Lanjut ke Parameter" : "Lanjut ke Mode Otomatis"}
-                      </button>
-                    </>
                   )}
-                </div></div></div></div>}{
+                  <button
+                    onClick={handleSubmitDeviceForm}
+                    className="flex-1 sm:flex-[1.5] px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
+                  >
+                    {selectedCategory === "sensor" ? "Lanjut ke Parameter" : "Lanjut ke Mode Otomatis"}
+                  </button>
+                </>
+              )}
+            </div></div></div></div>}{
           /* ==================== MODAL: CONFIGURE (ACTUATORS ONLY) ==================== */
         }{step === "configure" && <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto"><div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-6 mt-8 sm:mt-12 mb-20"><div className="flex items-center justify-between mb-4"><div><h2 className="text-2xl font-bold text-gray-900">{selectedCategory === "sensor" ? "Konfigurasi Parameter" : "Pilih Metode Pengaturan"}</h2><p className="text-sm text-gray-600">{selectedCategory === "sensor" ? "Tentukan batas/nilai referensi untuk sensor ini" : "Parameter lingkungan atau jadwal otomatis"}</p></div><button
           onClick={() => setStep("add-device-form")}
@@ -1268,7 +1375,7 @@ export function DeviceControlPage({ onNavigate }) {
                             <Thermometer className="w-6 h-6 text-orange-500" />
                             <div>
                               <h4 className="font-bold text-gray-900">Suhu (Temperature)</h4>
-                              <p className="text-xs text-gray-500">Status terpantau dari perubahan suhu lingkungan</p>
+                              <p className="text-xs text-gray-500">Status "Tidak Nyaman" jika suhu abnormal</p>
                             </div>
                           </div>
                           <input
@@ -1332,7 +1439,7 @@ export function DeviceControlPage({ onNavigate }) {
                             <Droplets className="w-6 h-6 text-blue-500" />
                             <div>
                               <h4 className="font-bold text-gray-900">Kelembaban (Humidity)</h4>
-                              <p className="text-xs text-gray-500">Status terpantau dari persentase kelembaban</p>
+                              <p className="text-xs text-gray-500">Status "Tidak Nyaman" jika kelembapan abnormal</p>
                             </div>
                           </div>
                           <input
@@ -1829,24 +1936,13 @@ export function DeviceControlPage({ onNavigate }) {
             ><Save className="w-5 h-5" />
               Simpan Konfigurasi
             </button></div></div></div>}
-        {showEditPage && editingDevice && currentBieon && (
-          <div className="fixed inset-0 z-50 overflow-auto bg-black/50">
-            <EditHubNodePage
-              device={editingDevice}
-              bieonSystem={currentBieon}
-              onSave={handleSaveEditedDevice}
-              onCancel={handleCancelEdit}
-              isTechnicianMode={isTechnicianMode}
-            />
-          </div>
-        )}
       </div>
       {/* Token Generation Modal */}
       {showTokenModal && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-[200] p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in duration-300">
             <div className="bg-emerald-600 p-6 text-center text-white relative">
-              <button 
+              <button
                 onClick={() => setShowTokenModal(false)}
                 className="absolute top-4 right-4 p-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
               >
