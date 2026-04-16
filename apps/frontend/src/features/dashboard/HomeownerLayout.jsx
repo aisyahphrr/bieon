@@ -1,7 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown, ShieldAlert } from 'lucide-react';
+import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerProfilePopup from './components/HomeownerProfilePopup';
+
+function TechReportModal({ isOpen, onClose, onSubmit }) {
+  const [report, setReport] = useState('');
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 flex flex-col">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Laporan Teknisi</h3>
+        <p className="text-gray-500 text-sm mb-4">Silakan catat aktivitas sinkronisasi atau masalah kendali perangkat yang baru saja dilakukan. Laporan akan otomatis diteruskan ke Super Admin.</p>
+        <textarea
+          value={report}
+          onChange={(e) => setReport(e.target.value)}
+          placeholder="Tuliskan aktivitas dan status perangkat yang dikonfigurasi..."
+          className="w-full border-2 border-gray-300 rounded-xl p-4 focus:outline-none focus:border-orange-500 min-h-[120px] mb-4 text-sm"
+        />
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-gray-500 font-semibold hover:bg-gray-100">Batal</button>
+          <button 
+            onClick={() => onSubmit(report)} 
+            disabled={!report.trim()}
+            className="px-6 py-2 rounded-lg bg-orange-600 text-white font-bold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Kirim & Keluar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Nav items shared between desktop navbar and mobile bottom nav
 const NAV_ITEMS = [
@@ -15,21 +45,61 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [isTechnicianMode, setIsTechnicianMode] = useState(false);
+  const [showTechReportModal, setShowTechReportModal] = useState(false);
   const roleDropdownRef = useRef(null);
 
   useEffect(() => {
     const techAccess = localStorage.getItem('bieon_tech_access');
+    const techExpiry = localStorage.getItem('bieon_tech_access_expiry');
+    
     if (techAccess === 'true') {
-      setIsTechnicianMode(true);
+      // Direct expiration check loop
+      const checkExpiry = () => {
+        if (techExpiry && Date.now() > parseInt(techExpiry)) {
+           alert("Sesi Teknisi Anda telah berakhir (30 menit). Anda telah di-logout otomatis.");
+           localStorage.removeItem('bieon_tech_access');
+           localStorage.removeItem('bieon_tech_access_expiry');
+           setIsTechnicianMode(false);
+           if (onNavigate) onNavigate('teknisi');
+           return true; /* expired */
+        }
+        return false;
+      };
+      
+      if (!checkExpiry()) {
+        setIsTechnicianMode(true);
+        const interval = setInterval(() => {
+           if (checkExpiry()) clearInterval(interval);
+        }, 5000);
+        return () => clearInterval(interval);
+      }
     }
-  }, []);
+  }, [onNavigate]);
 
-  const handleExitTechnicianMode = () => {
+  const handleTechReportSubmit = (reportContent) => {
+    // Mengirim ke notifikasi via custom event (simulasi laporan ke super admin)
+    const newNotif = {
+      id: Date.now(),
+      type: 'info',
+      title: 'Laporan Konfigurasi Teknisi Baru',
+      message: `Laporan: "${reportContent}"`,
+      time: 'Baru saja',
+      icon: CheckCircle2,
+    };
+    window.dispatchEvent(new CustomEvent('add-notification', { detail: newNotif }));
+
+    // Keluar dari sesi teknisi
     localStorage.removeItem('bieon_tech_access');
+    localStorage.removeItem('bieon_tech_access_expiry');
     setIsTechnicianMode(false);
+    setShowTechReportModal(false);
     if (onNavigate) {
       onNavigate('teknisi');
     }
+  };
+
+  const handleExitTechnicianMode = () => {
+    setShowTechReportModal(true);
   };
 
   const filteredNavItems = isTechnicianMode 
@@ -175,6 +245,11 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
           </div>
         )}
         {children}
+        <TechReportModal 
+          isOpen={showTechReportModal} 
+          onClose={() => setShowTechReportModal(false)} 
+          onSubmit={handleTechReportSubmit} 
+        />
       </main>
 
       {/* Profile Popup - Placed at root of layout */}

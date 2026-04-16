@@ -199,10 +199,20 @@ const NotificationPopup = ({
 }) => {
   const [isAllRead, setIsAllRead] = useState(false);
   const [readIds, setReadIds] = useState(new Set());
+  const [dynamicNotifs, setDynamicNotifs] = useState([]);
+
+  React.useEffect(() => {
+    const handleAddNotif = (e) => {
+      setDynamicNotifs(prev => [e.detail, ...prev]);
+    };
+    window.addEventListener('add-notification', handleAddNotif);
+    return () => window.removeEventListener('add-notification', handleAddNotif);
+  }, []);
 
   if (!isOpen) return null;
 
-  const notifications = notificationData[role] || [];
+  const baseNotifications = notificationData[role] || [];
+  const notifications = role === 'homeowner' ? [...dynamicNotifs, ...baseNotifications] : baseNotifications;
 
   const isRead = (id) => isAllRead || readIds.has(id);
   const handleRead = (id) => {

@@ -13,11 +13,22 @@ export function KonfigurasiPerangkatPage({ onNavigate, triggerToast }) {
     }
 
     const activeToken = localStorage.getItem('bieon_active_token');
+    const tokenExpiry = localStorage.getItem('bieon_active_token_expiry');
+    
+    // Cek kadaluarsa form (5 menit)
+    if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
+      setTokenError("Token telah kedaluwarsa (lebih dari 5 menit). Silakan minta Homeowner untuk generate ulang.");
+      localStorage.removeItem('bieon_active_token');
+      localStorage.removeItem('bieon_active_token_expiry');
+      return;
+    }
     
     // For demo/prototype purposes, we verify against localStorage
     if (inputToken === activeToken && activeToken !== null) {
       localStorage.setItem('bieon_tech_access', 'true');
+      localStorage.setItem('bieon_tech_access_expiry', (Date.now() + 30 * 60 * 1000).toString());
       localStorage.removeItem('bieon_active_token'); // One-time use
+      localStorage.removeItem('bieon_active_token_expiry');
       
       if (triggerToast) {
         triggerToast("Akses Diterima! Mengalihkan ke sistem Homeowner...");
@@ -53,7 +64,7 @@ export function KonfigurasiPerangkatPage({ onNavigate, triggerToast }) {
           <h3 className="font-bold text-gray-800 text-base mb-1">Penting: Akses Teknisi Terbatas</h3>
           <p className="text-gray-600 text-sm leading-relaxed">
             Sesuai kebijakan keamanan BIEON, teknisi memerlukan **Token Akses** dari Homeowner untuk masuk. 
-            Dalam mode ini, Anda **HANYA** diizinkan untuk menambahkan perangkat baru tanpa hak akses konfigurasi mendalam atau kontrol operasional.
+            Masa aktif token adalah **5 menit** untuk login. Dalam mode ini, Anda **HANYA** diizinkan untuk menambahkan perangkat baru dan sesi akan otomatis **kadaluarsa dalam 30 menit**.
           </p>
         </div>
       </div>

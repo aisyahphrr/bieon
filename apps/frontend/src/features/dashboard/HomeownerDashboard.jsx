@@ -485,11 +485,180 @@ function DataModal({ isOpen, onClose, chartType }) {
   );
 }
 
+function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDeposit }) {
+  const [inputLimit, setInputLimit] = useState(limit ? limit.toString() : '');
+  const [inputDeposit, setInputDeposit] = useState(deposit ? deposit.toString() : '');
+  const [submitted, setSubmitted] = useState(false);
+
+  if (!isOpen) return null;
+
+  const totalTerpakai = 78490;
+  const sisaDaya = deposit - totalTerpakai;
+  const isKritis = sisaDaya <= limit;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const parsedLimit = parseInt(inputLimit.replace(/[^0-9]/g, ''), 10);
+    const parsedDeposit = parseInt(inputDeposit.replace(/[^0-9]/g, ''), 10);
+    
+    let updatedDeposit = deposit;
+    let updatedLimit = limit;
+    
+    if (!isNaN(parsedLimit) && parsedLimit >= 0) {
+      setLimit(parsedLimit);
+      updatedLimit = parsedLimit;
+    }
+    if (!isNaN(parsedDeposit) && parsedDeposit >= 0) {
+      setDeposit(parsedDeposit);
+      updatedDeposit = parsedDeposit;
+    }
+
+    // Trigger notification immediately if critical after input
+    const newSisaDaya = updatedDeposit - totalTerpakai;
+    if (newSisaDaya <= updatedLimit) {
+      const newNotif = {
+        id: Date.now(),
+        type: 'warning',
+        title: 'Status: Peringatan Daya Kritis!',
+        message: `Sisa saldo listrik Anda (Rp ${newSisaDaya.toLocaleString('id-ID')}) berada di bawah atau mendekati batas peringatan (Rp ${updatedLimit.toLocaleString('id-ID')}). Segera isi ulang!`,
+        time: 'Baru saja',
+        icon: AlertTriangle,
+      };
+      window.dispatchEvent(new CustomEvent('add-notification', { detail: newNotif }));
+    }
+
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      onClose();
+    }, 2000);
+  };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
+        <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
+          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Pengaturan Disimpan!</h3>
+          <p className="text-gray-500 text-sm">Pengaturan token dan batas peringatan Anda telah diperbarui.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-5 sm:px-8 py-4 sm:py-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Zap className="w-6 h-6" />
+              <div>
+                <h2 className="text-2xl font-bold">Pengaturan Token Listrik</h2>
+                <p className="text-amber-100 text-sm mt-1">Perbarui deposit token dan atur batas peringatan Anda</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-5 sm:p-8 overflow-y-auto flex-1">
+          <div className={`border rounded-xl p-4 flex flex-col gap-2 mb-6 transition-colors ${isKritis ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'}`}>
+            <div className="flex justify-between items-center text-sm font-semibold">
+              <span className="text-gray-700">Deposit Token Anda:</span>
+              <span className="font-bold text-gray-900">Rp {deposit.toLocaleString('id-ID')}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm font-semibold">
+              <span className="text-gray-700">Total Terpakai:</span>
+              <span className="font-bold text-gray-600">Rp {totalTerpakai.toLocaleString('id-ID')}</span>
+            </div>
+            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-2 border-t ${isKritis ? 'border-red-200' : 'border-emerald-200'}`}>
+              <span className={isKritis ? 'text-red-800' : 'text-emerald-800'}>Sisa Kuota Daya:</span>
+              <span className={`text-lg font-bold ${isKritis ? 'text-red-600' : 'text-emerald-600'}`}>Rp {sisaDaya.toLocaleString('id-ID')}</span>
+            </div>
+            <div className={`flex justify-between items-center text-xs mt-3 p-2 rounded-lg font-bold uppercase tracking-wider ${isKritis ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+              <span>Status:</span>
+              <span className="flex items-center gap-1">
+                 {isKritis ? <AlertTriangle className="w-4 h-4"/> : <CheckCircle2 className="w-4 h-4"/>}
+                 {isKritis ? 'Sisa Saldo Kritis' : 'Aman'}
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Deposit Token Anda (Rp) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                value={inputDeposit}
+                onChange={(e) => setInputDeposit(e.target.value)}
+                placeholder="Masukkan nominal deposit (misal 150000)"
+                required
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Batas Peringatan (Rp) <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {[10000, 20000, 30000, 50000].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setInputLimit(val.toString())}
+                    className={`py-2 rounded-xl text-sm font-semibold transition-all border ${
+                      inputLimit === val.toString() 
+                        ? 'border-amber-500 bg-amber-50 text-amber-700' 
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300'
+                    }`}
+                  >
+                    Rp {val.toLocaleString('id-ID')}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                value={inputLimit}
+                onChange={(e) => setInputLimit(e.target.value)}
+                placeholder="Nominal peringatan lainnya (Rp)"
+                required
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+            
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                Simpan Pengaturan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function HomeownerDashboard({ onNavigate }) {
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [chartType, setChartType] = useState('daily');
   const [showDataModal, setShowDataModal] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningLimit, setWarningLimit] = useState(30000);
+  const [depositBalance, setDepositBalance] = useState(100000);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [toast, setToast] = useState(null);
@@ -513,7 +682,7 @@ export function HomeownerDashboard({ onNavigate }) {
     <HomeownerLayout
       currentPage="dashboard"
       onNavigate={onNavigate}
-      hideBottomNav={showComplaintModal || showDataModal}
+      hideBottomNav={showComplaintModal || showDataModal || showWarningModal}
     >
       <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6 md:mb-8">
@@ -806,15 +975,25 @@ export function HomeownerDashboard({ onNavigate }) {
                       : 'Update setiap bulan | Periode 1 tahun (Januari–Desember)'}
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowDataModal(true)}
-                  className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#00a67d] text-white rounded-xl text-xs sm:text-sm font-semibold hover:shadow-lg transition-all"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span className="hidden sm:inline">View Details</span>
-                  <span className="sm:hidden">Detail</span>
-                  <ChevronRight className="w-4 h-4 hidden sm:inline" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowWarningModal(true)}
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-amber-500 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-amber-600 transition-all shadow-md group"
+                  >
+                    <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <span className="hidden sm:inline">Atur Peringatan</span>
+                    <span className="sm:hidden">Peringatan</span>
+                  </button>
+                  <button
+                    onClick={() => setShowDataModal(true)}
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#00a67d] text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-teal-700 transition-all shadow-md group"
+                  >
+                    <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <span className="hidden sm:inline">View Details</span>
+                    <span className="sm:hidden">Detail</span>
+                    <ChevronRight className="w-4 h-4 hidden sm:inline" />
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-6 bg-[#ebfbf5] rounded-2xl border border-[#bbf7d0]">
@@ -1037,6 +1216,7 @@ export function HomeownerDashboard({ onNavigate }) {
 
         <NotificationPopup isOpen={showNotifications} onClose={() => setShowNotifications(false)} role="homeowner" />
         <DataModal isOpen={showDataModal} onClose={() => setShowDataModal(false)} chartType={chartType} />
+        <WarningLimitModal isOpen={showWarningModal} onClose={() => setShowWarningModal(false)} limit={warningLimit} setLimit={setWarningLimit} deposit={depositBalance} setDeposit={setDepositBalance} />
         <ComplaintModal isOpen={showComplaintModal} onClose={() => setShowComplaintModal(false)} />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>

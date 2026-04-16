@@ -127,6 +127,7 @@ export function DeviceControlPage({ onNavigate }) {
     setGeneratedToken(token);
     // Simpan token aktif di localStorage (mocking backend)
     localStorage.setItem('bieon_active_token', token);
+    localStorage.setItem('bieon_active_token_expiry', (Date.now() + 5 * 60 * 1000).toString());
     setShowTokenModal(true);
   };
 
@@ -606,6 +607,21 @@ export function DeviceControlPage({ onNavigate }) {
       hideBottomNav={isModalOpen}
     >
       <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
+        {/* Banner Status Konfigurasi untuk Tampilan Homeowner */}
+        {localStorage.getItem('bieon_tech_access') === 'true' && !isTechnicianMode && (
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6 shadow-sm flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="p-2 bg-orange-100 rounded-xl shrink-0 mt-0.5">
+               <Activity className="w-5 h-5 text-orange-600 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="font-bold text-orange-800 text-sm sm:text-base mb-1">Sedang Dikonfigurasi Teknisi</h3>
+              <p className="text-orange-700 text-xs sm:text-sm">
+                 Sistem Anda saat ini sedang dalam proses penambahan/pengaturan perangkat oleh teknisi. 
+                 Beberapa fungsi kendali mungkin dibatasi atau tidak merespons sampai sesi teknisi berakhir.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6 md:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -1282,7 +1298,7 @@ export function DeviceControlPage({ onNavigate }) {
             <div className="grid grid-cols-2 gap-4 mb-6"><button
               onClick={() => setConfigMode("sensor")}
               className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "sensor" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
-            ><Settings className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" /><div className="text-center sm:text-left"><h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3><p className="text-xs text-gray-500 hidden sm:block">Trigger bersyarat</p></div></button><button
+            ><Settings className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" /><div className="text-center sm:text-left"><h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3><p className="text-xs text-gray-500 hidden sm:block">Sesuai kondisi lingkungan (sensor)</p></div></button><button
               onClick={() => setConfigMode("schedule")}
               className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "schedule" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
             ><Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" /><div className="text-center sm:text-left"><h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3><p className="text-xs text-gray-500 hidden sm:block">Sesuai waktu</p></div></button></div>
@@ -1297,7 +1313,7 @@ export function DeviceControlPage({ onNavigate }) {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     {/* ASPEK KENYAMANAN */}
                     <button
                       onClick={() => setActiveSensorAspect("kenyamanan")}
@@ -1310,7 +1326,7 @@ export function DeviceControlPage({ onNavigate }) {
                       <p className="text-[10px] text-gray-500">Suhu & Lembap</p>
                     </button>
 
-                    {/* ASPEK KEAMANAN (Lengkap) */}
+                    {/* ASPEK KEAMANAN (Gabungan Motion & Pintu) */}
                     <button
                       onClick={() => setActiveSensorAspect("keamanan")}
                       className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-2xl hover:border-purple-500 hover:bg-purple-50 transition-all group text-center"
@@ -1318,20 +1334,8 @@ export function DeviceControlPage({ onNavigate }) {
                       <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <ShieldAlert className="w-6 h-6 text-purple-600" />
                       </div>
-                      <h4 className="text-sm font-bold text-gray-900 mb-1 leading-tight">Keamanan Motion</h4>
-                      <p className="text-[10px] text-gray-500">Deteksi Gerak</p>
-                    </button>
-
-                    {/* ASPEK KEAMANAN (Pintu) */}
-                    <button
-                      onClick={() => setActiveSensorAspect("keamananPintu")}
-                      className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-2xl hover:border-red-500 hover:bg-red-50 transition-all group text-center"
-                    >
-                      <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <Lock className="w-6 h-6 text-red-600" />
-                      </div>
-                      <h4 className="text-sm font-bold text-gray-900 mb-1 leading-tight">Keamanan Pintu</h4>
-                      <p className="text-[10px] text-gray-500">Smart Door</p>
+                      <h4 className="text-sm font-bold text-gray-900 mb-1 leading-tight">Keamanan</h4>
+                      <p className="text-[10px] text-gray-500">Motion & Door Sensor</p>
                     </button>
 
                     {/* KUALITAS AIR */}
@@ -1553,38 +1557,7 @@ export function DeviceControlPage({ onNavigate }) {
                     </div>
                   )}
 
-                  {/* ASPEK KEAMANAN (Pintu) */}
-                  {activeSensorAspect === "keamananPintu" && (
-                    <div className="space-y-4">
-                      <div className="px-4 py-2 bg-red-50 rounded-lg border border-red-100">
-                        <p className="text-sm font-bold text-red-800 flex items-center gap-2">
-                          <Lock className="w-4 h-4" /> Aspek Keamanan (Pintu)
-                        </p>
-                      </div>
 
-                      {/* Door Sensor Only */}
-                      <div className="border-2 border-gray-200 rounded-xl p-5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Lock className="w-6 h-6 text-red-600" />
-                            <div>
-                              <h4 className="font-bold text-gray-900">Door Sensor</h4>
-                              <p className="text-xs text-gray-500">Memantau status pintu (Terbuka/Tertutup)</p>
-                            </div>
-                          </div>
-                          <input
-                            type="checkbox"
-                            checked={sensorConfig.door.enabled}
-                            onChange={(e) => setSensorConfig({
-                              ...sensorConfig,
-                              door: { ...sensorConfig.door, enabled: e.target.checked }
-                            })}
-                            className="w-5 h-5 text-emerald-600 rounded"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* KUALITAS AIR */}
                   {activeSensorAspect === "kualitasAir" && (
@@ -1963,7 +1936,7 @@ export function DeviceControlPage({ onNavigate }) {
               <div className="flex items-start gap-3 text-left bg-amber-50 p-4 rounded-xl border border-amber-100 mb-6">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-800 leading-relaxed font-medium">
-                  Token ini bersifat **sekali pakai** dan akan hangus otomatis setelah teknisi menggunakannya untuk masuk ke sistem.
+                  Token ini bersifat **sekali pakai** dengan masa aktif **5 menit**. Setelah digunakan, akses konfigurasi teknisi berlaku selama **30 menit** dan akan *logout otomatis* jika waktu habis.
                 </p>
               </div>
               <button
