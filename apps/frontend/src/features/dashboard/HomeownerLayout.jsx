@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerProfilePopup from './components/HomeownerProfilePopup';
@@ -41,6 +42,7 @@ const NAV_ITEMS = [
 ];
 
 export default function HomeownerLayout({ children, currentPage, onNavigate, hideBottomNav }) {
+  const navigate = useNavigate();
   const [showNotif, setShowNotif] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
@@ -117,9 +119,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
     localStorage.removeItem('bieon_tech_access_expiry');
     setIsTechnicianMode(false);
     setShowTechReportModal(false);
-    if (onNavigate) {
-      onNavigate('teknisi');
-    }
+    navigate('/teknisi');
   };
 
   const handleExitTechnicianMode = () => {
@@ -164,7 +164,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               {filteredNavItems.map(({ id, label }) => (
                 <button
                   key={id}
-                  onClick={() => onNavigate && onNavigate(id)}
+                  onClick={() => navigate(`/${id}`)}
                   className={`font-semibold pb-1 border-b-2 transition-all ${
                     currentPage === id
                       ? 'text-teal-700 border-teal-700 cursor-default'
@@ -181,7 +181,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               {/* Pengaduan Button (Responsive Text) - Hidden in Tech Mode */}
               {!isTechnicianMode && (
                 <button
-                  onClick={() => onNavigate && onNavigate('pengaduan')}
+                  onClick={() => navigate('/pengaduan')}
                   className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
                   title="Ajukan Pengaduan"
                 >
@@ -233,9 +233,9 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                     {!isTechnicianMode && (
                       <>
                         <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
-                        <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
-                        <button onClick={() => onNavigate && onNavigate('teknisi')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
-                        <button onClick={() => onNavigate && onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
+                        <button onClick={() => navigate('/dashboard')} className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
+                        <button onClick={() => navigate('/teknisi')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
+                        <button onClick={() => navigate('/admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
                       </>
                     )}
                   </div>
@@ -285,7 +285,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
         userProfile={userProfile}
         onNavigate={item => {
           if (isTechnicianMode && item !== 'kendali') return;
-          onNavigate && onNavigate(item);
+          navigate(`/${item}`);
         }}
       />
 
@@ -301,7 +301,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
             return (
               <button
                 key={item.id}
-                onClick={() => onNavigate && onNavigate(item.id)}
+                onClick={() => navigate(`/${item.id}`)}
                 className={`flex flex-col items-center justify-center min-w-[64px] transition-all duration-200 ${
                   isActive ? 'text-teal-600 scale-105' : 'text-gray-400 hover:text-gray-600'
                 }`}
