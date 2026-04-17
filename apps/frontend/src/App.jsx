@@ -1,4 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 // Lazy loading for feature modules
 const LandingPage = lazy(() => import('./features/general-page/LandingPage'));
@@ -33,36 +34,62 @@ function LoadingScreen() {
   );
 }
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('landing');
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('bieon_token');
+  const location = useLocation();
 
-  // Enforce technician mode restriction
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
+function App() {
+  const [tempData, setTempData] = useState(() => {
+    const saved = sessionStorage.getItem('bieon_temp_data');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  // Simpan data sementara ke sessionStorage setiap kali berubah
   React.useEffect(() => {
-    const techAccess = localStorage.getItem('bieon_tech_access');
-    if (techAccess === 'true' && !['kendali', 'teknisi'].includes(currentPage)) {
-      setCurrentPage('kendali');
-    }
-  }, [currentPage]);
+    sessionStorage.setItem('bieon_temp_data', JSON.stringify(tempData));
+  }, [tempData]);
 
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      {currentPage === 'landing' && <LandingPage onNavigate={setCurrentPage} />}
-      {currentPage === 'login' && <Login onNavigate={setCurrentPage} />}
-      {currentPage === 'signup' && <Signup onNavigate={setCurrentPage} />}
-      {currentPage === 'setup' && <Setup onNavigate={setCurrentPage} />}
-      {currentPage === 'dashboard' && <HomeownerDashboard onNavigate={setCurrentPage} />}
-      {currentPage === 'history' && <HomeownerHistory onNavigate={setCurrentPage} />}
-      {currentPage === 'kendali' && <DeviceControlPage onNavigate={setCurrentPage} />}
-      {currentPage === 'teknisi' && <TechnicianDashboard onNavigate={setCurrentPage} />}
-      {currentPage === 'pengaduan' && <HomeownerComplaint onNavigate={setCurrentPage} />}
-      {currentPage === 'admin' && <SuperAdminDashboard onNavigate={setCurrentPage} />}
-      {currentPage === 'admin-pelanggan' && <ManajemenAkunPage onNavigate={setCurrentPage} />}
-      {currentPage === 'admin-client-detail' && <ClientDetailPage onNavigate={setCurrentPage} />}
-      {currentPage === 'admin-history' && <AdminHistory onNavigate={setCurrentPage} />}
-      {currentPage === 'admin-complaint' && <AdminComplaint onNavigate={setCurrentPage} />}
-      {currentPage === 'admin-teknisi' && <ManajemenTeknisiPage onNavigate={setCurrentPage} />}
-      {currentPage === 'admin-tariff' && <AdminTariff onNavigate={setCurrentPage} />}
-    </Suspense>
+    <Router>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup setTempData={setTempData} />} />
+          <Route path="/setup" element={<Setup tempData={tempData} />} />
+
+          {/* Homeowner Routes */}
+          <Route path="/dashboard" element={<ProtectedRoute><HomeownerDashboard /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><HomeownerHistory /></ProtectedRoute>} />
+          <Route path="/kendali" element={<ProtectedRoute><DeviceControlPage /></ProtectedRoute>} />
+          <Route path="/pengaduan" element={<ProtectedRoute><HomeownerComplaint /></ProtectedRoute>} />
+
+          {/* Technician Routes */}
+          <Route path="/teknisi" element={<ProtectedRoute><TechnicianDashboard /></ProtectedRoute>} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin-pelanggan" element={<ProtectedRoute><ManajemenAkunPage /></ProtectedRoute>} />
+          <Route path="/admin-client-detail" element={<ProtectedRoute><ClientDetailPage /></ProtectedRoute>} />
+          <Route path="/admin-history" element={<ProtectedRoute><AdminHistory /></ProtectedRoute>} />
+          <Route path="/admin-complaint" element={<ProtectedRoute><AdminComplaint /></ProtectedRoute>} />
+          <Route path="/admin-teknisi" element={<ProtectedRoute><ManajemenTeknisiPage /></ProtectedRoute>} />
+          <Route path="/admin-tariff" element={<ProtectedRoute><AdminTariff /></ProtectedRoute>} />
+
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </Router>
   );
 }
 

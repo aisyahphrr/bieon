@@ -1,5 +1,5 @@
-import React from 'react';
-import { User, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Lock, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -11,12 +11,66 @@ const GoogleIcon = () => (
 );
 
 const Logo = () => (
-   <div className="flex justify-center mb-10 items-center">
-     <img src="/logo_bieon.png" alt="BIEON Logo" className="h-10 md:h-12 object-contain drop-shadow-sm hover:scale-105 transition-transform duration-300" />
-   </div>
+  <div className="flex justify-center mb-10 items-center">
+    <img src="/logo_bieon.png" alt="BIEON Logo" className="h-10 md:h-12 object-contain drop-shadow-sm hover:scale-105 transition-transform duration-300" />
+  </div>
 );
 
-const Login = ({ onNavigate }) => {
+import { useNavigate } from 'react-router-dom';
+
+const Login = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError('Email dan Password wajib diisi');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login gagal. Cek kembali email dan password Anda.');
+      }
+
+      // Simpan token ke local storage
+      localStorage.setItem('bieon_token', data.token);
+
+      // Arahkan berdasarkan role
+      const userRole = data.user?.role;
+      if (userRole === 'SuperAdmin') {
+        navigate('/admin');
+      } else if (userRole === 'Technician') {
+        navigate('/teknisi');
+      } else {
+        // Default (Homeowner)
+        navigate('/dashboard');
+      }
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white pb-12 pt-8">
       {/* Ambient Background Glows */}
@@ -24,10 +78,10 @@ const Login = ({ onNavigate }) => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-teal-200/40 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_10s_ease-in-out_infinite] z-0" style={{ animationDelay: '2s' }}></div>
 
       <div className="relative z-10 w-full max-w-[440px]">
-        
+
         {/* Animated Card Container */}
         <div className="bg-white/80 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-[2.5rem] p-8 sm:p-12 transform transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-900/10">
-          
+
           <Logo />
 
           <div className="text-center mb-8">
@@ -39,7 +93,7 @@ const Login = ({ onNavigate }) => {
             </p>
           </div>
 
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleLogin}>
             {/* Email / Username Field */}
             <div className="space-y-1.5">
               <label className="block text-[13px] font-bold text-slate-700 ml-1">Email / Username</label>
@@ -47,9 +101,11 @@ const Login = ({ onNavigate }) => {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#009b7c] transition-colors">
                   <User size={18} />
                 </div>
-                <input 
-                  type="text" 
-                  placeholder="Enter your Email or Username here" 
+                <input
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your Email or Username here"
                   className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm"
                 />
               </div>
@@ -62,24 +118,37 @@ const Login = ({ onNavigate }) => {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#009b7c] transition-colors">
                   <Lock size={18} />
                 </div>
-                <input 
-                  type="password" 
-                  placeholder="Enter your Password here" 
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your Password here"
                   className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm tracking-widest"
                 />
               </div>
             </div>
 
+            {error && (
+              <div className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-100">
+                {error}
+              </div>
+            )}
+
             {/* Login Button */}
             <div className="pt-4">
-               <button 
-                 onClick={(e) => { e.preventDefault(); onNavigate && onNavigate('dashboard'); }}
-                 className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2"
-               >
-                 <span className="relative z-10">Login</span>
-                 <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />
-                 <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
-               </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2 disabled:bg-slate-400 disabled:hover:translate-y-0"
+              >
+                <span className="relative z-10">{loading ? 'Memproses...' : 'Login'}</span>
+                {!loading ? (
+                  <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />
+                ) : (
+                  <Loader2 size={18} className="animate-spin" />
+                )}
+                <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
+              </button>
             </div>
           </form>
 
@@ -91,8 +160,8 @@ const Login = ({ onNavigate }) => {
           </div>
 
           {/* Google Button */}
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 rounded-xl py-3.5 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow group"
           >
             <div className="group-hover:scale-110 transition-transform">
@@ -105,16 +174,16 @@ const Login = ({ onNavigate }) => {
           <div className="flex justify-between items-center mt-10 text-[13px] text-slate-500 font-medium">
             <a href="#" className="hover:text-[#009b7c] transition-colors font-bold">Forgot Password</a>
             <div>
-              Don't have an account? 
+              Don't have an account?
               <button onClick={() => onNavigate && onNavigate('signup')} className="text-[#009b7c] font-bold hover:underline ml-1.5 transition-all">
-                Sign in
+                Sign Up
               </button>
             </div>
           </div>
         </div>
-        
+
         <div className="text-center mt-8 text-xs font-bold text-slate-400 hover:text-slate-500 cursor-pointer transition-colors">
-           Terms of Service & Privacy Policy BIEON
+          Terms of Service & Privacy Policy BIEON
         </div>
       </div>
     </div>

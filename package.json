@@ -7,7 +7,10 @@
     "microservices/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspaces --if-present",
+    "dev": "concurrently \"npm run dev --workspace=@bieon/backend-api\" \"npm run dev --workspace=@bieon/frontend\"",
     "build": "npm run build --workspace=@bieon/frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

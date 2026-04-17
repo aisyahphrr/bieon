@@ -2,7 +2,16 @@
   "name": "@bieon/backend-api",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "dev": "node --watch server.js"
+  },
   "dependencies": {
-    "express": "^4.19.0"
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.4.1",
+    "mqtt": "^5.15.1"
   }
 }

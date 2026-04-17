@@ -127,7 +127,10 @@ const Logo = ({ className = "" }) => (
   </div>
 );
 
-const LandingPage = ({ onNavigate }) => {
+import { useNavigate } from 'react-router-dom';
+
+const LandingPage = () => {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -166,7 +169,7 @@ const LandingPage = ({ onNavigate }) => {
               <span className="text-slate-300">|</span>
               <span className="hover:text-[#009b7c] cursor-pointer transition-colors">EN</span>
             </div>
-            <button onClick={() => onNavigate && onNavigate('login')} className="group relative bg-[#009b7c] hover:bg-emerald-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 border border-white/10 overflow-hidden flex items-center gap-2">
+            <button onClick={() => navigate('/login')} className="group relative bg-[#009b7c] hover:bg-emerald-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 border border-white/10 overflow-hidden flex items-center gap-2">
               <span className="relative z-10">Log in</span>
               <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
               <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
@@ -203,7 +206,7 @@ const LandingPage = ({ onNavigate }) => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-              <button onClick={() => onNavigate && onNavigate('signup')} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-full font-bold transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2">
+              <button onClick={() => navigate('/signup')} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-full font-bold transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2">
                 Mulai Sekarang <ArrowRight className="w-4 h-4" />
               </button>
               <button className="w-full sm:w-auto bg-white/80 hover:bg-white backdrop-blur-md border border-slate-200 text-slate-700 px-8 py-3.5 rounded-full font-bold transition-all duration-300 hover:border-emerald-200 hover:shadow-lg shadow-sm flex items-center justify-center gap-2 group">

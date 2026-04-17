@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
 
 const GoogleIcon = () => (
@@ -16,7 +16,21 @@ const Logo = () => (
    </div>
 );
 
-const Signup = ({ onNavigate }) => {
+import { useNavigate } from 'react-router-dom';
+
+const Signup = ({ setTempData }) => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    if (setTempData) {
+      setTempData({ email, password });
+    }
+    navigate('/setup');
+  };
+
   return (
     <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white pb-12 pt-8">
       {/* Ambient Background Glows */}
@@ -39,7 +53,7 @@ const Signup = ({ onNavigate }) => {
             </p>
           </div>
 
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleNext}>
             {/* Email Field */}
             <div className="space-y-1.5">
               <label className="block text-[13px] font-bold text-slate-700 ml-1">Email Address</label>
@@ -49,7 +63,10 @@ const Signup = ({ onNavigate }) => {
                 </div>
                 <input 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@plantvision.id" 
+                  required
                   className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm"
                 />
               </div>
@@ -64,7 +81,10 @@ const Signup = ({ onNavigate }) => {
                 </div>
                 <input 
                   type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••" 
+                  required
                   className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm tracking-widest"
                 />
               </div>
@@ -73,7 +93,7 @@ const Signup = ({ onNavigate }) => {
             {/* Create Account Button */}
             <div className="pt-4">
                <button 
-                 onClick={(e) => { e.preventDefault(); onNavigate && onNavigate('setup'); }}
+                 type="submit"
                  className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2"
                >
                  <span className="relative z-10">Create Account</span>
@@ -104,7 +124,7 @@ const Signup = ({ onNavigate }) => {
           {/* Footer Links */}
           <div className="text-center mt-10 text-[13px] text-slate-500 font-medium">
             Sudah memiliki akun? 
-            <button onClick={() => onNavigate && onNavigate('login')} className="text-[#009b7c] font-bold hover:underline ml-1.5 transition-all">
+            <button onClick={() => navigate('/login')} className="text-[#009b7c] font-bold hover:underline ml-1.5 transition-all">
               Log in di sini
             </button>
           </div>

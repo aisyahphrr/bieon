@@ -61,8 +61,22 @@ const FlagId = () => (
     </svg>
 )
 
-const Setup = ({ onNavigate }) => {
+import { useNavigate } from 'react-router-dom';
+
+const Setup = ({ tempData }) => {
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        username: '',
+        phone: '',
+        address: '',
+        systemName: '',
+        bieonId: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [isTermsAccepted, setIsTermsAccepted] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [modalCheckboxChecked, setModalCheckboxChecked] = useState(false);
@@ -126,6 +140,70 @@ const Setup = ({ onNavigate }) => {
         return `${day} ${monthNames[month]} ${year}`;
     };
 
+    const handleRegister = async () => {
+        if (!tempData?.email || !tempData?.password) {
+            setError('Data email/password hilang. Harap ulangi dari halaman signup.');
+            return;
+        }
+        
+        setLoading(true);
+        setError('');
+        try {
+            // 1. Register User
+            const registerRes = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: tempData.email,
+                    password: tempData.password,
+                    fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+                    username: formData.username,
+                    dateOfBirth: formData.dob,
+                    phoneNumber: formData.phone,
+                    address: formData.address,
+                    systemName: formData.systemName,
+                    plnTariff: selectedPln,
+                    bieonId: formData.bieonId,
+                    role: 'Homeowner' // Default Homeowner
+                })
+            });
+            let registerData;
+            if (registerRes.ok) {
+                registerData = await registerRes.json();
+            } else {
+                const errText = await registerRes.text();
+                try {
+                    const errJson = JSON.parse(errText);
+                    throw new Error(errJson.message || 'Gagal mendaftar');
+                } catch(e) {
+                    throw new Error(errText || 'Gagal mendaftar');
+                }
+            }
+
+            // 2. Setup Hubs if bieonId is provided
+            if (formData.bieonId) {
+                const hubRes = await fetch('/api/hubs/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bieonId: formData.bieonId,
+                        userId: registerData.user.id
+                    })
+                });
+                if (!hubRes.ok) {
+                    const hubErr = await hubRes.text();
+                    console.error('Gagal setup hubs', hubErr);
+                }
+            }
+
+            if (navigate) navigate('/dashboard');
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleScrollTerms = (e) => {
         const bottom = e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 2;
         if (bottom && !hasScrolledToBottom) {
@@ -177,17 +255,17 @@ const Setup = ({ onNavigate }) => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
                                     <div className="space-y-2">
                                         <label className="block text-[13px] font-bold text-slate-700">First Name</label>
-                                        <input type="text" placeholder="Asri" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
+                                        <input type="text" placeholder="Asri" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="block text-[13px] font-bold text-slate-700">Last Name</label>
-                                        <input type="text" placeholder="Aisah" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
+                                        <input type="text" placeholder="Aisah" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
                                 </div>
 
                                 <div className="mb-4 space-y-2">
                                     <label className="block text-[13px] font-bold text-slate-700">Username</label>
-                                    <input type="text" placeholder="asrisarassufi" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
+                                    <input type="text" placeholder="asrisarassufi" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-4">
@@ -199,7 +277,7 @@ const Setup = ({ onNavigate }) => {
                                                 +62
                                                 <svg className="w-3 h-3 text-slate-400 ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                             </div>
-                                            <input type="text" placeholder="812345678" className="flex-1 w-full bg-transparent px-4 py-3.5 text-[13px] text-slate-800 focus:outline-none placeholder-slate-400 font-medium" />
+                                            <input type="text" placeholder="812345678" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="flex-1 w-full bg-transparent px-4 py-3.5 text-[13px] text-slate-800 focus:outline-none placeholder-slate-400 font-medium" />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -303,7 +381,7 @@ const Setup = ({ onNavigate }) => {
 
                                 <div className="mb-10 space-y-2">
                                     <label className="block text-[13px] font-bold text-slate-700">Address</label>
-                                    <input type="text" placeholder="Masukkan Alamat Lengkap disini" className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all shadow-sm font-medium" />
+                                    <input type="text" placeholder="Masukkan Alamat Lengkap disini" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all shadow-sm font-medium" />
                                 </div>
 
                                 <div className="flex items-center gap-3 mb-10 pl-1 group cursor-pointer" onClick={openTermsModal}>
@@ -336,12 +414,12 @@ const Setup = ({ onNavigate }) => {
                                 <div className="space-y-6 mb-12">
                                     <div className="space-y-2">
                                         <label className="block text-[13px] font-bold text-slate-700">Nama Sistem / Rumah</label>
-                                        <input type="text" placeholder='misal "Rumah Utama" atau "Kontrakan"' className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[14px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
+                                        <input type="text" placeholder='misal "Rumah Utama" atau "Kontrakan"' value={formData.systemName} onChange={(e) => setFormData({...formData, systemName: e.target.value})} className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[14px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="block text-[13px] font-bold text-slate-700">ID BIEON</label>
-                                        <input type="text" placeholder="ID ini bisa dilihat di belakang perangkat Master BIEON kamu." className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[14px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
+                                        <input type="text" placeholder="ID ini bisa dilihat di belakang perangkat Master BIEON kamu." value={formData.bieonId} onChange={(e) => setFormData({...formData, bieonId: e.target.value})} className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-[14px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-medium shadow-sm" />
                                     </div>
 
                                     <div className="space-y-2">
@@ -419,17 +497,23 @@ const Setup = ({ onNavigate }) => {
 
                                 <div className="mt-12 w-full max-w-[280px]">
                                     <button
-                                        onClick={() => onNavigate && onNavigate('dashboard')}
-                                        className="group relative w-full overflow-hidden rounded-xl bg-[#009b7c] p-4 text-sm font-bold text-white transition-all hover:bg-[#008268] active:scale-95 shadow-lg shadow-emerald-200"
+                                        onClick={handleRegister}
+                                        disabled={loading}
+                                        className="group relative w-full overflow-hidden rounded-xl bg-[#009b7c] p-4 text-sm font-bold text-white transition-all hover:bg-[#008268] disabled:bg-[#009b7c]/50 active:scale-95 shadow-lg shadow-emerald-200"
                                     >
                                         <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-[100%]"></div>
                                         <span className="relative flex items-center justify-center gap-2">
-                                            Masuk ke Dashboard
+                                            {loading ? 'Memproses...' : 'Masuk ke Dashboard'}
                                             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
                                         </span>
                                     </button>
+                                    {error && (
+                                        <div className="mt-4 text-center text-[13px] font-bold text-red-500 bg-red-50 py-2.5 rounded-xl border border-red-100">
+                                            {error}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
