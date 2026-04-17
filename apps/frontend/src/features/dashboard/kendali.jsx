@@ -611,13 +611,13 @@ export function DeviceControlPage({ onNavigate }) {
         {localStorage.getItem('bieon_tech_access') === 'true' && !isTechnicianMode && (
           <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6 shadow-sm flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="p-2 bg-orange-100 rounded-xl shrink-0 mt-0.5">
-               <Activity className="w-5 h-5 text-orange-600 animate-pulse" />
+              <Activity className="w-5 h-5 text-orange-600 animate-pulse" />
             </div>
             <div>
               <h3 className="font-bold text-orange-800 text-sm sm:text-base mb-1">Sedang Dikonfigurasi Teknisi</h3>
               <p className="text-orange-700 text-xs sm:text-sm">
-                 Sistem Anda saat ini sedang dalam proses penambahan/pengaturan perangkat oleh teknisi. 
-                 Beberapa fungsi kendali mungkin dibatasi atau tidak merespons sampai sesi teknisi berakhir.
+                Sistem Anda saat ini sedang dalam proses penambahan/pengaturan perangkat oleh teknisi.
+                Beberapa fungsi kendali mungkin dibatasi atau tidak merespons sampai sesi teknisi berakhir.
               </p>
             </div>
           </div>
@@ -1298,10 +1298,10 @@ export function DeviceControlPage({ onNavigate }) {
             <div className="grid grid-cols-2 gap-4 mb-6"><button
               onClick={() => setConfigMode("sensor")}
               className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "sensor" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
-            ><Settings className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" /><div className="text-center sm:text-left"><h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3><p className="text-xs text-gray-500 hidden sm:block">Sesuai kondisi lingkungan (sensor)</p></div></button><button
+            ><Settings className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" /><div className="text-center sm:text-left"><h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3><p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Kondisi Lingkungan</p></div></button><button
               onClick={() => setConfigMode("schedule")}
               className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "schedule" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
-            ><Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" /><div className="text-center sm:text-left"><h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3><p className="text-xs text-gray-500 hidden sm:block">Sesuai waktu</p></div></button></div>
+            ><Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" /><div className="text-center sm:text-left"><h3 className="font-bold text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3><p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Waktu</p></div></button></div>
           )}
           {configMode === "sensor" ? (
             <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
