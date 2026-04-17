@@ -500,10 +500,10 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
     e.preventDefault();
     const parsedLimit = parseInt(inputLimit.replace(/[^0-9]/g, ''), 10);
     const parsedDeposit = parseInt(inputDeposit.replace(/[^0-9]/g, ''), 10);
-    
+
     let updatedDeposit = deposit;
     let updatedLimit = limit;
-    
+
     if (!isNaN(parsedLimit) && parsedLimit >= 0) {
       setLimit(parsedLimit);
       updatedLimit = parsedLimit;
@@ -557,7 +557,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               <Zap className="w-6 h-6" />
               <div>
                 <h2 className="text-2xl font-bold">Pengaturan Token Listrik</h2>
-                <p className="text-amber-100 text-sm mt-1">Perbarui deposit token dan atur batas peringatan Anda</p>
+                <p className="text-amber-100 text-sm mt-1">Atur batas minimum saldo agar Anda mendapat peringatan sebelum listrik habis</p>
               </div>
             </div>
             <button
@@ -572,22 +572,22 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
         <div className="p-5 sm:p-8 overflow-y-auto flex-1">
           <div className={`border rounded-xl p-4 flex flex-col gap-2 mb-6 transition-colors ${isKritis ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'}`}>
             <div className="flex justify-between items-center text-sm font-semibold">
-              <span className="text-gray-700">Deposit Token Anda:</span>
+              <span className="text-gray-700">Total Isi Token:</span>
               <span className="font-bold text-gray-900">Rp {deposit.toLocaleString('id-ID')}</span>
             </div>
             <div className="flex justify-between items-center text-sm font-semibold">
-              <span className="text-gray-700">Total Terpakai:</span>
+              <span className="text-gray-700">Total Pemakaian:</span>
               <span className="font-bold text-gray-600">Rp {totalTerpakai.toLocaleString('id-ID')}</span>
             </div>
             <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-2 border-t ${isKritis ? 'border-red-200' : 'border-emerald-200'}`}>
-              <span className={isKritis ? 'text-red-800' : 'text-emerald-800'}>Sisa Kuota Daya:</span>
+              <span className={isKritis ? 'text-red-800' : 'text-emerald-800'}>Sisa Saldo Token:</span>
               <span className={`text-lg font-bold ${isKritis ? 'text-red-600' : 'text-emerald-600'}`}>Rp {sisaDaya.toLocaleString('id-ID')}</span>
             </div>
             <div className={`flex justify-between items-center text-xs mt-3 p-2 rounded-lg font-bold uppercase tracking-wider ${isKritis ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
               <span>Status:</span>
               <span className="flex items-center gap-1">
-                 {isKritis ? <AlertTriangle className="w-4 h-4"/> : <CheckCircle2 className="w-4 h-4"/>}
-                 {isKritis ? 'Sisa Saldo Kritis' : 'Aman'}
+                {isKritis ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                {isKritis ? 'Saldo Hampir Habis' : 'Aman'}
               </span>
             </div>
           </div>
@@ -616,11 +616,10 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
                     key={val}
                     type="button"
                     onClick={() => setInputLimit(val.toString())}
-                    className={`py-2 rounded-xl text-sm font-semibold transition-all border ${
-                      inputLimit === val.toString() 
-                        ? 'border-amber-500 bg-amber-50 text-amber-700' 
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300'
-                    }`}
+                    className={`py-2 rounded-xl text-sm font-semibold transition-all border ${inputLimit === val.toString()
+                      ? 'border-amber-500 bg-amber-50 text-amber-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300'
+                      }`}
                   >
                     Rp {val.toLocaleString('id-ID')}
                   </button>
@@ -635,7 +634,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
-            
+
             <div className="pt-2">
               <button
                 type="submit"
@@ -766,9 +765,9 @@ export function HomeownerDashboard({ onNavigate }) {
                           </div>
                           <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1 py-4 sm:py-0">
                             <div className="text-2xl font-bold mb-3 flex items-center gap-2">
-                              {currentSensors.comfort.temp >= 20.5 && currentSensors.comfort.temp <= 27.1 && 
-                               currentSensors.comfort.humidity >= 50 && currentSensors.comfort.humidity <= 80 ? 
-                               '😊 Nyaman' : '😕 Tidak Nyaman'}
+                              {currentSensors.comfort.temp >= 20.5 && currentSensors.comfort.temp <= 27.1 &&
+                                currentSensors.comfort.humidity >= 50 && currentSensors.comfort.humidity <= 80 ?
+                                '😊 Nyaman' : '😕 Tidak Nyaman'}
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3 mt-auto">
