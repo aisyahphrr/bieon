@@ -1,20 +1,49 @@
-import React, { useState, useRef } from 'react';
-import { X, Edit2, Plus, Settings, LogOut, ChevronDown, Check, User, Camera } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Edit2, Plus, Settings, LogOut, ChevronDown, Check, User, Camera, Zap } from 'lucide-react';
 
-export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate }) {
+export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, userProfile }) {
   const [view, setView] = useState('main'); // 'main', 'edit', 'settings'
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80');
+  const [userHubs, setUserHubs] = useState([]);
   const fileInputRef = useRef(null);
 
   // Form State
   const [formData, setFormData] = useState({
-    username: 'asrisarassufi',
-    firstName: 'Asri',
-    lastName: 'Aisah',
-    phoneNo: '+62 812 345 678',
-    dob: '17-08-2005',
-    address: 'Jl. Dalurung'
+    username: userProfile?.username || '',
+    email: userProfile?.email || '',
+    fullName: userProfile?.fullName || '',
+    phoneNo: userProfile?.phoneNumber || '',
+    dob: userProfile?.dateOfBirth || '',
+    address: userProfile?.address || ''
   });
+
+  // Update form data when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      setFormData({
+        username: userProfile.username || '',
+        email: userProfile.email || '',
+        fullName: userProfile.fullName || '',
+        phoneNo: userProfile.phoneNumber || '',
+        dob: userProfile.dateOfBirth || '',
+        address: userProfile.address || ''
+      });
+      
+      // Fetch hubs for this user
+      const fetchHubs = async () => {
+        try {
+          const response = await fetch(`/api/hubs/user/${userProfile._id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setUserHubs(data);
+          }
+        } catch (error) {
+          console.error('Gagal mengambil hubs:', error);
+        }
+      };
+      fetchHubs();
+    }
+  }, [userProfile]);
 
   // Settings State
   const [settingsData, setSettingsData] = useState({
@@ -96,8 +125,8 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate }) {
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <h3 className="text-[22px] font-extrabold text-slate-800 tracking-tight">{formData.username}</h3>
-                <p className="text-[13px] text-slate-500 font-medium tracking-tight mt-0.5">yourname@gmail.com</p>
+                <h3 className="text-[22px] font-extrabold text-slate-800 tracking-tight">{formData.username || 'No Username'}</h3>
+                <p className="text-[13px] text-slate-500 font-medium tracking-tight mt-0.5">{formData.email}</p>
               </div>
 
               {/* Info Details Glass Card */}
@@ -133,23 +162,26 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate }) {
                 </div>
                 
                 <div className="space-y-4 px-2 mb-6">
-                  {[
-                    { name: 'BIEON 01', id: 'B68ut75770', img: 'https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?auto=format&fit=crop&w=100&q=80' },
-                    { name: 'BIEON 02', id: 'Bvohw78070', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=100&q=80' }
-                  ].map((device, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors group">
-                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-slate-200 group-hover:border-emerald-200 transition-colors">
-                        <img src={device.img} alt={device.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  {userHubs.length > 0 ? (
+                    userHubs.map((device, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors group">
+                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-slate-200 group-hover:border-emerald-200 transition-colors flex items-center justify-center bg-slate-50">
+                          <Zap className="w-6 h-6 text-emerald-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[14px] font-bold text-slate-800 tracking-tight">{device.name}</div>
+                          <div className="text-[11px] font-bold text-slate-400">Id_BIEON: {device.bieonId}</div>
+                        </div>
+                        <button className="px-4 py-1.5 bg-emerald-50 text-[#009b7c] text-[11px] font-bold rounded-full hover:bg-[#009b7c] hover:text-white transition-all opacity-80 group-hover:opacity-100">
+                          Detail
+                        </button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[14px] font-bold text-slate-800 tracking-tight">{device.name}</div>
-                        <div className="text-[11px] font-bold text-slate-400">Id_BIEON: {device.id}</div>
-                      </div>
-                      <button className="px-4 py-1.5 bg-emerald-50 text-[#009b7c] text-[11px] font-bold rounded-full hover:bg-[#009b7c] hover:text-white transition-all opacity-80 group-hover:opacity-100">
-                        Detail
-                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-slate-400 text-sm font-medium">
+                      Belum ada perangkat terdaftar.
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 <div className="px-2">
@@ -228,8 +260,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate }) {
               <div className="space-y-4 flex-1 px-1">
                 {[
                   { label: 'Username', name: 'username' },
-                  { label: 'First Name', name: 'firstName' },
-                  { label: 'Last Name', name: 'lastName' },
+                  { label: 'Full Name', name: 'fullName' },
                   { label: 'Phone No', name: 'phoneNo' },
                   { label: 'Date of Birth', name: 'dob' },
                   { label: 'Address', name: 'address' },

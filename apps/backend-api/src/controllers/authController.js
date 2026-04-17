@@ -59,3 +59,16 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
     }
 };
+
+// Fungsi untuk mengambil data profil user yang sedang login
+exports.getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User tidak ditemukan' });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal mengambil data profil', error: error.message });
+    }
+};

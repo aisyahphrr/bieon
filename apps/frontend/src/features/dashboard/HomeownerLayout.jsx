@@ -46,9 +46,33 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [isTechnicianMode, setIsTechnicianMode] = useState(false);
   const [showTechReportModal, setShowTechReportModal] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const roleDropdownRef = useRef(null);
 
   useEffect(() => {
+    // Fetch user profile
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('bieon_token');
+        if (!token) return;
+
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Gagal mengambil profil:', error);
+      }
+    };
+
+    fetchProfile();
+
     const techAccess = localStorage.getItem('bieon_tech_access');
     const techExpiry = localStorage.getItem('bieon_tech_access_expiry');
     
@@ -187,8 +211,10 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full shrink-0"></div>
                   {/* Keep text hidden until xl screen if space is tight, else lg */}
                   <div className="text-left hidden xl:block">
-                    <div className="text-xs font-semibold text-gray-900">Hi, Aisyah!</div>
-                    <div className="text-xs text-gray-500">Homeowner</div>
+                    <div className="text-xs font-semibold text-gray-900">
+                      Hi, {userProfile?.fullName?.split(' ')[0] || 'User'}!
+                    </div>
+                    <div className="text-xs text-gray-500">{userProfile?.role || 'Homeowner'}</div>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400 ml-1 hidden lg:block" />
                 </button>
@@ -256,6 +282,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       <HomeownerProfilePopup
         isOpen={showProfilePopup}
         onClose={() => setShowProfilePopup(false)}
+        userProfile={userProfile}
         onNavigate={item => {
           if (isTechnicianMode && item !== 'kendali') return;
           onNavigate && onNavigate(item);
