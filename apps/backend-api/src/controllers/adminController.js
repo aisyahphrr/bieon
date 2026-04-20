@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Hub = require('../models/Hub');
+const dashboardService = require('../modules/admin/dashboardService');
+const technicianService = require('../modules/users/technicianService');
 
 // ========================================================
 // GET /api/admin/homeowners
@@ -79,6 +81,179 @@ exports.deleteHomeowner = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Gagal menghapus homeowner',
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// GET /api/admin/dashboard/metrics
+// Mengambil aggregated metrics untuk dashboard
+// Menampilkan: Total Users, Total Hubs, Total Devices, Total Complaints
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.getDashboardMetrics = async (req, res) => {
+    try {
+        const metrics = await dashboardService.getDashboardMetrics();
+
+        res.status(200).json({
+            success: true,
+            data: metrics,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Gagal mengambil data dashboard metrics',
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// POST /api/admin/technicians
+// Membuat akun teknisi baru
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.createTechnician = async (req, res) => {
+    try {
+        const payload = {
+            fullName: req.body.fullName,
+            email: req.body.email,
+            password: req.body.password,
+            phoneNumber: req.body.phoneNumber,
+            address: req.body.address,
+            position: req.body.position,
+            experience: req.body.experience,
+            specializations: req.body.specializations,
+            workArea: req.body.workArea,
+            coverageAreas: req.body.coverageAreas,
+            workSchedule: req.body.workSchedule,
+            status: req.body.status,
+        };
+
+        const created = await technicianService.createTechnician(payload);
+
+        res.status(201).json({
+            success: true,
+            message: 'Akun teknisi berhasil dibuat.',
+            data: created,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal membuat akun teknisi.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// GET /api/admin/technicians
+// Mengambil daftar teknisi dengan filter dan pagination
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.getAllTechnicians = async (req, res) => {
+    try {
+        const result = await technicianService.listTechnicians(req.query);
+
+        res.status(200).json({
+            success: true,
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            data: result.data,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Gagal mengambil daftar teknisi.',
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// GET /api/admin/technicians/:id
+// Mengambil detail teknisi berdasarkan id
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.getTechnicianById = async (req, res) => {
+    try {
+        const data = await technicianService.getTechnicianById(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal mengambil detail teknisi.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// PUT /api/admin/technicians/:id
+// Mengupdate data teknisi berdasarkan id
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.updateTechnician = async (req, res) => {
+    try {
+        const payload = {
+            fullName: req.body.fullName,
+            email: req.body.email,
+            password: req.body.password,
+            phoneNumber: req.body.phoneNumber,
+            address: req.body.address,
+            position: req.body.position,
+            experience: req.body.experience,
+            specializations: req.body.specializations,
+            workArea: req.body.workArea,
+            coverageAreas: req.body.coverageAreas,
+            workSchedule: req.body.workSchedule,
+            status: req.body.status,
+        };
+
+        const updated = await technicianService.updateTechnician(req.params.id, payload);
+
+        res.status(200).json({
+            success: true,
+            message: 'Data teknisi berhasil diperbarui.',
+            data: updated,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal memperbarui data teknisi.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// DELETE /api/admin/technicians/:id
+// Menghapus akun teknisi
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.deleteTechnician = async (req, res) => {
+    try {
+        const deleted = await technicianService.deleteTechnician(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Akun teknisi berhasil dihapus.',
+            data: deleted,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal menghapus akun teknisi.' : error.message,
             error: error.message,
         });
     }

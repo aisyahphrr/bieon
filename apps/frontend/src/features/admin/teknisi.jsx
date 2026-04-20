@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import {
     Users,
@@ -51,69 +51,8 @@ const CITY_AREAS = {
     'Lainnya': ['Area Luar Kota', 'Nasional']
 };
 
-// Mock data teknisi
-const mockTechnicians = [
-    {
-        id: 'TECH001',
-        name: 'Budi Santoso',
-        email: 'budi.santoso@bieon.id',
-        phone: '+62 812-3456-7890',
-        address: 'Jl. Sudirman No. 45, Jakarta Pusat',
-        workArea: 'Bandung',
-        status: 'aktif',
-        clientsCount: 3,
-        color: '#3b82f6', // blue
-        clients: [
-            { id: 'C001', name: 'Ahmad Fauzi', location: 'Bandung, Jawa Barat', lat: -6.9175, lng: 107.6191, bieonDevices: 4, smartDevices: 28, status: 'online' },
-            { id: 'C003', name: 'Budi Santoso', location: 'Surabaya, Jawa Timur', lat: -7.2575, lng: 112.7521, bieonDevices: 5, smartDevices: 34, status: 'warning' },
-            { id: 'C005', name: 'Rizki Pratama', location: 'Semarang, Jawa Tengah', lat: -6.9932, lng: 110.4203, bieonDevices: 3, smartDevices: 22, status: 'offline' },
-        ],
-        position: 'Senior Technician',
-        experience: 8,
-        specializations: ['Smart Automation', 'Industrial IoT', 'System Architecture'],
-        coverageAreas: ['Bandung Pusat', 'Cimahi', 'Sumedang'],
-        workSchedule: {
-            'Senin': '08:00 - 17:00',
-            'Selasa': '08:00 - 17:00',
-            'Rabu': '08:00 - 17:00',
-            'Kamis': '08:00 - 17:00',
-            'Jumat': '08:00 - 17:00',
-            'Sabtu': '09:00 - 14:00',
-            'Minggu': 'Off'
-        }
-    },
-    {
-        id: 'TECH002',
-        name: 'Andi Wijaya',
-        email: 'andi.wijaya@bieon.id',
-        phone: '+62 813-2456-8901',
-        address: 'Jl. Gatot Subroto No. 88, Jakarta Selatan',
-        workArea: 'Jakarta',
-        status: 'aktif',
-        clientsCount: 3,
-        color: '#10b981', // green
-        clients: [
-            { id: 'C002', name: 'Siti Nurhaliza', location: 'Jakarta Selatan', lat: -6.2088, lng: 106.8456, bieonDevices: 3, smartDevices: 19, status: 'online' },
-            { id: 'C004', name: 'Dewi Lestari', location: 'Yogyakarta', lat: -7.7956, lng: 110.3695, bieonDevices: 2, smartDevices: 15, status: 'online' },
-            { id: 'C006', name: 'Linda Wijaya', location: 'Jakarta Pusat', lat: -6.1751, lng: 106.8650, bieonDevices: 6, smartDevices: 42, status: 'online' },
-        ]
-    },
-    {
-        id: 'TECH003',
-        name: 'Siti Rahmawati',
-        email: 'siti.rahmawati@bieon.id',
-        phone: '+62 815-3456-9012',
-        address: 'Jl. Ahmad Yani No. 123, Surabaya',
-        workArea: 'Surabaya',
-        status: 'nonaktif',
-        clientsCount: 0,
-        color: '#f59e0b', // yellow
-        clients: []
-    },
-];
-
 export function ManajemenTeknisiPage({ onNavigate }) {
-    const [technicians, setTechnicians] = useState(mockTechnicians);
+    const [technicians, setTechnicians] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -126,14 +65,17 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const [selectedTechnician, setSelectedTechnician] = useState(null);
     const [mapFilterTech, setMapFilterTech] = useState('all');
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [isLoadingTechnicians, setIsLoadingTechnicians] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formError, setFormError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
-    const [formData, setFormData] = useState({
+    const getInitialFormData = () => ({
         name: '',
         email: '',
         phone: '',
         address: '',
         password: '',
-        workArea: '',
         status: 'aktif',
         position: 'Senior Technician',
         experience: 5,
@@ -150,6 +92,63 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             'Minggu': 'Off'
         }
     });
+
+    const [formData, setFormData] = useState(getInitialFormData());
+
+    const mapApiTechnicianToUi = (tech) => ({
+        _id: tech._id,
+        id: tech.technicianId || '-',
+        name: tech.fullName || '-',
+        email: tech.email || '-',
+        phone: tech.phoneNumber || '-',
+        address: tech.address || '-',
+        workArea: tech.workArea || '-',
+        status: tech.status || 'aktif',
+        clientsCount: Number(tech.clientsCount) || 0,
+        color: tech.color || '#10b981',
+        clients: Array.isArray(tech.clients) ? tech.clients : [],
+        position: tech.position || 'Senior Technician',
+        experience: Number(tech.experience) || 0,
+        specializations: Array.isArray(tech.specializations) ? tech.specializations : [],
+        coverageAreas: Array.isArray(tech.coverageAreas) ? tech.coverageAreas : [],
+        workSchedule: tech.workSchedule || getInitialFormData().workSchedule,
+    });
+
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('bieon_token');
+        return {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        };
+    };
+
+    const loadTechnicians = async () => {
+        setIsLoadingTechnicians(true);
+        setFormError('');
+
+        try {
+            const response = await fetch('/api/admin/technicians', {
+                method: 'GET',
+                headers: getAuthHeaders(),
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Gagal mengambil data teknisi.');
+            }
+
+            setTechnicians((result.data || []).map(mapApiTechnicianToUi));
+        } catch (error) {
+            setFormError(error.message || 'Terjadi kesalahan saat mengambil data teknisi.');
+            setTechnicians([]);
+        } finally {
+            setIsLoadingTechnicians(false);
+        }
+    };
+
+    useEffect(() => {
+        loadTechnicians();
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -211,40 +210,51 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const totalClients = technicians.reduce((sum, t) => sum + (t.clientsCount || 0), 0);
     const avgClientsPerTech = totalClients > 0 && activeTechnicians > 0 ? (totalClients / activeTechnicians).toFixed(1) : 0;
 
-    const handleAddTechnician = () => {
-        const newTech = {
-            ...formData,
-            id: `TECH${String(technicians.length + 1).padStart(3, '0')}`,
-            clientsCount: 0,
-            color: '#6366f1', // default indigo
-            clients: []
-        };
+    const handleAddTechnician = async () => {
+        if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.password) {
+            setFormError('Nama, email, nomor telepon, alamat, dan password wajib diisi.');
+            return;
+        }
 
-        setTechnicians(prev => [...prev, newTech]);
-        setIsAddModalOpen(false);
-        // Reset form data
-        setFormData({
-            name: '',
-            email: '',
-            phone: '',
-            address: '',
-            password: '',
-            status: 'aktif',
-            position: 'Senior Technician',
-            experience: 5,
-            workArea: 'Bandung',
-            specializations: [],
-            coverageAreas: [],
-            workSchedule: {
-                'Senin': '08:00 - 17:00',
-                'Selasa': '08:00 - 17:00',
-                'Rabu': '08:00 - 17:00',
-                'Kamis': '08:00 - 17:00',
-                'Jumat': '08:00 - 17:00',
-                'Sabtu': '09:00 - 14:00',
-                'Minggu': 'Off'
+        setIsSubmitting(true);
+        setFormError('');
+
+        try {
+            const payload = {
+                fullName: formData.name,
+                email: formData.email,
+                password: formData.password,
+                phoneNumber: formData.phone,
+                address: formData.address,
+                position: formData.position,
+                experience: Number(formData.experience),
+                specializations: formData.specializations,
+                workArea: formData.workArea,
+                coverageAreas: formData.coverageAreas,
+                workSchedule: formData.workSchedule,
+                status: formData.status,
+            };
+
+            const response = await fetch('/api/admin/technicians', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Gagal membuat akun teknisi.');
             }
-        });
+
+            setSuccessMessage('Akun teknisi berhasil ditambahkan.');
+            setIsAddModalOpen(false);
+            setFormData(getInitialFormData());
+            await loadTechnicians();
+        } catch (error) {
+            setFormError(error.message || 'Terjadi kesalahan saat menambahkan teknisi.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleDeleteTechnician = (tech) => {
@@ -252,11 +262,36 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDeleteTechnician = () => {
-        setTechnicians(prev => prev.filter(t => t.id !== selectedTechnician.id));
-        setIsDeleteModalOpen(false);
-        setDeleteReason('');
-        setSelectedTechnician(null);
+    const confirmDeleteTechnician = async () => {
+        if (!selectedTechnician?._id) {
+            setFormError('ID teknisi tidak ditemukan.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setFormError('');
+
+        try {
+            const response = await fetch(`/api/admin/technicians/${selectedTechnician._id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Gagal menghapus teknisi.');
+            }
+
+            setSuccessMessage('Akun teknisi berhasil dihapus.');
+            setIsDeleteModalOpen(false);
+            setDeleteReason('');
+            setSelectedTechnician(null);
+            await loadTechnicians();
+        } catch (error) {
+            setFormError(error.message || 'Terjadi kesalahan saat menghapus teknisi.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleViewDetail = (tech) => {
@@ -281,17 +316,68 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         setIsEditModalOpen(true);
     };
 
-    const handleSaveEdit = () => {
-        setTechnicians(prev => prev.map(t =>
-            t.id === selectedTechnician.id ? { ...t, ...formData } : t
-        ));
-        setIsEditModalOpen(false);
-        setSelectedTechnician(null);
+    const handleSaveEdit = async () => {
+        if (!selectedTechnician?._id) {
+            setFormError('ID teknisi tidak ditemukan.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setFormError('');
+
+        try {
+            const payload = {
+                fullName: formData.name,
+                email: formData.email,
+                phoneNumber: formData.phone,
+                address: formData.address,
+                position: formData.position,
+                experience: Number(formData.experience),
+                specializations: formData.specializations,
+                workArea: formData.workArea,
+                coverageAreas: formData.coverageAreas,
+                workSchedule: formData.workSchedule,
+                status: formData.status,
+                ...(formData.password ? { password: formData.password } : {}),
+            };
+
+            const response = await fetch(`/api/admin/technicians/${selectedTechnician._id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Gagal memperbarui data teknisi.');
+            }
+
+            setSuccessMessage('Data teknisi berhasil diperbarui.');
+            setIsEditModalOpen(false);
+            setSelectedTechnician(null);
+            setFormData(getInitialFormData());
+            await loadTechnicians();
+        } catch (error) {
+            setFormError(error.message || 'Terjadi kesalahan saat memperbarui data teknisi.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <SuperAdminLayout activeMenu="Teknisi" onNavigate={handleNavigate} title="Manajemen Teknisi">
             <div className="space-y-8">
+                {formError && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                        {formError}
+                    </div>
+                )}
+                {successMessage && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                        {successMessage}
+                    </div>
+                )}
+
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-[#2563eb] rounded-3xl p-6 shadow-xl shadow-blue-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
@@ -433,6 +519,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     </div>
 
                     <div className="overflow-x-auto md:overflow-visible p-4 md:p-0">
+                        {isLoadingTechnicians && (
+                            <div className="px-4 py-3 text-sm font-semibold text-gray-500">Memuat data teknisi...</div>
+                        )}
+
                         {/* Desktop Table View */}
                         <table className="w-full text-left table-auto hidden md:table">
                             <thead>
@@ -788,9 +878,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                             <div className="flex items-center gap-4 pt-4 shrink-0">
                                 <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
-                                <button onClick={handleAddTechnician} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group">
+                                <button onClick={handleAddTechnician} disabled={isSubmitting} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                    Simpan
+                                    {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                                 </button>
                             </div>
                         </div>
@@ -1072,7 +1162,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         onChange={(e) => setMapFilterTech(e.target.value)}
                                     >
                                         <option value="all">Semua Teknisi</option>
-                                        {mockTechnicians.map(t => (
+                                        {technicians.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
@@ -1411,9 +1501,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                             <div className="flex items-center gap-4 pt-4 shrink-0">
                                 <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
-                                <button onClick={handleSaveEdit} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group">
+                                <button onClick={handleSaveEdit} disabled={isSubmitting} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                    Simpan
+                                    {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                                 </button>
                             </div>
                         </div>
@@ -1477,13 +1567,13 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             </button>
                             <button
                                 onClick={confirmDeleteTechnician}
-                                disabled={!deleteReason.trim()}
+                                disabled={!deleteReason.trim() || isSubmitting}
                                 className={`flex-1 py-3 text-white rounded-2xl text-sm font-bold transition-all shadow-lg ${deleteReason.trim()
                                     ? 'bg-[#dc2626] hover:bg-[#b91c1c] shadow-red-100 cursor-pointer'
                                     : 'bg-[#fca5a5] cursor-not-allowed shadow-none opacity-80'
                                     }`}
                             >
-                                Ya, Hapus Teknisi
+                                {isSubmitting ? 'Menghapus...' : 'Ya, Hapus Teknisi'}
                             </button>
                         </div>
                     </div>

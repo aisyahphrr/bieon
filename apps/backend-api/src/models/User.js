@@ -19,8 +19,18 @@ const userSchema = new mongoose.Schema({
 
     // Field Khusus Teknisi
     technicianId: { type: String },
-    assignedRegion: { type: String }
+    assignedRegion: { type: String },
+    position: { type: String },
+    experience: { type: Number, default: 0 },
+    specializations: [{ type: String }],
+    workArea: { type: String },
+    coverageAreas: [{ type: String }],
+    workSchedule: { type: Map, of: String },
+    status: { type: String, enum: ['aktif', 'nonaktif'], default: 'aktif' }
 }, { timestamps: true });
+
+// Unik untuk ID teknisi jika digunakan; sparse agar role lain tidak terdampak
+userSchema.index({ technicianId: 1 }, { unique: true, sparse: true });
 
 // Middleware: Enkripsi password otomatis setiap kali disave ke database
 userSchema.pre('save', async function () {

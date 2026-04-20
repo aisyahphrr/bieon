@@ -24,4 +24,52 @@ router.delete(
     adminController.deleteHomeowner
 );
 
+// GET /api/admin/dashboard/metrics
+router.get(
+    '/dashboard/metrics',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getDashboardMetrics
+);
+
+// POST /api/admin/technicians
+router.post(
+    '/technicians',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.createTechnician
+);
+
+// GET /api/admin/technicians
+router.get(
+    '/technicians',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getAllTechnicians
+);
+
+// GET /api/admin/technicians/:id
+router.get(
+    '/technicians/:id',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getTechnicianById
+);
+
+// PUT /api/admin/technicians/:id
+router.put(
+    '/technicians/:id',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.updateTechnician
+);
+
+// DELETE /api/admin/technicians/:id
+router.delete(
+    '/technicians/:id',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.deleteTechnician
+);
+
 module.exports = router;

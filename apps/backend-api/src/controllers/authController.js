@@ -7,15 +7,33 @@ exports.register = async (req, res) => {
     try {
         const { email, password, role, fullName, username, dateOfBirth, phoneNumber, address, systemName, plnTariff, bieonId, technicianId, assignedRegion } = req.body;
 
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+
+        if (!normalizedEmail || !password || !fullName) {
+            return res.status(400).json({ message: 'Email, password, dan fullName wajib diisi.' });
+        }
+
         // Cek apakah email sudah dipakai
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.status(400).json({ message: 'Email sudah terdaftar!' });
         }
 
         // Buat user baru (Data yang kosong dari frontend akan otomatis diabaikan oleh MongoDB)
         const newUser = new User({
-            email, password, role, fullName, username, dateOfBirth, phoneNumber, address, systemName, plnTariff, bieonId, technicianId, assignedRegion
+            email: normalizedEmail,
+            password,
+            role,
+            fullName,
+            username,
+            dateOfBirth,
+            phoneNumber,
+            address,
+            systemName,
+            plnTariff,
+            bieonId,
+            technicianId,
+            assignedRegion
         });
 
         await newUser.save(); // Password otomatis dienkripsi karena hook di User.js sebelumnya
@@ -30,9 +48,14 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+
+        if (!normalizedEmail || !password) {
+            return res.status(400).json({ message: 'Email dan password wajib diisi!' });
+        }
 
         // Cari user berdasarkan email
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: normalizedEmail });
         if (!user) {
             return res.status(404).json({ message: 'Email tidak ditemukan!' });
         }

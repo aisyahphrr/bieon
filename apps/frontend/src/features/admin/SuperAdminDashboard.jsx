@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -153,11 +153,66 @@ const ThreeDBar = (props) => {
 import { SuperAdminLayout } from './SuperAdminLayout';
 
 export default function SuperAdminDashboard({ onNavigate }) {
+  // Dashboard metrics states
+  const [metrics, setMetrics] = useState({
+    totalUsers: 0,
+    totalHubs: 0,
+    totalDevices: 0,
+    totalComplaints: 0,
+  });
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsError, setMetricsError] = useState(null);
+
+  // Other states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
   const [showPlnModal, setShowPlnModal] = useState(false);
   const [plnTariff, setPlnTariff] = useState(1445);
   const [newTariff, setNewTariff] = useState(plnTariff);
+
+  // Fetch dashboard metrics from API
+  const fetchDashboardMetrics = async () => {
+    try {
+      setMetricsError(null);
+      const token = localStorage.getItem('bieon_token');
+      
+      const response = await fetch('/api/admin/dashboard/metrics', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch metrics: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        setMetrics(data.data);
+        setMetricsLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard metrics:', error);
+      setMetricsError(error.message);
+      setMetricsLoading(false);
+    }
+  };
+
+  // Setup polling on component mount
+  useEffect(() => {
+    // Fetch immediately on mount
+    fetchDashboardMetrics();
+
+    // Setup polling interval (every 10 seconds)
+    const pollingInterval = setInterval(() => {
+      fetchDashboardMetrics();
+    }, 10000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(pollingInterval);
+  }, []);
 
   const handleDownloadPDF = (title, columns, data, filename) => {
     const doc = new jsPDF();
@@ -197,7 +252,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Users className="w-8 h-8 text-white" />
               </div>
               <div className="text-right">
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">123</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
+                  {metricsLoading ? '-' : metrics.totalUsers}
+                </h3>
                 <p className="text-white/90 text-sm font-medium">Total Pelanggan</p>
               </div>
             </div>
@@ -216,7 +273,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Box className="w-8 h-8 text-white" />
               </div>
               <div className="text-right">
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">312</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
+                  {metricsLoading ? '-' : metrics.totalHubs}
+                </h3>
                 <p className="text-white/90 text-sm font-medium">BIEON Nodes</p>
               </div>
             </div>
@@ -233,7 +292,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Monitor className="w-8 h-8 text-white" />
               </div>
               <div className="text-right">
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">459</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
+                  {metricsLoading ? '-' : metrics.totalDevices}
+                </h3>
                 <p className="text-white/90 text-sm font-medium">Smart Devices</p>
               </div>
             </div>
@@ -250,7 +311,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <AlertTriangle className="w-8 h-8 text-white" />
               </div>
               <div className="text-right">
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">15</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
+                  {metricsLoading ? '-' : metrics.totalComplaints}
+                </h3>
                 <p className="text-white/90 text-sm font-medium">Total Pengaduan</p>
               </div>
             </div>

@@ -34,13 +34,41 @@ function LoadingScreen() {
   );
 }
 
+const decodeJwtPayload = (token) => {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch (error) {
+    return null;
+  }
+};
+
+const getDefaultPathByRole = (role) => {
+  if (role === 'SuperAdmin') return '/admin';
+  if (role === 'Technician') return '/teknisi';
+  return '/dashboard';
+};
+
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('bieon_token');
   const location = useLocation();
 
   if (!token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  const payload = decodeJwtPayload(token);
+  const currentRole = payload?.role;
+
+  if (!payload || !currentRole) {
+    localStorage.removeItem('bieon_token');
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (Array.isArray(allowedRoles) && allowedRoles.length > 0 && !allowedRoles.includes(currentRole)) {
+    return <Navigate to={getDefaultPathByRole(currentRole)} replace />;
   }
 
   return children;
@@ -72,22 +100,22 @@ function AppContent() {
         <Route path="/setup" element={<Setup tempData={tempData} />} />
 
         {/* Homeowner Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><HomeownerDashboard /></ProtectedRoute>} />
-        <Route path="/history" element={<ProtectedRoute><HomeownerHistory /></ProtectedRoute>} />
-        <Route path="/kendali" element={<ProtectedRoute><DeviceControlPage /></ProtectedRoute>} />
-        <Route path="/pengaduan" element={<ProtectedRoute><HomeownerComplaint /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerDashboard /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerHistory /></ProtectedRoute>} />
+        <Route path="/kendali" element={<ProtectedRoute allowedRoles={['Homeowner']}><DeviceControlPage /></ProtectedRoute>} />
+        <Route path="/pengaduan" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerComplaint /></ProtectedRoute>} />
 
         {/* Technician Routes */}
-        <Route path="/teknisi" element={<ProtectedRoute><TechnicianDashboard /></ProtectedRoute>} />
+        <Route path="/teknisi" element={<ProtectedRoute allowedRoles={['Technician']}><TechnicianDashboard /></ProtectedRoute>} />
 
         {/* Admin Routes */}
-        <Route path="/admin" element={<ProtectedRoute><SuperAdminDashboard onNavigate={handleNavigate} /></ProtectedRoute>} />
-        <Route path="/admin-pelanggan" element={<ProtectedRoute><ManajemenAkunPage onNavigate={handleNavigate} /></ProtectedRoute>} />
-        <Route path="/admin-client-detail" element={<ProtectedRoute><ClientDetailPage onNavigate={handleNavigate} /></ProtectedRoute>} />
-        <Route path="/admin-history" element={<ProtectedRoute><AdminHistory onNavigate={handleNavigate} /></ProtectedRoute>} />
-        <Route path="/admin-complaint" element={<ProtectedRoute><AdminComplaint onNavigate={handleNavigate} /></ProtectedRoute>} />
-        <Route path="/admin-teknisi" element={<ProtectedRoute><ManajemenTeknisiPage onNavigate={handleNavigate} /></ProtectedRoute>} />
-        <Route path="/admin-tariff" element={<ProtectedRoute><AdminTariff onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><SuperAdminDashboard onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin-pelanggan" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><ManajemenAkunPage onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin-client-detail" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><ClientDetailPage onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin-history" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminHistory onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin-complaint" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminComplaint onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin-teknisi" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><ManajemenTeknisiPage onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin-tariff" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminTariff onNavigate={handleNavigate} /></ProtectedRoute>} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
