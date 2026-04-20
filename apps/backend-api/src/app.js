@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const hubRoutes = require("./routes/hubRoutes");
 const deviceRoutes = require("./routes/deviceRoutes");
 const complaintRoutes = require("./routes/complaintRoutes");
+const kendaliPerangkatRoutes = require("./routes/kendaliPerangkatRoutes");
 
 // Middleware
 app.use(cors());
@@ -22,5 +23,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/hubs', hubRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/complaints', complaintRoutes);
+app.use('/api/kendaliperangkat', kendaliPerangkatRoutes);
 
 module.exports = app;

@@ -49,21 +49,12 @@ const CATEGORY_DEVICES = {
   "other": ["Custom Device"]
 };
 export function DeviceControlPage({ onNavigate }) {
-  const initialBieon = {
-    id: `bieon-sys-1`,
-    bieonId: 'BIEON-001',
-    name: BIEON_DATABASE['BIEON-001'].name,
-    totalHubs: BIEON_DATABASE['BIEON-001'].totalHubs,
-    hubs: [
-      { id: 'hub-1775530705366-1', name: 'Hub 1', devices: [], status: 'active' },
-      { id: 'hub-1775530705366-2', name: 'Hub 2', devices: [], status: 'active' }
-    ],
-    createdAt: new Date().toISOString()
-  };
-
   const [step, setStep] = useState("idle");
-  const [bieonSystems, setBieonSystems] = useState([initialBieon]);
-  const [currentBieon, setCurrentBieon] = useState(initialBieon);
+  const [bieonSystems, setBieonSystems] = useState([]);
+  const [currentBieon, setCurrentBieon] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [rooms, setRooms] = useState(["R1", "R2", "R3", "R4"]);
   const [bieonIdInput, setBieonIdInput] = useState("");
   const [selectedHub, setSelectedHub] = useState(null);
@@ -115,10 +106,75 @@ export function DeviceControlPage({ onNavigate }) {
   const [generatedToken, setGeneratedToken] = useState("");
   const [isEditingDevice, setIsEditingDevice] = useState(null);
 
+  // Load User and Systems from Backend
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('bieon_token');
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
+
+        // 1. Get Me
+        const meRes = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!meRes.ok) throw new Error("Gagal fetch profil");
+        const user = await meRes.json();
+        setUserProfile(user);
+
+        // 2. Get Systems
+        const sysRes = await fetch(`/api/hubs/systems/${user._id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const systemsData = await sysRes.json();
+
+        // 3. Get Devices
+        const devRes = await fetch(`/api/kendaliperangkat/user/${user._id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const devicesData = await devRes.json();
+
+        // Join devices into hubs in systems
+        const joinedSystems = systemsData.map(sys => ({
+          id: sys._id,
+          bieonId: sys.bieonId,
+          name: sys.bieonId, // Fallback name
+          totalHubs: sys.totalHubsCount,
+          hubs: sys.hubs.map(hub => ({
+            ...hub,
+            devices: devicesData.filter(d => d.hubId === hub.id)
+          })),
+          createdAt: sys.createdAt
+        }));
+
+        setBieonSystems(joinedSystems);
+        if (joinedSystems.length > 0) {
+          setCurrentBieon(joinedSystems[0]);
+          setStep("view-bieon");
+        } else {
+          setStep("idle");
+        }
+      } catch (err) {
+        console.error("Error loading data:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+
     const techAccess = localStorage.getItem('bieon_tech_access');
     if (techAccess) {
       setIsTechnicianMode(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem('openBieonInput') === 'true') {
+      setStep('input-id');
+      localStorage.removeItem('openBieonInput');
     }
   }, []);
 
@@ -137,44 +193,49 @@ export function DeviceControlPage({ onNavigate }) {
     onNavigate('teknisi');
   };
 
-  useEffect(() => {
-    if (localStorage.getItem('openBieonInput') === 'true') {
-      setStep('input-id');
-      localStorage.removeItem('openBieonInput');
-    }
-  }, []);
+  const handleSubmitBieonId = async () => {
+    if (!bieonIdInput.trim()) return;
 
-  const handleSubmitBieonId = () => {
-    const bieonData = BIEON_DATABASE[bieonIdInput];
-    if (!bieonData) {
-      alert("ID BIEON tidak ditemukan! Coba: BIEON-001, BIEON-002, BIEON-003, atau BIEON-004");
-      return;
-    }
-    if (bieonSystems.find((b) => b.bieonId === bieonIdInput)) {
-      alert("BIEON ini sudah ditambahkan!");
-      return;
-    }
-    const hubs = [];
-    for (let i = 1; i <= bieonData.totalHubs; i++) {
-      hubs.push({
-        id: `hub-${Date.now()}-${i}`,
-        name: `Hub ${i}`,
-        devices: [],
-        status: "active"
+    try {
+      const token = localStorage.getItem('bieon_token');
+      const response = await fetch('/api/hubs/setup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bieonId: bieonIdInput,
+          totalHubs: 3, // Default atau ambil dari BIEON_DATABASE jika perlu
+          userId: userProfile._id
+        })
       });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+
+      const newBieon = {
+        id: data.system._id,
+        bieonId: data.system.bieonId,
+        name: data.system.bieonId,
+        totalHubs: data.system.totalHubsCount,
+        hubs: data.hubs.map(h => ({
+          id: h._id,
+          name: h.name,
+          status: h.status,
+          devices: []
+        })),
+        createdAt: data.system.createdAt
+      };
+
+      setBieonSystems([...bieonSystems, newBieon]);
+      setCurrentBieon(newBieon);
+      setBieonIdInput("");
+      setStep("view-bieon");
+      alert("Sistem BIEON berhasil ditambahkan!");
+    } catch (error) {
+      alert("Gagal: " + error.message);
     }
-    const newBieon = {
-      id: `bieon-sys-${Date.now()}`,
-      bieonId: bieonIdInput,
-      name: bieonData.name,
-      totalHubs: bieonData.totalHubs,
-      hubs,
-      createdAt: (/* @__PURE__ */ new Date()).toISOString()
-    };
-    setBieonSystems([...bieonSystems, newBieon]);
-    setCurrentBieon(newBieon);
-    setBieonIdInput("");
-    setStep("view-bieon");
   };
   const handleAddHub = () => {
     if (!currentBieon) return;
@@ -234,17 +295,108 @@ export function DeviceControlPage({ onNavigate }) {
       return;
     }
 
-    // Khusus sensor, langsung arahkan ke aspek yang relevan
+    // Khusus sensor, langsung arahkan ke aspek yang relevan dan AKTIFKAN parameternya
     if (selectedCategory === "sensor") {
-      if (selectedDeviceType === "Sensor Kualitas Air") setActiveSensorAspect("kualitasAir");
-      else if (selectedDeviceType === "Sensor Kenyamanan" || selectedDeviceType === "Humidity Sensor") setActiveSensorAspect("kenyamanan");
-      else if (selectedDeviceType === "Sensor Keamanan" || selectedDeviceType === "Motion Sensor") setActiveSensorAspect("keamanan");
-      else if (selectedDeviceType === "Door Sensor") setActiveSensorAspect("keamananPintu");
+      let aspect = null;
+      let newConfig = { ...sensorConfig };
+
+      if (selectedDeviceType === "Sensor Kualitas Air") {
+        aspect = "kualitasAir";
+        newConfig.ph.enabled = true;
+        newConfig.turbidity.enabled = true;
+        newConfig.tds.enabled = true;
+        newConfig.waterTemp.enabled = true;
+      } 
+      else if (selectedDeviceType === "Sensor Kenyamanan" || selectedDeviceType === "Humidity Sensor") {
+        aspect = "kenyamanan";
+        newConfig.temperature.enabled = true;
+        newConfig.humidity.enabled = true;
+      } 
+      else if (selectedDeviceType === "Sensor Keamanan" || selectedDeviceType === "Motion Sensor") {
+        aspect = "keamanan";
+        newConfig.motion.enabled = true;
+      } 
+      else if (selectedDeviceType === "Door Sensor") {
+        aspect = "keamananPintu";
+        newConfig.door.enabled = true;
+      }
+
+      if (aspect) {
+        setActiveSensorAspect(aspect);
+        setSensorConfig(newConfig);
+      }
     }
 
     setStep("configure");
   };
-  const handleDirectSave = (forcedMode = null) => {
+  const mapToBackendData = (category, type, controlMode, aspect) => {
+    let backendCategory = category;
+    let backendType = type;
+    let backendControl = controlMode;
+    let backendAspect = null;
+
+    // Map Category
+    if (category === "sensor") {
+      backendCategory = "Sensor";
+    } else if (["smart-plug", "smart-switch", "remote"].includes(category)) {
+      backendCategory = "Control Actuator System";
+    }
+
+    // Map Type
+    if (type === "Sensor Kualitas Air") {
+      backendType = "Kualitas Air";
+    } else if (type === "Sensor Kenyamanan") {
+      backendType = "Kenyamanan";
+    } else if (type === "Sensor Keamanan") {
+      backendType = "Keamanan";
+    }
+
+    // Map Control Mode
+    if (controlMode === "sensor") {
+      backendControl = "Lingkungan";
+    } else if (controlMode === "manual") {
+      backendControl = "Manual";
+    } else if (controlMode === "schedule") {
+      backendControl = "Jadwal";
+    } else if (!controlMode && category === "sensor") {
+      backendControl = "Lingkungan";
+    }
+
+    // Map Aspect
+    if (aspect === "kualitasAir") {
+      backendAspect = "Kualitas Air";
+    } else if (aspect === "kenyamanan") {
+      backendAspect = "Kenyamanan";
+    } else if (aspect === "keamanan" || aspect === "keamananPintu") {
+      backendAspect = "Keamanan";
+    }
+
+    return { backendCategory, backendType, backendControl, backendAspect };
+  };
+
+  const transformSensorParams = (config, aspect) => {
+    if (!config) return null;
+    
+    // Default empty result
+    let result = {};
+
+    if (aspect === "kualitasAir") {
+      if (config.ph?.enabled) result.ph = config.ph.value;
+      if (config.turbidity?.enabled) result.turbidity = config.turbidity.value;
+      if (config.tds?.enabled) result.tds = config.tds.value;
+      if (config.waterTemp?.enabled) result.temperature = config.waterTemp.value;
+    } else if (aspect === "kenyamanan") {
+      if (config.temperature?.enabled) result.temperature = config.temperature.value;
+      if (config.humidity?.enabled) result.humidity = config.humidity.value;
+    } else if (aspect === "keamanan" || aspect === "keamananPintu") {
+      if (config.motion?.enabled) result.isMotionEnabled = true;
+      if (config.door?.enabled) result.isDoorEnabled = true;
+    }
+
+    return Object.keys(result).length > 0 ? result : null;
+  };
+
+  const handleDirectSave = async (forcedMode = null) => {
     if (!deviceForm.name || !deviceForm.location) {
       alert("Mohon lengkapi nama device dan lokasi!");
       return;
@@ -252,121 +404,123 @@ export function DeviceControlPage({ onNavigate }) {
 
     if (!currentBieon || !selectedHub) return;
 
-    // Build the device object
-    const deviceData = {
-      name: deviceForm.name,
-      deviceType: selectedDeviceType,
-      category: selectedCategory,
-      location: deviceForm.location,
-      notes: deviceForm.notes,
-      hubId: selectedHub.id,
-      bieonId: currentBieon.bieonId,
-      lastActivity: new Date().toISOString(),
-      controlMode: forcedMode || (isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : "manual"))
-    };
+    try {
+      const token = localStorage.getItem('bieon_token');
+      const rawControl = forcedMode || (isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : "manual"));
+      const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(selectedCategory, selectedDeviceType, rawControl, activeSensorAspect);
 
-    if (selectedCategory !== "sensor") {
-      deviceData.controls = deviceData.controls || {};
-    } else {
-      if (!isEditingDevice) {
-        deviceData.sensorData = generateMockSensorData(selectedDeviceType);
-      }
-      if (!isTechnicianMode) {
-        deviceData.sensorParams = sensorConfig;
-      }
-    }
-
-    let updatedHubs;
-    if (isEditingDevice) {
-      updatedHubs = currentBieon.hubs.map((hub) => {
-        const filteredDevices = hub.devices.filter(d => d.id !== isEditingDevice);
-        if (hub.id === selectedHub.id) {
-          const originalDevice = allDevices.find(d => d.id === isEditingDevice);
-          return { ...hub, devices: [...filteredDevices, { ...originalDevice, ...deviceData }] };
-        }
-        return { ...hub, devices: filteredDevices };
-      });
-    } else {
-      const newDevice = {
-        ...deviceData,
-        id: `dev-${Date.now()}`,
-        status: "OFF",
-        installedDate: new Date().toISOString(),
+      const deviceData = {
+        name: deviceForm.name,
+        deviceType: backendType, 
+        category: backendCategory, 
+        location: deviceForm.location,
+        notes: deviceForm.notes,
+        hubId: selectedHub.id,
+        bieonId: currentBieon.bieonId,
+        ownerId: userProfile._id,
+        controlMode: backendControl,
+        environmentAspect: backendAspect,
+        sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
+        sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null
       };
-      updatedHubs = currentBieon.hubs.map((hub) =>
+
+      const response = await fetch('/api/kendaliperangkat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(deviceData)
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Gagal menyimpan perangkat");
+      }
+
+      const newDevice = {
+        ...data.device,
+        id: data.device._id,
+        status: "OFF",
+        installedDate: data.device.createdAt
+      };
+
+      // Update local state
+      const updatedHubs = currentBieon.hubs.map((hub) =>
         hub.id === selectedHub.id ? { ...hub, devices: [...hub.devices, newDevice] } : hub
       );
+      const updatedBieon = { ...currentBieon, hubs: updatedHubs };
+      setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
+      setCurrentBieon(updatedBieon);
+      
+      resetForm();
+      setStep("view-bieon");
+      alert("Perangkat berhasil ditambahkan ke database!");
+    } catch (error) {
+      console.error("Save error details:", error);
+      alert("Gagal simpan: " + (error.message || "Terjadi kesalahan pada server"));
     }
-
-    const updatedBieon = { ...currentBieon, hubs: updatedHubs };
-    setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
-    setCurrentBieon(updatedBieon);
-    resetForm();
-    setStep("view-bieon");
-    alert(isEditingDevice ? "Perangkat berhasil diperbarui!" : "Perangkat berhasil ditambahkan!");
   };
-  const handleSaveDevice = () => {
+
+  const handleSaveDevice = async () => {
     if (!currentBieon || !selectedHub) return;
 
-    const deviceData = {
-      name: deviceForm.name,
-      deviceType: selectedDeviceType,
-      category: selectedCategory,
-      location: deviceForm.location,
-      notes: deviceForm.notes,
-      hubId: selectedHub.id,
-      bieonId: currentBieon.bieonId,
-      lastActivity: new Date().toISOString()
-    };
+    try {
+      const token = localStorage.getItem('bieon_token');
+      const rawControl = isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : configMode);
+      const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(selectedCategory, selectedDeviceType, rawControl, activeSensorAspect);
 
-    if (selectedCategory !== "sensor") {
-      deviceData.controlMode = isTechnicianMode ? null : configMode;
-      if (!isTechnicianMode) {
-        if (configMode === "sensor") {
-          deviceData.sensorParams = sensorConfig;
-        } else {
-          deviceData.scheduleSettings = scheduleConfig;
-        }
-      }
-      deviceData.controls = deviceData.controls || {};
-    } else {
-      if (!isEditingDevice) {
-        deviceData.sensorData = generateMockSensorData(selectedDeviceType);
-      }
-      deviceData.controlMode = isTechnicianMode ? null : "sensor";
-      if (!isTechnicianMode) {
-        deviceData.sensorParams = sensorConfig;
-      }
-    }
-
-    let updatedHubs;
-    if (isEditingDevice) {
-      updatedHubs = currentBieon.hubs.map((hub) => {
-        const filteredDevices = hub.devices.filter(d => d.id !== isEditingDevice);
-        if (hub.id === selectedHub.id) {
-          const originalDevice = allDevices.find(d => d.id === isEditingDevice);
-          return { ...hub, devices: [...filteredDevices, { ...originalDevice, ...deviceData }] };
-        }
-        return { ...hub, devices: filteredDevices };
-      });
-    } else {
-      const newDevice = {
-        ...deviceData,
-        id: `dev-${Date.now()}`,
-        status: "OFF",
-        installedDate: new Date().toISOString(),
+      const deviceData = {
+        name: deviceForm.name,
+        deviceType: backendType, 
+        category: backendCategory, 
+        location: deviceForm.location,
+        notes: deviceForm.notes,
+        hubId: selectedHub.id,
+        bieonId: currentBieon.bieonId,
+        ownerId: userProfile._id,
+        controlMode: backendControl,
+        environmentAspect: backendAspect,
+        sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
+        scheduleSettings: configMode === "schedule" ? scheduleConfig : null,
+        sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null
       };
-      updatedHubs = currentBieon.hubs.map((hub) =>
+
+      const response = await fetch('/api/kendaliperangkat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(deviceData)
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Gagal menyimpan perangkat");
+      }
+
+      const newDevice = {
+        ...data.device,
+        id: data.device._id,
+        status: "OFF",
+        installedDate: data.device.createdAt
+      };
+
+      // Update local state
+      const updatedHubs = currentBieon.hubs.map((hub) =>
         hub.id === selectedHub.id ? { ...hub, devices: [...hub.devices, newDevice] } : hub
       );
-    }
+      const updatedBieon = { ...currentBieon, hubs: updatedHubs };
+      setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
+      setCurrentBieon(updatedBieon);
 
-    const updatedBieon = { ...currentBieon, hubs: updatedHubs };
-    setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
-    setCurrentBieon(updatedBieon);
-    resetForm();
-    setStep("view-bieon");
-    alert(isEditingDevice ? "Perangkat berhasil diperbarui!" : "Perangkat berhasil ditambahkan!");
+      resetForm();
+      setStep("view-bieon");
+      alert("Konfigurasi perangkat berhasil disimpan!");
+    } catch (error) {
+      alert("Gagal simpan: " + error.message);
+    }
   };
   const generateMockSensorData = (deviceType) => {
     const data = {
@@ -456,18 +610,36 @@ export function DeviceControlPage({ onNavigate }) {
     }));
     setBieonSystems(updatedSystems);
   };
-  const deleteDevice = (deviceId) => {
+  const deleteDevice = async (deviceId) => {
     if (!confirm("Yakin ingin menghapus device ini?")) return;
-    const updatedSystems = bieonSystems.map((system) => ({
-      ...system,
-      hubs: system.hubs.map((hub) => ({
-        ...hub,
-        devices: hub.devices.filter((device) => device.id !== deviceId)
-      }))
-    }));
-    setBieonSystems(updatedSystems);
-    if (currentBieon) {
-      setCurrentBieon(updatedSystems.find((s) => s.id === currentBieon.id) || null);
+
+    try {
+      const token = localStorage.getItem('bieon_token');
+      const response = await fetch(`/api/kendaliperangkat/${deviceId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error("Gagal menghapus perangkat");
+
+      // Update local state
+      const updatedSystems = bieonSystems.map((system) => ({
+        ...system,
+        hubs: system.hubs.map((hub) => ({
+          ...hub,
+          devices: hub.devices.filter((device) => device.id !== deviceId)
+        }))
+      }));
+      setBieonSystems(updatedSystems);
+      if (currentBieon) {
+        const matching = updatedSystems.find((s) => s.id === currentBieon.id);
+        setCurrentBieon(matching || null);
+      }
+      alert("Perangkat berhasil dihapus dari database!");
+    } catch (error) {
+      alert("Error: " + error.message);
     }
   };
   const handleEditDevice = (device) => {
@@ -607,7 +779,14 @@ export function DeviceControlPage({ onNavigate }) {
       hideBottomNav={isModalOpen}
     >
       <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
-        {/* Banner Status Konfigurasi untuk Tampilan Homeowner */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-40">
+            <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-500 font-medium">Memuat data sistem BIEON...</p>
+          </div>
+        ) : (
+          <>
+            {/* Banner Status Konfigurasi untuk Tampilan Homeowner */}
         {localStorage.getItem('bieon_tech_access') === 'true' && !isTechnicianMode && (
           <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6 shadow-sm flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="p-2 bg-orange-100 rounded-xl shrink-0 mt-0.5">
@@ -784,40 +963,39 @@ export function DeviceControlPage({ onNavigate }) {
             {expandedDevice === device.id && (
               <div className="mt-5 pt-5 border-t border-gray-100">
                 {/* Configuration Context Section - Hidden for Technicians or if no mode */}
-                {!isTechnicianMode && device.controlMode && (
+                {!isTechnicianMode && device.controlMethod && (
                   <div className="mb-6">
                     <div className="flex items-center gap-3 mb-4">
                       <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        Mode: <span className={`${(device.category === "sensor" || device.controlMode === "sensor") ? "text-emerald-600 bg-emerald-50" : (device.controlMode === "manual" ? "text-blue-600 bg-blue-50" : (device.controlMode ? "text-purple-600 bg-purple-50" : "text-gray-500 bg-gray-100"))} font-bold px-2 py-0.5 rounded capitalize`}>
-                          {device.controlMode === "manual" ? "Mode Manual" : (device.controlMode ? ((device.category === "sensor" || device.controlMode === "sensor") ? "Parameter Sensor" : "Jadwal Otomatis") : "-")}
+                        Mode: <span className={`${(device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? "text-emerald-600 bg-emerald-50" : (device.controlMethod === "Manual" || device.controlMethod === "manual" ? "text-blue-600 bg-blue-50" : (device.controlMethod ? "text-purple-600 bg-purple-50" : "text-gray-500 bg-gray-100"))} font-bold px-2 py-0.5 rounded capitalize`}>
+                          {device.controlMethod === "Manual" || device.controlMethod === "manual" ? "Mode Manual" : (device.controlMethod ? ((device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? "Parameter Sensor" : "Jadwal Otomatis") : "-")}
                         </span>
                       </p>
                     </div>
 
                     {/* Detailed Configuration Summary */}
-                    {device.controlMode !== "manual" && (
+                    {(device.controlMethod !== "Manual" && device.controlMethod !== "manual") && (
                       <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-wrap gap-3">
-                        {device.category === "sensor" || device.controlMode === "sensor" ? (
+                        {device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor" ? (
                           <>
-                            {device.sensorParams && Object.entries(device.sensorParams).filter(([_, cfg]) => cfg.enabled).length > 0 ? (
+                            {device.sensorParams && Object.keys(device.sensorParams).length > 0 ? (
                               Object.entries(device.sensorParams)
-                                .filter(([_, cfg]) => cfg.enabled)
-                                .map(([key, cfg], idx) => (
+                                .map(([key, val], idx) => (
                                   <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
-                                    {key === "temperature" && <Thermometer className="w-4 h-4 text-orange-500" />}
+                                    {(key === "temperature" || key === "waterTemp") && <Thermometer className="w-4 h-4 text-orange-500" />}
                                     {key === "humidity" && <Droplets className="w-4 h-4 text-blue-500" />}
-                                    {key === "motion" && <Eye className="w-4 h-4 text-purple-600" />}
-                                    {key === "door" && <Lock className="w-4 h-4 text-red-600" />}
-                                    {["ph", "turbidity", "tds", "waterTemp"].includes(key) && <Waves className="w-4 h-4 text-cyan-600" />}
+                                    {key === "isMotionEnabled" && <Eye className="w-4 h-4 text-purple-600" />}
+                                    {key === "isDoorEnabled" && <Lock className="w-4 h-4 text-red-600" />}
+                                    {["ph", "turbidity", "tds"].includes(key) && <Waves className="w-4 h-4 text-cyan-600" />}
                                     <span className="text-xs font-bold text-gray-700">
                                       {key === "temperature" ? "Suhu" :
                                         key === "humidity" ? "Lembap" :
-                                          key === "motion" ? "Gerakan" :
-                                            key === "door" ? "Buka Pintu" :
-                                              key === "ph" ? "pH" :
-                                                key === "turbidity" ? "Kekeruhan" :
-                                                  key === "tds" ? "TDS" : "Suhu Air"}:
-                                      {cfg.value !== undefined ? ` > ${cfg.value}${key === "temperature" || key === "waterTemp" ? "°C" : key === "humidity" ? "%" : ""}` : " (Aktif)"}
+                                        key === "isMotionEnabled" ? "Gerakan" :
+                                        key === "isDoorEnabled" ? "Buka Pintu" :
+                                        key === "ph" ? "pH" :
+                                        key === "turbidity" ? "Kekeruhan" :
+                                        key === "tds" ? "TDS" : "Suhu Air"}:
+                                      {val !== undefined ? ` > ${val}${key === "temperature" || key === "waterTemp" ? "°C" : key === "humidity" ? "%" : ""}` : " (Aktif)"}
                                     </span>
                                   </div>
                                 ))
@@ -856,7 +1034,11 @@ export function DeviceControlPage({ onNavigate }) {
                 {/* Quick Controls Section - Hidden for Technicians */}
                 {!isTechnicianMode && (
                   <div className="mb-6">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{device.category === "sensor" ? "Status Monitoring" : "Kontrol Manual"}</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                      {device.category === "sensor" ? "Status Monitoring" : 
+                       (device.controlMethod === "Lingkungan" ? "Kontrol Lingkungan" : 
+                        (device.controlMethod === "Jadwal" ? "Kontrol Jadwal" : "Kontrol Manual"))}
+                    </p>
                     <div className="flex flex-wrap gap-4 p-3 bg-blue-50/50 rounded-xl border border-blue-50/50">
                       {device.category !== "sensor" && (
                         <button
@@ -1909,6 +2091,8 @@ export function DeviceControlPage({ onNavigate }) {
             ><Save className="w-5 h-5" />
               Simpan Konfigurasi
             </button></div></div></div>}
+          </>
+        )}
       </div>
       {/* Token Generation Modal */}
       {showTokenModal && (
