@@ -53,125 +53,13 @@ import {
     Area
 } from 'recharts';
 
-// Mock data homeowners
-const mockHomeowners = [
-    {
-        id: 'HO001',
-        username: 'ahmad.fauzi',
-        fullName: 'Ahmad Fauzi',
-        email: 'ahmad.fauzi@email.com',
-        phone: '+62 812-3456-7890',
-        address: 'Jl. Merdeka No. 123, Bandung, Jawa Barat',
-        status: 'aktif',
-        registrationDate: '15 Jan 2024',
-        lastActive: '2 menit lalu',
-        totalBieonDevices: 4,
-        totalSmartDevices: 28,
-        assignedTechnician: 'Budi Santoso',
-        monthlyConsumption: 245.5,
-        monthlyBill: 368250
-    },
-    {
-        id: 'HO002',
-        username: 'siti.nurhaliza',
-        fullName: 'Siti Nurhaliza',
-        email: 'siti.nurhaliza@email.com',
-        phone: '+62 813-2456-8901',
-        address: 'Jl. Sudirman No. 45, Jakarta Selatan',
-        status: 'aktif',
-        registrationDate: '22 Feb 2024',
-        lastActive: '5 menit lalu',
-        totalBieonDevices: 3,
-        totalSmartDevices: 19,
-        assignedTechnician: 'Andi Wijaya',
-        monthlyConsumption: 189.3,
-        monthlyBill: 283950
-    },
-    {
-        id: 'HO003',
-        username: 'budi.santoso',
-        fullName: 'Budi Santoso',
-        email: 'budi.santoso@email.com',
-        phone: '+62 815-3456-9012',
-        address: 'Jl. Gatot Subroto No. 88, Surabaya, Jawa Timur',
-        status: 'warning',
-        registrationDate: '10 Mar 2024',
-        lastActive: '2 jam lalu',
-        totalBieonDevices: 5,
-        totalSmartDevices: 34,
-        assignedTechnician: 'Budi Santoso',
-        monthlyConsumption: 312.7,
-        monthlyBill: 469050
-    },
-    {
-        id: 'HO004',
-        username: 'dewi.lestari',
-        fullName: 'Dewi Lestari',
-        email: 'dewi.lestari@email.com',
-        phone: '+62 817-4567-0123',
-        address: 'Jl. Malioboro No. 56, Yogyakarta',
-        status: 'aktif',
-        registrationDate: '5 Apr 2024',
-        lastActive: '10 menit lalu',
-        totalBieonDevices: 2,
-        totalSmartDevices: 15,
-        assignedTechnician: 'Andi Wijaya',
-        monthlyConsumption: 156.2,
-        monthlyBill: 234300
-    },
-    {
-        id: 'HO005',
-        username: 'rizki.pratama',
-        fullName: 'Rizki Pratama',
-        email: 'rizki.pratama@email.com',
-        phone: '+62 819-5678-1234',
-        address: 'Jl. Pemuda No. 99, Semarang, Jawa Tengah',
-        status: 'nonaktif',
-        registrationDate: '18 May 2024',
-        lastActive: '2 hari lalu',
-        totalBieonDevices: 3,
-        totalSmartDevices: 22,
-        assignedTechnician: 'Budi Santoso',
-        monthlyConsumption: 0,
-        monthlyBill: 0
-    },
-    {
-        id: 'HO006',
-        username: 'linda.wijaya',
-        fullName: 'Linda Wijaya',
-        email: 'linda.wijaya@email.com',
-        phone: '+62 821-6789-2345',
-        address: 'Jl. Asia Afrika No. 77, Jakarta Pusat',
-        status: 'aktif',
-        registrationDate: '12 Jun 2024',
-        lastActive: '1 menit lalu',
-        totalBieonDevices: 6,
-        totalSmartDevices: 42,
-        assignedTechnician: 'Andi Wijaya',
-        monthlyConsumption: 421.8,
-        monthlyBill: 632700
-    },
-];
+// Helper: format tanggal ISO ke string lokal
+const formatDate = (iso) => {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
-const energyTrendData = [
-    { month: 'Jan', consumption: 1245 },
-    { month: 'Feb', consumption: 1389 },
-    { month: 'Mar', consumption: 1521 },
-    { month: 'Apr', consumption: 1456 },
-    { month: 'May', consumption: 1678 },
-    { month: 'Jun', consumption: 1815 },
-];
-
-const deviceStatusData = [
-    { name: 'Online', value: 156, color: '#10b981' },
-    { name: 'Offline', value: 24, color: '#ef4444' },
-    { name: 'Warning', value: 12, color: '#f59e0b' },
-];
-
-const technicianDistributionData = [
-    { name: 'Budi Santoso', clients: 3, color: '#3b82f6' },
-    { name: 'Andi Wijaya', clients: 3, color: '#10b981' },
-];
+// End of helpers
 
 export function ManajemenAkunPage({ onNavigate }) {
     const [activeTab, setActiveTab] = useState('accounts');
@@ -187,10 +75,63 @@ export function ManajemenAkunPage({ onNavigate }) {
     const [activeDetailTab, setActiveDetailTab] = useState('info');
     const [deleteReason, setDeleteReason] = useState('');
 
+    // State untuk data dari API
+    const [homeowners, setHomeowners] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [fetchError, setFetchError] = useState(null);
+    const [selectedHomeownerHubs, setSelectedHomeownerHubs] = useState([]);
+    const [isLoadingHubs, setIsLoadingHubs] = useState(false);
+
+    // Fetch data homeowner dari backend
+    useEffect(() => {
+        const fetchHomeowners = async () => {
+            setIsLoading(true);
+            setFetchError(null);
+            try {
+                const token = localStorage.getItem('bieon_token');
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/homeowners`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error(`Error ${res.status}`);
+                const json = await res.json();
+                setHomeowners(json.data || []);
+            } catch (err) {
+                setFetchError('Gagal memuat data homeowner: ' + err.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchHomeowners();
+    }, []);
+
+    // Fetch Hubs untuk homeowner yang dipilih
+    useEffect(() => {
+        if (selectedHomeowner && activeDetailTab === 'devices') {
+            const fetchHubs = async () => {
+                setIsLoadingHubs(true);
+                try {
+                    const token = localStorage.getItem('bieon_token');
+                    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hubs/user/${selectedHomeowner._id}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (!res.ok) throw new Error('Gagal mengambil data hub');
+                    const json = await res.json();
+                    setSelectedHomeownerHubs(json);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    setIsLoadingHubs(false);
+                }
+            };
+            fetchHubs();
+        }
+    }, [selectedHomeowner, activeDetailTab]);
+
+    // Event listener dari halaman lain (misal: SuperAdminDashboard)
     useEffect(() => {
         const handleOpenDetail = (e) => {
             const customerName = e.detail;
-            const ho = mockHomeowners.find(h => h.fullName === customerName);
+            const ho = homeowners.find(h => h.fullName === customerName);
             if (ho) {
                 setSelectedHomeowner(ho);
                 setActiveDetailTab('info');
@@ -199,7 +140,7 @@ export function ManajemenAkunPage({ onNavigate }) {
         };
         window.addEventListener('openHomeownerDetail', handleOpenDetail);
         return () => window.removeEventListener('openHomeownerDetail', handleOpenDetail);
-    }, []);
+    }, [homeowners]);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -211,24 +152,22 @@ export function ManajemenAkunPage({ onNavigate }) {
         status: 'aktif'
     });
 
-    // Filter homeowners
-    const filteredHomeowners = mockHomeowners.filter(ho => {
+    // Filter homeowners dari state API
+    const filteredHomeowners = homeowners.filter(ho => {
         const matchesSearch =
-            ho.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ho.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ho.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            ho.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesStatus = filterStatus === 'all' || ho.status === filterStatus;
-
-        return matchesSearch && matchesStatus;
+            (ho.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (ho.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (ho.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (ho._id || '').toLowerCase().includes(searchQuery.toLowerCase());
+        // Tidak ada field 'status' dari API saat ini, tampilkan semua
+        return matchesSearch;
     });
 
     // Stats
-    const totalHomeowners = mockHomeowners.length;
-    const activeHomeowners = mockHomeowners.filter(h => h.status === 'aktif').length;
-    const warningHomeowners = mockHomeowners.filter(h => h.status === 'warning').length;
-    const totalDevices = mockHomeowners.reduce((sum, h) => sum + h.totalSmartDevices, 0);
+    const totalHomeowners = homeowners.length;
+    const activeHomeowners = homeowners.length; // semua dianggap aktif jika belum ada field status
+    const warningHomeowners = 0;
+    const totalDevices = homeowners.reduce((sum, h) => sum + (h.totalHubs || 0), 0);
 
     const handleAddHomeowner = () => {
         alert('Homeowner berhasil ditambahkan!');
@@ -259,13 +198,32 @@ export function ManajemenAkunPage({ onNavigate }) {
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDeleteHomeowner = () => {
+    const confirmDeleteHomeowner = async () => {
         if (!deleteReason.trim()) {
             alert('Silakan masukkan alasan penghapusan.');
             return;
         }
-        alert('Homeowner berhasil dihapus!');
-        setIsDeleteModalOpen(false);
+
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/homeowners/${selectedHomeowner._id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const json = await res.json();
+            if (res.ok) {
+                alert('Homeowner berhasil dihapus!');
+                // Refresh list
+                setHomeowners(prev => prev.filter(h => h._id !== selectedHomeowner._id));
+                setIsDeleteModalOpen(false);
+            } else {
+                alert('Gagal menghapus: ' + json.message);
+            }
+        } catch (err) {
+            alert('Terjadi kesalahan saat menghapus data.');
+            console.error(err);
+        }
     };
 
     return (
@@ -359,8 +317,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <button
                                     onClick={() => handleDownloadPDF(
                                         "Daftar Akun Homeowner",
-                                        ["ID", "Nama Lengkap", "Username", "Email", "Telepon", "Status", "Teknisi"],
-                                        filteredHomeowners.map(h => [h.id, h.fullName, h.username, h.email, h.phone, h.status.toUpperCase(), h.assignedTechnician]),
+                                        ["ID", "Nama Lengkap", "Username", "Email", "Telepon", "Total Hub"],
+                                        filteredHomeowners.map(h => [h._id, h.fullName, h.username || '-', h.email, h.phoneNumber || '-', h.totalHubs || 0]),
                                         "Homeowner_Report"
                                     )}
                                     className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group col-span-1"
@@ -372,104 +330,100 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto hidden md:block">
-                        <table className="w-full text-left table-auto min-w-[900px]">
-                            <thead>
-                                <tr className="bg-[#009b7c] text-white text-xs font-semibold uppercase tracking-wider">
-                                    <th className="px-6 py-4">Identitas</th>
-                                    <th className="px-6 py-4">Email & Kontak</th>
-                                    <th className="px-6 py-4">Hardware</th>
-                                    <th className="px-6 py-4">Teknisi</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {filteredHomeowners.map((ho) => (
-                                    <tr key={ho.id} className="hover:bg-gray-50/50 transition-all group">
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
-                                                    {ho.fullName.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900">{ho.fullName}</p>
-                                                    <p className="text-xs font-semibold text-[#009b7c]">ID: {ho.id}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="space-y-0.5">
-                                                <p className="text-sm font-semibold text-gray-700">{ho.email}</p>
-                                                <p className="text-xs font-medium text-gray-500">{ho.phone}</p>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">{ho.totalBieonDevices} Hub</span>
-                                                <span className="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-lg text-[10px] font-bold border border-purple-100">{ho.totalSmartDevices} Node</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
-                                                    <UserCog className="w-4 h-4 text-gray-500" />
-                                                </div>
-                                                <span className="text-sm font-semibold text-gray-700">{ho.assignedTechnician}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit ${ho.status === 'aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
-                                                ho.status === 'warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
-                                                    'bg-[#FEF2F2] text-[#ef4444]'
-                                                }`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${ho.status === 'aktif' ? 'bg-[#10b981]' :
-                                                    ho.status === 'warning' ? 'bg-[#f59e0b]' :
-                                                        'bg-[#ef4444]'
-                                                    }`}></span>
-                                                {ho.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button
-                                                    onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
-                                                    className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-[#009b7c] hover:border-[#009b7c] hover:bg-emerald-50 rounded-xl transition-all shadow-sm group/btn"
-                                                >
-                                                    <Eye className="w-4 h-4 gap-2" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteHomeowner(ho)}
-                                                    className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm group/btn"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
+                    {/* Loading & Error State */}
+                    {isLoading && (
+                        <div className="flex items-center justify-center py-16 gap-3 text-[#009b7c]">
+                            <div className="w-6 h-6 border-2 border-[#009b7c] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-semibold text-gray-500">Memuat data homeowner...</span>
+                        </div>
+                    )}
+                    {fetchError && !isLoading && (
+                        <div className="flex items-center justify-center py-16 gap-3 text-red-500">
+                            <AlertCircle className="w-5 h-5" />
+                            <span className="text-sm font-semibold">{fetchError}</span>
+                        </div>
+                    )}
+                    {!isLoading && !fetchError && (
+                        <div className="overflow-x-auto hidden md:block">
+                            <table className="w-full text-left table-auto min-w-[900px]">
+                                <thead>
+                                    <tr className="bg-[#009b7c] text-white text-xs font-semibold uppercase tracking-wider">
+                                        <th className="px-6 py-4">Identitas</th>
+                                        <th className="px-6 py-4">Email & Kontak</th>
+                                        <th className="px-6 py-4">Hub</th>
+                                        <th className="px-6 py-4">Terdaftar</th>
+                                        <th className="px-6 py-4 text-center">Aksi</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {filteredHomeowners.length === 0 ? (
+                                        <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm font-medium">Tidak ada data homeowner yang ditemukan.</td></tr>
+                                    ) : filteredHomeowners.map((ho) => (
+                                        <tr key={ho._id} className="hover:bg-gray-50/50 transition-all group">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
+                                                        {(ho.fullName || '?').charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-gray-900">{ho.fullName}</p>
+                                                        <p className="text-xs font-semibold text-[#009b7c]">@{ho.username || '-'}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="space-y-0.5">
+                                                    <p className="text-sm font-semibold text-gray-700">{ho.email}</p>
+                                                    <p className="text-xs font-medium text-gray-500">{ho.phoneNumber || '-'}</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">{ho.totalHubs || 0} Hub</span>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className="text-sm font-semibold text-gray-600">{formatDate(ho.registrationDate)}</span>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
+                                                        className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-[#009b7c] hover:border-[#009b7c] hover:bg-emerald-50 rounded-xl transition-all shadow-sm"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteHomeowner(ho)}
+                                                        className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
 
                     {/* Mobile View - Cards */}
                     <div className="md:hidden divide-y divide-gray-100">
                         {filteredHomeowners.length > 0 ? (
                             filteredHomeowners.map((ho) => (
-                                <div key={ho.id} className="p-5 space-y-4">
+                                <div key={ho._id} className="p-5 space-y-4">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
-                                                {ho.fullName.charAt(0)}
+                                                {(ho.fullName || '?').charAt(0)}
                                             </div>
                                             <div>
                                                 <p className="font-bold text-gray-900 leading-tight">{ho.fullName}</p>
-                                                <p className="text-[11px] font-semibold text-[#009b7c]">ID: {ho.id}</p>
+                                                <p className="text-[11px] font-semibold text-[#009b7c]">@{ho.username || '-'}</p>
                                             </div>
                                         </div>
-                                        <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 ${ho.status === 'aktif' ? 'bg-[#EAFDF5] text-[#10b981]' : ho.status === 'warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' : 'bg-[#FEF2F2] text-[#ef4444]'}`}>
+                                        <span className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 bg-[#EAFDF5] text-[#10b981]">
                                             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                            {ho.status}
+                                            Aktif
                                         </span>
                                     </div>
 
@@ -477,26 +431,18 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         <div className="flex flex-col">
                                             <span className="text-gray-500 font-medium mb-0.5">Email & Kontak</span>
                                             <span className="font-semibold text-gray-900 truncate">{ho.email}</span>
-                                            <span className="font-semibold text-gray-900 mt-0.5">{ho.phone}</span>
+                                            <span className="font-semibold text-gray-900 mt-0.5">{ho.phoneNumber || '-'}</span>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 text-xs border-y border-gray-50 py-3">
                                         <div>
-                                            <span className="text-gray-500 font-medium block mb-1">Hardware</span>
-                                            <div className="flex flex-col gap-1.5 items-start">
-                                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold border border-emerald-100">{ho.totalBieonDevices} Hub</span>
-                                                <span className="px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md text-[10px] font-bold border border-purple-100">{ho.totalSmartDevices} Node</span>
-                                            </div>
+                                            <span className="text-gray-500 font-medium block mb-1">Hub BIEON</span>
+                                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold border border-emerald-100">{ho.totalHubs || 0} Hub</span>
                                         </div>
                                         <div>
-                                            <span className="text-gray-500 font-medium block mb-1">Teknisi</span>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
-                                                    <UserCog className="w-3 h-3 text-gray-500" />
-                                                </div>
-                                                <span className="font-semibold text-gray-900 truncate">{ho.assignedTechnician}</span>
-                                            </div>
+                                            <span className="text-gray-500 font-medium block mb-1">Terdaftar</span>
+                                            <span className="font-semibold text-gray-900">{formatDate(ho.registrationDate)}</span>
                                         </div>
                                     </div>
 
@@ -616,7 +562,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 </div>
                                 <div className="text-white pr-2">
                                     <h2 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight">{selectedHomeowner.fullName}</h2>
-                                    <p className="text-white/80 text-[11px] sm:text-sm font-medium mt-1 leading-snug">ID: {selectedHomeowner.id} • <br className="sm:hidden" />{selectedHomeowner.email}</p>
+                                    <p className="text-white/80 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{selectedHomeowner.email}</p>
                                 </div>
                             </div>
                             <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all group shrink-0">
@@ -636,7 +582,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 onClick={() => setActiveDetailTab('devices')}
                                 className={`py-4 text-sm font-semibold border-b-2 transition-all ${activeDetailTab === 'devices' ? 'border-[#009b7c] text-[#009b7c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
-                                Perangkat (10)
+                                Perangkat ({selectedHomeowner.totalHubs || 0})
                             </button>
                         </div>
 
@@ -671,14 +617,14 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     <Phone className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                                                     <div>
                                                         <p className="text-gray-500 font-medium mb-0.5">No. Telepon</p>
-                                                        <p className="font-bold text-gray-900">{selectedHomeowner.phone}</p>
+                                                        <p className="font-bold text-gray-900">{selectedHomeowner.phoneNumber || '-'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <MapPin className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                                                     <div>
                                                         <p className="text-gray-500 font-medium mb-0.5">Alamat</p>
-                                                        <p className="font-bold text-gray-900">{selectedHomeowner.address}</p>
+                                                        <p className="font-bold text-gray-900">{selectedHomeowner.address || '-'}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -690,29 +636,27 @@ export function ManajemenAkunPage({ onNavigate }) {
                                             <div className="space-y-6">
                                                 <div className="flex items-center justify-between text-sm pb-4 border-b border-emerald-100/50">
                                                     <p className="text-gray-500 font-medium">Status Sistem</p>
-                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase ${selectedHomeowner.status === 'aktif' ? 'bg-[#009b7c] text-white' :
-                                                        selectedHomeowner.status === 'warning' ? 'bg-amber-500 text-white' : 'bg-red-500 text-white'
-                                                        }`}>{selectedHomeowner.status}</span>
+                                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase bg-[#009b7c] text-white">AKTIF</span>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <TrendingUp className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                                                     <div>
                                                         <p className="text-gray-500 font-medium mb-0.5">Tanggal Registrasi</p>
-                                                        <p className="font-bold text-gray-900">{selectedHomeowner.registrationDate}</p>
+                                                        <p className="font-bold text-gray-900">{formatDate(selectedHomeowner.registrationDate)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <Activity className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">Terakhir Aktif</p>
-                                                        <p className="font-bold text-gray-900">{selectedHomeowner.lastActive}</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">ID BIEON</p>
+                                                        <p className="font-bold text-gray-900">{selectedHomeowner.bieonId || '-'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <UserCog className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">Teknisi</p>
-                                                        <p className="font-bold text-gray-900">{selectedHomeowner.assignedTechnician}</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">Sistem</p>
+                                                        <p className="font-bold text-gray-900">{selectedHomeowner.systemName || '-'}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -727,22 +671,22 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 <div className="flex items-center gap-4 bg-white p-3.5 rounded-2xl shadow-sm border border-purple-50">
                                                     <Box className="w-6 h-6 text-purple-500 shrink-0" />
                                                     <div>
-                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">BIEON Nodes</p>
-                                                        <p className="text-lg font-bold text-gray-900 leading-none">1</p>
+                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Tarif PLN</p>
+                                                        <p className="text-lg font-bold text-gray-900 leading-none">{selectedHomeowner.plnTariff || '-'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4 bg-white p-3.5 rounded-2xl shadow-sm border border-purple-50">
                                                     <Cpu className="w-6 h-6 text-purple-500 shrink-0" />
                                                     <div>
-                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Hub Nodes</p>
-                                                        <p className="text-lg font-bold text-gray-900 leading-none">{selectedHomeowner.totalBieonDevices}</p>
+                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Total Hub</p>
+                                                        <p className="text-lg font-bold text-gray-900 leading-none">{selectedHomeowner.totalHubs || 0}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4 bg-white p-3.5 rounded-2xl shadow-sm border border-purple-50">
                                                     <Zap className="w-6 h-6 text-purple-500 shrink-0" />
                                                     <div>
-                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Smart Devices</p>
-                                                        <p className="text-lg font-bold text-gray-900 leading-none">{selectedHomeowner.totalSmartDevices}</p>
+                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Status Akun</p>
+                                                        <p className="text-lg font-bold text-gray-900 leading-none">Terverifikasi</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -750,43 +694,42 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                                         {/* Status Perangkat */}
                                         <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100/50 flex flex-col">
-                                            <h4 className="font-bold text-gray-900 mb-4">Status Perangkat</h4>
+                                            <h4 className="font-bold text-gray-900 mb-4">Ringkasan Sistem</h4>
                                             <div className="space-y-3 flex-1 flex flex-col">
                                                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-blue-50">
                                                     <div className="flex items-center gap-2">
                                                         <CheckCircle className="w-5 h-5 text-[#10b981]" />
-                                                        <span className="text-sm font-semibold text-gray-700">Online</span>
+                                                        <span className="text-sm font-semibold text-gray-700">Hardware Hub</span>
                                                     </div>
-                                                    <span className="text-xl font-bold text-[#10b981]">{selectedHomeowner.totalSmartDevices + selectedHomeowner.totalBieonDevices - 1}</span>
+                                                    <span className="text-xl font-bold text-[#10b981]">{selectedHomeowner.totalHubs || 0}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-blue-50">
                                                     <div className="flex items-center gap-2">
-                                                        <X className="w-5 h-5 text-red-500 p-0.5 bg-red-100 rounded-full" />
-                                                        <span className="text-sm font-semibold text-gray-700">Offline</span>
+                                                        <TrendingUp className="w-5 h-5 text-blue-500" />
+                                                        <span className="text-sm font-semibold text-gray-700">BIEON ID</span>
                                                     </div>
-                                                    <span className="text-xl font-bold text-red-500">1</span>
+                                                    <span className="text-sm font-bold text-blue-500">{selectedHomeowner.bieonId || '-'}</span>
                                                 </div>
                                                 <div className="mt-auto pt-2 flex items-center justify-between px-2">
-                                                    <span className="text-sm font-semibold text-gray-500">Total</span>
-                                                    <span className="text-lg font-bold text-gray-900">{selectedHomeowner.totalSmartDevices + selectedHomeowner.totalBieonDevices}</span>
+                                                    <span className="text-sm font-semibold text-gray-500">Total Perangkat</span>
+                                                    <span className="text-lg font-bold text-gray-900">{selectedHomeowner.totalHubs || 0}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Konsumsi Energi */}
                                         <div className="bg-orange-50/50 p-6 rounded-3xl border border-orange-100/50 flex flex-col">
-                                            <h4 className="font-bold text-gray-900 mb-4">Konsumsi Energi</h4>
+                                            <h4 className="font-bold text-gray-900 mb-4">Monitoring Energi</h4>
                                             <div className="space-y-3 flex-1">
                                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-50 relative overflow-hidden h-[90px] flex flex-col justify-center">
                                                     <Zap className="w-16 h-16 text-orange-50 absolute -right-2 -bottom-2" />
                                                     <div className="relative z-10">
                                                         <div className="flex items-center gap-1.5 text-orange-500 mb-1">
                                                             <Zap className="w-4 h-4" />
-                                                            <span className="text-xs font-semibold">Konsumsi Bulanan</span>
+                                                            <span className="text-xs font-semibold">Nama Sistem</span>
                                                         </div>
                                                         <div className="flex items-end gap-1">
-                                                            <span className="text-2xl font-bold text-gray-900">{selectedHomeowner.monthlyConsumption}</span>
-                                                            <span className="text-sm text-gray-500 font-medium mb-1">kWh</span>
+                                                            <span className="text-lg font-bold text-gray-900 truncate w-full">{selectedHomeowner.systemName || '-'}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -794,11 +737,10 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     <Box className="w-16 h-16 text-orange-50 absolute -right-2 -bottom-2 opacity-50" />
                                                     <div className="relative z-10">
                                                         <div className="flex items-center gap-1.5 text-orange-500 mb-1">
-                                                            <span className="text-xs font-semibold">Rp Estimasi Tagihan</span>
+                                                            <span className="text-xs font-semibold">Golongan Tarif PLN</span>
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-2xl font-bold text-gray-900">Rp {selectedHomeowner.monthlyBill.toLocaleString('id-ID')}</span>
-                                                            <span className="text-[10px] text-gray-500 font-medium">per bulan</span>
+                                                            <span className="text-xl font-bold text-gray-900">{selectedHomeowner.plnTariff || '-'}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -810,45 +752,37 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <div className="space-y-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                            <Cpu className="w-6 h-6 text-[#009b7c]" /> Daftar Perangkat (10)
+                                            <Cpu className="w-6 h-6 text-[#009b7c]" /> Daftar Hub ({selectedHomeownerHubs.length})
                                         </h3>
-                                        <button className="px-4 py-2 bg-[#009b7c] hover:bg-[#008268] text-white text-sm font-semibold rounded-lg flex items-center gap-2 transition-all">
-                                            <TrendingUp className="w-4 h-4" /> Export Data
-                                        </button>
                                     </div>
 
                                     <div className="space-y-4">
-                                        {[
-                                            { icon: Box, name: 'BIEON System', detail: 'BIEON Node • Living Room', status: 'Online', time: '1 min ago', bg: 'bg-[#009b7c]/10 text-[#009b7c]' },
-                                            { icon: Activity, name: 'Hub Node 1', detail: 'Hub Node • Living Room', status: 'Online', time: '1 min ago', bg: 'bg-emerald-100 text-emerald-600' },
-                                            { icon: Activity, name: 'Hub Node 2', detail: 'Hub Node • Bedroom 1', status: 'Online', time: '2 min ago', bg: 'bg-emerald-100 text-emerald-600' },
-                                            { icon: Zap, name: 'Smart Plug', detail: 'SP-001', status: 'Online', time: '1 min ago', bg: 'bg-blue-100 text-blue-500' },
-                                            { icon: Zap, name: 'Smart Plug', detail: 'SP-002', status: 'Online', time: '1 min ago', bg: 'bg-blue-100 text-blue-500' },
-                                            { icon: Zap, name: 'Smart Switch', detail: 'SW-001', status: 'Online', time: '1 min ago', bg: 'bg-blue-100 text-blue-500' },
-                                            { icon: Zap, name: 'Smart Bulb', detail: 'SB-001', status: 'Online', time: '2 min ago', bg: 'bg-blue-100 text-blue-500' },
-                                            { icon: Monitor, name: 'Smart Camera', detail: 'SC-001', status: 'Offline', time: '15 min ago', bg: 'bg-red-100 text-red-500' },
-                                            { icon: ShieldCheck, name: 'Smart Door Lock', detail: 'SDL-001', status: 'Online', time: '5 min ago', bg: 'bg-blue-100 text-blue-500' },
-                                            { icon: Zap, name: 'Smart Thermostat', detail: 'ST-001', status: 'Online', time: '3 min ago', bg: 'bg-blue-100 text-blue-500' },
-                                        ].map((device, idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${device.bg}`}>
-                                                        <device.icon className="w-5 h-5" />
+                                        {isLoadingHubs ? (
+                                            <div className="py-12 text-center text-gray-500 text-sm font-medium">Memuat data perangkat...</div>
+                                        ) : selectedHomeownerHubs.length > 0 ? (
+                                            selectedHomeownerHubs.map((hub, idx) => (
+                                                <div key={hub._id || idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 text-emerald-600">
+                                                            <Box className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-gray-900 text-sm">{hub.name || 'Hub Node'}</p>
+                                                            <p className="text-xs text-gray-500">ID BIEON: {hub.bieonId || '-'}</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="font-bold text-gray-900 text-sm">{device.name}</p>
-                                                        <p className="text-xs text-gray-500">{device.detail}</p>
+                                                    <div className="text-right">
+                                                        <div className="flex items-center gap-1.5 justify-end mb-0.5">
+                                                            <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
+                                                            <span className="text-[10px] font-bold uppercase text-[#10b981]">Online</span>
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-400">Aktif</p>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <div className="flex items-center gap-1.5 justify-end mb-0.5">
-                                                        <span className={`w-2 h-2 rounded-full ${device.status === 'Online' ? 'bg-[#10b981]' : 'bg-red-500'}`}></span>
-                                                        <span className={`text-[10px] font-bold uppercase ${device.status === 'Online' ? 'text-[#10b981]' : 'text-red-500'}`}>{device.status}</span>
-                                                    </div>
-                                                    <p className="text-[10px] text-gray-400">{device.time}</p>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))
+                                        ) : (
+                                            <div className="py-12 text-center text-gray-500 text-sm font-medium">Tidak ada perangkat yang terhubung.</div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -857,7 +791,6 @@ export function ManajemenAkunPage({ onNavigate }) {
                 </div>
             )}
 
-            {/* Custom Delete Modal */}
             {isDeleteModalOpen && selectedHomeowner && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
