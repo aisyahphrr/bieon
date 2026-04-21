@@ -1,7 +1,9 @@
 const User = require('../models/User');
 const Hub = require('../models/Hub');
+const Device = require('../models/Device');
 const dashboardService = require('../modules/admin/dashboardService');
 const technicianService = require('../modules/users/technicianService');
+const homeownerService = require('../modules/users/homeownerService');
 
 // ========================================================
 // GET /api/admin/homeowners
@@ -16,7 +18,10 @@ exports.getAllHomeowners = async (req, res) => {
         // Untuk setiap homeowner, ambil jumlah hub yang mereka punya
         const homeownersWithStats = await Promise.all(
             homeowners.map(async (user) => {
-                const hubCount = await Hub.countDocuments({ owner: user._id });
+                const [hubCount, deviceCount] = await Promise.all([
+                    Hub.countDocuments({ owner: user._id }),
+                    Device.countDocuments({ owner: user._id }),
+                ]);
 
                 return {
                     _id: user._id,
@@ -28,9 +33,11 @@ exports.getAllHomeowners = async (req, res) => {
                     systemName: user.systemName || '-',
                     plnTariff: user.plnTariff || '-',
                     bieonId: user.bieonId || '-',
+                    status: user.status || 'aktif',
                     role: user.role,
                     registrationDate: user.createdAt,
                     totalHubs: hubCount,
+                    totalDevices: deviceCount,
                 };
             })
         );
@@ -48,6 +55,96 @@ exports.getAllHomeowners = async (req, res) => {
         });
     }
 };
+// ========================================================
+// GET /api/admin/homeowners/:id
+// Mengambil detail homeowner beserta stats
+// ========================================================
+exports.getHomeownerById = async (req, res) => {
+    try {
+        const data = await homeownerService.getHomeownerById(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            data,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal mengambil detail homeowner.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// POST /api/admin/homeowners
+// Membuat akun homeowner baru
+// ========================================================
+exports.createHomeowner = async (req, res) => {
+    try {
+        const created = await homeownerService.createHomeowner(req.body);
+
+        res.status(201).json({
+            success: true,
+            message: 'Akun homeowner berhasil dibuat.',
+            data: created,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal membuat akun homeowner.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// PUT /api/admin/homeowners/:id
+// Mengupdate data homeowner berdasarkan id
+// ========================================================
+exports.updateHomeowner = async (req, res) => {
+    try {
+        const updated = await homeownerService.updateHomeowner(req.params.id, req.body);
+
+        res.status(200).json({
+            success: true,
+            message: 'Data homeowner berhasil diperbarui.',
+            data: updated,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal memperbarui data homeowner.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// GET /api/admin/homeowners/:id/stats
+// Mengambil data statistik device/hub homeowner
+// ========================================================
+exports.getHomeownerStats = async (req, res) => {
+    try {
+        const stats = await homeownerService.getHomeownerStats(req.params.id);
+
+        res.status(200).json({
+            success: true,
+            data: stats,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal mengambil statistik homeowner.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
 // ========================================================
 // DELETE /api/admin/homeowners/:id
 // Menghapus akun homeowner dan semua hub terkait
