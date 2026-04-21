@@ -56,7 +56,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                 <button
                   key={id}
                   onClick={() => setActiveMenu(id)}
-                  className={`font-semibold pb-1 border-b-2 transition-colors ${
+                  className={`font-semibold pb-1 border-b-2 transition-all ${
                     activeMenu === id
                       ? 'text-teal-700 border-teal-700'
                       : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'

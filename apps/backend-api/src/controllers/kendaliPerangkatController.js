@@ -56,15 +56,16 @@ exports.createDevice = async (req, res) => {
 exports.configureDevice = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, location, thresholds, controlMethod, environmentAspect, scheduleSettings } = req.body;
+        const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes } = req.body;
 
         const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(
             id,
             { 
                 name, 
                 location, 
-                thresholds, 
-                controlMethod, 
+                notes,
+                thresholds: sensorParams || thresholds, 
+                controlMethod: controlMode || controlMethod, 
                 environmentAspect,
                 scheduleSettings,
                 status: 'Active',

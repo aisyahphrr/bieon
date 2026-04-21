@@ -1,164 +1,162 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Radio, AlertCircle, Info, ChevronRight } from 'lucide-react';
 
 export function KonfigurasiPerangkatPage({ onNavigate, triggerToast }) {
   const [inputToken, setInputToken] = useState("");
   const [tokenError, setTokenError] = useState("");
+  const navigate = useNavigate();
 
-  const handleVerifyToken = (e) => {
+  const handleVerifyToken = async (e) => {
     e.preventDefault();
     if (!inputToken) {
       setTokenError("Silakan masukkan kode akses.");
       return;
     }
 
-    const activeToken = localStorage.getItem('bieon_active_token');
-    const tokenExpiry = localStorage.getItem('bieon_active_token_expiry');
-    
-    // Cek kadaluarsa form (5 menit)
-    if (tokenExpiry && Date.now() > parseInt(tokenExpiry)) {
-      setTokenError("Token telah kedaluwarsa (lebih dari 5 menit). Silakan minta Homeowner untuk generate ulang.");
-      localStorage.removeItem('bieon_active_token');
-      localStorage.removeItem('bieon_active_token_expiry');
-      return;
-    }
-    
-    // For demo/prototype purposes, we verify against localStorage
-    if (inputToken === activeToken && activeToken !== null) {
-      localStorage.setItem('bieon_tech_access', 'true');
-      localStorage.setItem('bieon_tech_access_expiry', (Date.now() + 30 * 60 * 1000).toString());
-      localStorage.removeItem('bieon_active_token'); // One-time use
-      localStorage.removeItem('bieon_active_token_expiry');
-      
-      if (triggerToast) {
-        triggerToast("Akses Diterima! Mengalihkan ke sistem Homeowner...");
-      }
-      
-      setTimeout(() => {
-        if (onNavigate) {
-          onNavigate('kendali');
+    try {
+      const technicianId = localStorage.getItem('bieon_user_id'); // Pastikan ID teknisi tersimpan saat login
+      const response = await fetch('/api/technician-access/validate-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: inputToken,
+          technicianId: technicianId
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Simpan data sesi keamanan
+        localStorage.setItem('bieon_tech_access', 'true');
+        localStorage.setItem('bieon_active_homeowner_id', data.session.homeownerId);
+        localStorage.setItem('bieon_tech_session_id', data.session._id);
+        localStorage.setItem('bieon_tech_access_expiry', (Date.now() + 30 * 60 * 1000).toString());
+        
+        if (data.homeownerName) {
+          localStorage.setItem('bieon_active_homeowner_name', data.homeownerName);
         }
-      }, 1500);
-    } else {
-      setTokenError("Token tidak valid atau sudah kedaluwarsa. Mohon minta token baru dari homeowner.");
-      if (triggerToast) {
-        triggerToast("Gagal memproses token!", "error");
+        
+        if (triggerToast) {
+          triggerToast("Akses Diterima! Mengalihkan ke sistem Homeowner...");
+        }
+        
+        // Redirect fisik ke halaman kendali sistem homeowner
+        setTimeout(() => {
+          navigate('/kendali');
+        }, 1500);
+      } else {
+        setTokenError(data.message || "Token tidak valid atau sudah kedaluwarsa.");
+        if (triggerToast) {
+          triggerToast("Gagal memproses token!", "error");
+        }
       }
+    } catch (error) {
+      console.error("error verify token:", error);
+      setTokenError("Terjadi kesalahan teknis. Pastikan server aktif.");
     }
   };
 
   return (
-    <div className="py-8 w-full max-w-4xl mx-auto px-4">
-      {/* Page Header */}
-      <div className="mb-8 text-center sm:text-left">
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Konfigurasi Perangkat</h1>
-        <p className="text-gray-500 mt-2 font-medium">Masuk ke sistem Homeowner untuk pendaftaran perangkat baru</p>
-      </div>
-
-      {/* Info Alert Box - Premium Styled */}
-      <div className="bg-gradient-to-r from-[#FFFDF4] to-[#FFF9E6] border border-[#FBE6A2] rounded-3xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-10 shadow-sm">
-        <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center shrink-0">
-          <Info className="w-6 h-6 text-orange-600" />
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+        <div className="bg-gradient-to-r from-[#009b7c] to-[#235C50] p-8 text-white relative">
+          <div className="relative z-10">
+            <h1 className="text-3xl font-black mb-2 flex items-center gap-3">
+              <ShieldCheck className="w-10 h-10" />
+              Verifikasi Akses
+            </h1>
+            <p className="text-emerald-100 font-medium">BIEON Technician Management System</p>
+          </div>
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Radio className="w-32 h-32 rotate-12" />
+          </div>
         </div>
-        <div>
-          <h3 className="font-bold text-gray-800 text-base mb-1">Penting: Akses Teknisi Terbatas</h3>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            Sesuai kebijakan keamanan BIEON, teknisi memerlukan **Token Akses** dari Homeowner untuk masuk. 
-            Masa aktif token adalah **5 menit** untuk login. Dalam mode ini, Anda **HANYA** diizinkan untuk menambahkan perangkat baru dan sesi akan otomatis **kadaluarsa dalam 30 menit**.
-          </p>
-        </div>
-      </div>
 
-      {/* Token Verification Portal */}
-      <div className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden relative group">
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#009270] via-emerald-400 to-[#009270] bg-[length:200%_auto] animate-gradient-x"></div>
-        
-        <div className="p-8 sm:p-12">
-          <div className="flex flex-col items-center text-center">
-            <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mb-10 border border-emerald-100/50 shadow-inner group-hover:scale-110 transition-transform duration-500">
-              <ShieldCheck className="w-12 h-12 text-emerald-600" />
+        <div className="p-8">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="flex-1 space-y-6">
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4">
+                <Info className="w-6 h-6 text-blue-600 shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold text-blue-900 mb-1">Cara Mengambil Akses</h3>
+                  <p className="text-sm text-blue-800 leading-relaxed">
+                    Minta **kode akses 6-karakter** dari homeowner. Kode ini hanya berlaku sekali pakai dan akan kedaluwarsa dalam 5 menit setelah dibuat.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleVerifyToken} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">
+                    Masukkan Kode Akses Alphanumeric
+                  </label>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={inputToken}
+                      onChange={(e) => setInputToken(e.target.value.toUpperCase())}
+                      placeholder="CONTOH: 4X29B1"
+                      className={`w-full px-6 py-5 bg-gray-50 border-2 rounded-2xl text-2xl font-mono font-black tracking-[0.5rem] focus:outline-none transition-all text-center ${
+                        tokenError 
+                        ? 'border-red-300 focus:border-red-500 text-red-600 bg-red-50' 
+                        : 'border-gray-200 focus:border-[#009b7c] focus:bg-white group-hover:border-gray-300'
+                      }`}
+                    />
+                    {tokenError && (
+                      <div className="absolute top-full left-0 mt-2 flex items-center gap-2 text-red-600 font-bold text-sm animate-in fade-in slide-in-from-top-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {tokenError}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-5 bg-[#009b7c] text-white rounded-2xl font-black text-lg shadow-xl shadow-emerald-200 hover:bg-[#007b63] hover:shadow-emerald-300 transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-8"
+                >
+                  <ShieldCheck className="w-6 h-6" />
+                  VERIFIKASI & AMBIL AKSES
+                </button>
+              </form>
             </div>
 
-            <form onSubmit={handleVerifyToken} className="w-full max-w-md space-y-8">
-              <div className="space-y-4">
-                <label className="block text-xs font-black text-gray-400 uppercase tracking-[0.2rem]">Kode Akses Homeowner</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    placeholder="XXXXXX"
-                    value={inputToken}
-                    onChange={(e) => {
-                      setInputToken(e.target.value.toUpperCase());
-                      setTokenError("");
-                    }}
-                    className={`w-full text-center text-5xl font-black tracking-[1rem] py-8 border-3 rounded-[2rem] focus:outline-none transition-all duration-300 ${
-                      tokenError 
-                        ? 'border-red-200 bg-red-50 text-red-600 shake' 
-                        : 'border-gray-100 bg-gray-50/50 text-emerald-700 focus:border-emerald-500 focus:bg-white focus:shadow-xl'
-                    }`}
-                  />
-                  {inputToken && (
-                    <div className="absolute top-1/2 -translate-y-1/2 right-6">
-                      <Radio className="w-6 h-6 text-emerald-500 animate-pulse" />
-                    </div>
-                  )}
-                </div>
-                {tokenError && (
-                  <div className="flex items-center justify-center gap-2 text-red-500 animate-in fade-in slide-in-from-top-2">
-                    <AlertCircle className="w-4 h-4" />
-                    <p className="text-sm font-bold">{tokenError}</p>
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="group relative w-full py-6 bg-gray-900 overflow-hidden rounded-[1.5rem] font-bold text-white transition-all hover:bg-black active:scale-[0.98] shadow-2xl"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative flex items-center justify-center gap-3 text-lg">
-                  <span>Verifikasi & Ambil Akses</span>
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
-            </form>
-
-            <div className="mt-12 flex items-center gap-6 py-4 px-6 bg-gray-50 rounded-2xl border border-gray-100">
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  </div>
-                ))}
-              </div>
-              <p className="text-[11px] text-gray-500 text-left font-medium max-w-[200px]">
-                Keamanan enkripsi berlapis BIEON aktif memantau sesi ini.
-              </p>
+            <div className="w-full md:w-72 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+              <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-[#009b7c]" />
+                Keamanan & Batasan
+              </h4>
+              <ul className="space-y-4 text-xs font-medium text-gray-600">
+                <li className="flex gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#009b7c] mt-1.5 shrink-0" />
+                  Durasi akses maksimal 30 menit per sesi.
+                </li>
+                <li className="flex gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#009b7c] mt-1.5 shrink-0" />
+                  Akses hanya berlaku untuk halaman Kendali Perangkat.
+                </li>
+                <li className="flex gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#009b7c] mt-1.5 shrink-0" />
+                  Anda hanya diizinkan menambahkan perangkat baru.
+                </li>
+                <li className="flex gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#009b7c] mt-1.5 shrink-0" />
+                  Fitur edit, hapus, dan jadwal otomatis dinonaktifkan.
+                </li>
+                <li className="flex gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#009b7c] mt-1.5 shrink-0" />
+                  Laporan hasil konfigurasi wajib dikirim di akhir sesi.
+                </li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes gradient-x {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .animate-gradient-x {
-          animation: gradient-x 3s ease infinite;
-        }
-        .shake {
-          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-          10%, 90% { transform: translate3d(-1px, 0, 0); }
-          20%, 80% { transform: translate3d(2px, 0, 0); }
-          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-          40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-      `}</style>
     </div>
   );
 }
