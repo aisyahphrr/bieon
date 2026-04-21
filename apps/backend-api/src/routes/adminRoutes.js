@@ -16,6 +16,38 @@ router.get(
     adminController.getAllHomeowners
 );
 
+// GET /api/admin/homeowners/:id
+router.get(
+    '/homeowners/:id',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getHomeownerById
+);
+
+// POST /api/admin/homeowners
+router.post(
+    '/homeowners',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.createHomeowner
+);
+
+// PUT /api/admin/homeowners/:id
+router.put(
+    '/homeowners/:id',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.updateHomeowner
+);
+
+// GET /api/admin/homeowners/:id/stats
+router.get(
+    '/homeowners/:id/stats',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getHomeownerStats
+);
+
 // DELETE /api/admin/homeowners/:id
 router.delete(
     '/homeowners/:id',

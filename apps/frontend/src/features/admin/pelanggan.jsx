@@ -89,10 +89,22 @@ export function ManajemenAkunPage({ onNavigate }) {
             setFetchError(null);
             try {
                 const token = localStorage.getItem('bieon_token');
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/homeowners`, {
+                const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (!res.ok) throw new Error(`Error ${res.status}`);
+                
+                if (!res.ok) {
+                    const text = await res.text();
+                    let errMsg = `Error ${res.status}`;
+                    try { const errJson = JSON.parse(text); errMsg = errJson.message || errMsg; } catch(e) {}
+                    throw new Error(errMsg);
+                }
+                
+                const contentType = res.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error("Target endpoint tidak ditemukan atau backend belum berjalan (menerima HTML).");
+                }
+                
                 const json = await res.json();
                 setHomeowners(json.data || []);
             } catch (err) {
@@ -111,12 +123,45 @@ export function ManajemenAkunPage({ onNavigate }) {
                 setIsLoadingHubs(true);
                 try {
                     const token = localStorage.getItem('bieon_token');
-                    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/hubs/user/${selectedHomeowner._id}`, {
+                    const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners/${selectedHomeowner._id}/stats`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
-                    if (!res.ok) throw new Error('Gagal mengambil data hub');
+                    
+                    if (!res.ok) {
+                        const text = await res.text();
+                        let errMsg = `Gagal ${res.status}`;
+                        try { const errJson = JSON.parse(text); errMsg = errJson.message || errMsg; } catch(e) {}
+                        throw new Error(errMsg);
+                    }
+                    
+                    const contentType = res.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("Target endpoint invalid (HTML diterima)");
+                    }
+                    
                     const json = await res.json();
-                    setSelectedHomeownerHubs(json);
+                    
+                    // Kita asumsikan selectedHomeownerHubs jadi simpan summary hubnya
+                    // Hub endpoint GET /api/hubs/user/:id aslinya mereturn array hub. 
+                    // Kita bisa ambil array hub dulu lalu statsnya.
+                    
+                    // Fetch hubs (existing logic)
+                    const hubsRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/hubs/user/${selectedHomeowner._id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (hubsRes.ok && hubsRes.headers.get("content-type")?.includes("application/json")) {
+                        const hubsJson = await hubsRes.json();
+                        setSelectedHomeownerHubs(hubsJson);
+                    }
+                    
+                    // Kita tambahkan update stats ke selectedHomeowner local jika diperlukan
+                    if(json.success && json.data) {
+                        setSelectedHomeowner(prev => ({
+                            ...prev,
+                            totalDevicesDetails: json.data.totalDevices,
+                            totalHubsDetails: json.data.totalHubs
+                        }));
+                    }
                 } catch (err) {
                     console.error(err);
                 } finally {
@@ -169,9 +214,45 @@ export function ManajemenAkunPage({ onNavigate }) {
     const warningHomeowners = 0;
     const totalDevices = homeowners.reduce((sum, h) => sum + (h.totalHubs || 0), 0);
 
-    const handleAddHomeowner = () => {
-        alert('Homeowner berhasil ditambahkan!');
-        setIsAddModalOpen(false);
+    const handleAddHomeowner = async () => {
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fullName: formData.fullName,
+                    email: formData.email,
+                    password: formData.password,
+                    phoneNumber: formData.phone || '',
+                    address: formData.address || '',
+                    username: formData.username || ''
+                })
+            });
+
+            const text = await res.text();
+            
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("Target endpoint tidak tersedia atau ada kesalahan server (HTML diterima).");
+            }
+            
+            const json = JSON.parse(text);
+
+            if (!res.ok) {
+                throw new Error(json.message || 'Gagal menambah homeowner');
+            }
+
+            alert('Homeowner berhasil ditambahkan!');
+            setIsAddModalOpen(false);
+            setHomeowners(prev => [json.data, ...prev]); // update state tanpa reload
+        } catch (error) {
+            alert('Kesalahan sewaktu menambah data: ' + error.message);
+            console.error(error);
+        }
     };
 
     const handleDownloadPDF = (title, columns, data, filename) => {
@@ -187,9 +268,49 @@ export function ManajemenAkunPage({ onNavigate }) {
         doc.save(`${filename}.pdf`);
     };
 
-    const handleEditHomeowner = () => {
-        alert('Data homeowner berhasil diupdate!');
-        setIsEditModalOpen(false);
+    const handleEditHomeowner = async () => {
+        if (!selectedHomeowner) return;
+
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const payload = {
+                fullName: formData.fullName,
+                email: formData.email,
+                phoneNumber: formData.phone || '',
+                address: formData.address || '',
+                username: formData.username || ''
+            };
+            if (formData.password) payload.password = formData.password;
+
+            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners/${selectedHomeowner._id}`, {
+                method: 'PUT',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const text = await res.text();
+            
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("Target endpoint tidak tersedia atau ada kesalahan server (HTML diterima).");
+            }
+            
+            const json = JSON.parse(text);
+
+            if (!res.ok) {
+                throw new Error(json.message || 'Gagal mengubah homeowner');
+            }
+
+            alert('Data homeowner berhasil diupdate!');
+            setIsEditModalOpen(false);
+            setHomeowners(prev => prev.map(h => h._id === selectedHomeowner._id ? { ...h, ...json.data } : h));
+        } catch (error) {
+            alert('Kesalahan sewaktu update data: ' + error.message);
+            console.error(error);
+        }
     };
 
     const handleDeleteHomeowner = (ho) => {
@@ -206,12 +327,19 @@ export function ManajemenAkunPage({ onNavigate }) {
 
         try {
             const token = localStorage.getItem('bieon_token');
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/homeowners/${selectedHomeowner._id}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners/${selectedHomeowner._id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            const json = await res.json();
+            const text = await res.text();
+            let contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("Respons bukan JSON. Ada masalah pada backend.");
+            }
+            
+            const json = JSON.parse(text);
+
             if (res.ok) {
                 alert('Homeowner berhasil dihapus!');
                 // Refresh list

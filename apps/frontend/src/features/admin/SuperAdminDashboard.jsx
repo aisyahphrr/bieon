@@ -47,57 +47,18 @@ import {
   Cell
 } from 'recharts';
 
-// --- MOCK DATA ---
-const instalasiData = [
-  { name: 'Jan', value: 8 }, { name: 'Feb', value: 12 }, { name: 'Mar', value: 15 },
-  { name: 'Apr', value: 10 }, { name: 'Mei', value: 18 }, { name: 'Jun', value: 14 },
-  { name: 'Jul', value: 20 }, { name: 'Agu', value: 16 }, { name: 'Sep', value: 22 },
-  { name: 'Okt', value: 19 }, { name: 'Nov', value: 25 }, { name: 'Des', value: 21 }
-];
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-const hubNodeData = [
-  { name: 'Jan', value: 10 }, { name: 'Feb', value: 14 }, { name: 'Mar', value: 12 },
-  { name: 'Apr', value: 16 }, { name: 'Mei', value: 15 }, { name: 'Jun', value: 18 },
-  { name: 'Jul', value: 17 }, { name: 'Agu', value: 20 }, { name: 'Sep', value: 19 },
-  { name: 'Okt', value: 22 }, { name: 'Nov', value: 21 }, { name: 'Des', value: 24 }
-];
+const createMonthlyChartData = (values = []) => MONTH_LABELS.map((name, index) => ({
+  name,
+  value: values?.[index] || 0,
+}));
 
-const smartDeviceTrend = [
-  { name: 'Jan', value: 40 }, { name: 'Feb', value: 55 }, { name: 'Mar', value: 70 },
-  { name: 'Apr', value: 85 }, { name: 'Mei', value: 100 }, { name: 'Jun', value: 120 },
-  { name: 'Jul', value: 140 }, { name: 'Agu', value: 165 }, { name: 'Sep', value: 190 },
-  { name: 'Okt', value: 220 }, { name: 'Nov', value: 255 }, { name: 'Des', value: 300 }
-];
-
-const pelangganTrend = [
-  { name: 'Jan', value: 8 }, { name: 'Feb', value: 12 }, { name: 'Mar', value: 10 },
-  { name: 'Apr', value: 15 }, { name: 'Mei', value: 11 }, { name: 'Jun', value: 9 },
-  { name: 'Jul', value: 13 }, { name: 'Agu', value: 12 }, { name: 'Sep', value: 14 },
-  { name: 'Okt', value: 11 }, { name: 'Nov', value: 13 }, { name: 'Des', value: 12 }
-];
-
-const teknisiTrend = [
-  { name: 'Jan', value: 4 }, { name: 'Feb', value: 4 }, { name: 'Mar', value: 5 },
-  { name: 'Apr', value: 6 }, { name: 'Mei', value: 7 }, { name: 'Jun', value: 7 },
-  { name: 'Jul', value: 8 }, { name: 'Agu', value: 8 }, { name: 'Sep', value: 9 },
-  { name: 'Okt', value: 9 }, { name: 'Nov', value: 10 }, { name: 'Des', value: 10 }
-];
-
-const pengaduanTrend = [
-  { name: 'Jan', value: 5 }, { name: 'Feb', value: 8 }, { name: 'Mar', value: 6 },
-  { name: 'Apr', value: 10 }, { name: 'Mei', value: 7 }, { name: 'Jun', value: 5 },
-  { name: 'Jul', value: 9 }, { name: 'Agu', value: 8 }, { name: 'Sep', value: 10 },
-  { name: 'Okt', value: 7 }, { name: 'Nov', value: 9 }, { name: 'Des', value: 8 }
-];
-
-const customers = [
-  { id: 'USR001', name: 'Ahmad Fauzi', username: '@ahmad.fauzi', email: 'ahmad.fauzi@email.com', status: 'Aktif', bieon: 4, devices: 28, technician: 'Budi Santoso' },
-  { id: 'USR002', name: 'Siti Nurhaliza', username: '@siti.nurhaliza', email: 'siti.nurhaliza@email.com', status: 'Aktif', bieon: 3, devices: 19, technician: 'Andi Wijaya' },
-  { id: 'USR003', name: 'Budi Santoso', username: '@budi.santoso', email: 'budi.santoso@email.com', status: 'Warning', bieon: 5, devices: 34, technician: 'Budi Santoso' },
-  { id: 'USR004', name: 'Dewi Lestari', username: '@dewi.lestari', email: 'dewi.lestari@email.com', status: 'Aktif', bieon: 2, devices: 15, technician: 'Andi Wijaya' },
-  { id: 'USR005', name: 'Rizki Pratama', username: '@rizki.pratama', email: 'rizki.pratama@email.com', status: 'Nonaktif', bieon: 3, devices: 22, technician: 'Budi Santoso' },
-  { id: 'USR006', name: 'Linda Wijaya', username: '@linda.wijaya', email: 'linda.wijaya@email.com', status: 'Aktif', bieon: 6, devices: 42, technician: 'Andi Wijaya' },
-];
+const createCustomerStatusLabel = (status) => {
+  if (!status) return 'Aktif';
+  if (status.toLowerCase() === 'nonaktif') return 'Nonaktif';
+  return 'Aktif';
+};
 
 // Refined Custom 3D Bar Component to match user's image exactly
 const ThreeDBar = (props) => {
@@ -159,6 +120,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
     totalHubs: 0,
     totalDevices: 0,
     totalComplaints: 0,
+    totalTechnicians: 0,
+    activeTechnicians: 0,
+    monthlyInstalasi: Array(12).fill(0),
+    monthlyHubs: Array(12).fill(0),
+    monthlyPelanggan: Array(12).fill(0),
+    monthlyTechnicians: Array(12).fill(0),
+    monthlyDevices: Array(12).fill(0),
+    monthlyComplaints: Array(12).fill(0)
   });
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState(null);
@@ -169,6 +138,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const [showPlnModal, setShowPlnModal] = useState(false);
   const [plnTariff, setPlnTariff] = useState(1445);
   const [newTariff, setNewTariff] = useState(plnTariff);
+  const [homeowners, setHomeowners] = useState([]);
+  const [homeownersLoading, setHomeownersLoading] = useState(true);
+  const [homeownersError, setHomeownersError] = useState(null);
 
   // Fetch dashboard metrics from API
   const fetchDashboardMetrics = async () => {
@@ -190,7 +162,16 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
       const data = await response.json();
       if (data.success && data.data) {
-        setMetrics(data.data);
+        setMetrics((prev) => ({
+          ...prev,
+          ...data.data,
+          monthlyInstalasi: data.data.monthlyInstalasi || prev.monthlyInstalasi,
+          monthlyHubs: data.data.monthlyHubs || prev.monthlyHubs,
+          monthlyPelanggan: data.data.monthlyPelanggan || prev.monthlyPelanggan,
+          monthlyTechnicians: data.data.monthlyTechnicians || prev.monthlyTechnicians,
+          monthlyDevices: data.data.monthlyDevices || prev.monthlyDevices,
+          monthlyComplaints: data.data.monthlyComplaints || prev.monthlyComplaints,
+        }));
         setMetricsLoading(false);
       }
     } catch (error) {
@@ -200,17 +181,54 @@ export default function SuperAdminDashboard({ onNavigate }) {
     }
   };
 
-  // Setup polling on component mount
-  useEffect(() => {
-    // Fetch immediately on mount
-    fetchDashboardMetrics();
+  const fetchHomeowners = async () => {
+    try {
+      setHomeownersError(null);
+      const token = localStorage.getItem('bieon_token');
 
-    // Setup polling interval (every 10 seconds)
+      const response = await fetch('/api/admin/homeowners', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch homeowners: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        setHomeowners(data.data.map((homeowner) => ({
+          id: homeowner._id,
+          name: homeowner.fullName,
+          username: homeowner.username || '-',
+          email: homeowner.email,
+          status: createCustomerStatusLabel(homeowner.status),
+          bieon: homeowner.totalHubs || 0,
+          devices: homeowner.totalDevices || 0,
+          technician: '-',
+        })));
+        setHomeownersLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching homeowners:', error);
+      setHomeownersError(error.message);
+      setHomeownersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch immediately on mount.
+    fetchDashboardMetrics();
+    fetchHomeowners();
+
+    // Poll metrics periodically to keep dashboard counters/charts updated.
     const pollingInterval = setInterval(() => {
       fetchDashboardMetrics();
     }, 10000);
 
-    // Cleanup interval on unmount
     return () => clearInterval(pollingInterval);
   }, []);
 
@@ -232,13 +250,20 @@ export default function SuperAdminDashboard({ onNavigate }) {
     setShowPlnModal(false);
   };
 
-  const filteredCustomers = customers.filter(cust => {
+  const filteredCustomers = homeowners.filter(cust => {
     const matchesSearch = cust.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cust.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cust.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'Semua Status' || cust.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const instalasiChartData = createMonthlyChartData(metrics.monthlyInstalasi);
+  const hubNodeChartData = createMonthlyChartData(metrics.monthlyHubs);
+  const smartDeviceChartData = createMonthlyChartData(metrics.monthlyDevices);
+  const pelangganChartData = createMonthlyChartData(metrics.monthlyPelanggan);
+  const teknisiChartData = createMonthlyChartData(metrics.monthlyTechnicians);
+  const pengaduanChartData = createMonthlyChartData(metrics.monthlyComplaints);
 
   return (
     <SuperAdminLayout activeMenu="Dashboard" onNavigate={onNavigate} title="Super Admin Dashboard">
@@ -332,10 +357,10 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <User className="w-8 h-8" />
             </div>
             <div>
-              <span className="text-3xl font-bold text-gray-900 leading-none">10</span>
+              <span className="text-3xl font-bold text-gray-900 leading-none">{metricsLoading ? '-' : metrics.activeTechnicians || 0}</span>
               <p className="text-sm font-medium text-gray-500 mt-1">Total Teknisi Aktif</p>
               <div className="text-xs text-[#10b981] font-semibold flex items-center gap-1 mt-1.5">
-                <TrendingUp className="w-3.5 h-3.5" /> +12% dari bulan lalu
+                <TrendingUp className="w-3.5 h-3.5" /> {metricsLoading ? '-' : `Total teknisi ${metrics.totalTechnicians || 0}`}
               </div>
             </div>
           </div>
@@ -389,7 +414,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={instalasiData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                <BarChart data={instalasiChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorBieonBar" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
@@ -421,7 +446,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={hubNodeData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                <BarChart data={hubNodeChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorHubBar" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#14b8a6" stopOpacity={1} />
@@ -454,7 +479,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 onClick={() => handleDownloadPDF(
                   "Laporan Jumlah Smart Device",
                   ["Bulan", "Jumlah Device"],
-                  smartDeviceTrend.map(d => [d.name, d.value]),
+                  smartDeviceChartData.map(d => [d.name, d.value]),
                   "SmartDevice_Report"
                 )}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
@@ -464,7 +489,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={smartDeviceTrend}>
+                <AreaChart data={smartDeviceChartData}>
                   <defs>
                     <linearGradient id="colorDeviceBg" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
@@ -501,7 +526,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 onClick={() => handleDownloadPDF(
                   "Laporan Jumlah Pelanggan",
                   ["Bulan", "Jumlah Pelanggan"],
-                  pelangganTrend.map(d => [d.name, d.value]),
+                  pelangganChartData.map(d => [d.name, d.value]),
                   "Pelanggan_Report"
                 )}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
@@ -511,7 +536,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={pelangganTrend}>
+                <LineChart data={pelangganChartData}>
                   <defs>
                     <linearGradient id="colorPelangganLine" x1="0" y1="0" x2="1" y2="0">
                       <stop offset="0%" stopColor="#a855f7" stopOpacity={1} />
@@ -543,7 +568,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={teknisiTrend}>
+                <LineChart data={teknisiChartData}>
                   <defs>
                     <linearGradient id="colorTeknisiLine" x1="0" y1="0" x2="1" y2="0">
                       <stop offset="0%" stopColor="#fb923c" stopOpacity={1} />
@@ -576,7 +601,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 onClick={() => handleDownloadPDF(
                   "Laporan Pengaduan Pelanggan",
                   ["Bulan", "Jumlah Pengaduan"],
-                  pengaduanTrend.map(d => [d.name, d.value]),
+                  pengaduanChartData.map(d => [d.name, d.value]),
                   "Pengaduan_Report"
                 )}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
@@ -586,7 +611,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={pengaduanTrend}>
+                <LineChart data={pengaduanChartData}>
                   <defs>
                     <linearGradient id="colorPengaduanLine" x1="0" y1="0" x2="1" y2="0">
                       <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
@@ -781,7 +806,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           <div className="p-6 md:p-10 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center md:text-left">
-              Menampilkan {filteredCustomers.length} dari {customers.length} Pelanggan
+              Menampilkan {filteredCustomers.length} dari {homeowners.length} Pelanggan
             </span>
             <div className="flex flex-wrap justify-center items-center gap-2 md:gap-3">
               <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Prev</button>
