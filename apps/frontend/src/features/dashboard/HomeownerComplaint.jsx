@@ -29,6 +29,8 @@ import {
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
+import { formatStatusDisplay, getActionButtons } from '../../utils/complaintHelpers';
+import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 
 export function HomeownerComplaint({ onNavigate }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -64,197 +66,78 @@ export function HomeownerComplaint({ onNavigate }) {
     const [formFiles, setFormFiles] = useState([]);
     const fileInputRef = useRef(null);
 
-    // Dummy Data
-    const initialComplaints = [
-        {
-            id: 'TCK-0105',
-            date: '26 Feb 2026, 08:15',
-            topic: 'Smart Plug kipas exhaust tidak bisa di-ON-kan via web',
-            device: 'Smart Plug (Exhaust) - R3 Kitchen',
-            technician: 'Menunggu Teknisi',
-            status: 'Menunggu Respons',
-            category: 'Energi & Kelistrikan',
-            description: 'Saya sudah mencoba menyalakan kipas exhaust melalui web dashboard tapi tidak ada respons, padahal icon menunjukkan status loading tapi akhirnya kembali OFF.',
-            clientInfo: {
-                name: 'Aisyah',
-                email: 'aisyah@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok A1 No. 5',
-                idBieon: 'BIEON-001'
-            },
-            technicianInfo: null,
-            timeline: [
-                { time: '26 Feb 2026, 08:15', desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons', isDone: true }
-            ],
-            files: []
-        },
-        {
-            id: 'TCK-0102',
-            date: '25 Feb 2026, 14:30',
-            topic: 'Angka PM2.5 udara selalu stuck di angka 0',
-            device: 'Node Udara - R2 Bedroom',
-            technician: 'Budi Santoso',
-            status: 'Diproses Teknisi',
-            category: 'Kesehatan & Lingkungan',
-            description: 'Sejak pemadaman listrik kemarin, sensor PM2.5 tidak pernah berubah dari angka 0.',
-            clientInfo: {
-                name: 'Aisyah',
-                email: 'aisyah@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok A1 No. 5',
-                idBieon: 'BIEON-001'
-            },
-            technicianInfo: {
-                name: 'Budi Santoso',
-                phone: '+62 811-222-333',
-                targetDate: 'Maks. 27 Feb 2026, 14:30 WIB'
-            },
-            timeline: [
-                { time: '25 Feb 2026, 15:00', desc: 'Teknisi Budi Santoso sedang melakukan diagnosa remote.', status: 'Status: Diproses', isDone: true },
-                { time: '25 Feb 2026, 14:45', desc: 'Tiket diterima oleh Teknisi Budi Santoso.', isDone: true },
-                { time: '25 Feb 2026, 14:30', desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons', isDone: true }
-            ],
-            files: []
-        },
-        {
-            id: 'TCK-0098',
-            date: '24 Feb 2026, 10:00',
-            topic: 'Nilai tegangan Power Meter tiba-tiba hilang',
-            device: 'Power Meter Utama - Master Node',
-            technician: 'Andi Pratama',
-            status: 'Menunggu Konfirmasi',
-            category: 'Energi & Kelistrikan',
-            description: 'Sejak tadi malam sekitar pukul 19.00 WIB, grafik tegangan (Voltage) dan arus (Current) dari Power Meter di dashboard tiba-tiba menunjukkan angka 0 atau blank sama sekali. Anehnya, listrik di rumah menyala normal dan total akumulasi kWh masih bertambah. Mohon dicek apakah ada kabel sensor Modbus RTU yang kendur di box panel utama.',
-            clientInfo: {
-                name: 'Aisyah',
-                email: 'aisyah@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok A1 No. 5',
-                idBieon: 'BIEON-001'
-            },
-            technicianInfo: {
-                name: 'Andi Pratama',
-                phone: '+62 812-456-789',
-                targetDate: 'Maks. 26 Feb 2026, 10:00 WIB'
-            },
-            timeline: [
-                { time: '25 Feb 2026, 15:30', desc: 'Teknisi mengonfirmasi perbaikan fisik telah selesai.', status: 'Status: Menunggu Konfirmasi Homeowner', isDone: true },
-                { time: '25 Feb 2026, 11:00', desc: 'Teknisi Andi Pratama tiba di lokasi dan melakukan pengecekan kabel Modbus RTU.', status: 'Status: Diproses', isDone: true },
-                { time: '24 Feb 2026, 10:15', desc: 'Tiket diterima oleh Teknisi Andi Pratama.', isDone: true },
-                { time: '24 Feb 2026, 10:00', desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons', isDone: true }
-            ],
-            files: [
-                { name: 'bukti_1.jpg', url: 'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?auto=format&fit=crop&w=200&q=80' },
-                { name: 'dashboard_error.png', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=200&q=80' },
-                { name: 'panel_listrik.jpg', url: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=200&q=80' }
-            ]
-        },
-        {
-            id: 'TCK-0085',
-            date: '20 Feb 2026, 09:15',
-            topic: 'Notifikasi Door Sensor sering telat masuk',
-            device: 'Door Sensor - R1 Living',
-            technician: 'Budi Santoso',
-            status: 'Selesai',
-            category: 'Keamanan',
-            description: 'Notifikasi masuk terlambat sekitar 5 menit setelah pintu dibuka.',
-            clientInfo: {
-                name: 'Aisyah',
-                email: 'aisyah@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok A1 No. 5',
-                idBieon: 'BIEON-001'
-            },
-            technicianInfo: {
-                name: 'Budi Santoso',
-                phone: '+62 811-222-333',
-                targetDate: 'Maks. 22 Feb 2026, 09:15 WIB'
-            },
-            timeline: [
-                { time: '21 Feb 2026, 10:00', desc: 'Homeowner telah mengonfirmasi tiket selesai dan memberikan penilaian.', status: 'Selesai', isDone: true },
-                { time: '21 Feb 2026, 09:00', desc: 'Teknisi mengonfirmasi perbaikan (Restart Gateway & Update Firmware) selesai.', status: 'Status: Menunggu Konfirmasi Homeowner', isDone: true },
-                { time: '20 Feb 2026, 09:15', desc: 'Laporan pengaduan berhasil dibuat.', isDone: true }
-            ],
-            rating: {
-                stars: 4,
-                review: 'Respon teknisi cepat, tapi butuh waktu sedikit lama untuk sinkronisasi gateway. Overall oke!'
-            },
-            files: []
-        },
-        {
-            id: 'TCK-0070',
-            date: '15 Feb 2026, 16:45',
-            topic: 'Ingin memindahkan posisi sensor gas agak ke kanan',
-            device: 'Gas Detector - R3 Kitchen',
-            technician: 'Sistem',
-            status: 'Ditolak',
-            category: 'Keamanan',
-            description: 'Saya ingin memindahkan letak sensor gas 1 meter ke kanan agar lebih pas dengan kabinet baru.',
-            clientInfo: {
-                name: 'Aisyah',
-                email: 'aisyah@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok A1 No. 5',
-                idBieon: 'BIEON-001'
-            },
-            technicianInfo: null,
-            timeline: [
-                { time: '16 Feb 2026, 08:00', desc: 'Pengaduan ditolak karena request pemindahan instalasi di luar cakupan garansi pengaduan. Silakan ajukan melalui layanan relokasi berbayar.', status: 'Ditolak', isDone: true },
-                { time: '15 Feb 2026, 16:45', desc: 'Laporan pengaduan berhasil dibuat.', isDone: true }
-            ],
-            files: []
-        },
-        {
-            id: 'TCK-0045',
-            date: '02 Feb 2026, 11:00',
-            topic: 'Pembacaan pH air toren fluktuatif parah',
-            device: 'Node Air Toren - R3 Kitchen',
-            technician: 'Andi Pratama',
-            status: 'Selesai',
-            category: 'Kualitas Air',
-            description: 'Sensor pH naik turun sangat cepat (antara 5 sampai 9) dalam satu menit.',
-            clientInfo: {
-                name: 'Aisyah',
-                email: 'aisyah@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok A1 No. 5',
-                idBieon: 'BIEON-001'
-            },
-            technicianInfo: {
-                name: 'Andi Pratama',
-                phone: '+62 812-456-789',
-                targetDate: 'Maks. 04 Feb 2026, 11:00 WIB'
-            },
-            timeline: [
-                { time: '04 Feb 2026, 10:00', desc: 'Homeowner telah mengonfirmasi tiket selesai dan memberikan penilaian.', status: 'Selesai', isDone: true },
-                { time: '03 Feb 2026, 15:00', desc: 'Kalibrasi ulang sensor selesai dilakukan.', status: 'Menunggu Konfirmasi', isDone: true },
-                { time: '02 Feb 2026, 11:00', desc: 'Laporan pengaduan berhasil dibuat.', isDone: true }
-            ],
-            rating: {
-                stars: 5,
-                review: 'Pelayanan sangat cepat! Mas Andi datang tepat waktu dan memperbaiki sensor dengan kalibrasi ulang, sekarang pembacaan normal. Mantap PT Matra!'
-            },
-            files: []
-        }
-    ];
+    // Fetch and loading state
+    const [complaints, setComplaints] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+    const [submitSuccess, setSubmitSuccess] = useState('');
 
-    const [complaints, setComplaints] = useState(initialComplaints);
-
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'Menunggu Respons':
-                return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FEF3C7] text-[#D97706]"><span className="w-1.5 h-1.5 rounded-full bg-[#D97706]"></span>{status}</span>;
-            case 'Diproses Teknisi':
-                return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#DBEAFE] text-[#2563EB]"><span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]"></span>{status}</span>;
-            case 'Menunggu Konfirmasi':
-                return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FEF9C3] text-[#CA8A04]"><span className="w-1.5 h-1.5 rounded-full bg-[#CA8A04]"></span>{status}</span>;
-            case 'Selesai':
-                return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#D1FAE5] text-[#059669]"><span className="w-1.5 h-1.5 rounded-full bg-[#059669]"></span>{status}</span>;
-            case 'Ditolak':
-                return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FEE2E2] text-[#DC2626]"><span className="w-1.5 h-1.5 rounded-full bg-[#DC2626]"></span>{status}</span>;
-            default:
-                return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">{status}</span>;
+    const decodeJwtPayload = (token) => {
+        try {
+            return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        } catch (e) {
+            return null;
         }
+    };
+
+    const fetchComplaints = async () => {
+        try {
+            setIsLoading(true);
+            const token = localStorage.getItem('bieon_token');
+            if (!token) return;
+            const payload = decodeJwtPayload(token);
+            if (!payload) return;
+            
+            const userId = payload.userId || payload.id;
+            if (!userId) return;
+
+            const res = await fetch(`/api/complaints/owner/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Gagal memuat data');
+            const data = await res.json();
+            
+            const mappedData = data.map(item => {
+                const safeId = item._id ? item._id.toString() : '';
+                return {
+                    ...item,
+                    id: safeId, // Map backend _id to id for table
+                    description: item.desc || 'No Description',
+                    date: item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':') : '-',
+                    technician: item.technician ? item.technician.fullName : 'Menunggu Teknisi',
+                    status: item.status?.toLowerCase() || 'unassigned',
+                    clientInfo: item.homeowner ? {
+                        name: item.homeowner.fullName,
+                        email: item.homeowner.email,
+                        phone: item.homeowner.phoneNumber,
+                        address: item.homeowner.address,
+                        idBieon: item.homeowner.bieonId
+                    } : {}
+                };
+            });
+
+            setComplaints(mappedData);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchComplaints();
+    }, []);
+
+
+
+    const getStatusBadge = (ticket) => {
+        return <TicketStatusBadge 
+            status={ticket.status} 
+            rating={ticket.rating}
+            assignedAt={ticket.assignedAt}
+            processStartedAt={ticket.processStartedAt}
+        />;
     };
 
     const requestSort = (key) => {
@@ -267,7 +150,7 @@ export function HomeownerComplaint({ onNavigate }) {
         let result = complaints;
 
         if (selectedStatusFilter) {
-            result = result.filter(c => c.status === selectedStatusFilter);
+            result = result.filter(c => c.status === selectedStatusFilter.toLowerCase());
         }
 
         if (searchQuery) {
@@ -309,16 +192,31 @@ export function HomeownerComplaint({ onNavigate }) {
         alert("Exporting data to CSV...");
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         if (e.target.files) {
-            const newFiles = Array.from(e.target.files).map(file => {
-                return {
-                    file,
-                    previewUrl: URL.createObjectURL(file), // create temporary URL for preview
-                    name: file.name
-                };
+            const filesArray = Array.from(e.target.files);
+            
+            const filePromises = filesArray.map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        resolve({
+                            file,
+                            previewUrl: event.target.result, // Base64 Data URL
+                            name: file.name
+                        });
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
             });
-            setFormFiles([...formFiles, ...newFiles]);
+
+            try {
+                const newFiles = await Promise.all(filePromises);
+                setFormFiles(prev => [...prev, ...newFiles]);
+            } catch (error) {
+                alert("Gagal membaca file gambar.");
+            }
         }
     };
 
@@ -328,87 +226,97 @@ export function HomeownerComplaint({ onNavigate }) {
         setFormFiles(updated);
     };
 
-    const handleSubmitComplaint = (e) => {
+    const handleSubmitComplaint = async (e) => {
         e.preventDefault();
         if (!formData.category || !formData.device || !formData.topic || !formData.description) {
             alert("Harap lengkapi semua field yang ditandai bintang (*).");
             return;
         }
 
-        // Convert preview URLs to our dummy structure
-        const uploadedFiles = formFiles.map(f => ({
-            name: f.name,
-            url: f.previewUrl
-        }));
+        setIsSubmitting(true);
+        setSubmitError('');
+        setSubmitSuccess('');
 
-        const newTicket = {
-            id: `TCK-010${complaints.length + 6}`,
-            date: new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':'),
-            topic: formData.topic,
-            device: formData.device,
-            technician: 'Menunggu Teknisi',
-            status: 'Menunggu Respons',
-            category: formData.category,
-            description: formData.description,
-            clientInfo: {
-                name: 'Aisyah',
-                email: 'aisyah@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok A1 No. 5',
-                idBieon: 'BIEON-001'
-            },
-            technicianInfo: null,
-            timeline: [
-                { time: new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':'), desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons', isDone: true }
-            ],
-            files: uploadedFiles
-        };
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const uploadedFiles = formFiles.map(f => ({ name: f.name, url: f.previewUrl }));
 
-        setComplaints([newTicket, ...complaints]);
-        setIsFormOpen(false);
+            const response = await fetch('/api/complaints', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    topic: formData.topic,
+                    category: formData.category,
+                    device: formData.device,
+                    desc: formData.description,
+                    files: uploadedFiles
+                })
+            });
 
-        // reset form
-        setFormData({ category: '', device: '', topic: '', description: '', files: [] });
-        setFormFiles([]);
-        alert("Pengaduan berhasil diajukan! Teknisi kami akan merespons dalam waktu SLA.");
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || 'Gagal mengajukan pengaduan');
+
+            setSubmitSuccess('Pengaduan berhasil diajukan! Teknisi akan segera memproses laporan Anda.');
+            setFormData({ category: '', device: '', topic: '', description: '', files: [] });
+            setFormFiles([]);
+            
+            // Re-fetch data untuk mendapatkan baris tabel terbaru
+            await fetchComplaints();
+
+            setTimeout(() => {
+                setIsFormOpen(false);
+                setSubmitSuccess('');
+            }, 1000);
+
+        } catch (error) {
+            setSubmitError(error.message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleSelesaikanTiket = (ticketId) => {
         setRatingTargetId(ticketId);
     };
 
-    const submitRating = () => {
+    const submitRating = async () => {
         if (ratingStars === 0) return;
 
-        const now = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':');
-
-        const updated = complaints.map(c => {
-            if (c.id === ratingTargetId) {
-                const updatedTicket = {
-                    ...c,
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const response = await fetch(`/api/complaints/${ratingTargetId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
                     status: 'Selesai',
-                    timeline: [
-                        { time: now, desc: 'Homeowner telah mengonfirmasi tiket selesai dan memberikan penilaian.', status: 'Selesai', isDone: true },
-                        ...c.timeline
-                    ],
                     rating: {
                         stars: ratingStars,
                         review: ratingReview
                     }
-                };
-                if (selectedTicket && selectedTicket.id === ratingTargetId) {
-                    setSelectedTicket(updatedTicket);
-                }
-                return updatedTicket;
-            }
-            return c;
-        });
+                })
+            });
 
-        setComplaints(updated);
-        setRatingTargetId(null);
-        setRatingStars(0);
-        setRatingReview('');
-        setHoverStars(0);
+            if (response.ok) {
+                setRatingTargetId(null);
+                setRatingStars(0);
+                setRatingReview('');
+                setHoverStars(0);
+                // Refresh data
+                await fetchComplaints();
+                alert("Terima kasih! Tiket telah diselesaikan dan ulasan Anda telah disimpan.");
+            } else {
+                alert("Gagal mengirimkan penilaian.");
+            }
+        } catch (error) {
+            console.error("Error submitting rating:", error);
+            alert("Terjadi kesalahan saat mengirim penilaian.");
+        }
     };
 
     return (
@@ -557,8 +465,8 @@ export function HomeownerComplaint({ onNavigate }) {
                                     {showStatusDropdown && (
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
-                                            <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
-                                                {['', 'Menunggu Respons', 'Diproses Teknisi', 'Menunggu Konfirmasi', 'Selesai', 'Ditolak'].map((status) => (
+                                            <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 min-w-[220px] bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                                                {['', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi', 'Selesai', 'Ditolak'].map((status) => (
                                                     <button
                                                         key={status}
                                                         onClick={() => {
@@ -609,31 +517,38 @@ export function HomeownerComplaint({ onNavigate }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {currentComplaints.length > 0 ? (
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-12 text-center text-gray-500">
+                                            <div className="flex flex-col items-center justify-center space-y-2">
+                                                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <span className="text-sm">Memuat data pengaduan...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : currentComplaints.length > 0 ? (
                                     currentComplaints.map(ticket => (
                                         <tr key={ticket.id} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="py-3 md:py-4 pr-2 md:pr-4 font-bold text-gray-900">{ticket.id}</td>
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4 font-bold text-gray-900">
+                                                {ticket.id ? ticket.id.substring(Math.max(0, ticket.id.length - 6)).toUpperCase() : '000000'}
+                                            </td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.date}</td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4 truncate max-w-[200px]" title={ticket.topic}>{ticket.topic}</td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.device}</td>
                                             <td className={`py-3 md:py-4 pr-2 md:pr-4 ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'font-medium text-gray-900'}`}>{ticket.technician}</td>
-                                            <td className="py-3 md:py-4 pr-2 md:pr-4">{getStatusBadge(ticket.status)}</td>
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4">{getStatusBadge(ticket)}</td>
                                             <td className="py-3 md:py-4 text-center">
-                                                {ticket.status === 'Menunggu Konfirmasi' ? (
+                                                {getActionButtons('homeowner', ticket.status).map((btn, idx) => (
                                                     <button
+                                                        key={idx}
                                                         onClick={() => setSelectedTicket(ticket)}
-                                                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#0F9E78] text-white rounded-lg text-xs font-bold hover:bg-[#0B8563] shadow shadow-[#0F9E78]/20 transition-all"
+                                                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                                            btn.variant === 'primary' ? 'bg-[#0F9E78] text-white hover:bg-[#0B8563] shadow shadow-[#0F9E78]/20' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow shadow-emerald-600/20'
+                                                        }`}
                                                     >
-                                                        Selesai ✓
+                                                        {btn.label} {btn.action === 'confirm' ? '✓' : <span className="text-[10px]">›</span>}
                                                     </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => setSelectedTicket(ticket)}
-                                                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 shadow shadow-emerald-600/20 transition-all"
-                                                    >
-                                                        Detail <span className="text-[10px]">›</span>
-                                                    </button>
-                                                )}
+                                                ))}
                                             </td>
                                         </tr>
                                     ))
@@ -648,11 +563,18 @@ export function HomeownerComplaint({ onNavigate }) {
 
                     {/* Mobile Card List */}
                     <div className="md:hidden divide-y divide-gray-100">
-                        {currentComplaints.length > 0 ? (
+                        {isLoading ? (
+                            <div className="py-12 flex flex-col items-center justify-center text-gray-500">
+                                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                <span className="text-sm">Memuat data pengaduan...</span>
+                            </div>
+                        ) : currentComplaints.length > 0 ? (
                             currentComplaints.map(ticket => (
                                 <div key={ticket.id} className="p-4 hover:bg-gray-50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">{ticket.id}</span>
+                                        <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">
+                                            {ticket.id ? ticket.id.substring(Math.max(0, ticket.id.length - 6)).toUpperCase() : '000000'}
+                                        </span>
                                         <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{ticket.date}</span>
                                     </div>
                                     <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.topic}</h3>
@@ -672,22 +594,20 @@ export function HomeownerComplaint({ onNavigate }) {
                                         </div>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <div>{getStatusBadge(ticket.status)}</div>
-                                        {ticket.status === 'Menunggu Konfirmasi' ? (
-                                            <button
-                                                onClick={() => setSelectedTicket(ticket)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0F9E78] text-white rounded-lg text-xs font-bold hover:bg-[#0B8563] shadow-sm shadow-[#0F9E78]/20 transition-all shrink-0"
-                                            >
-                                                Selesai ✓
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => setSelectedTicket(ticket)}
-                                                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all shrink-0"
-                                            >
-                                                Detail
-                                            </button>
-                                        )}
+                                        <div>{getStatusBadge(ticket)}</div>
+                                        <div className="flex gap-2">
+                                            {getActionButtons('homeowner', ticket.status).map((btn, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setSelectedTicket(ticket)}
+                                                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all active:scale-95 shrink-0 ${
+                                                        btn.variant === 'primary' ? 'bg-[#0D9488] text-white hover:bg-[#0F766E]' : 'bg-[#0F9E78] text-white hover:bg-[#0B8563]'
+                                                    }`}
+                                                >
+                                                    {btn.label} {btn.action === 'confirm' && '✓'}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -781,6 +701,18 @@ export function HomeownerComplaint({ onNavigate }) {
 
                         {/* Body */}
                         <div className="p-8 flex-1 overflow-y-auto custom-scrollbar">
+                            {submitError && (
+                                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium flex items-center gap-2">
+                                    <AlertCircle className="w-5 h-5 shrink-0" />
+                                    {submitError}
+                                </div>
+                            )}
+                            {submitSuccess && (
+                                <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium flex items-center gap-2">
+                                    <CheckCircle2 className="w-5 h-5 shrink-0" />
+                                    {submitSuccess}
+                                </div>
+                            )}
                             <form id="complaintForm" onSubmit={handleSubmitComplaint} className="space-y-8">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
@@ -937,17 +869,26 @@ export function HomeownerComplaint({ onNavigate }) {
                         <div className="p-8 flex gap-4">
                             <button
                                 type="button"
+                                disabled={isSubmitting}
                                 onClick={() => setIsFormOpen(false)}
-                                className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all"
+                                className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50"
                             >
                                 Batal
                             </button>
                             <button
                                 form="complaintForm"
                                 type="submit"
-                                className="flex-[2] py-3.5 bg-[#558580] text-white font-bold rounded-xl hover:opacity-90 transition-all active:scale-95"
+                                disabled={isSubmitting}
+                                className="flex-[2] py-3.5 bg-[#558580] text-white font-bold rounded-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:bg-gray-400"
                             >
-                                Kirim Pengaduan
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    <>Kirim Pengaduan</>
+                                )}
                             </button>
                         </div>
                     </div>

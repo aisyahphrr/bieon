@@ -14,6 +14,8 @@ import {
     AlertCircle,
     X
 } from 'lucide-react';
+import { formatStatusDisplay } from '../../utils/complaintHelpers';
+import { useSLA } from '../../hooks/useSLA';
 
 /**
  * Standard BIEON Component for Complaint Details
@@ -29,39 +31,54 @@ export function ComplaintDetailModal({
     if (!isOpen || !ticket) return null;
 
     // Helper: Badge Status Standard
-    const getStatusBadge = (status, sla, rating) => {
-        const baseClasses = "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border";
+    const StatusBadge = ({ ticket }) => {
+        const baseClasses = "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all";
+        const { level, isOverdue, type } = useSLA(ticket.createdAt, ticket.assignedAt, ticket.processStartedAt, ticket.status);
+        const displayStatus = formatStatusDisplay(ticket.status);
 
-        switch (status) {
-            case 'Baru':
-            case 'Menunggu Respons':
-                return <span className={`${baseClasses} bg-blue-50 text-blue-600 border-blue-100`}>Menunggu Respons</span>;
-            case 'Menunggu Konfirmasi':
-                return <span className={`${baseClasses} bg-orange-50 text-orange-600 border-orange-100`}>Menunggu Konfirmasi</span>;
-            case 'Diproses Teknisi':
-            case 'Diproses':
-                return (
-                    <div className="flex flex-row items-center gap-2">
-                        <span className={`${baseClasses} bg-teal-50 text-teal-600 border-teal-100`}>Diproses</span>
-                        <span className="text-[9px] font-bold text-teal-500 bg-teal-50/50 px-2 py-0.5 rounded border border-teal-100/50 whitespace-nowrap">SLA: {sla || 'N/A'}</span>
-                    </div>
-                );
-            case 'Selesai':
-                const ratingStars = rating?.stars || (typeof rating === 'number' ? rating : null);
-                return (
-                    <div className="flex flex-row items-center gap-2">
-                        <span className={`${baseClasses} bg-[#E1F2EB] text-[#1E4D40] border-[#BEE3D1]`}>Selesai</span>
-                        {ratingStars && (
-                            <div className="flex items-center gap-0.5 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
-                                <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                                <span className="text-[9px] font-bold text-amber-700">{ratingStars}/5</span>
-                            </div>
-                        )}
-                    </div>
-                );
-            default:
-                return <span className={`${baseClasses} bg-gray-50 text-gray-500 border-gray-100`}>{status}</span>;
-        }
+        const performanceIndicator = ticket.status.toLowerCase() === 'selesai' ? (
+            <div className="flex items-center gap-1.5 ml-2">
+                <div className={`w-2.5 h-2.5 rounded-full ${
+                    ticket.points >= 90 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
+                    ticket.points >= 70 ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' : 
+                    'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'
+                }`} title={`Performance: ${ticket.points || 0} pts`} />
+            </div>
+        ) : null;
+
+        const slaTimer = (ticket.status.toLowerCase() === 'diproses' || ticket.status.toLowerCase() === 'menunggu respons' || isOverdue) ? (
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ml-2 ${
+                level === 'red' ? 'bg-red-50 text-red-600 border-red-100 animate-pulse' :
+                level === 'amber' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                'bg-teal-50 text-teal-600 border-teal-100'
+            }`}>
+                SLA: {type} {isOverdue ? 'OVERDUE' : ''}
+            </span>
+        ) : null;
+
+        const colors = {
+            'unassigned': 'bg-gray-50 text-gray-400 border-gray-100',
+            'menunggu respons': 'bg-blue-50 text-blue-600 border-blue-100',
+            'diproses': 'bg-teal-50 text-teal-600 border-teal-100',
+            'overdue respons': 'bg-red-50 text-red-600 border-red-100',
+            'overdue perbaikan': 'bg-red-50 text-red-600 border-red-100',
+            'menunggu konfirmasi': 'bg-orange-50 text-orange-600 border-orange-100',
+            'selesai': 'bg-[#E1F2EB] text-[#1E4D40] border-[#BEE3D1]',
+            'ditolak': 'bg-red-50 text-red-600 border-red-100'
+        };
+
+        const cleanStatus = ticket.status.toLowerCase();
+        const badgeClass = colors[cleanStatus] || 'bg-gray-50 text-gray-500 border-gray-100';
+
+        return (
+            <div className="flex items-center">
+                <span className={`${baseClasses} ${badgeClass}`}>
+                    {displayStatus}
+                </span>
+                {slaTimer}
+                {performanceIndicator}
+            </div>
+        );
     };
 
     return (
@@ -120,7 +137,7 @@ export function ComplaintDetailModal({
                                         <p className="text-[11px] text-gray-500 font-medium">ID Tiket: {ticket.id}</p>
                                     </div>
                                     <div className="shrink-0">
-                                        {getStatusBadge(ticket.status, ticket.sla, ticket.rating)}
+                                        <StatusBadge ticket={ticket} />
                                     </div>
                                 </div>
 
@@ -324,12 +341,30 @@ export function ComplaintDetailModal({
                                                 <p className="text-sm font-medium text-gray-800">{ticket.technicianInfo.targetDate}</p>
                                             </div>
                                         </div>
-                                        {ticket.status === 'Selesai' && ticket.duration && (
-                                            <div className="pt-2 flex items-center gap-3">
+
+                                        {/* SLA PERFORMANCE POINTS */}
+                                        <div className="pt-4 border-t border-gray-100">
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase mb-3 flex items-center gap-2">
+                                                <Star className="w-3 h-3 text-amber-500" /> SLA Poin Performa
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                                    <p className="text-[9px] text-gray-400 font-bold uppercase mb-1">Respons</p>
+                                                    <p className={`text-sm font-bold ${ticket.technicianInfo.responsePoints >= 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{ticket.technicianInfo.responsePoints} pts</p>
+                                                </div>
+                                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                                    <p className="text-[9px] text-gray-400 font-bold uppercase mb-1">Perbaikan</p>
+                                                    <p className={`text-sm font-bold ${ticket.technicianInfo.repairPoints >= 90 ? 'text-emerald-600' : 'text-amber-600'}`}>{ticket.technicianInfo.repairPoints} pts</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {(ticket.status === 'Selesai' || ticket.duration) && (
+                                            <div className="pt-4 border-t border-gray-100 flex items-center gap-3">
                                                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                                                 <div>
                                                     <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Durasi Pengerjaan</p>
-                                                    <p className="text-sm font-bold text-teal-600">{ticket.duration}</p>
+                                                    <p className="text-sm font-bold text-teal-600">{ticket.duration || 'N/A'}</p>
                                                 </div>
                                             </div>
                                         )}

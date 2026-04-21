@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Users,
     Zap,
@@ -29,170 +29,108 @@ import {
 } from 'lucide-react';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { SuperAdminLayout } from './SuperAdminLayout';
+import { useSLA } from '../../hooks/useSLA';
+import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
+import { formatStatusDisplay, getActionButtons, getPerformanceIndicator } from '../../utils/complaintHelpers';
 
-// --- Dummy Data (Moved outside to avoid ReferenceError in state initialization) ---
-const initialComplaints = [
-    {
-        id: 'TCK-0105',
-        date: '28 Feb 2026, 08:15',
-        customer: 'Asri Sarassufi',
-        location: 'Kartika Wanasari',
-        topic: 'Smart Plug kipas exhaust tidak bisa di-ON-kan via web',
-        device: 'Smart Plug (Exhaust) - R3 Kitchen',
-        technician: 'Unassigned',
-        status: 'Menunggu Respons',
-        sla: '5 Menit',
-        urgency: 'High',
-        category: 'Energi & Kelistrikan',
-        description: 'Saya sudah mencoba menyalakan kipas exhaust melalui web dashboard tapi tidak ada respons, padahal icon menunjukkan status loading tapi akhirnya kembali OFF.',
-        clientInfo: {
-            name: 'Asri Sarassufi',
-            email: 'asri@gmail.com',
-            phone: '+62 856-890-689',
-            address: 'Kartika Wanasari Blok Dbdw gcwk wkhclwd chow',
-            idBieon: 'BIEON-001'
-        },
-        technicianInfo: null,
-        timeline: [
-            { time: '28 Feb 2026, 08:15', desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons' }
-        ],
-        files: [],
-        rating: '-',
-        logRequested: false,
-        logConfirmed: false
-    },
-    {
-        id: 'TCK-0102',
-        date: '28 Feb 2026, 10:00',
-        customer: 'Ahmad Fauzi',
-        location: 'Jl. Melati Bogor',
-        topic: 'Angka PM2.5 udara selalu stuck di angka 0',
-        device: 'R2 Bedroom - Node Udara',
-        technician: 'Budi Santoso',
-        status: 'Overdue Respons',
-        sla: 'Lewat 15 menit',
-        urgency: 'High',
-        category: 'Kenyamanan & Udara',
-        description: 'Sensor kualitas udara di kamar tidur utama sepertinya mengalami error atau nge-hang. Indikator suhu dan kelembapan terbaca dengan normal, tetapi nilai partikel debu PM2.5 dan PM10 terus menerus menunjukkan angka 0 µg/m³ selama 3 hari terakhir.',
-        clientInfo: {
-            name: 'Ahmad Fauzi',
-            email: 'fauzi@gmail.com',
-            phone: '+62 811-999-888',
-            address: 'Jl. Melati No. 12, Kel. Menteng, Bogor',
-            idBieon: 'BIEON-002'
-        },
-        technicianInfo: {
-            name: 'Budi Santoso',
-            phone: '+62 812-444-555',
-            targetDate: '02 Mar 2026, 10:00 WIB'
-        },
-        timeline: [
-            { time: '28 Feb 2026, 15:30', desc: 'Teknisi meminta data log historis dari SuperAdmin untuk dikaji.' },
-            { time: '28 Feb 2026, 10:15', desc: 'Laporan diterima. Teknisi akan melakukan troubleshooting via remote terlebih dahulu.' },
-            { time: '28 Feb 2026, 10:00', desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons' }
-        ],
-        files: [],
-        rating: '-',
-        logRequested: true,
-        logConfirmed: false
-    },
-    {
-        id: 'TCK-0098',
-        date: '27 Feb 2026, 15:30',
-        customer: 'Bpk. Budi',
-        location: 'Perum Dramaga',
-        topic: 'Nilai tegangan Power Meter tiba-tiba hilang',
-        device: 'Master Node - Power Meter Utama',
-        technician: 'Andi Pratama',
-        status: 'Diproses',
-        sla: '45 Jam',
-        urgency: 'Medium',
-        category: 'Energi & Kelistrikan',
-        description: 'Sejak tadi malam sekitar pukul 19.00 WIB, grafik tegangan (Voltage) dan arus (Current) dari Power Meter di dashboard tiba-tiba menunjukkan angka 0.',
-        clientInfo: {
-            name: 'Bpk. Budi',
-            email: 'budi@gmail.com',
-            phone: '+62 812-333-444',
-            address: 'Perum Dramaga Blok B No. 12, Bogor',
-            idBieon: 'BIEON-012'
-        },
-        technicianInfo: {
-            name: 'Andi Pratama',
-            phone: '+62 855-666-777',
-            targetDate: '01 Mar 2026, 15:30 WIB'
-        },
-        timeline: [
-            { time: '27 Feb 2026, 16:00', desc: 'Teknisi sedang melakukan pengecekan koneksi Modbus.' },
-            { time: '27 Feb 2026, 15:30', desc: 'Laporan pengaduan berhasil dibuat.' }
-        ],
-        files: [],
-        rating: '-'
-    },
-    {
-        id: 'TCK-0110',
-        date: '27 Feb 2026, 09:00',
-        customer: 'Budi Hartono',
-        location: 'Sentul City',
-        topic: 'Kebocoran pada pipa distribusi utama',
-        device: 'Pipa Air Utama',
-        technician: 'Joko Widodo',
-        status: 'Overdue Perbaikan',
-        sla: 'Lewat 2 jam',
-        urgency: 'High',
-        category: 'Air Sanitasi',
-        description: 'Ada rembesan air di dekat meteran air utama.',
-        clientInfo: {
-            name: 'Budi Hartono',
-            email: 'hartono@gmail.com',
-            phone: '+62 822-111-222',
-            address: 'Sentul City Blok A No. 5',
-            idBieon: 'BIEON-101'
-        },
-        technicianInfo: {
-            name: 'Joko Widodo',
-            phone: '+62 899-777-666',
-            targetDate: '28 Feb 2026, 09:00 WIB'
-        },
-        timeline: [
-            { time: '27 Feb 2026, 09:00', desc: 'Laporan pengaduan berhasil dibuat.' }
-        ],
-        files: [],
-        rating: '-'
-    },
-    {
-        id: 'TCK-0085',
-        date: '20 Feb 2026, 09:15',
-        customer: 'Ibu Rina',
-        location: 'Sentul City',
-        topic: 'Notifikasi Door Sensor sering telat masuk',
-        device: 'R1 Living - Door Sensor',
-        technician: 'Budi Santoso',
-        status: 'Selesai',
-        sla: 'Selesai',
-        urgency: 'Medium',
-        category: 'Keamanan',
-        description: 'Notifikasi pintu terbuka/tertutup terlambat masuk ke HP sekitar 5-10 menit.',
-        clientInfo: {
-            name: 'Ibu Rina',
-            email: 'rina@gmail.com',
-            phone: '+62 877-666-555',
-            address: 'Sentul City, Cluster Pine Forest No. 45',
-            idBieon: 'BIEON-045'
-        },
-        technicianInfo: {
-            name: 'Budi Santoso',
-            phone: '+62 812-444-555',
-            targetDate: 'Selesai'
-        },
-        timeline: [
-            { time: '21 Feb 2026, 10:00', desc: 'Homeowner mengonfirmasi perbaikan selesai.', status: 'Status: Selesai' }
-        ],
-        files: [],
-        rating: 5,
-        logRequested: false,
-        logConfirmed: false
-    }
-];
+const SLADisplay = ({ createdAt, assignedAt, processStartedAt, status }) => {
+    const { timer, points, level, isOverdue, type } = useSLA(createdAt, assignedAt, processStartedAt, status);
+
+    if (!timer) return null;
+
+    const colors = {
+        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+        amber: 'bg-amber-50 text-amber-600 border-amber-100',
+        red: 'bg-red-50 text-red-600 border-red-100'
+    };
+
+    const dotColors = {
+        emerald: 'bg-emerald-500',
+        amber: 'bg-amber-400',
+        red: 'bg-red-500'
+    };
+
+    return (
+        <div className="mt-1 inline-flex flex-col gap-0.5">
+            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-bold ${colors[level]} ${isOverdue ? 'animate-pulse-red shadow-[0_0_8px_rgba(239,68,68,0.3)]' : ''}`}>
+                <Clock className="w-2.5 h-2.5" />
+                <span>{timer}</span>
+                <span className="opacity-60 font-medium">({type})</span>
+            </div>
+            <div className="flex items-center gap-1 px-1">
+                <div className={`w-1 h-1 rounded-full ${dotColors[level]}`}></div>
+                <span className="text-[9px] font-bold text-gray-400">{points} Poin</span>
+            </div>
+        </div>
+    );
+};
+
+// Sub-component for individual table rows to handle SLA hooks correctly
+const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, handlePing, handleReject, handleTransfer }) => {
+    const { timer, points, isOverdue, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
+    
+    const displayStatus = formatStatusDisplay(item.status, 'admin', timeElapsedMinutes);
+    const actions = getActionButtons('admin', item.status, timeElapsedMinutes);
+
+    return (
+        <tr className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-gray-500 font-medium whitespace-nowrap">{item.date}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
+                <span className={item.technician === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
+                    {item.technician === 'Unassigned' ? 'Menunggu Teknisi' : item.technician}
+                </span>
+            </td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-center">
+                {item.status === 'selesai' && item.rating !== '-' ? (
+                    <div className="inline-flex items-center gap-1 font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                        <Star className="w-3 h-3 fill-amber-500" />
+                        {item.rating}/5
+                    </div>
+                ) : <span className="text-gray-300 font-bold">—</span>}
+            </td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
+                <div className="flex flex-col items-start gap-1">
+                    <TicketStatusBadge 
+                        status={displayStatus} 
+                        rating={item.rating} 
+                        assignedAt={item.assignedAt}
+                        processStartedAt={item.processStartedAt}
+                    />
+                </div>
+            </td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
+                <div className="flex items-center justify-center gap-2">
+                    {actions.map((btn, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => {
+                                if (btn.action === 'detail') handleDetail(item);
+                                if (btn.action === 'assign') handleAssign(item);
+                                if (btn.action === 'ping') handlePing(item);
+                                if (btn.action === 'reject') handleReject(item);
+                                if (btn.action === 'reassign') handleTransfer(item);
+                            }}
+                            className={`px-4 py-2 rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1 whitespace-nowrap ${
+                                btn.variant === 'primary' ? 'bg-[#1076E5] text-white' :
+                                btn.variant === 'danger' ? 'bg-red-100 text-red-600 border border-red-200' :
+                                btn.variant === 'warning' ? 'bg-[#F98C12] text-white' :
+                                btn.variant === 'secondary' ? 'bg-[#E11D48] text-white' :
+                                'bg-[#009B7C] text-white'
+                            }`}
+                        >
+                            {btn.label} {btn.action === 'detail' && <ChevronRight className="w-3 h-3" />}
+                        </button>
+                    ))}
+                </div>
+            </td>
+        </tr>
+    );
+};
+
+// Dummy data array has been moved directly to MongoDB via the Seed script!
 
 export default function AdminComplaint({ onNavigate }) {
     // --- Filter & Pagination States ---
@@ -205,26 +143,100 @@ export default function AdminComplaint({ onNavigate }) {
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
     const [showRowsDropdown, setShowRowsDropdown] = useState(false);
-    const [complaints, setComplaints] = useState(initialComplaints);
+    const [complaints, setComplaints] = useState([]);
+    const [technicians, setTechnicians] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     // --- Modal States ---
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [isPingModalOpen, setIsPingModalOpen] = useState(false);
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-    const [isLogConfirmOpen, setIsLogConfirmOpen] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState(null);
-    const [selectedTechnician, setSelectedTechnician] = useState('');
+    const [selectedTechnicianId, setSelectedTechnicianId] = useState('');
     const [selectedPingType, setSelectedPingType] = useState('');
 
+    // --- Fetch Logic ---
+    const token = localStorage.getItem('bieon_token');
 
-    // --- Dummy Data ---
-    const technicians = [
-        { id: 'TECH-001', name: 'Budi Santoso', status: 'Standby', activeTickets: 2 },
-        { id: 'TECH-002', name: 'Andi Pratama', status: 'On Tasks', activeTickets: 5 },
-        { id: 'TECH-003', name: 'Siti Aminah', status: 'Standby', activeTickets: 1 },
-        { id: 'TECH-004', name: 'Joko Widodo', status: 'Standby', activeTickets: 0 },
-    ];
+    const fetchData = async () => {
+        try {
+            setIsLoading(true);
+
+            // Fetch tickets using parallel promise
+            const [complaintsRes, techsRes] = await Promise.all([
+                fetch('/api/complaints', {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+                    cache: 'no-store'
+                }),
+                fetch('/api/admin/technicians', {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+                    cache: 'no-store'
+                })
+            ]);
+
+            if (complaintsRes.ok) {
+                const data = await complaintsRes.json();
+
+                // Mapped structure for frontend compatibility
+                const formattedComplaints = data.map(item => ({
+                    ...item,
+                    originalId: item._id, // Save DB ID to hit PUT endpoints
+                    id: `TCK-${item._id ? item._id.substring(item._id.length - 6).toUpperCase() : '000000'}`,
+                    description: item.desc, // Map from DB
+                    date: new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    customer: item.homeowner?.fullName || 'Unknown User',
+                    location: item.homeowner?.address || '-',
+                    clientInfo: item.homeowner ? {
+                        name: item.homeowner.fullName,
+                        email: item.homeowner.email,
+                        phone: item.homeowner.phoneNumber,
+                        address: item.homeowner.address,
+                        idBieon: item.homeowner.bieonId
+                    } : {},
+                    rating: item.rating?.stars || '-',
+                    technician: item.technician?.fullName || 'Unassigned',
+                    technicianInfo: item.technician ? {
+                        id: item.technician._id,
+                        name: item.technician.fullName,
+                        phone: item.technician.phoneNumber,
+                        targetDate: item.assignedAt ? new Date(new Date(item.assignedAt).getTime() + (48 * 60 * 60 * 1000)).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA',
+                        responsePoints: item.responsePoints || 0,
+                        repairPoints: item.repairPoints || 0,
+                    } : null,
+                    duration: (item.status === 'selesai' && item.processStartedAt) 
+                        ? (() => {
+                            const diff = new Date(item.updatedAt) - new Date(item.processStartedAt);
+                            const hours = Math.floor(diff / (1000 * 60 * 60));
+                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            return hours > 0 ? `${hours}j ${minutes}m` : `${minutes}m`;
+                          })()
+                        : null
+                }));
+                setComplaints(formattedComplaints);
+            } else {
+                const errJson = await complaintsRes.json().catch(() => ({}));
+                setComplaints([{ id: 'ERR-API', topic: `API Error: ${complaintsRes.status} - ${errJson.message || 'Unknown'}`, status: 'unassigned' }]);
+            }
+
+            if (techsRes.ok) {
+                const techsData = await techsRes.json();
+                const techList = Array.isArray(techsData.data) ? techsData.data : (Array.isArray(techsData) ? techsData : []);
+                setTechnicians(techList);
+            }
+        } catch (error) {
+            console.error("Gagal menarik data pengaduan:", error);
+            setComplaints([{ id: 'ERR-JS', topic: `JS Exception: ${error.message}`, status: 'unassigned' }]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (token) {
+            fetchData();
+        }
+    }, [token]);
 
     const stats = [
         { label: 'Total Tiket Aktif (BIEON)', value: '12', trend: '↑ 5% dari minggu lalu', color: 'blue', icon: Activity },
@@ -233,26 +245,37 @@ export default function AdminComplaint({ onNavigate }) {
         { label: 'Global CSAT', value: '4.6', trend: '↓ Turun 0.1 poin', color: 'amber', icon: Star, isRating: true }
     ];
 
-    // --- Filtering Logic ---
     const processedData = useMemo(() => {
         let filtered = [...complaints];
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(item =>
-                item.id.toLowerCase().includes(q) ||
-                item.customer.toLowerCase().includes(q) ||
-                item.topic.toLowerCase().includes(q) ||
-                item.device.toLowerCase().includes(q) ||
-                item.technician.toLowerCase().includes(q) ||
+                item.id?.toLowerCase().includes(q) ||
+                item.customer?.toLowerCase().includes(q) ||
+                item.topic?.toLowerCase().includes(q) ||
+                item.device?.toLowerCase().includes(q) ||
+                item.technician?.toLowerCase().includes(q) ||
                 (item.clientInfo?.idBieon && item.clientInfo.idBieon.toLowerCase().includes(q))
             );
         }
         if (selectedStatusFilter) {
-            if (selectedStatusFilter === 'Unassigned') {
-                filtered = filtered.filter(item => item.technician === 'Unassigned');
-            } else {
-                filtered = filtered.filter(item => item.status === selectedStatusFilter);
-            }
+            filtered = filtered.filter(item => {
+                const s = item.status?.toLowerCase();
+                if (selectedStatusFilter === 'Unassigned') {
+                    return s === 'unassigned' || item.technician === 'Unassigned';
+                }
+                
+                if (selectedStatusFilter === 'Overdue Respons') {
+                    return s === 'overdue respons';
+                }
+
+                if (selectedStatusFilter === 'Overdue Perbaikan') {
+                    return s === 'overdue perbaikan';
+                }
+
+                // Default matching
+                return s === selectedStatusFilter.toLowerCase();
+            });
         }
 
         if (sortConfig.key) {
@@ -260,7 +283,6 @@ export default function AdminComplaint({ onNavigate }) {
                 let aVal = a[sortConfig.key];
                 let bVal = b[sortConfig.key];
 
-                // Ensure rating is handled as a number
                 if (sortConfig.key === 'rating') {
                     aVal = aVal === '-' ? -1 : parseFloat(aVal);
                     bVal = bVal === '-' ? -1 : parseFloat(bVal);
@@ -275,7 +297,7 @@ export default function AdminComplaint({ onNavigate }) {
             });
         }
         return filtered;
-    }, [searchQuery, selectedStatusFilter, selectedCategoryFilter, sortConfig]);
+    }, [complaints, searchQuery, selectedStatusFilter, sortConfig]);
 
     const totalItems = processedData.length;
     const totalPages = Math.ceil(totalItems / rowsPerPage);
@@ -294,43 +316,42 @@ export default function AdminComplaint({ onNavigate }) {
     };
 
     const getStatusStyle = (status) => {
-        switch (status) {
-            case 'Menunggu Respons':
-            case 'Baru': return 'bg-amber-50 text-amber-600 border-amber-100';
-            case 'Overdue Respons':
-            case 'Overdue Perbaikan': return 'bg-red-50 text-red-600 border-red-100 font-bold';
-            case 'Sedang Diperbaiki':
-            case 'Diproses': return 'bg-blue-50 text-blue-600 border-blue-100';
-            case 'Waiting Feedback':
-            case 'Menunggu Konfirmasi': return 'bg-purple-50 text-purple-600 border-purple-100';
-            case 'Selesai': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+        const s = status?.toLowerCase();
+        switch (s) {
+            case 'baru':
+            case 'unassigned': return 'bg-gray-100 text-gray-500 border-gray-100';
+            case 'menunggu respons': return 'bg-amber-50 text-amber-600 border-amber-100';
+            case 'overdue respons': return 'bg-amber-50 text-red-600 border-amber-200 font-bold';
+            case 'diproses': return 'bg-blue-50 text-blue-600 border-blue-100';
+            case 'overdue perbaikan': return 'bg-blue-50 text-red-600 border-blue-200 font-bold';
+            case 'menunggu konfirmasi': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+            case 'selesai': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+            case 'ditolak': return 'bg-red-50 text-red-700 border-red-200';
             default: return 'bg-gray-50 text-gray-500 border-gray-100';
         }
     };
 
     const getStatusDotColor = (status) => {
-        switch (status) {
-            case 'Menunggu Respons':
-            case 'Baru': return 'bg-amber-400';
-            case 'Overdue Respons':
-            case 'Overdue Perbaikan': return 'bg-red-500';
-            case 'Sedang Diperbaiki':
-            case 'Diproses': return 'bg-blue-500';
-            case 'Waiting Feedback':
-            case 'Menunggu Konfirmasi': return 'bg-purple-500';
-            case 'Selesai': return 'bg-emerald-500';
+        const s = status?.toLowerCase();
+        switch (s) {
+            case 'unassigned':
+            case 'baru': return 'bg-gray-400';
+            case 'menunggu respons': return 'bg-amber-400';
+            case 'overdue respons': return 'bg-red-500';
+            case 'diproses': return 'bg-blue-500';
+            case 'overdue perbaikan': return 'bg-red-500';
+            case 'menunggu konfirmasi': return 'bg-indigo-500';
+            case 'selesai': return 'bg-emerald-500';
+            case 'ditolak': return 'bg-red-500';
             default: return 'bg-gray-400';
         }
     };
 
-    const getStatusBadge = (status, sla, rating) => {
-        const style = { bg: getStatusStyle(status), dot: getStatusDotColor(status) };
-        const label = status === 'Baru' ? 'Menunggu Respons' : status;
-
+    const getStatusBadge = (status, sla) => {
         return (
             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold ${getStatusStyle(status)} border whitespace-nowrap`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(status)}`}></span>
-                {label}
+                <span className={`w-1.5 h-1.5 rounded-full ${getStatusDotColor(status?.toLowerCase())}`}></span>
+                {status}
                 {sla && status !== 'Selesai' && (
                     <span className="font-normal opacity-90 ml-0.5">({sla})</span>
                 )}
@@ -338,7 +359,6 @@ export default function AdminComplaint({ onNavigate }) {
         );
     };
 
-    // --- Action Handlers ---
     const handleDetail = (ticket) => {
         setSelectedTicket(ticket);
         setIsDetailModalOpen(true);
@@ -354,21 +374,80 @@ export default function AdminComplaint({ onNavigate }) {
         setIsPingModalOpen(true);
     };
 
-    const handleTransfer = (ticket) => {
-        setSelectedTicket(ticket);
-        setIsTransferModalOpen(true);
+    const handleReject = async (ticket) => {
+        if (!window.confirm(`Apakah Anda yakin ingin menolak tiket ${ticket.id}?`)) return;
+        
+        try {
+            const response = await fetch(`/api/complaints/${ticket.originalId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    status: 'ditolak',
+                    note: 'Tiket ditolak oleh SuperAdmin.'
+                })
+            });
+
+            if (response.ok) {
+                fetchData();
+            } else {
+                alert("Gagal menolak tiket.");
+            }
+        } catch (error) {
+            console.error("Error rejecting ticket:", error);
+        }
     };
 
-    const confirmAssign = () => {
-        alert(`Teknisi ${selectedTechnician} telah ditugaskan ke tiket ${selectedTicket.id}`);
-        setIsAssignModalOpen(false);
-        setSelectedTechnician('');
+    const confirmAssign = async () => {
+        if (!selectedTechnicianId) return;
+
+        try {
+            const response = await fetch(`/api/complaints/${selectedTicket.originalId}/assign`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ technicianId: selectedTechnicianId })
+            });
+
+            if (response.ok) {
+                setIsAssignModalOpen(false);
+                setSelectedTechnicianId('');
+                fetchData();
+            } else {
+                const err = await response.json();
+                alert(`Gagal menugaskan teknisi: ${err.message}`);
+            }
+        } catch (error) {
+            alert(`Terjadi kesalahan server: ${error.message}`);
+        }
     };
 
-    const confirmPing = () => {
-        alert(`Peringatan "${selectedPingType}" telah dikirim ke teknisi ${selectedTicket.technician}`);
-        setIsPingModalOpen(false);
-        setSelectedPingType('');
+    const confirmPing = async () => {
+        try {
+            const response = await fetch(`/api/complaints/${selectedTicket.originalId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    note: `SA mengirimkan PING: ${selectedPingType}`
+                })
+            });
+
+            if (response.ok) {
+                alert(`Peringatan "${selectedPingType}" telah dikirim ke teknisi ${selectedTicket.technician}`);
+                setIsPingModalOpen(false);
+                setSelectedPingType('');
+                fetchData();
+            }
+        } catch (error) {
+            console.error("Error sending ping:", error);
+        }
     };
 
     const handleLogAction = (ticketId, isApproved) => {
@@ -406,30 +485,33 @@ export default function AdminComplaint({ onNavigate }) {
                 .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:decrement:hover { background-color: #e2e8f0; }
                 .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='2,2 8,5 2,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
                 .custom-scrollbar-x::-webkit-scrollbar-button:single-button:horizontal:increment:hover { background-color: #e2e8f0; }
+                
+                @keyframes pulse-red {
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.8; transform: scale(0.98); background-color: #fee2e2; }
+                }
+                .animate-pulse-red {
+                    animation: pulse-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                }
                 `}
             </style>
             <div className="space-y-6">
-                {/* Stats Cards - REVISED PER USER REQUEST */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
                     {stats.map((stat, idx) => (
                         <div key={idx} className={`bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden flex flex-col justify-between min-h-[110px] md:min-h-[140px] ${stat.color === 'red' ? 'border-red-100 shadow-red-50/50' : 'border-gray-100 shadow-sm'}`}>
                             <div className={`absolute top-0 right-0 w-16 h-16 md:w-24 md:h-24 blur-2xl md:blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-emerald-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
 
                             <div className="relative z-10 flex items-center gap-2 md:gap-3 mb-2 md:mb-0">
-                                {/* Simbol */}
                                 <div className={`p-2 md:p-2.5 rounded-lg md:rounded-xl shrink-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
                                     <stat.icon className="w-4 h-4 md:w-5 md:h-5" />
                                 </div>
 
-                                {/* Judul */}
                                 <p className="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">{stat.label}</p>
                             </div>
 
                             <div className="relative z-10 flex flex-col items-start md:flex-row md:items-end md:justify-between mt-auto gap-1 md:gap-0 mt-3 md:mt-0">
-                                {/* Angka di Bawah Judul */}
                                 <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-none">{stat.value}{stat.isRating && <span className="text-xl md:text-2xl ml-1 text-amber-400">★</span>}</h3>
 
-                                {/* Tren di Samping Angka (Kanan Bawah Desktop, Bawah Angka Mobile) */}
                                 <div className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold border transition-colors whitespace-nowrap mt-1 md:mt-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                                     {stat.trend}
                                 </div>
@@ -438,9 +520,7 @@ export default function AdminComplaint({ onNavigate }) {
                     ))}
                 </div>
 
-                {/* Table Control & Table Area */}
                 <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
-                    {/* Header & Controls inside the same box */}
                     <div className="p-5 md:p-8 border-b border-gray-50">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-6">
                             <div>
@@ -448,7 +528,6 @@ export default function AdminComplaint({ onNavigate }) {
                                 <p className="text-xs text-gray-500 mt-1 italic leading-relaxed">Pantau status laporan serta penugasan teknisi BIEON Smart Monitoring secara real-time.</p>
                             </div>
                             <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto">
-                                {/* Search */}
                                 <div className="relative flex-1 group min-w-0">
                                     <Search className="w-4 h-4 md:w-4 md:h-4 absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009B7C] transition-colors" />
                                     <input
@@ -460,7 +539,6 @@ export default function AdminComplaint({ onNavigate }) {
                                     />
                                 </div>
 
-                                {/* Status Filter */}
                                 <div className="relative shrink-0">
                                     <button
                                         onClick={() => setShowStatusDropdown(!showStatusDropdown)}
@@ -470,7 +548,6 @@ export default function AdminComplaint({ onNavigate }) {
                                         <span className="hidden md:block">{selectedStatusFilter || 'Semua Status'}</span>
                                         <ChevronDown className={`w-3.5 h-3.5 text-gray-400 hidden md:block transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
 
-                                        {/* Notification dot for mobile if filter is active */}
                                         {selectedStatusFilter && (
                                             <span className="md:hidden absolute top-2.5 right-2 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
                                         )}
@@ -480,7 +557,7 @@ export default function AdminComplaint({ onNavigate }) {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
                                             <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-[1.5rem] shadow-xl py-2 z-20">
-                                                {['', 'Menunggu Respons', 'Unassigned', 'Diproses', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan'].map(s => (
+                                                {['', 'Unassigned', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan', 'Ditolak'].map(s => (
                                                     <button
                                                         key={s}
                                                         onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
@@ -494,7 +571,6 @@ export default function AdminComplaint({ onNavigate }) {
                                     )}
                                 </div>
 
-                                {/* Export Data */}
                                 <button
                                     onClick={() => alert("Eksport PDF...")}
                                     className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
@@ -535,56 +611,27 @@ export default function AdminComplaint({ onNavigate }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {paginatedData.length > 0 ? (
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan={8} className="px-8 py-20 text-center">
+                                            <div className="flex flex-col items-center justify-center gap-4">
+                                                <div className="w-10 h-10 border-4 border-gray-100 border-t-[#009B7C] rounded-full animate-spin"></div>
+                                                <p className="text-sm font-bold text-gray-500 animate-pulse">Menarik Data dari Database...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : paginatedData.length > 0 ? (
                                     paginatedData.map((item) => (
-                                        <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-gray-500 font-medium whitespace-nowrap">{item.date}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
-                                                <span className={item.technician === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
-                                                    {item.technician === 'Unassigned' ? 'Menunggu Teknisi' : item.technician}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-center">
-                                                {item.status === 'Selesai' && item.rating !== '-' ? (
-                                                    <div className="inline-flex items-center gap-1 font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                                                        <Star className="w-3 h-3 fill-amber-500" />
-                                                        {item.rating}/5
-                                                    </div>
-                                                ) : <span className="text-gray-300 font-bold">—</span>}
-                                            </td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
-                                                {getStatusBadge(item.status, item.sla)}
-                                            </td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    {item.status.includes('Overdue') ? (
-                                                        <button
-                                                            onClick={() => handlePing(item)}
-                                                            className="px-4 py-2 bg-[#F98C12] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
-                                                        >
-                                                            Ping Teknisi
-                                                        </button>
-                                                    ) : (item.status === 'Menunggu Respons' || item.technician === 'Unassigned') ? (
-                                                        <button
-                                                            onClick={() => handleAssign(item)}
-                                                            className="px-4 py-2 bg-[#1076E5] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
-                                                        >
-                                                            Alihkan Teknisi
-                                                        </button>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => handleDetail(item)}
-                                                            className="px-4 py-2 bg-[#009B7C] text-white rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1 whitespace-nowrap"
-                                                        >
-                                                            Detail <ChevronRight className="w-3 h-3" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        <AdminComplaintRow 
+                                            key={item.id} 
+                                            item={item} 
+                                            getStatusBadge={getStatusBadge}
+                                            handleDetail={handleDetail}
+                                            handleAssign={handleAssign}
+                                            handlePing={handlePing}
+                                            handleReject={handleReject}
+                                            handleTransfer={handleAssign}
+                                        />
                                     ))
                                 ) : (
                                     <tr>
@@ -593,7 +640,7 @@ export default function AdminComplaint({ onNavigate }) {
                                                 <Activity className="w-12 h-12 text-gray-100" />
                                                 <div className="space-y-1">
                                                     <p className="text-lg font-bold text-gray-900">Tidak ada pengaduan ditemukan</p>
-                                                    <p className="text-sm font-semibold text-gray-400">Coba ubah filter atau kata kunci pencarian Anda</p>
+                                                    <p className="text-sm font-semibold text-gray-400">Belum ada pengaduan di database server.</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -701,7 +748,7 @@ export default function AdminComplaint({ onNavigate }) {
                         )}
 
                         {/* ALIKHAN TEKNISI */}
-                        {(selectedTicket?.status === 'Menunggu Respons' || selectedTicket?.technician === 'Unassigned') && (
+                        {(selectedTicket?.status !== 'Selesai' && selectedTicket?.status !== 'Ditolak') && (
                             <button
                                 onClick={() => {
                                     handleAssign(selectedTicket);
@@ -709,7 +756,7 @@ export default function AdminComplaint({ onNavigate }) {
                                 }}
                                 className="w-full py-3 bg-[#009B7C] text-white font-bold rounded-xl text-xs hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2"
                             >
-                                <Users className="w-3.5 h-3.5" /> Konfirmasi Alihkan Teknisi
+                                <Users className="w-3.5 h-3.5" /> Alihkan / Tugaskan
                             </button>
                         )}
 
@@ -799,30 +846,34 @@ export default function AdminComplaint({ onNavigate }) {
                             <div className="space-y-3">
                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Pilih Teknisi</label>
                                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 modal-custom-scrollbar">
-                                    {technicians.map(tech => (
+                                    {technicians.length > 0 ? technicians.map(tech => (
                                         <button
-                                            key={tech.id}
-                                            onClick={() => setSelectedTechnician(tech.name)}
-                                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedTechnician === tech.name ? 'border-[#009B7C] bg-emerald-50/50 ring-2 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
+                                            key={tech._id}
+                                            onClick={() => setSelectedTechnicianId(tech._id)}
+                                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedTechnicianId === tech._id ? 'border-[#009B7C] bg-emerald-50/50 ring-2 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-500 text-xs">{tech.name.charAt(0)}</div>
+                                                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-500 text-xs">
+                                                    {(tech?.fullName || '?').charAt(0).toUpperCase()}
+                                                </div>
                                                 <div className="text-left">
-                                                    <p className="text-sm font-bold text-gray-800">{tech.name}</p>
-                                                    <p className="text-[10px] text-gray-400 font-medium">{tech.activeTickets} Tiket Aktif</p>
+                                                    <p className="text-sm font-bold text-gray-800">{tech?.fullName || 'Tanpa Nama'}</p>
+                                                    <p className="text-[10px] text-gray-400 font-medium">{tech?.position || 'Teknisi BIEON'}</p>
                                                 </div>
                                             </div>
-                                            <div className={`px-2 py-0.5 rounded text-[9px] font-bold border ${tech.status === 'Standby' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                                                {tech.status}
+                                            <div className={`px-2 py-0.5 rounded text-[9px] font-bold border ${tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                                {tech.status === 'aktif' ? 'Standby' : 'Sibuk'}
                                             </div>
                                         </button>
-                                    ))}
+                                    )) : (
+                                        <div className="text-center py-4 text-xs font-bold text-gray-400">Tidak ada teknisi tersedia</div>
+                                    )}
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 gap-3">
                                 <button
                                     onClick={confirmAssign}
-                                    disabled={!selectedTechnician}
+                                    disabled={!selectedTechnicianId}
                                     className="w-full py-4 bg-[#009B7C] text-white font-bold rounded-2xl text-sm hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:shadow-none"
                                 >
                                     Konfirmasi Penugasan

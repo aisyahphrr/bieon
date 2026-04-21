@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Search,
     Filter,
@@ -26,149 +26,113 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
+import { useSLA } from '../../hooks/useSLA';
+import { formatStatusDisplay, getActionButtons } from '../../utils/complaintHelpers';
 
-// Module-level constant — avoids re-creation on every render
-const INITIAL_COMPLAINTS_DATA = [
 
-        {
-            id: 'TCK-0105',
-            date: '28 Feb 2026, 08:15',
-            customer: 'Asri Sarassufi',
-            location: 'Kartika Wanasari',
-            topic: 'Smart Plug kipas exhaust tidak bisa di-ON-kan via web',
-            status: 'Baru',
-            sla: '5 Menit',
-            urgency: 'High',
-            category: 'Energi & Kelistrikan',
-            device: 'Smart Plug (Exhaust) - R3 Kitchen',
-            description: 'Saya sudah mencoba menyalakan kipas exhaust melalui web dashboard tapi tidak ada respons, padahal icon menunjukkan status loading tapi akhirnya kembali OFF.',
-            clientInfo: {
-                name: 'Asri Sarassufi',
-                email: 'asri@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Kartika Wanasari Blok Dbdw gcwk wkhclwd chow',
-                idBieon: 'TCK-0045'
-            },
-            technicianInfo: {
-                name: 'Asri Sarassufi',
-                phone: '+62 856-890-689',
-                targetDate: 'Maksimal 28 Feb 2026, 08:15 WIB'
-            },
-            timeline: [
-                { time: '28 Feb 2026, 08:15', desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons' }
-            ],
-            files: [
-                { name: 'bukti_1.jpg', url: 'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?auto=format&fit=crop&w=200&q=80' },
-                { name: 'dashboard.png', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=200&q=80' },
-                { name: 'panel.jpg', url: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=200&q=80' }
-            ],
-            logRequested: false,
-            logConfirmed: false,
-            progressNotes: []
-        },
-        {
-            id: 'TCK-0102',
-            date: '28 Feb 2026, 10:00',
-            customer: 'Asri Sarassufi',
-            location: 'Jl. Melati Bogor',
-            topic: 'Angka PM2.5 udara selalu stuck di angka 0',
-            status: 'Diproses',
-            sla: '10 Menit',
-            urgency: 'High',
-            category: 'Kenyamanan & Udara',
-            device: 'R2 Bedroom - Node Udara',
-            description: 'Sensor kualitas udara di kamar tidur utama sepertinya mengalami error atau nge-hang. Indikator suhu dan kelembapan terbaca dengan normal, tetapi nilai partikel debu PM2.5 dan PM10 terus menerus menunjukkan angka 0 µg/m³ selama 3 hari terakhir.',
-            clientInfo: {
-                name: 'Asri Sarassufi',
-                email: 'asri@gmail.com',
-                phone: '+62 856-890-689',
-                address: 'Jl. Melati No. 12, Kel. Menteng, Bogor',
-                idBieon: 'TCK-0045'
-            },
-            technicianInfo: {
-                name: 'Asri Sarassufi',
-                phone: '+62 856-890-689',
-                targetDate: 'Maksimal 02 Mar 2026, 10:00 WIB'
-            },
-            timeline: [
-                { time: '28 Feb 2026, 15:30', desc: 'Teknisi meminta data log historis dari SuperAdmin untuk dikaji.' },
-                { time: '28 Feb 2026, 10:15', desc: 'Laporan diterima. Teknisi akan melakukan troubleshooting via remote terlebih dahulu.' },
-                { time: '28 Feb 2026, 10:00', desc: 'Laporan pengaduan berhasil dibuat.', status: 'Status: Menunggu Respons' }
-            ],
-            files: [],
-            logRequested: true,
-            logConfirmed: true,
-            progressNotes: []
-        },
-        {
-            id: 'TCK-0098',
-            date: '27 Feb 2026, 15:30',
-            customer: 'Bpk. Budi',
-            location: 'Perum Dramaga',
-            topic: 'Nilai tegangan Power Meter tiba-tiba hilang',
-            status: 'Diproses',
-            sla: '45 Jam',
-            urgency: 'Medium',
-            category: 'Energi & Kelistrikan',
-            device: 'Master Node - Power Meter Utama',
-            description: 'Sejak tadi malam sekitar pukul 19.00 WIB, grafik tegangan (Voltage) dan arus (Current) dari Power Meter di dashboard tiba-tiba menunjukkan angka 0.',
-            clientInfo: {
-                name: 'Bpk. Budi',
-                email: 'budi@gmail.com',
-                phone: '+62 812-333-444',
-                address: 'Perum Dramaga Blok B No. 12, Bogor',
-                idBieon: 'BIEON-012'
-            },
-            technicianInfo: {
-                name: 'Asri Sarassufi',
-                phone: '+62 856-890-689',
-                targetDate: 'Maksimal 01 Mar 2026, 15:30 WIB'
-            },
-            timeline: [
-                { time: '27 Feb 2026, 16:00', desc: 'Teknisi sedang melakukan pengecekan koneksi Modbus.' },
-                { time: '27 Feb 2026, 15:30', desc: 'Laporan pengaduan berhasil dibuat.' }
-            ],
-            files: [],
-            logRequested: false,
-            logConfirmed: false,
-            progressNotes: []
-        },
-        {
-            id: 'TCK-0085',
-            date: '20 Feb 2026, 09:15',
-            customer: 'Ibu Rina',
-            location: 'Jl. Melati Bogor',
-            topic: 'Notifikasi Door Sensor sering telat masuk',
-            status: 'Selesai',
-            sla: null,
-            urgency: 'Medium',
-            category: 'Keamanan',
-            rating: 5,
-            device: 'R1 Living - Door Sensor',
-            description: 'Notifikasi pintu terbuka/tertutup terlambat masuk ke HP sekitar 5-10 menit.',
-            clientInfo: {
-                name: 'Ibu Rina',
-                email: 'rina@gmail.com',
-                phone: '+62 877-666-555',
-                address: 'Sentul City, Cluster Pine Forest No. 45',
-                idBieon: 'BIEON-045'
-            },
-            technicianInfo: {
-                name: 'Asri Sarassufi',
-                phone: '+62 856-890-689',
-                targetDate: 'Selesai'
-            },
-            timeline: [
-                { time: '21 Feb 2026, 10:00', desc: 'Homeowner mengonfirmasi perbaikan selesai.', status: 'Status: Selesai' },
-                { time: '20 Feb 2026, 14:00', desc: 'Update firmware gateway selesai.' },
-                { time: '20 Feb 2026, 09:15', desc: 'Laporan pengaduan berhasil dibuat.' }
-            ],
-            files: [],
-            logRequested: false,
-            logConfirmed: false,
-            progressNotes: []
-        }
-];
+
+const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }) => {
+    const { timer, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
+    const displayStatus = formatStatusDisplay(item.status, 'technician');
+    const actions = getActionButtons('technician', item.status, timeElapsedMinutes);
+
+    return (
+        <div className="p-4 bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <div className="flex justify-between items-start mb-2">
+                <span className="px-2 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-500">{item.id}</span>
+                <span className="text-[10px] text-gray-400 font-medium">{item.date}</span>
+            </div>
+            <div className="mb-4">
+                <h3 className="font-bold text-gray-900 text-sm mb-1 leading-tight">{item.customer}</h3>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <MapPin className="w-3 h-3" />
+                    <span className="truncate">{item.location}</span>
+                </div>
+            </div>
+            <div className="bg-[#f8fafc] p-3 rounded-xl border border-gray-100 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <FileText className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Topik Kendala</span>
+                </div>
+                <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
+                <div className="flex justify-between items-center mt-2">
+                    <div>
+                        <TicketStatusBadge 
+                            status={item.status} 
+                            rating={item.rating}
+                            assignedAt={item.assignedAt}
+                            processStartedAt={item.processStartedAt}
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        {actions.map((btn, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => {
+                                    if (btn.action === 'process') handleStartProcess(item);
+                                    else setSelectedTicket(item);
+                                }}
+                                className={`px-4 py-2 rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition-all ${
+                                    btn.variant === 'primary' ? 'bg-[#0D9488] text-white hover:bg-[#0F766E]' : 'bg-gray-100 text-gray-400'
+                                }`}
+                            >
+                                {btn.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket }) => {
+    const { timer, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
+    const displayStatus = formatStatusDisplay(item.status, 'technician');
+    const actions = getActionButtons('technician', item.status, timeElapsedMinutes);
+
+    return (
+        <tr className="hover:bg-gray-50/50 transition-colors group">
+            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">{item.id}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-500 whitespace-nowrap">{item.date}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 font-medium text-gray-900 whitespace-nowrap">{item.customer}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-500 whitespace-nowrap">{item.location}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-600 truncate max-w-[400px]" title={item.topic}>
+                {item.topic}
+            </td>
+            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
+                <div className="flex flex-col items-start gap-1">
+                    <TicketStatusBadge 
+                        status={item.status} 
+                        rating={item.rating}
+                        assignedAt={item.assignedAt}
+                        processStartedAt={item.processStartedAt}
+                    />
+                </div>
+            </td>
+            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-center">
+                <div className="flex items-center justify-center gap-2">
+                    {actions.map((btn, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => {
+                                if (btn.action === 'process') handleStartProcess(item);
+                                else setSelectedTicket(item);
+                            }}
+                            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm active:scale-95 transition-all ${
+                                btn.variant === 'primary' ? 'bg-[#0D9488] text-white hover:bg-[#0F766E]' : 'bg-gray-100 text-gray-400'
+                            }`}
+                        >
+                            {btn.label} {btn.action !== 'process' && <ChevronRight className="w-3 h-3" />}
+                        </button>
+                    ))}
+                </div>
+            </td>
+        </tr>
+    );
+};
+
+// --- Dummy Data (Telah dibersihkan dan dipindah ke Database MongoDB Cloud via Seeder) ---
 
 export function PengaduanKlienPage({ onNavigate }) {
     const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -182,10 +146,61 @@ export function PengaduanKlienPage({ onNavigate }) {
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-    const [complaints, setComplaints] = useState(INITIAL_COMPLAINTS_DATA);
+    const [complaints, setComplaints] = useState([]);
     const [selectedTicket, setSelectedTicket] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // --- Toast States ---
+    // --- Fetch Logic ---
+    const token = localStorage.getItem('bieon_token');
+
+    const fetchData = async () => {
+        try {
+            setIsLoading(true);
+            const response = await fetch('/api/complaints/technician', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+                cache: 'no-store'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Mapped structure for formatting UI
+                const formattedComplaints = data.map(item => {
+                    const safeId = item._id ? item._id.toString() : '';
+                    return {
+                        ...item,
+                        originalId: item._id,
+                        id: safeId ? `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}` : 'TCK-000000',
+                        date: item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':') : '-',
+                        customer: item.homeowner?.fullName || 'Unknown User',
+                        location: item.homeowner?.address || '-',
+                        topic: item.topic || 'No Topic',
+                        status: item.status?.toLowerCase() || 'unassigned',
+                        clientInfo: item.homeowner ? {
+                            name: item.homeowner.fullName,
+                            email: item.homeowner.email,
+                            phone: item.homeowner.phoneNumber,
+                            address: item.homeowner.address,
+                            idBieon: item.homeowner.bieonId
+                        } : {},
+                        technicianInfo: null
+                    };
+                });
+                setComplaints(formattedComplaints);
+            }
+        } catch (error) {
+            console.error("Gagal menarik data pengaduan teknisi:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (token) {
+            fetchData();
+        }
+    }, [token]);
+
     const [toast, setToast] = useState({ show: false, message: '' });
 
     const showToast = (message) => {
@@ -193,28 +208,100 @@ export function PengaduanKlienPage({ onNavigate }) {
         setTimeout(() => setToast({ show: false, message: '' }), 3000);
     };
 
-    // New States for Detail & Action Modals
     const [isLogModalOpen, setIsLogModalOpen] = useState(false);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [logRequestText, setLogRequestText] = useState('');
     const [statusNoteText, setStatusNoteText] = useState('');
     const [updateTargetStatus, setUpdateTargetStatus] = useState('');
-    const [showUpdateStatusDropdown, setShowUpdateStatusDropdown] = useState(false);
 
-    // Summary Stats
+    const handleStartProcess = async (ticket) => {
+        try {
+            const response = await fetch(`/api/complaints/${ticket.originalId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    status: 'diproses',
+                    note: 'Teknisi menyetujui tiket dan mulai melakukan perbaikan.'
+                })
+            });
+
+            if (response.ok) {
+                showToast("Tiket berhasil diterima & proses pemeriksaan dimulai.");
+                fetchData();
+            } else {
+                showToast("Gagal memulai proses perbaikan.");
+            }
+        } catch (error) {
+            console.error("Error starting process:", error);
+        }
+    };
+
+    const handleAction = async (actionType) => {
+        if (!selectedTicket) return;
+
+        try {
+            if (actionType === 'request_log') {
+                const response = await fetch(`/api/complaints/${selectedTicket.originalId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        logRequested: true,
+                        logRequestedAt: new Date(),
+                        logRequestNote: logRequestText
+                    })
+                });
+
+                if (response.ok) {
+                    showToast("Permintaan data log telah dikirim ke SuperAdmin.");
+                    setIsLogModalOpen(false);
+                    setLogRequestText('');
+                    fetchData();
+                }
+            } else if (actionType === 'update_progress') {
+                const response = await fetch(`/api/complaints/${selectedTicket.originalId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ 
+                        status: updateTargetStatus,
+                        note: statusNoteText
+                    })
+                });
+
+                if (response.ok) {
+                    showToast(`Tiket berhasil di-update ke status ${updateTargetStatus}.`);
+                    setIsUpdateModalOpen(false);
+                    setStatusNoteText('');
+                    setSelectedTicket(null);
+                    fetchData();
+                }
+            }
+        } catch (error) {
+            console.error("Error executing action:", error);
+            showToast("Terjadi kesalahan sistem.");
+        }
+    };
+
     const stats = {
-        waiting: complaints.filter(c => c.status === 'Baru').length,
-        processing: complaints.filter(c => c.status === 'Diproses').length,
-        completed: complaints.filter(c => c.status === 'Selesai').length,
+        waiting: complaints.filter(c => c.status === 'menunggu respons' || c.status === 'overdue respons').length,
+        processing: complaints.filter(c => c.status === 'diproses' || c.status === 'overdue perbaikan').length,
+        completed: complaints.filter(c => c.status === 'selesai' || c.status === 'menunggu konfirmasi').length,
         avgRating: 4.8
     };
 
-    // Filter & Sort Logic
     const processedData = useMemo(() => {
         let result = [...complaints];
 
         if (selectedStatusFilter) {
-            result = result.filter(c => c.status === selectedStatusFilter);
+            result = result.filter(c => c.status === selectedStatusFilter.toLowerCase());
         }
 
         if (selectedCategoryFilter) {
@@ -250,7 +337,6 @@ export function PengaduanKlienPage({ onNavigate }) {
         return result;
     }, [complaints, searchQuery, selectedStatusFilter, selectedCategoryFilter, sortConfig]);
 
-    // Pagination
     const totalItems = processedData.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
     const startIndex = (currentPage - 1) * rowsPerPage;
@@ -262,123 +348,9 @@ export function PengaduanKlienPage({ onNavigate }) {
         setSortConfig({ key, direction });
     };
 
-    const handleExportPDF = () => {
-        const doc = new jsPDF('l', 'mm', 'a4');
-
-        // Header
-        doc.setFontSize(18);
-        doc.text('BIEON - Laporan Pengaduan Teknisi', 14, 20);
-        doc.setFontSize(10);
-        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 28);
-
-        // Table
-        const tableData = processedData.map(c => [
-            c.id,
-            c.date,
-            c.customer,
-            c.location,
-            c.topic,
-            c.status,
-            c.sla || '-'
-        ]);
-
-        doc.autoTable({
-            startY: 35,
-            head: [['ID Tiket', 'Tanggal', 'Pelanggan', 'Lokasi', 'Topik Kendala', 'Status', 'SLA']],
-            body: tableData,
-            theme: 'grid',
-            headStyles: { fillColor: [43, 92, 80], textColor: [255, 255, 255] },
-            alternateRowStyles: { fillColor: [245, 245, 245] },
-            margin: { top: 35 },
-            styles: { fontSize: 8, cellPadding: 3 }
-        });
-
-        doc.save(`BIEON_Taskboard_Export_${new Date().getTime()}.pdf`);
-    };
-
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />;
         return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-gray-600" /> : <ArrowDown className="w-3.5 h-3.5 text-gray-600" />;
-    };
-
-    // getStatusBadge replaced by shared <TicketStatusBadge> component
-
-    const handleAction = (type) => {
-        if (!selectedTicket) return;
-
-        const now = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-        if (type === 'request_log') {
-            const updatedComplaints = complaints.map(c => {
-                if (c.id === selectedTicket.id) {
-                    return {
-                        ...c,
-                        logRequested: true,
-                        timeline: [
-                            { time: now, desc: `Teknisi meminta data log: "${logRequestText}"` },
-                            ...c.timeline
-                        ]
-                    };
-                }
-                return c;
-            });
-            setComplaints(updatedComplaints);
-            setSelectedTicket({ ...selectedTicket, logRequested: true, timeline: [{ time: now, desc: `Teknisi meminta data log: "${logRequestText}"` }, ...selectedTicket.timeline] });
-            setIsLogModalOpen(false);
-            setLogRequestText('');
-            // Auto-confirm after 2s to simulate SuperAdmin response (demo)
-            setTimeout(() => {
-                setComplaints(prev => prev.map(c => c.id === selectedTicket.id ? { ...c, logConfirmed: true } : c));
-            }, 2000);
-        }
-
-        if (type === 'update_progress') {
-            const updatedComplaints = complaints.map(c => {
-                if (c.id === selectedTicket.id) {
-                    return {
-                        ...c,
-                        status: updateTargetStatus,
-                        timeline: [
-                            { time: now, desc: statusNoteText || `Status diperbarui menjadi ${updateTargetStatus}`, status: `Status: ${updateTargetStatus}` },
-                            ...c.timeline
-                        ]
-                    };
-                }
-                return c;
-            });
-            setComplaints(updatedComplaints);
-            setSelectedTicket({
-                ...selectedTicket,
-                status: updateTargetStatus,
-                timeline: [{ time: now, desc: statusNoteText || `Status diperbarui menjadi ${updateTargetStatus}`, status: `Status: ${updateTargetStatus}` }, ...selectedTicket.timeline]
-            });
-            setIsUpdateModalOpen(false);
-            setStatusNoteText('');
-        }
-
-        if (type === 'selesai') {
-            const now = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const updatedComplaints = complaints.map(c => {
-                if (c.id === selectedTicket.id) {
-                    return {
-                        ...c,
-                        status: 'Menunggu Konfirmasi',
-                        timeline: [
-                            { time: now, desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Status: Menunggu Konfirmasi' },
-                            ...c.timeline
-                        ]
-                    };
-                }
-                return c;
-            });
-            setComplaints(updatedComplaints);
-            setSelectedTicket({
-                ...selectedTicket,
-                status: 'Menunggu Konfirmasi',
-                timeline: [{ time: now, desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Status: Menunggu Konfirmasi' }, ...selectedTicket.timeline]
-            });
-            // Tiket otomatis berpindah ke tab 'Menunggu Konfirmasi' di list
-        }
     };
 
     return (
@@ -389,17 +361,13 @@ export function PengaduanKlienPage({ onNavigate }) {
                 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
                 .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
             `}</style>
-            {/* Main Content Area */}
             <div className="py-8">
-                {/* Title Section */}
                 <div className="mb-8">
                     <h1 className="text-2xl font-bold text-[#1E4D40] mb-2 text-center sm:text-left">Taskboard Teknisi - Pusat Pengaduan</h1>
                     <p className="text-gray-500 text-sm max-w-2xl text-center sm:text-left">Pantau dan selesaikan tiket pengaduan Pelanggan yang ditugaskan kepada Anda. Perhatikan batas waktu SLA untuk setiap tiket.</p>
                 </div>
 
-                {/* Summary Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-                    {/* Card 1: Waiting */}
                     <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between mb-2 md:mb-4">
                             <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
@@ -418,7 +386,6 @@ export function PengaduanKlienPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    {/* Card 2: Processing */}
                     <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between mb-2 md:mb-4">
                             <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
@@ -437,7 +404,6 @@ export function PengaduanKlienPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    {/* Card 3: Completed */}
                     <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between mb-2 md:mb-4">
                             <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
@@ -456,7 +422,6 @@ export function PengaduanKlienPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    {/* Card 4: Rating */}
                     <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between mb-2 md:mb-4">
                             <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
@@ -476,9 +441,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                     </div>
                 </div>
 
-                {/* Data Section */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    {/* Toolbar */}
                     <div className="p-6 border-b border-gray-100">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div>
@@ -487,7 +450,6 @@ export function PengaduanKlienPage({ onNavigate }) {
                             </div>
 
                             <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
-                                {/* Search */}
                                 <div className="relative flex-1 sm:w-auto md:w-64 group">
                                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                     <input
@@ -500,7 +462,6 @@ export function PengaduanKlienPage({ onNavigate }) {
                                 </div>
 
                                 <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                                    {/* Status Filter */}
                                     <div className="relative">
                                         <button
                                             onClick={() => setShowStatusDropdown(!showStatusDropdown)}
@@ -518,7 +479,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                                             <>
                                                 <div className="fixed inset-0 z-[10]" onClick={() => setShowStatusDropdown(false)}></div>
                                                 <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-[20] animate-in fade-in zoom-in-95 duration-200">
-                                                    {['', 'Baru', 'Diproses', 'Menunggu Konfirmasi', 'Selesai'].map(s => (
+                                                    {['', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi', 'Selesai'].map(s => (
                                                         <button
                                                             key={s}
                                                             onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
@@ -532,7 +493,6 @@ export function PengaduanKlienPage({ onNavigate }) {
                                         )}
                                     </div>
 
-                                    {/* Export */}
                                     <button
                                         onClick={() => showToast("Mengekspor data pengaduan ke PDF...")}
                                         className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent"
@@ -572,35 +532,31 @@ export function PengaduanKlienPage({ onNavigate }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {currentData.length > 0 ? (
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-6 py-20 text-center">
+                                            <div className="flex flex-col items-center justify-center gap-4">
+                                                <div className="w-10 h-10 border-4 border-gray-100 border-t-[#0D9488] rounded-full animate-spin"></div>
+                                                <p className="text-sm font-bold text-gray-500 animate-pulse">Menarik Tugas dari Server...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : currentData.length > 0 ? (
                                     currentData.map((item, idx) => (
-                                        <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
-                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">{item.id}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-500 whitespace-nowrap">{item.date}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 font-medium text-gray-900 whitespace-nowrap">{item.customer}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-500 whitespace-nowrap">{item.location}</td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-gray-600 truncate max-w-[400px]" title={item.topic}>
-                                                {item.topic}
-                                            </td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                                                <TicketStatusBadge status={item.status} sla={item.sla} rating={item.rating} />
-                                            </td>
-                                            <td className="px-3 md:px-4 lg:px-6 py-3 lg:py-4 text-center">
-                                                <button
-                                                    onClick={() => setSelectedTicket(item)}
-                                                    className="inline-flex items-center gap-1 px-4 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all"
-                                                >
-                                                    Detail <ChevronRight className="w-3 h-3" />
-                                                </button>
-                                            </td>
-                                        </tr>
+                                        <TechnicianComplaintRow 
+                                            key={idx} 
+                                            item={item} 
+                                            idx={idx}
+                                            handleStartProcess={handleStartProcess}
+                                            setSelectedTicket={setSelectedTicket}
+                                        />
                                     ))
                                 ) : (
                                     <tr>
                                         <td colSpan={7} className="px-6 py-20 text-center text-gray-500">
                                             <div className="flex flex-col items-center gap-2">
                                                 <Search className="w-8 h-8 opacity-20" />
-                                                <div>Tidak ada data pengaduan yang ditemukan.</div>
+                                                <div>Belum ada tiket pengaduan yang ditugaskan ke Anda.</div>
                                             </div>
                                         </td>
                                     </tr>
@@ -609,37 +565,29 @@ export function PengaduanKlienPage({ onNavigate }) {
                         </table>
                     </div>
 
+
                     {/* Mobile Card List */}
                     <div className="md:hidden divide-y divide-gray-100">
-                        {currentData.length > 0 ? (
+                        {isLoading ? (
+                            <div className="py-20 flex flex-col items-center justify-center gap-4">
+                                <div className="w-10 h-10 border-4 border-gray-100 border-t-[#0D9488] rounded-full animate-spin"></div>
+                                <p className="text-sm font-bold text-gray-500 animate-pulse">Menarik Tugas...</p>
+                            </div>
+                        ) : currentData.length > 0 ? (
                             currentData.map((item, idx) => (
-                                <div key={idx} className="p-5 active:bg-gray-50 transition-colors">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded border border-teal-100">{item.id}</span>
-                                        <span className="text-[11px] text-gray-400">{item.date}</span>
-                                    </div>
-                                    <h3 className="font-bold text-gray-900 mb-1">{item.customer}</h3>
-                                    <div className="flex items-center gap-1 text-[11px] text-gray-500 mb-3">
-                                        <AlertCircle className="w-3 h-3" /> {item.location}
-                                    </div>
-                                    <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
-                                    <div className="flex justify-between items-center mt-2">
-                                        <div>
-                                            <TicketStatusBadge status={item.status} sla={item.sla} rating={item.rating} />
-                                        </div>
-                                        <button
-                                            onClick={() => setSelectedTicket(item)}
-                                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all shrink-0"
-                                        >
-                                            Detail
-                                        </button>
-                                    </div>
-                                </div>
+                                <TechnicianComplaintCard 
+                                    key={item.originalId || idx} 
+                                    item={item} 
+                                    idx={idx}
+                                    handleStartProcess={handleStartProcess}
+                                    setSelectedTicket={setSelectedTicket}
+                                />
                             ))
                         ) : (
                             <div className="py-20 text-center text-gray-500">Tidak ada pengaduan.</div>
                         )}
                     </div>
+
 
                     {/* Pagination Footer */}
                     <div className="flex flex-row items-center justify-between text-sm text-gray-500 pt-4 p-6 border-t border-gray-100 gap-2 sm:gap-4 bg-[#FBFDFB]/50">
@@ -739,7 +687,7 @@ export function PengaduanKlienPage({ onNavigate }) {
                                 </button>
 
                                 <button
-                                    onClick={() => handleAction('selesai')}
+                                    onClick={() => { setUpdateTargetStatus('Menunggu Konfirmasi'); setStatusNoteText(''); setIsUpdateModalOpen(true); }}
                                     className="w-full py-3 bg-[#0D9488] text-white font-bold rounded-xl text-xs hover:bg-[#0F766E] shadow-lg shadow-teal-500/20 active:scale-95 transition-all"
                                 >
                                     Perbaikan Selesai
