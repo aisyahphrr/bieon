@@ -10,6 +10,7 @@ const complaintRoutes = require("./routes/complaintRoutes");
 const kendaliPerangkatRoutes = require("./routes/kendaliPerangkatRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const technicianAccessRoutes = require("./routes/technicianAccessRoutes");
+const technicianDashboardRoutes = require("./routes/technicianDashboardRoutes");
 
 // Middleware
 app.use(cors());
@@ -29,5 +30,6 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/kendaliperangkat', kendaliPerangkatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/technician-access', technicianAccessRoutes);
+app.use('/api/technician/dashboard', technicianDashboardRoutes);
 
 module.exports = app;

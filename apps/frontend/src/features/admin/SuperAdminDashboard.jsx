@@ -147,7 +147,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
     try {
       setMetricsError(null);
       const token = localStorage.getItem('bieon_token');
-      
+
       const response = await fetch('/api/admin/dashboard/metrics', {
         method: 'GET',
         headers: {
@@ -472,7 +472,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-800">Jumlah Smart Device</h3>
-                  <p className="text-sm text-gray-600 mt-1">Akumulasi pertumbuhan per bulan</p>
+                  <p className="text-sm text-gray-600 mt-1">per bulan dalam 1 tahun</p>
                 </div>
               </div>
               <button
@@ -753,11 +753,10 @@ export default function SuperAdminDashboard({ onNavigate }) {
                       <h3 className="text-sm font-bold text-gray-900">{cust.name}</h3>
                       <p className="text-xs text-gray-500">{cust.username}</p>
                     </div>
-                    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                      cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
+                    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
                       cust.status === 'Warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
-                      'bg-[#FEF2F2] text-[#ef4444]'
-                    }`}>
+                        'bg-[#FEF2F2] text-[#ef4444]'
+                      }`}>
                       <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
                       {cust.status}
                     </div>

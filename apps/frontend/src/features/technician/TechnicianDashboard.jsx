@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Monitor,
@@ -41,252 +41,6 @@ import { KonfigurasiPerangkatPage } from './KonfigurasiPerangkatPage';
 import { RiwayatPerbaikanPage } from './RiwayatPerbaikanPage';
 import { TechnicianProfilePage } from './profileteknisi';
 import TechnicianLayout from './TechnicianLayout';
-
-const mockClients = [
-  {
-    id: 'C001',
-    nama: 'Ahmad Fauzi',
-    lokasi: 'Bandung, Jawa Barat',
-    status: 'online',
-    jumlahBieon: 4,
-    jumlahDevice: 28,
-    statusSistem: 'Normal',
-    alamatLengkap: 'Jl. Setiabudi No. 123, Bandung, Jawa Barat 40153',
-    noTelp: '+62 812-3456-7890',
-    email: 'ahmad.fauzi@email.com',
-    tanggalInstalasi: '15 Januari 2024',
-    lastUpdate: '2 menit lalu',
-    adaPengaduan: false,
-    statusPengaduan: 'Tidak ada',
-    devicesOnline: 26,
-    devicesOffline: 2
-  },
-  {
-    id: 'C002',
-    nama: 'Siti Nurhaliza',
-    lokasi: 'Jakarta Selatan',
-    status: 'online',
-    jumlahBieon: 3,
-    jumlahDevice: 19,
-    statusSistem: 'Normal',
-    alamatLengkap: 'Jl. Mampang Prapatan No. 45, Jakarta Selatan 12790',
-    noTelp: '+62 813-2456-8901',
-    email: 'siti.nurhaliza@email.com',
-    tanggalInstalasi: '22 Februari 2024',
-    lastUpdate: '5 menit lalu',
-    adaPengaduan: false,
-    statusPengaduan: 'Tidak ada',
-    devicesOnline: 19,
-    devicesOffline: 0
-  },
-  {
-    id: 'C003',
-    nama: 'Budi Santoso',
-    lokasi: 'Surabaya, Jawa Timur',
-    status: 'warning',
-    jumlahBieon: 5,
-    jumlahDevice: 34,
-    statusSistem: 'Minor Issue',
-    alamatLengkap: 'Jl. Darmo No. 67, Surabaya, Jawa Timur 60264',
-    noTelp: '+62 815-3456-9012',
-    email: 'budi.santoso@email.com',
-    tanggalInstalasi: '10 Maret 2024',
-    lastUpdate: '1 menit lalu',
-    adaPengaduan: true,
-    statusPengaduan: 'Ada (1 tiket aktif)',
-    devicesOnline: 30,
-    devicesOffline: 4
-  },
-  {
-    id: 'C004',
-    nama: 'Dewi Lestari',
-    lokasi: 'Yogyakarta',
-    status: 'online',
-    jumlahBieon: 2,
-    jumlahDevice: 15,
-    statusSistem: 'Normal',
-    alamatLengkap: 'Jl. Kaliurang KM 5, Yogyakarta 55281',
-    noTelp: '+62 816-4567-0123',
-    email: 'dewi.lestari@email.com',
-    tanggalInstalasi: '5 April 2024',
-    lastUpdate: '3 menit lalu',
-    adaPengaduan: false,
-    statusPengaduan: 'Tidak ada',
-    devicesOnline: 15,
-    devicesOffline: 0
-  },
-  {
-    id: 'C005',
-    nama: 'Rizki Pratama',
-    lokasi: 'Semarang, Jawa Tengah',
-    status: 'offline',
-    jumlahBieon: 3,
-    jumlahDevice: 22,
-    statusSistem: 'Maintenance',
-    alamatLengkap: 'Jl. Pemuda No. 89, Semarang, Jawa Tengah 50132',
-    noTelp: '+62 817-5678-1234',
-    email: 'rizki.pratama@email.com',
-    tanggalInstalasi: '18 Mei 2024',
-    lastUpdate: '2 jam lalu',
-    adaPengaduan: true,
-    statusPengaduan: 'Ada (1 tiket aktif)',
-    devicesOnline: 0,
-    devicesOffline: 22
-  },
-  {
-    id: 'C006',
-    nama: 'Linda Wijaya',
-    lokasi: 'Tangerang, Banten',
-    status: 'online',
-    jumlahBieon: 4,
-    jumlahDevice: 31,
-    statusSistem: 'Normal',
-    alamatLengkap: 'Jl. BSD Raya No. 234, Tangerang, Banten 15310',
-    noTelp: '+62 818-6789-2345',
-    email: 'linda.wijaya@email.com',
-    tanggalInstalasi: '7 Juni 2024',
-    lastUpdate: '4 menit lalu',
-    adaPengaduan: false,
-    statusPengaduan: 'Tidak ada',
-    devicesOnline: 29,
-    devicesOffline: 2
-  },
-  {
-    id: 'C007',
-    nama: 'Eko Prasetyo',
-    lokasi: 'Malang, Jawa Timur',
-    status: 'online',
-    jumlahBieon: 3,
-    jumlahDevice: 20,
-    statusSistem: 'Normal',
-    alamatLengkap: 'Jl. Ijen No. 56, Malang, Jawa Timur 65119',
-    noTelp: '+62 819-7890-3456',
-    email: 'eko.prasetyo@email.com',
-    tanggalInstalasi: '20 Juli 2024',
-    lastUpdate: '6 menit lalu',
-    adaPengaduan: false,
-    statusPengaduan: 'Tidak ada',
-    devicesOnline: 20,
-    devicesOffline: 0
-  },
-  {
-    id: 'C008',
-    nama: 'Maya Kusuma',
-    lokasi: 'Bekasi, Jawa Barat',
-    status: 'warning',
-    jumlahBieon: 2,
-    jumlahDevice: 14,
-    statusSistem: 'Sensor Error',
-    alamatLengkap: 'Jl. Ahmad Yani No. 78, Bekasi, Jawa Barat 17141',
-    noTelp: '+62 821-8901-4567',
-    email: 'maya.kusuma@email.com',
-    tanggalInstalasi: '12 Agustus 2024',
-    lastUpdate: '8 menit lalu',
-    adaPengaduan: true,
-    statusPengaduan: 'Ada (2 tiket aktif)',
-    devicesOnline: 12,
-    devicesOffline: 2
-  },
-  {
-    id: 'C009',
-    nama: 'Arif Rahman',
-    lokasi: 'Depok, Jawa Barat',
-    status: 'online',
-    jumlahBieon: 5,
-    jumlahDevice: 38,
-    statusSistem: 'Normal',
-    alamatLengkap: 'Jl. Margonda Raya No. 345, Depok, Jawa Barat 16424',
-    noTelp: '+62 822-9012-5678',
-    email: 'arif.rahman@email.com',
-    tanggalInstalasi: '3 September 2024',
-    lastUpdate: '1 menit lalu',
-    adaPengaduan: false,
-    statusPengaduan: 'Tidak ada',
-    devicesOnline: 36,
-    devicesOffline: 2
-  },
-  {
-    id: 'C010',
-    nama: 'Putri Ayu',
-    lokasi: 'Bogor, Jawa Barat',
-    status: 'online',
-    jumlahBieon: 3,
-    jumlahDevice: 25,
-    statusSistem: 'Normal',
-    alamatLengkap: 'Jl. Pajajaran No. 111, Bogor, Jawa Barat 16143',
-    noTelp: '+62 823-0123-6789',
-    email: 'putri.ayu@email.com',
-    tanggalInstalasi: '25 Oktober 2024',
-    lastUpdate: '3 menit lalu',
-    adaPengaduan: false,
-    statusPengaduan: 'Tidak ada',
-    devicesOnline: 25,
-    devicesOffline: 0
-  }
-];
-
-// Data instalasi BIEON per bulan (12 bulan)
-const bieonPerMonthData = [
-  { bulan: 'Jan', jumlah: 8 },
-  { bulan: 'Feb', jumlah: 12 },
-  { bulan: 'Mar', jumlah: 15 },
-  { bulan: 'Apr', jumlah: 10 },
-  { bulan: 'Mei', jumlah: 18 },
-  { bulan: 'Jun', jumlah: 14 },
-  { bulan: 'Jul', jumlah: 20 },
-  { bulan: 'Agu', jumlah: 16 },
-  { bulan: 'Sep', jumlah: 22 },
-  { bulan: 'Okt', jumlah: 19 },
-  { bulan: 'Nov', jumlah: 25 },
-  { bulan: 'Des', jumlah: 21 }
-];
-
-// Data pertumbuhan klien yang ditangani per bulan
-const klienPerMonthData = [
-  { bulan: 'Jan', jumlah: 145 },
-  { bulan: 'Feb', jumlah: 152 },
-  { bulan: 'Mar', jumlah: 158 },
-  { bulan: 'Apr', jumlah: 163 },
-  { bulan: 'Mei', jumlah: 171 },
-  { bulan: 'Jun', jumlah: 178 },
-  { bulan: 'Jul', jumlah: 186 },
-  { bulan: 'Agu', jumlah: 193 },
-  { bulan: 'Sep', jumlah: 201 },
-  { bulan: 'Okt', jumlah: 208 },
-  { bulan: 'Nov', jumlah: 215 },
-  { bulan: 'Des', jumlah: 223 }
-];
-
-const pengaduanTrendData = [
-  { bulan: 'Jan', jumlah: 8 },
-  { bulan: 'Feb', jumlah: 12 },
-  { bulan: 'Mar', jumlah: 7 },
-  { bulan: 'Apr', jumlah: 15 },
-  { bulan: 'Mei', jumlah: 10 },
-  { bulan: 'Jun', jumlah: 6 },
-  { bulan: 'Jul', jumlah: 9 },
-  { bulan: 'Agu', jumlah: 14 },
-  { bulan: 'Sep', jumlah: 11 },
-  { bulan: 'Okt', jumlah: 8 },
-  { bulan: 'Nov', jumlah: 13 },
-  { bulan: 'Des', jumlah: 10 }
-];
-
-// Data tren status perangkat
-const statusPerangkatTrendData = [
-  { bulan: 'Jan', online: 195, offline: 18, error: 7 },
-  { bulan: 'Feb', online: 203, offline: 15, error: 5 },
-  { bulan: 'Mar', online: 210, offline: 12, error: 8 },
-  { bulan: 'Apr', online: 218, offline: 22, error: 6 },
-  { bulan: 'Mei', online: 225, offline: 19, error: 4 },
-  { bulan: 'Jun', online: 218, offline: 22, error: 6 },
-  { bulan: 'Jul', online: 232, offline: 16, error: 5 },
-  { bulan: 'Agu', online: 238, offline: 20, error: 7 },
-  { bulan: 'Sep', online: 245, offline: 18, error: 4 },
-  { bulan: 'Okt', online: 251, offline: 15, error: 6 },
-  { bulan: 'Nov', online: 258, offline: 21, error: 8 },
-  { bulan: 'Des', online: 264, offline: 17, error: 5 }
-];
 
 // Refined Custom 3D Bar Component to match user's image exactly
 const ThreeDBar = (props) => {
@@ -367,32 +121,78 @@ export function TechnicianDashboard({ onNavigate }) {
   const [toast, setToast] = useState(null);
   const [inputToken, setInputToken] = useState("");
   const [tokenError, setTokenError] = useState("");
+  const [metrics, setMetrics] = useState({
+    totalClients: 0,
+    totalHubs: 0,
+    totalDevices: 0,
+    activeComplaints: 0
+  });
+  const [charts, setCharts] = useState({
+    bieonPerMonth: [],
+    klienPerMonth: [],
+    pengaduanTrend: []
+  });
+  const [clients, setClients] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const triggerToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const filteredClients = mockClients.filter(client =>
-    client.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    client.lokasi.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      const token = localStorage.getItem('bieon_token');
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      };
+
+      try {
+        const [metricsRes, chartsRes, clientsRes] = await Promise.all([
+          fetch('/api/technician/dashboard/metrics', { headers }),
+          fetch('/api/technician/dashboard/charts', { headers }),
+          fetch('/api/technician/dashboard/clients', { headers })
+        ]);
+
+        const metricsData = await metricsRes.json();
+        const chartsData = await chartsRes.json();
+        const clientsData = await clientsRes.json();
+
+        if (metricsData.success) setMetrics(metricsData.data);
+        if (chartsData.success) setCharts(chartsData.data);
+        if (clientsData.success) setClients(clientsData.data);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // triggerToast('Gagal memuat data dashboard', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredClients = (clients || []).filter(client =>
+    (client.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (client.lokasi || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderContent = () => {
     switch (activeMenu) {
       case 'monitoring':
-        return <MonitoringKlienPage clients={mockClients} />;
+        return <MonitoringKlienPage clients={clients} />;
       case 'pengaduan':
         return <PengaduanKlienPage />;
       case 'konfigurasi':
-        return <KonfigurasiPerangkatPage clients={mockClients} onNavigate={onNavigate} triggerToast={triggerToast} />;
+        return <KonfigurasiPerangkatPage clients={clients} onNavigate={onNavigate} triggerToast={triggerToast} />;
       case 'riwayat':
         return <RiwayatPerbaikanPage />;
       case 'profile':
         return <TechnicianProfilePage onNavigate={onNavigate} />;
       default:
         return (
-          <div className="py-8">
+          <div>
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900">Dashboard Teknisi</h1>
               <p className="text-gray-500">Monitoring &amp; Manajemen Sistem Pelanggan BIEON</p>
@@ -404,7 +204,7 @@ export function TechnicianDashboard({ onNavigate }) {
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
                   <Users className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">223</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalClients}</h3>
                 <p className="text-white/90 text-sm font-medium pt-2">Total Pelanggan Ditangani</p>
               </div>
 
@@ -412,7 +212,7 @@ export function TechnicianDashboard({ onNavigate }) {
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
                   <Cpu className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">200</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalHubs}</h3>
                 <p className="text-white/90 text-sm font-medium pt-2">Instalasi BIEON [2025]</p>
               </div>
 
@@ -420,7 +220,7 @@ export function TechnicianDashboard({ onNavigate }) {
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
                   <HardDrive className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">1.8K</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalDevices}</h3>
                 <p className="text-white/90 text-sm font-medium pt-2">Smart Device Aktif</p>
               </div>
 
@@ -428,7 +228,7 @@ export function TechnicianDashboard({ onNavigate }) {
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">12</h3>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.activeComplaints}</h3>
                 <p className="text-white/90 text-sm font-medium pt-2">Pengaduan Aktif</p>
               </div>
             </div>
@@ -619,7 +419,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={bieonPerMonthData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                  <BarChart data={charts.bieonPerMonth} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" vertical={false} />
                     <XAxis
                       dataKey="bulan"
@@ -669,7 +469,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={klienPerMonthData}>
+                  <LineChart data={charts.klienPerMonth}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e9d5ff" vertical={false} />
                     <XAxis
                       dataKey="bulan"
@@ -722,7 +522,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={pengaduanTrendData}>
+                  <LineChart data={charts.pengaduanTrend}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#fef3c7" vertical={false} />
                     <XAxis
                       dataKey="bulan"

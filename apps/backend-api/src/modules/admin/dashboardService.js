@@ -1,6 +1,7 @@
 const User = require('../../models/User');
 const Hub = require('../../models/Hub');
 const Device = require('../../models/Device');
+const KendaliPerangkat = require('../../models/KendaliPerangkat');
 const Complaint = require('../../models/Complaint');
 
 const buildMonthlySeries = (rows = []) => {
@@ -43,7 +44,7 @@ exports.getDashboardMetrics = async () => {
         ] = await Promise.all([
             User.countDocuments({ role: 'Homeowner' }),
             Hub.countDocuments(),
-            Device.countDocuments(),
+            KendaliPerangkat.countDocuments(),
             Complaint.countDocuments(),
             User.countDocuments({ role: 'Technician' }),
             User.countDocuments({ role: 'Technician', status: 'aktif' }),
@@ -93,7 +94,7 @@ exports.getDashboardMetrics = async () => {
                 },
                 { $sort: { _id: 1 } },
             ]),
-            Device.aggregate([
+            KendaliPerangkat.aggregate([
                 {
                     $match: {
                         createdAt: { $gte: startOfYear, $lte: endOfYear },

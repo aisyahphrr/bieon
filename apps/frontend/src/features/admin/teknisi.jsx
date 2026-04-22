@@ -69,6 +69,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const [availableClients, setAvailableClients] = useState([]);
+    const [selectedClients, setSelectedClients] = useState([]);
+    const [isLoadingClients, setIsLoadingClients] = useState(false);
 
     const getInitialFormData = () => ({
         name: '',
@@ -191,6 +194,66 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         if (onNavigate) onNavigate(id);
     };
 
+    const fetchAvailableClients = async () => {
+        setIsLoadingClients(true);
+        try {
+            const response = await fetch('/api/admin/homeowners/available', {
+                headers: getAuthHeaders(),
+            });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                setAvailableClients(result.data || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch available clients', error);
+        } finally {
+            setIsLoadingClients(false);
+        }
+    };
+
+    const toggleClientSelection = (clientId) => {
+        setSelectedClients(prev => 
+            prev.includes(clientId) ? prev.filter(id => id !== clientId) : [...prev, clientId]
+        );
+    };
+
+    const handleAssignClients = async () => {
+        if (!selectedTechnician || selectedClients.length === 0) return;
+        
+        setIsSubmitting(true);
+        try {
+            const response = await fetch(`/api/admin/technicians/${selectedTechnician._id || selectedTechnician.id}/assign-clients`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ clientIds: selectedClients }),
+            });
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                setSuccessMessage('Berhasil menugaskan pelanggan ke teknisi.');
+                setIsAddClientModalOpen(false);
+                setSelectedClients([]);
+                
+                // Refresh technician details to show updated clients
+                const techRes = await fetch(`/api/admin/technicians/${selectedTechnician._id || selectedTechnician.id}`, {
+                    headers: getAuthHeaders(),
+                });
+                const techResult = await techRes.json();
+                if (techRes.ok && techResult.success) {
+                    setSelectedTechnician(mapApiTechnicianToUi(techResult.data));
+                }
+                
+                loadTechnicians(); // Refresh main list
+            } else {
+                throw new Error(result.message || 'Gagal menugaskan pelanggan');
+            }
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     // Filter technicians
     const filteredTechnicians = technicians.filter(tech => {
         const matchesSearch =
@@ -294,9 +357,21 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         }
     };
 
-    const handleViewDetail = (tech) => {
+    const handleViewDetail = async (tech) => {
         setSelectedTechnician(tech);
         setIsDetailModalOpen(true);
+        
+        try {
+            const response = await fetch(`/api/admin/technicians/${tech._id}`, {
+                headers: getAuthHeaders(),
+            });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                setSelectedTechnician(mapApiTechnicianToUi(result.data));
+            }
+        } catch (error) {
+            console.error('Failed to fetch full technician details', error);
+        }
     };
 
     const handleEditTechnician = (tech) => {
@@ -1011,7 +1086,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                                     <h3 className="text-lg font-bold text-gray-800">Daftar Pelanggan yang Ditangani</h3>
                                     <button
-                                        onClick={() => setIsAddClientModalOpen(true)}
+                                        onClick={() => {
+                                            setIsAddClientModalOpen(true);
+                                            fetchAvailableClients();
+                                        }}
                                         className="px-4 py-2 bg-[#009b7c] text-white rounded-lg text-sm font-semibold hover:bg-[#008268] transition-all flex items-center justify-center gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
@@ -1241,19 +1319,23 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             <p className="text-sm font-bold text-gray-700">Pilih dari pelanggan yang tersedia (Homeowner):</p>
 
                             <div className="space-y-3">
-                                {[
-                                    { id: 'C007', name: 'Budi Handoko', loc: 'Semarang, Jawa Tengah', status: 'Baru' },
-                                    { id: 'C008', name: 'Zain Maulana', loc: 'Surabaya, Jawa Timur', status: 'Unassigned' },
-                                    { id: 'C009', name: 'Rani Permata', loc: 'Jakarta Selatan', status: 'Perlu Teknisi' },
-                                    { id: 'C010', name: 'Kelvin Yustanto', loc: 'Bandung, Jawa Barat', status: 'Unassigned' }
-                                ].map((pelanggan, idx) => (
+                                {isLoadingClients ? (
+                                    <div className="text-center py-6 text-gray-500 text-sm">Memuat pelanggan yang tersedia...</div>
+                                ) : availableClients.length === 0 ? (
+                                    <div className="text-center py-6 text-gray-500 text-sm italic">Tidak ada pelanggan (Homeowner) yang belum ditugaskan.</div>
+                                ) : availableClients.map((pelanggan, idx) => (
                                     <label key={idx} className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer transition-all">
-                                        <input type="checkbox" className="w-5 h-5 mt-0.5 text-[#009b7c] border-gray-300 rounded focus:ring-[#009b7c]" />
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedClients.includes(pelanggan._id)}
+                                            onChange={() => toggleClientSelection(pelanggan._id)}
+                                            className="w-5 h-5 mt-0.5 text-[#009b7c] border-gray-300 rounded focus:ring-[#009b7c]" 
+                                        />
                                         <div className="flex-1">
-                                            <p className="font-bold text-gray-800 text-sm">{pelanggan.name}</p>
-                                            <p className="text-xs text-gray-500 mt-1">ID: {pelanggan.id} • {pelanggan.loc}</p>
+                                            <p className="font-bold text-gray-800 text-sm">{pelanggan.fullName}</p>
+                                            <p className="text-xs text-gray-500 mt-1">{pelanggan.email} • {pelanggan.address || 'Alamat tidak tersedia'}</p>
                                         </div>
-                                        <span className="px-2 py-1 bg-yellow-50 text-yellow-600 rounded-md text-[10px] font-bold uppercase">{pelanggan.status}</span>
+                                        <span className="px-2 py-1 bg-yellow-50 text-yellow-600 rounded-md text-[10px] font-bold uppercase">Tersedia</span>
                                     </label>
                                 ))}
                             </div>
@@ -1267,14 +1349,12 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 Batal
                             </button>
                             <button
-                                onClick={() => {
-                                    alert('Berhasil menyimpan tambahan pelanggan ke ' + selectedTechnician.name);
-                                    setIsAddClientModalOpen(false);
-                                }}
-                                className="px-6 py-2.5 text-sm font-bold text-white bg-[#009b7c] rounded-xl hover:bg-[#008268] transition-all shadow-md flex items-center gap-2"
+                                onClick={handleAssignClients}
+                                disabled={isSubmitting || selectedClients.length === 0}
+                                className="px-6 py-2.5 text-sm font-bold text-white bg-[#009b7c] rounded-xl hover:bg-[#008268] transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Save className="w-4 h-4" />
-                                Simpan Penugasan
+                                {isSubmitting ? 'Menyimpan...' : 'Simpan Penugasan'}
                             </button>
                         </div>
                     </div>

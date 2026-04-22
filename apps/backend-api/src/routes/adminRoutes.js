@@ -16,6 +16,14 @@ router.get(
     adminController.getAllHomeowners
 );
 
+// GET /api/admin/homeowners/available
+router.get(
+    '/homeowners/available',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getAvailableHomeowners
+);
+
 // GET /api/admin/homeowners/:id
 router.get(
     '/homeowners/:id',
@@ -94,6 +102,14 @@ router.put(
     authMiddleware,
     roleMiddleware('SuperAdmin'),
     adminController.updateTechnician
+);
+
+// POST /api/admin/technicians/:id/assign-clients
+router.post(
+    '/technicians/:id/assign-clients',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.assignClientsToTechnician
 );
 
 // DELETE /api/admin/technicians/:id
