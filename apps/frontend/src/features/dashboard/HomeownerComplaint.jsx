@@ -68,6 +68,8 @@ export function HomeownerComplaint({ onNavigate }) {
 
     // Fetch and loading state
     const [complaints, setComplaints] = useState([]);
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [userDevices, setUserDevices] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
@@ -81,18 +83,38 @@ export function HomeownerComplaint({ onNavigate }) {
         }
     };
 
-    const fetchComplaints = async () => {
+    const fetchUserDevices = async (userId) => {
+        try {
+            console.log("🔍 FETCHING DEVICES FOR USER:", userId);
+            const token = localStorage.getItem('bieon_token');
+            const res = await fetch(`/api/kendali-perangkat/user/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            console.log("📡 API RESPONSE STATUS:", res.status);
+            if (res.ok) {
+                const data = await res.json();
+                console.log("📦 DEVICE DATA RECEIVED:", data);
+                setUserDevices(Array.isArray(data) ? data : []);
+            } else {
+                const errText = await res.text();
+                console.error("❌ API ERROR RESPONSE:", errText);
+            }
+        } catch (err) {
+            console.error("💥 FETCH ERROR:", err);
+        }
+    };
+
+    const fetchComplaints = async (userId) => {
+        const idToUse = userId || currentUserId;
         try {
             setIsLoading(true);
             const token = localStorage.getItem('bieon_token');
-            if (!token) return;
-            const payload = decodeJwtPayload(token);
-            if (!payload) return;
-            
-            const userId = payload.userId || payload.id;
-            if (!userId) return;
+            if (!token || !idToUse) {
+                setIsLoading(false);
+                return;
+            }
 
-            const res = await fetch(`/api/complaints/owner/${userId}`, {
+            const res = await fetch(`/api/complaints/owner/${idToUse}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error('Gagal memuat data');
@@ -104,16 +126,35 @@ export function HomeownerComplaint({ onNavigate }) {
                     ...item,
                     id: safeId, // Map backend _id to id for table
                     description: item.desc || 'No Description',
-                    date: item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace('.', ':') : '-',
+                    date: new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                     technician: item.technician ? item.technician.fullName : 'Menunggu Teknisi',
                     status: item.status?.toLowerCase() || 'unassigned',
+                    customer: item.homeowner?.fullName || 'Unknown User',
                     clientInfo: item.homeowner ? {
                         name: item.homeowner.fullName,
                         email: item.homeowner.email,
                         phone: item.homeowner.phoneNumber,
                         address: item.homeowner.address,
                         idBieon: item.homeowner.bieonId
-                    } : {}
+                    } : {},
+                    technicianInfo: item.technician ? {
+                        id: item.technician._id,
+                        name: item.technician.fullName,
+                        phone: item.technician.phoneNumber,
+                        targetDate: item.assignedAt ? new Date(new Date(item.assignedAt).getTime() + (48 * 60 * 60 * 1000)).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA'
+                    } : null,
+                    isEscalated: item.isEscalated || false,
+                    completedAt: item.completedAt || null,
+                    updatedAt: item.updatedAt ? new Date(item.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') : '-',
+                    duration: (item.status === 'selesai' && item.processStartedAt) 
+                        ? (() => {
+                            const end = item.completedAt ? new Date(item.completedAt) : new Date(item.updatedAt);
+                            const diff = end - new Date(item.processStartedAt);
+                            const hours = Math.floor(diff / (1000 * 60 * 60));
+                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            return hours > 0 ? `${hours}j ${minutes}m` : `${minutes}m`;
+                          })()
+                        : null
                 };
             });
 
@@ -126,7 +167,18 @@ export function HomeownerComplaint({ onNavigate }) {
     };
 
     React.useEffect(() => {
-        fetchComplaints();
+        const token = localStorage.getItem('bieon_token');
+        if (token) {
+            const payload = decodeJwtPayload(token);
+            if (payload) {
+                const userId = payload.id || payload.userId || payload._id;
+                if (userId) {
+                    setCurrentUserId(userId);
+                    fetchComplaints(userId);
+                    fetchUserDevices(userId);
+                }
+            }
+        }
     }, []);
 
 
@@ -137,6 +189,8 @@ export function HomeownerComplaint({ onNavigate }) {
             rating={ticket.rating}
             assignedAt={ticket.assignedAt}
             processStartedAt={ticket.processStartedAt}
+            isEscalated={ticket.isEscalated}
+            role="homeowner"
         />;
     };
 
@@ -221,9 +275,11 @@ export function HomeownerComplaint({ onNavigate }) {
     };
 
     const removeFile = (index) => {
-        const updated = [...formFiles];
-        updated.splice(index, 1);
-        setFormFiles(updated);
+        setFormFiles(prev => {
+            const updated = [...prev];
+            updated.splice(index, 1);
+            return updated;
+        });
     };
 
     const handleSubmitComplaint = async (e) => {
@@ -264,7 +320,7 @@ export function HomeownerComplaint({ onNavigate }) {
             setFormFiles([]);
             
             // Re-fetch data untuk mendapatkan baris tabel terbaru
-            await fetchComplaints();
+            await fetchComplaints(currentUserId);
 
             setTimeout(() => {
                 setIsFormOpen(false);
@@ -294,7 +350,7 @@ export function HomeownerComplaint({ onNavigate }) {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    status: 'Selesai',
+                    status: 'selesai',
                     rating: {
                         stars: ratingStars,
                         review: ratingReview
@@ -466,7 +522,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
                                             <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 min-w-[220px] bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
-                                                {['', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi', 'Selesai', 'Ditolak'].map((status) => (
+                                                {['', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi Pelanggan', 'Selesai', 'Ditolak'].map((status) => (
                                                     <button
                                                         key={status}
                                                         onClick={() => {
@@ -733,7 +789,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 <>
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowCategoryDropdown(false)}></div>
                                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
-                                                        {['Energi & Kelistrikan', 'Kualitas Air', 'Keamanan', 'Kenyamanan & Udara', 'Perangkat Aktuator', 'Lainnya'].map((cat) => (
+                                                        {(userDevices.length > 0 ? [...new Set(userDevices.map(d => d.category))] : ['Energi & Kelistrikan', 'Kualitas Air', 'Keamanan', 'Kenyamanan & Udara', 'Perangkat Aktuator', 'Lainnya']).map((cat) => (
                                                             <button
                                                                 key={cat}
                                                                 type="button"
@@ -770,25 +826,38 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 <>
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowDeviceDropdown(false)}></div>
                                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
-                                                        {[
-                                                            'R3 Kitchen - Smart Plug (Exhaust)',
-                                                            'R3 Kitchen - Gas Detector',
-                                                            'R1 Living - Door Sensor',
-                                                            'Master Node - Power Meter Utama',
-                                                            'R2 Bedroom - Node Udara'
-                                                        ].map((dev) => (
-                                                            <button
-                                                                key={dev}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setFormData({ ...formData, device: dev });
-                                                                    setShowDeviceDropdown(false);
-                                                                }}
-                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === dev ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                            >
-                                                                {dev}
-                                                            </button>
-                                                        ))}
+                                                        {userDevices.length > 0 ? (
+                                                            userDevices.map((dev) => {
+                                                                const label = `${dev.location || 'Tanpa Lokasi'} - ${dev.name}`;
+                                                                return (
+                                                                    <button
+                                                                        key={dev._id}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setFormData({ ...formData, device: label });
+                                                                            setShowDeviceDropdown(false);
+                                                                        }}
+                                                                        className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === label ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                    >
+                                                                        {label}
+                                                                    </button>
+                                                                );
+                                                            })
+                                                        ) : (
+                                                            ['R3 Kitchen - Smart Plug', 'R3 Kitchen - Gas Detector', 'R1 Living - Door Sensor', 'Master Node - Power Meter', 'R2 Bedroom - Node Udara'].map((dev) => (
+                                                                <button
+                                                                    key={dev}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setFormData({ ...formData, device: dev });
+                                                                        setShowDeviceDropdown(false);
+                                                                    }}
+                                                                    className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === dev ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                >
+                                                                    {dev}
+                                                                </button>
+                                                            ))
+                                                        )}
                                                     </div>
                                                 </>
                                             )}
@@ -826,7 +895,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         <input
                                             type="file"
                                             multiple
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                            className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${formFiles.length > 0 ? 'z-0' : 'z-20'}`}
                                             ref={fileInputRef}
                                             onChange={handleFileChange}
                                             accept="image/*"
@@ -842,15 +911,21 @@ export function HomeownerComplaint({ onNavigate }) {
                                         {formFiles.length > 0 && (
                                             <div className="flex flex-wrap gap-4 mt-8 justify-center relative z-10">
                                                 {formFiles.map((f, idx) => (
-                                                    <div key={idx} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-md">
+                                                    <div key={idx} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-lg group">
                                                         <img src={f.previewUrl} alt={f.name} className="w-full h-full object-cover" />
                                                         <button
                                                             type="button"
-                                                            onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
-                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+                                                            onClick={(e) => { 
+                                                                e.preventDefault();
+                                                                e.stopPropagation(); 
+                                                                removeFile(idx); 
+                                                            }}
+                                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 transition-all z-30"
+                                                            title="Hapus foto"
                                                         >
                                                             <X className="w-4 h-4" />
                                                         </button>
+                                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors pointer-events-none"></div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -900,39 +975,27 @@ export function HomeownerComplaint({ onNavigate }) {
                 isOpen={!!selectedTicket}
                 onClose={() => setSelectedTicket(null)}
                 ticket={selectedTicket}
-                renderActions={
-                    selectedTicket?.status === 'Menunggu Konfirmasi' && (
-                        <div className="space-y-4">
-                            <div className="text-center mb-4">
-                                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                                <p className="font-bold text-emerald-900 text-sm mb-1">Perlu Konfirmasi Anda</p>
-                                <p className="text-xs text-emerald-700">Teknisi menyatakan bahwa kendala sudah teratasi. Anda wajib mengonfirmasi untuk menyelesaikan tiket ini.</p>
-                            </div>
-                            <button
-                                onClick={() => handleSelesaikanTiket(selectedTicket.id)}
-                                className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-emerald-700 transition-all hover:shadow-xl active:scale-95"
-                            >
-                                Selesaikan Tiket
-                            </button>
-                        </div>
-                    )
-                }
-            />            {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
+                role="homeowner"
+                onActionSuccess={() => fetchComplaints(currentUserId)}
+            />
+
             {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {ratingTargetId && (
                 <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 pb-12 overflow-y-auto animate-in fade-in duration-300">
                     <div className="bg-[#489C74] rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-500 max-h-[90vh] flex flex-col border border-white/10">
-                        {/* Close Button */}
-                        <button 
-                            onClick={() => setRatingTargetId(null)} 
+                        <button
+                            onClick={() => setRatingTargetId(null)}
                             className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors p-1"
                         >
                             <X className="w-5 h-5 sm:w-6 sm:h-6" />
                         </button>
-                        
-                        {/* Emoji Display Header Overlapping - Simplified to just the emoji as requested */}
-                        <div className="absolute -top-10 sm:-top-14 left-1/2 -translate-x-1/2 flex items-center justify-center">
-                            <span className="text-6xl sm:text-7xl drop-shadow-[0_10px_10px_rgba(0,0,0,0.3)] animate-bounce-slow">😍</span>
+
+                        {/* Floating Emoji Badge */}
+                        <div className="absolute -top-16 sm:-top-24 left-1/2 -translate-x-1/2">
+                            <div className="w-32 h-32 sm:w-44 sm:h-44 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20 relative group transition-transform hover:scale-105 duration-500">
+                                <div className="absolute inset-0 bg-white/5 rounded-full animate-pulse"></div>
+                                <span className="text-7xl sm:text-8xl drop-shadow-[0_20px_20px_rgba(0,0,0,0.4)] animate-bounce-slow relative z-10">🤩</span>
+                            </div>
                         </div>
 
                         <div className="pt-8 sm:pt-14 overflow-y-auto custom-scrollbar pr-2">
@@ -952,9 +1015,9 @@ export function HomeownerComplaint({ onNavigate }) {
                                     >
                                         <Star
                                             className={`w-8 h-8 sm:w-10 sm:h-10 ${(hoverStars || ratingStars) >= star
-                                                    ? "fill-[#FCD34D] text-[#FCD34D]"
-                                                    : "fill-white/30 text-white/30"
-                                                } drop-shadow-md`}
+                                                ? "fill-[#FCD34D] text-[#FCD34D]"
+                                                : "fill-white/30 text-white/30"
+                                            } drop-shadow-md`}
                                         />
                                     </button>
                                 ))}

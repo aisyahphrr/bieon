@@ -98,6 +98,8 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
                         rating={item.rating} 
                         assignedAt={item.assignedAt}
                         processStartedAt={item.processStartedAt}
+                        isEscalated={item.isEscalated}
+                        role="admin"
                     />
                 </div>
             </td>
@@ -114,11 +116,12 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
                                 if (btn.action === 'reassign') handleTransfer(item);
                             }}
                             className={`px-4 py-2 rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1 whitespace-nowrap ${
-                                btn.variant === 'primary' ? 'bg-[#1076E5] text-white' :
-                                btn.variant === 'danger' ? 'bg-red-100 text-red-600 border border-red-200' :
-                                btn.variant === 'warning' ? 'bg-[#F98C12] text-white' :
-                                btn.variant === 'secondary' ? 'bg-[#E11D48] text-white' :
-                                'bg-[#009B7C] text-white'
+                                btn.action === 'detail' ? 'bg-[#009B7C] text-white' :
+                                btn.action === 'reject' ? 'bg-red-50 text-red-600 border border-red-100' :
+                                btn.action === 'ping' ? 'bg-red-500 text-white shadow-lg shadow-red-100' :
+                                btn.variant === 'primary' ? 'bg-blue-600 text-white' :
+                                btn.variant === 'secondary' ? 'bg-blue-500 text-white' :
+                                'bg-blue-600 text-white'
                             }`}
                         >
                             {btn.label} {btn.action === 'detail' && <ChevronRight className="w-3 h-3" />}
@@ -184,7 +187,7 @@ export default function AdminComplaint({ onNavigate }) {
                     originalId: item._id, // Save DB ID to hit PUT endpoints
                     id: `TCK-${item._id ? item._id.substring(item._id.length - 6).toUpperCase() : '000000'}`,
                     description: item.desc, // Map from DB
-                    date: new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                    date: new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                     customer: item.homeowner?.fullName || 'Unknown User',
                     location: item.homeowner?.address || '-',
                     clientInfo: item.homeowner ? {
@@ -206,12 +209,18 @@ export default function AdminComplaint({ onNavigate }) {
                     } : null,
                     duration: (item.status === 'selesai' && item.processStartedAt) 
                         ? (() => {
-                            const diff = new Date(item.updatedAt) - new Date(item.processStartedAt);
+                            const end = item.completedAt ? new Date(item.completedAt) : new Date(item.updatedAt);
+                            const diff = end - new Date(item.processStartedAt);
                             const hours = Math.floor(diff / (1000 * 60 * 60));
                             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                             return hours > 0 ? `${hours}j ${minutes}m` : `${minutes}m`;
                           })()
-                        : null
+                        : null,
+                    isEscalated: item.isEscalated || false,
+                    completedAt: item.completedAt || null,
+                    logRequestStatus: item.logRequestStatus || 'none',
+                    logReason: item.logReason || '',
+                    updatedAt: new Date(item.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')
                 }));
                 setComplaints(formattedComplaints);
             } else {
@@ -261,8 +270,8 @@ export default function AdminComplaint({ onNavigate }) {
         if (selectedStatusFilter) {
             filtered = filtered.filter(item => {
                 const s = item.status?.toLowerCase();
-                if (selectedStatusFilter === 'Unassigned') {
-                    return s === 'unassigned' || item.technician === 'Unassigned';
+                if (selectedStatusFilter === 'Baru') {
+                    return (s === 'unassigned' || item.technician === 'Unassigned') && s !== 'ditolak';
                 }
                 
                 if (selectedStatusFilter === 'Overdue Respons') {
@@ -324,7 +333,7 @@ export default function AdminComplaint({ onNavigate }) {
             case 'overdue respons': return 'bg-amber-50 text-red-600 border-amber-200 font-bold';
             case 'diproses': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'overdue perbaikan': return 'bg-blue-50 text-red-600 border-blue-200 font-bold';
-            case 'menunggu konfirmasi': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
+            case 'menunggu konfirmasi pelanggan': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
             case 'selesai': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
             case 'ditolak': return 'bg-red-50 text-red-700 border-red-200';
             default: return 'bg-gray-50 text-gray-500 border-gray-100';
@@ -340,7 +349,7 @@ export default function AdminComplaint({ onNavigate }) {
             case 'overdue respons': return 'bg-red-500';
             case 'diproses': return 'bg-blue-500';
             case 'overdue perbaikan': return 'bg-red-500';
-            case 'menunggu konfirmasi': return 'bg-indigo-500';
+            case 'menunggu konfirmasi pelanggan': return 'bg-indigo-500';
             case 'selesai': return 'bg-emerald-500';
             case 'ditolak': return 'bg-red-500';
             default: return 'bg-gray-400';
@@ -450,24 +459,46 @@ export default function AdminComplaint({ onNavigate }) {
         }
     };
 
-    const handleLogAction = (ticketId, isApproved) => {
-        setComplaints(prev => prev.map(c => {
-            if (c.id === ticketId) {
-                return {
-                    ...c,
+    const handleLogAction = async (ticketId, isApproved) => {
+        try {
+            const newStatus = isApproved ? 'granted' : 'rejected';
+            
+            // API Call
+            const ticket = complaints.find(c => c.id === ticketId);
+            const response = await fetch(`/api/complaints/${ticket.originalId}/grant-log`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ isApproved })
+            });
+
+            if (!response.ok) throw new Error('Gagal memproses akses log di server');
+
+            // Update local state for optimistic UI
+            setComplaints(prev => prev.map(c => {
+                if (c.id === ticketId) {
+                    return {
+                        ...c,
+                        logRequestStatus: newStatus,
+                        logConfirmed: true,
+                        logApproved: isApproved
+                    };
+                }
+                return c;
+            }));
+
+            if (selectedTicket && selectedTicket.id === ticketId) {
+                setSelectedTicket(prev => ({
+                    ...prev,
+                    logRequestStatus: newStatus,
                     logConfirmed: true,
                     logApproved: isApproved
-                };
+                }));
             }
-            return c;
-        }));
-
-        if (selectedTicket && selectedTicket.id === ticketId) {
-            setSelectedTicket(prev => ({
-                ...prev,
-                logConfirmed: true,
-                logApproved: isApproved
-            }));
+        } catch (error) {
+            alert(error.message);
         }
     };
 
@@ -557,7 +588,7 @@ export default function AdminComplaint({ onNavigate }) {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
                                             <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-[1.5rem] shadow-xl py-2 z-20">
-                                                {['', 'Unassigned', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan', 'Ditolak'].map(s => (
+                                                {['', 'Baru', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi Pelanggan', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan', 'Ditolak'].map(s => (
                                                     <button
                                                         key={s}
                                                         onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
@@ -582,7 +613,7 @@ export default function AdminComplaint({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto custom-scrollbar-x pb-2">
+                    <div className="overflow-x-auto custom-scrollbar-x pb-2 min-h-[400px]">
                         <table className="w-full text-left min-w-[1000px] table-auto">
                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                 <tr>
@@ -702,91 +733,93 @@ export default function AdminComplaint({ onNavigate }) {
                 isOpen={isDetailModalOpen}
                 onClose={() => setIsDetailModalOpen(false)}
                 ticket={selectedTicket}
+                role="admin"
                 renderActions={
                     <div className="space-y-4">
                         {/* KONFIRMASI LOG DATA (Khusus jika ada permintaan dari teknisi) */}
-                        {selectedTicket?.logRequested && (
-                            <div className={`space-y-3 p-4 rounded-2xl border border-dashed transition-all duration-300 ${!selectedTicket?.logConfirmed ? 'bg-blue-50/50 border-blue-100' : selectedTicket?.logApproved ? 'bg-emerald-50/50 border-emerald-100' : 'bg-red-50/50 border-red-100'}`}>
-                                <h4 className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${!selectedTicket?.logConfirmed ? 'text-blue-600' : selectedTicket?.logApproved ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {!selectedTicket?.logConfirmed ? (
-                                        <><FileText className="w-3 h-3" /> Teknisi Meminta Data Log</>
-                                    ) : selectedTicket?.logApproved ? (
-                                        <><ShieldCheck className="w-3 h-3" /> Laporan Log Disetujui</>
-                                    ) : (
-                                        <><XCircle className="w-3 h-3" /> Akses Log Ditolak</>
-                                    )}
+                        {(selectedTicket?.logRequestStatus === 'pending' || selectedTicket?.logRequestStatus === 'requested') && (
+                            <div className="space-y-3 p-5 rounded-2xl border border-dashed bg-blue-50/50 border-blue-200 transition-all duration-300">
+                                <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-blue-600">
+                                    <FileText className="w-3 h-3" /> Teknisi Meminta Data Log
                                 </h4>
+                                
+                                {selectedTicket?.logReason && (
+                                    <div className="bg-white/60 p-3 rounded-xl border border-blue-100/50">
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Alasan Permintaan:</p>
+                                        <p className="text-xs text-gray-700 italic leading-relaxed">"{selectedTicket.logReason}"</p>
+                                    </div>
+                                )}
 
-                                {!selectedTicket?.logConfirmed ? (
-                                    <div className="flex gap-2">
-                                        <button
-                                            className="flex-1 py-2.5 bg-[#009B7C] text-white font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-[#008268] transition-all shadow-sm flex items-center justify-center gap-2"
-                                            onClick={() => handleLogAction(selectedTicket.id, true)}
-                                        >
-                                            <ShieldCheck className="w-3 h-3" /> Setujui
-                                        </button>
-                                        <button
-                                            className="flex-1 py-2.5 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                                            onClick={() => handleLogAction(selectedTicket.id, false)}
-                                        >
-                                            <XCircle className="w-3 h-3 text-red-100" /> Tolak
-                                        </button>
-                                    </div>
-                                ) : selectedTicket?.logApproved ? (
+                                <div className="flex gap-2">
                                     <button
-                                        onClick={() => alert('Membuka Viewer Data Log BIEON...')}
-                                        className="w-full py-2.5 bg-white border border-emerald-100 text-emerald-700 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+                                        className="flex-1 py-3 bg-[#009B7C] text-white font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-[#008268] transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2"
+                                        onClick={() => handleLogAction(selectedTicket.id, true)}
                                     >
-                                        <Activity className="w-3 h-3" /> Lihat Data Log
+                                        <ShieldCheck className="w-3.5 h-3.5" /> Setujui
                                     </button>
-                                ) : (
-                                    <div className="flex items-center gap-2 text-[10px] text-red-400 font-medium italic">
-                                        <AlertCircle className="w-3 h-3" /> Anda menolak permintaan ini. Teknisi tidak dapat melihat log.
-                                    </div>
+                                    <button
+                                        className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                                        onClick={() => handleLogAction(selectedTicket.id, false)}
+                                    >
+                                        <XCircle className="w-3.5 h-3.5 text-red-500" /> Tolak
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {selectedTicket?.logRequestStatus === 'granted' && (
+                            <button
+                                onClick={() => alert('Membuka Viewer Data Log BIEON...')}
+                                className="w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+                            >
+                                <Activity className="w-3.5 h-3.5" /> Lihat Data Log
+                            </button>
+                        )}
+                        {selectedTicket?.logRequestStatus === 'rejected' && (
+                            <div className="flex items-center gap-2 text-[10px] text-red-400 font-medium italic">
+                                <AlertCircle className="w-3 h-3" /> Anda menolak permintaan ini. Teknisi tidak dapat melihat log.
+                            </div>
+                        )}
+
+                        {/* ALIKHAN & PING TEKNISI (Selalu ada kecuali status tertentu) */}
+                        {!['selesai', 'ditolak', 'menunggu konfirmasi pelanggan'].includes(selectedTicket?.status?.toLowerCase()) && (
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => {
+                                        handleAssign(selectedTicket);
+                                        setIsDetailModalOpen(false);
+                                    }}
+                                    className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+                                >
+                                    <Users className="w-3.5 h-3.5" /> Alihkan Teknisi
+                                </button>
+                                
+                                {selectedTicket?.status?.toLowerCase() !== 'unassigned' && (
+                                    <button
+                                        onClick={() => {
+                                            handlePing(selectedTicket);
+                                            setIsDetailModalOpen(false);
+                                        }}
+                                        className="w-full py-3 bg-red-500 text-white font-bold rounded-xl text-xs hover:bg-red-600 transition-all shadow-lg shadow-red-100 flex items-center justify-center gap-2"
+                                    >
+                                        <Bell className="w-3.5 h-3.5" /> Kirim Ping Ke Teknisi
+                                    </button>
                                 )}
                             </div>
                         )}
 
-                        {/* ALIKHAN TEKNISI */}
-                        {(selectedTicket?.status !== 'Selesai' && selectedTicket?.status !== 'Ditolak') && (
-                            <button
-                                onClick={() => {
-                                    handleAssign(selectedTicket);
-                                    setIsDetailModalOpen(false);
-                                }}
-                                className="w-full py-3 bg-[#009B7C] text-white font-bold rounded-xl text-xs hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2"
-                            >
-                                <Users className="w-3.5 h-3.5" /> Alihkan / Tugaskan
-                            </button>
-                        )}
-
-                        {/* PING TEKNISI (Hanya jika Overdue) */}
-                        {selectedTicket?.status?.includes('Overdue') && (
-                            <button
-                                onClick={() => {
-                                    handlePing(selectedTicket);
-                                    setIsDetailModalOpen(false);
-                                }}
-                                className="w-full py-3 bg-red-500 text-white font-bold rounded-xl text-xs hover:bg-red-600 transition-all shadow-lg shadow-red-100 flex items-center justify-center gap-2"
-                            >
-                                <Bell className="w-3.5 h-3.5" /> Kirim Ping Ke Teknisi
-                            </button>
-                        )}
-
-                        {/* DEFAULT ACTIONS (Agar tidak kosong seperti di screenshot) */}
+                        {/* DEFAULT ACTIONS */}
                         <div className="pt-2 space-y-3">
-                            <button
-                                onClick={() => alert('Membuka Chat dengan Teknisi...')}
-                                className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                            >
-                                <MessageSquare className="w-3.5 h-3.5 text-[#009B7C]" /> Chat Teknisi
-                            </button>
-                            <button
-                                onClick={() => alert('Menghubungi Homeowner via sistem...')}
-                                className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Phone className="w-3.5 h-3.5 text-blue-500" /> Hubungi Homeowner
-                            </button>
+                            {selectedTicket?.technicianInfo?.phone && (
+                                <button
+                                    onClick={() => {
+                                        window.open(`https://wa.me/62${selectedTicket.technicianInfo.phone.replace(/^0/, '')}`, '_blank');
+                                    }}
+                                    className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <MessageSquare className="w-3.5 h-3.5 text-[#009B7C]" /> Chat Teknisi (WA)
+                                </button>
+                            )}
                         </div>
                     </div>
                 }
@@ -832,14 +865,14 @@ export default function AdminComplaint({ onNavigate }) {
                     <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
                         <div className="p-6 md:p-8 border-b border-gray-50 shrink-0">
                             <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-emerald-50 text-[#009B7C] rounded-2xl">
+                                <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
                                     <Users className="w-6 h-6" />
                                 </div>
                                 <button onClick={() => setIsAssignModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
                                     <X className="w-5 h-5 text-gray-400" />
                                 </button>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight">Alihkan / Tugas Teknisi</h3>
+                            <h3 className="text-xl font-bold text-gray-900 leading-tight">Alihkan Teknisi</h3>
                             <p className="text-xs text-gray-500 mt-2">Pilih teknisi yang tersedia untuk menangani tiket <span className="font-bold text-gray-700">#{selectedTicket?.id}</span>.</p>
                         </div>
                         <div className="p-6 md:p-8 space-y-6 overflow-y-auto modal-custom-scrollbar">
@@ -850,7 +883,7 @@ export default function AdminComplaint({ onNavigate }) {
                                         <button
                                             key={tech._id}
                                             onClick={() => setSelectedTechnicianId(tech._id)}
-                                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedTechnicianId === tech._id ? 'border-[#009B7C] bg-emerald-50/50 ring-2 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
+                                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedTechnicianId === tech._id ? 'border-blue-500 bg-blue-50/50 ring-2 ring-blue-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-bold text-gray-500 text-xs">
@@ -861,7 +894,7 @@ export default function AdminComplaint({ onNavigate }) {
                                                     <p className="text-[10px] text-gray-400 font-medium">{tech?.position || 'Teknisi BIEON'}</p>
                                                 </div>
                                             </div>
-                                            <div className={`px-2 py-0.5 rounded text-[9px] font-bold border ${tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                            <div className={`px-2 py-0.5 rounded text-[9px] font-bold border ${tech.status === 'aktif' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                                                 {tech.status === 'aktif' ? 'Standby' : 'Sibuk'}
                                             </div>
                                         </button>
@@ -874,7 +907,7 @@ export default function AdminComplaint({ onNavigate }) {
                                 <button
                                     onClick={confirmAssign}
                                     disabled={!selectedTechnicianId}
-                                    className="w-full py-4 bg-[#009B7C] text-white font-bold rounded-2xl text-sm hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:shadow-none"
+                                    className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50 disabled:shadow-none"
                                 >
                                     Konfirmasi Penugasan
                                 </button>

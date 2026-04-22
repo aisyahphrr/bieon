@@ -10,7 +10,7 @@ export const useSLA = (createdAt, assignedAt, processStartedAt, status) => {
 
     const slaData = useMemo(() => {
         const s = status?.toLowerCase();
-        if (!createdAt || s === 'selesai' || s === 'ditolak' || s === 'menunggu konfirmasi' || s === 'unassigned') {
+        if (!createdAt || s === 'selesai' || s === 'ditolak' || s === 'menunggu konfirmasi pelanggan' || s === 'unassigned') {
             return { timer: null, points: 0, timeElapsedMinutes: 0, level: 'emerald', isOverdue: false, type: null };
         }
 

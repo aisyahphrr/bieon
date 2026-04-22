@@ -60,7 +60,7 @@ const INITIAL_HISTORY_DATA = [
     ],
     timeline: [
       { time: '26 Feb 2026, 08:15', desc: 'Pengaduan diselesaikan dan telah dikonfirmasi oleh pelanggan.', status: 'Selesai' },
-      { time: '26 Feb 2026, 08:00', desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Menunggu Konfirmasi' },
+      { time: '26 Feb 2026, 08:00', desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Menunggu Konfirmasi Pelanggan' },
       { time: '26 Feb 2026, 06:15', desc: 'Teknisi melakukan penggantian unit Smart Plug dan melakukan re-pairing ke Hub.', status: 'Diproses' },
       { time: '25 Feb 2026, 14:00', desc: 'Permintaan data log dikonfirmasi oleh SuperAdmin.', status: 'Baru' },
     ]

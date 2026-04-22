@@ -13,7 +13,7 @@ const complaintSchema = new mongoose.Schema({
     desc: { type: String, required: true },
     status: { 
         type: String, 
-        enum: ['unassigned', 'menunggu respons', 'diproses', 'menunggu konfirmasi', 'selesai', 'overdue respons', 'overdue perbaikan', 'ditolak'], 
+        enum: ['unassigned', 'menunggu respons', 'diproses', 'menunggu konfirmasi pelanggan', 'selesai', 'overdue respons', 'overdue perbaikan', 'ditolak'], 
         default: 'unassigned' 
     },
     homeowner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -29,8 +29,15 @@ const complaintSchema = new mongoose.Schema({
     },
     assignedAt: { type: Date, default: null },
     processStartedAt: { type: Date, default: null },
+    completedAt: { type: Date, default: null },
+    isEscalated: { type: Boolean, default: false },
     responsePoints: { type: Number, default: 0 },
-    repairPoints: { type: Number, default: 0 }
+    repairPoints: { type: Number, default: 0 },
+    responseDuration: { type: String, default: null },
+    repairDuration: { type: String, default: null },
+    logRequestStatus: { type: String, enum: ['none', 'pending', 'granted', 'rejected', 'requested'], default: 'none' },
+    logReason: { type: String, default: '' },
+    hasStartedRepair: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Complaint', complaintSchema);

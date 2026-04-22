@@ -102,6 +102,75 @@ const initialComplaints = [
         dynamicDates: { processStartedAtOffset: 65 * 60 * 60 * 1000 },
         timeline: [{ time: 'Dynamic', desc: 'Mulai diagnosa.', status: 'diproses' }]
     },
+    {
+        id: 'TCK-SLA-08',
+        topic: 'Laporan Ditolak (Tanpa Teknisi)',
+        device: 'Smart Plug',
+        technicianName: null,
+        status: 'ditolak',
+        category: 'Energi',
+        description: 'Pengaduan ditolak oleh Admin karena alasan tertentu.',
+        timeline: [{ time: 'Dynamic', desc: 'Laporan dibuat.', status: 'unassigned' }, { time: 'Dynamic', desc: 'Laporan ditolak oleh Admin.', status: 'ditolak' }]
+    },
+    {
+        id: 'TCK-SLA-09',
+        topic: 'Menunggu Konfirmasi (Selesai oleh Teknisi)',
+        device: 'Air Nodes',
+        technicianName: 'AlanPenggendong',
+        status: 'menunggu konfirmasi pelanggan',
+        category: 'Lingkungan',
+        description: 'Teknisi sudah menyelesaikan tugas, menunggu konfirmasi pelanggan.',
+        dynamicDates: { 
+            completedAtOffset: 1 * 60 * 60 * 1000, // 1 hour ago
+            processStartedAtOffset: 24 * 60 * 60 * 1000, // 24 hours ago
+            assignedAtOffset: 25 * 60 * 60 * 1000 // 25 hours ago
+        },
+        timeline: [
+            { time: 'Dynamic', desc: 'Tiket ditugaskan.', status: 'menunggu respons' },
+            { time: 'Dynamic', desc: 'Mulai perbaikan.', status: 'diproses' },
+            { time: 'Dynamic', desc: 'Pekerjaan selesai, menunggu konfirmasi.', status: 'menunggu konfirmasi pelanggan' }
+        ]
+    },
+    {
+        id: 'TCK-SLA-10',
+        topic: 'Tiket Selesai (Sangat Puas)',
+        device: 'Gateway Utama',
+        technicianName: 'AlanPenggendong',
+        status: 'selesai',
+        category: 'Konektivitas',
+        description: 'Tiket sudah selesai dan diberikan rating oleh pelanggan.',
+        dynamicDates: { 
+            completedAtOffset: 48 * 60 * 60 * 1000, 
+            processStartedAtOffset: 72 * 60 * 60 * 1000 
+        },
+        rating: 5,
+        review: 'Sangat cepat dan ramah!',
+        timeline: [
+            { time: 'Dynamic', desc: 'Laporan dibuat.', status: 'unassigned' },
+            { time: 'Dynamic', desc: 'Tiket ditugaskan ke Teknisi Alan.', status: 'menunggu respons' },
+            { time: 'Dynamic', desc: 'Mulai perbaikan.', status: 'diproses' },
+            { time: 'Dynamic', desc: 'Selesai dan dikonfirmasi.', status: 'selesai' }
+        ]
+    },
+    {
+        id: 'TCK-SLA-11',
+        topic: 'Kualitas Air Keruh (Selesai)',
+        device: 'Node Kualitas Air - R3',
+        technicianName: 'AlanPenggendong',
+        status: 'selesai',
+        category: 'Kualitas Air',
+        description: 'Filter air tersumbat, sudah dibersihkan.',
+        dynamicDates: { 
+            completedAtOffset: 5 * 24 * 60 * 60 * 1000, // 5 days ago
+            processStartedAtOffset: 6 * 24 * 60 * 60 * 1000 
+        },
+        rating: 4,
+        review: 'Cukup oke, tapi teknisi agak telat datangnya.',
+        timeline: [
+            { time: 'Dynamic', desc: 'Laporan dibuat.', status: 'unassigned' },
+            { time: 'Dynamic', desc: 'Selesai.', status: 'selesai' }
+        ]
+    },
     // --- DATA HISTORIS ---
     {
         id: 'TCK-0105',
@@ -165,6 +234,7 @@ const seedDB = async () => {
             let createdAt = new Date();
             let assignedAt = null;
             let processStartedAt = null;
+            let completedAt = null;
 
             if (item.dynamicDates) {
                 const now = Date.now();
@@ -174,8 +244,18 @@ const seedDB = async () => {
                 }
                 if (item.dynamicDates.processStartedAtOffset) {
                     processStartedAt = new Date(now - item.dynamicDates.processStartedAtOffset);
-                    assignedAt = new Date(processStartedAt.getTime() - 30 * 60 * 1000); // 30m before process
-                    createdAt = new Date(assignedAt.getTime() - 15 * 60 * 1000);
+                    if (!assignedAt) {
+                        assignedAt = new Date(processStartedAt.getTime() - 30 * 60 * 1000); // 30m before process
+                        createdAt = new Date(assignedAt.getTime() - 15 * 60 * 1000);
+                    }
+                }
+                if (item.dynamicDates.completedAtOffset) {
+                    completedAt = new Date(now - item.dynamicDates.completedAtOffset);
+                    if (!processStartedAt) {
+                        processStartedAt = new Date(completedAt.getTime() - 2 * 60 * 60 * 1000); // 2h before complete
+                        assignedAt = new Date(processStartedAt.getTime() - 30 * 60 * 1000);
+                        createdAt = new Date(assignedAt.getTime() - 15 * 60 * 1000);
+                    }
                 }
             } else {
                 const createdAtEntry = item.timeline.find(t => t.desc.toLowerCase().includes('dibuat'));
@@ -186,6 +266,9 @@ const seedDB = async () => {
 
                 const progressEntry = item.timeline.find(t => t.desc.toLowerCase().includes('diagnosa') || t.desc.toLowerCase().includes('pengecekan') || t.desc.toLowerCase().includes('tiba'));
                 processStartedAt = progressEntry ? parseDateString(progressEntry.time) : null;
+
+                const completedEntry = item.timeline.find(t => t.desc.toLowerCase().includes('selesai') || t.desc.toLowerCase().includes('konfirmasi'));
+                completedAt = completedEntry ? parseDateString(completedEntry.time) : null;
             }
 
             return {
@@ -198,15 +281,19 @@ const seedDB = async () => {
                 technician: techId,
                 timeline: item.timeline.map(t => ({
                     ...t,
-                    time: t.time === 'Dynamic' ? createdAt.toLocaleString() : t.time,
+                    time: t.time === 'Dynamic' ? createdAt.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') : t.time,
                     status: t.status ? t.status.toLowerCase() : undefined
                 })),
                 files: item.files || [],
-                rating: item.rating ? item.rating : undefined,
+                rating: item.rating ? {
+                    stars: item.rating,
+                    review: item.review || ''
+                } : undefined,
                 createdAt: createdAt,
                 updatedAt: createdAt,
                 assignedAt: assignedAt,
-                processStartedAt: processStartedAt
+                processStartedAt: processStartedAt,
+                completedAt: completedAt
             };
         });
 

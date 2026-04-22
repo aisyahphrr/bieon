@@ -19,7 +19,16 @@ router.put('/:id/assign', authMiddleware, roleMiddleware('SuperAdmin'), complain
 // [Technician] Melihat aduan yang di-assign padanya
 router.get('/technician', authMiddleware, roleMiddleware('Technician'), complaintController.getComplaintsByTechnician);
 
-// [Technician] Mengupdate status ('Diproses' / 'Menunggu Konfirmasi')
-router.put('/:id/status', authMiddleware, roleMiddleware('Technician', 'SuperAdmin'), complaintController.updateComplaintStatus);
+// [Technician] Mengupdate status ('Diproses' / 'Menunggu Konfirmasi Pelanggan')
+router.put('/:id/status', authMiddleware, complaintController.updateComplaintStatus);
+
+// [Technician] Mengupdate progres timeline
+router.put('/:id/progress', authMiddleware, roleMiddleware('Technician'), complaintController.updateProgress);
+
+// [Technician] Meminta data log
+router.put('/:id/request-log', authMiddleware, roleMiddleware('Technician'), complaintController.requestDataLog);
+
+// [SuperAdmin] Mengizinkan data log
+router.put('/:id/grant-log', authMiddleware, roleMiddleware('SuperAdmin'), complaintController.grantDataLog);
 
 module.exports = router;
