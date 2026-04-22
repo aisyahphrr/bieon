@@ -56,6 +56,33 @@ exports.getAllHomeowners = async (req, res) => {
     }
 };
 // ========================================================
+// GET /api/admin/homeowners/available
+// Mengambil homeowner yang belum memiliki teknisi
+// ========================================================
+exports.getAvailableHomeowners = async (req, res) => {
+    try {
+        const homeowners = await User.find({
+            role: 'Homeowner',
+            $or: [
+                { assignedTechnician: { $exists: false } },
+                { assignedTechnician: null }
+            ]
+        }).select('fullName email phoneNumber address systemName assignedTechnician').lean();
+
+        res.status(200).json({
+            success: true,
+            data: homeowners,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Gagal mengambil data homeowner yang tersedia.',
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
 // GET /api/admin/homeowners/:id
 // Mengambil detail homeowner beserta stats
 // ========================================================
@@ -327,6 +354,46 @@ exports.updateTechnician = async (req, res) => {
         res.status(statusCode).json({
             success: false,
             message: statusCode >= 500 ? 'Gagal memperbarui data teknisi.' : error.message,
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// POST /api/admin/technicians/:id/assign-clients
+// Menugaskan beberapa pelanggan ke teknisi tertentu
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.assignClientsToTechnician = async (req, res) => {
+    try {
+        const technicianId = req.params.id;
+        const { clientIds } = req.body;
+
+        if (!Array.isArray(clientIds)) {
+            return res.status(400).json({ success: false, message: 'clientIds harus berupa array.' });
+        }
+
+        // Pastikan teknisi ada
+        const technician = await User.findOne({ _id: technicianId, role: 'Technician' });
+        if (!technician) {
+            return res.status(404).json({ success: false, message: 'Teknisi tidak ditemukan.' });
+        }
+
+        // Update semua homeowner yang dipilih untuk ditugaskan ke teknisi ini
+        const updateResult = await User.updateMany(
+            { _id: { $in: clientIds }, role: 'Homeowner' },
+            { $set: { assignedTechnician: technicianId } }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: `${updateResult.modifiedCount} pelanggan berhasil ditugaskan ke teknisi.`,
+            modifiedCount: updateResult.modifiedCount
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Gagal menugaskan pelanggan ke teknisi.',
             error: error.message,
         });
     }

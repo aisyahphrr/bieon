@@ -174,8 +174,15 @@ exports.listTechnicians = async (query = {}) => {
         User.countDocuments(filter)
     ]);
 
+    const publicData = rows.map(toPublicTechnician);
+
+    const dataWithClientsCount = await Promise.all(publicData.map(async (tech) => {
+        const count = await User.countDocuments({ assignedTechnician: tech._id, role: 'Homeowner' });
+        return { ...tech, clientsCount: count };
+    }));
+
     return {
-        data: rows.map(toPublicTechnician),
+        data: dataWithClientsCount,
         total,
         page,
         limit,
@@ -191,7 +198,32 @@ exports.getTechnicianById = async (id) => {
         throw error;
     }
 
-    return toPublicTechnician(tech);
+    const publicTech = toPublicTechnician(tech);
+
+    // Ambil data pelanggan (Homeowners) yang ditugaskan ke teknisi ini
+    const clients = await User.find({ assignedTechnician: id, role: 'Homeowner' }).select('fullName address').lean();
+    
+    // Pastikan Hub dan Device bisa digunakan
+    const Hub = require('../../models/Hub');
+    const Device = require('../../models/Device');
+
+    const formattedClients = await Promise.all(clients.map(async (client) => {
+        const hubCount = await Hub.countDocuments({ owner: client._id });
+        const deviceCount = await Device.countDocuments({ owner: client._id });
+        
+        return {
+            id: client._id,
+            name: client.fullName,
+            location: client.address || 'Alamat tidak tersedia',
+            bieonDevices: hubCount,
+            smartDevices: deviceCount,
+            status: 'online' // TODO: implement real status logic based on hubs
+        };
+    }));
+
+    publicTech.clients = formattedClients;
+
+    return publicTech;
 };
 
 exports.updateTechnician = async (id, payload) => {

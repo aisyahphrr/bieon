@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
     systemName: { type: String }, // Nama Sistem / Rumah
     plnTariff: { type: String },  // Golongan Tarif PLN
     bieonId: { type: String },    // ID BIEON Master
+    assignedTechnician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Referensi ke Teknisi yang menangani
 
     // Field Khusus Teknisi
     technicianId: { type: String },
