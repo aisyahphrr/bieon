@@ -13,11 +13,17 @@ router.get('/owner/:userId', authMiddleware, complaintController.getComplaintsBy
 // [SuperAdmin] Melihat semua aduan
 router.get('/', authMiddleware, roleMiddleware('SuperAdmin'), complaintController.getAllComplaints);
 
+// [Technician] Melihat aduan yang di-assign padanya
+router.get('/technician', authMiddleware, roleMiddleware('Technician'), complaintController.getComplaintsByTechnician);
+
+// [Public/Auth] Melihat detail aduan spesifik
+router.get('/:id', authMiddleware, complaintController.getComplaintById);
+
 // [SuperAdmin] Meng-assign teknisi ke sebuah tiket
 router.put('/:id/assign', authMiddleware, roleMiddleware('SuperAdmin'), complaintController.assignTechnician);
 
-// [Technician] Melihat aduan yang di-assign padanya
-router.get('/technician', authMiddleware, roleMiddleware('Technician'), complaintController.getComplaintsByTechnician);
+// [SuperAdmin] Mengirim PING ke teknisi
+router.put('/:id/ping', authMiddleware, roleMiddleware('SuperAdmin'), complaintController.pingComplaint);
 
 // [Technician] Mengupdate status ('Diproses' / 'Menunggu Konfirmasi Pelanggan')
 router.put('/:id/status', authMiddleware, complaintController.updateComplaintStatus);

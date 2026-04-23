@@ -37,6 +37,8 @@ export function ComplaintDetailModal({
     onActionSuccess
 }) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [localTicket, setLocalTicket] = React.useState(null);
     const [isProgressModalOpen, setIsProgressModalOpen] = React.useState(false);
     const [isRatingModalOpen, setIsRatingModalOpen] = React.useState(false);
     const [ratingStars, setRatingStars] = React.useState(0);
@@ -48,15 +50,46 @@ export function ComplaintDetailModal({
     const [isLogReasonModalOpen, setIsLogReasonModalOpen] = React.useState(false);
     const [logReason, setLogReason] = React.useState('');
 
-    if (!isOpen || !ticket) return null;
+    // Sync local state when ticket prop changes
+    React.useEffect(() => {
+        if (ticket) {
+            setLocalTicket(ticket);
+        }
+    }, [ticket]);
+
+    if (!isOpen || !localTicket) return null;
 
     const token = localStorage.getItem('bieon_token');
 
     // API Handlers
+    const fetchComplaintDetail = async () => {
+        try {
+            setIsRefreshing(true);
+            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error('Gagal mengambil data terbaru');
+            const data = await response.json();
+            
+            // Map display ID if needed (consistent with frontend logic)
+            const updatedData = {
+                ...data,
+                id: data.id || `TCK-${data._id ? data._id.substring(data._id.length - 6).toUpperCase() : '000000'}`,
+                date: data.createdAt ? new Date(data.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'
+            };
+            
+            setLocalTicket(updatedData);
+        } catch (error) {
+            console.error('Error refreshing ticket:', error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     const handleStatusUpdate = async (newStatus, note = '', rating = null) => {
         try {
             setIsSubmitting(true);
-            const response = await fetch(`/api/complaints/${ticket._id || ticket.originalId}/status`, {
+            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -65,9 +98,17 @@ export function ComplaintDetailModal({
                 body: JSON.stringify({ status: newStatus, note, rating })
             });
             if (!response.ok) throw new Error('Gagal memperbarui status');
+            
+            // Refresh data first to update timeline before closing/notifying
+            await fetchComplaintDetail();
+            
             setIsRatingModalOpen(false); // Close rating modal if open
             if (onActionSuccess) onActionSuccess();
-            onClose();
+            
+            // For 'selesai', we might close the modal, for others we stay
+            if (newStatus === 'selesai' || newStatus === 'ditolak') {
+                onClose();
+            }
         } catch (error) {
             alert(error.message);
         } finally {
@@ -79,7 +120,7 @@ export function ComplaintDetailModal({
         if (!progressOption) return;
         try {
             setIsSubmitting(true);
-            const response = await fetch(`/api/complaints/${ticket._id || ticket.originalId}/progress`, {
+            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}/progress`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -88,6 +129,10 @@ export function ComplaintDetailModal({
                 body: JSON.stringify({ desc: progressOption, note: progressNote })
             });
             if (!response.ok) throw new Error('Gagal memperbarui progres');
+            
+            // Refresh data to show new timeline entry immediately
+            await fetchComplaintDetail();
+            
             setIsProgressModalOpen(false);
             setProgressNote(''); // Clear note
             if (onActionSuccess) onActionSuccess();
@@ -102,7 +147,7 @@ export function ComplaintDetailModal({
         try {
             setIsSubmitting(true);
             const endpoint = action === 'request' ? 'request-log' : 'grant-log';
-            const response = await fetch(`/api/complaints/${ticket._id || ticket.originalId}/${endpoint}`, {
+            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}/${endpoint}`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -111,6 +156,9 @@ export function ComplaintDetailModal({
                 body: JSON.stringify({ reason })
             });
             if (!response.ok) throw new Error('Gagal memproses data log');
+            
+            // Refresh data
+            await fetchComplaintDetail();
             
             setIsLogReasonModalOpen(false);
             setLogReason('');
@@ -130,7 +178,7 @@ export function ComplaintDetailModal({
 
     // --- FALLBACK DURATION CALCULATION ---
     const getDurationFromTimeline = (type) => {
-        if (!ticket?.timeline || ticket.timeline.length === 0) return '00:00:00';
+        if (!localTicket?.timeline || localTicket.timeline.length === 0) return '00:00:00';
 
         const parseDate = (str) => {
             if (!str) return null;
@@ -150,17 +198,17 @@ export function ComplaintDetailModal({
         };
 
         if (type === 'response') {
-            if (ticket.responseDuration && ticket.responseDuration !== '00:00:00') return ticket.responseDuration;
-            const processEntry = [...ticket.timeline].reverse().find(t => t.status?.toLowerCase() === 'diproses');
-            if (!processEntry || !ticket.assignedAt) return '00:00:00';
-            const start = new Date(ticket.assignedAt);
+            if (localTicket.responseDuration && localTicket.responseDuration !== '00:00:00') return localTicket.responseDuration;
+            const processEntry = [...localTicket.timeline].reverse().find(t => t.status?.toLowerCase() === 'diproses');
+            if (!processEntry || !localTicket.assignedAt) return '00:00:00';
+            const start = new Date(localTicket.assignedAt);
             const end = parseDate(processEntry.time);
             return end ? formatDiff(end - start) : '00:00:00';
         }
 
         if (type === 'repair') {
-            if (ticket.repairDuration && ticket.repairDuration !== '00:00:00') return ticket.repairDuration;
-            const entries = [...ticket.timeline].reverse();
+            if (localTicket.repairDuration && localTicket.repairDuration !== '00:00:00') return localTicket.repairDuration;
+            const entries = [...localTicket.timeline].reverse();
             const startEntry = entries.find(t => t.status?.toLowerCase() === 'diproses');
             const endEntry = entries.find(t => ['menunggu konfirmasi pelanggan', 'selesai'].includes(t.status?.toLowerCase()));
             if (!startEntry || !endEntry) return '00:00:00';
@@ -173,10 +221,10 @@ export function ComplaintDetailModal({
     };
 
     // Helper: Badge Status Standard
-    const StatusBadge = ({ ticket }) => {
+    const StatusBadge = ({ ticket: badgeTicket }) => {
         const baseClasses = "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all";
-        const { level, isOverdue, type } = useSLA(ticket.createdAt, ticket.assignedAt, ticket.processStartedAt, ticket.status);
-        const displayStatus = formatStatusDisplay(ticket.status);
+        const { level, isOverdue, type } = useSLA(badgeTicket.createdAt, badgeTicket.assignedAt, badgeTicket.processStartedAt, badgeTicket.status);
+        const displayStatus = formatStatusDisplay(badgeTicket.status);
 
         const colors = {
             'unassigned': 'bg-gray-50 text-gray-400 border-gray-100',
@@ -198,7 +246,7 @@ export function ComplaintDetailModal({
             </span>
         ) : null;
 
-        const cleanStatus = ticket.status?.toLowerCase() || '';
+        const cleanStatus = badgeTicket.status?.toLowerCase() || '';
         const badgeClass = colors[cleanStatus] || 'bg-gray-50 text-gray-500 border-gray-100';
 
         return (
@@ -206,7 +254,7 @@ export function ComplaintDetailModal({
                 <span className={`${baseClasses} ${badgeClass}`}>
                     {displayStatus}
                 </span>
-                {ticket.isEscalated && !['selesai', 'ditolak'].includes(ticket.status?.toLowerCase()) && (
+                {badgeTicket.isEscalated && !['selesai', 'ditolak'].includes(badgeTicket.status?.toLowerCase()) && (
                     <span className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-[0_2px_4px_rgba(239,68,68,0.3)] flex items-center gap-1 animate-pulse">
                         <AlertCircle className="w-2.5 h-2.5" /> PRIORITAS
                     </span>
@@ -228,7 +276,15 @@ export function ComplaintDetailModal({
                     >
                         <ArrowLeft className="w-4 h-4" /> Kembali
                     </button>
-                    <h2 className="text-2xl font-bold text-white">{title}</h2>
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                        {title}
+                        {isRefreshing && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
+                                <RefreshCw className="w-3 h-3 text-white animate-spin" />
+                                <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Memperbarui...</span>
+                            </div>
+                        )}
+                    </h2>
                 </div>
 
                 {/* MOBILE HEADER */}
@@ -251,7 +307,7 @@ export function ComplaintDetailModal({
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-1 lg:px-4">
 
                         {/* MOBILE ONLY: ROLE ACTIONS SLOT (At the very top) */}
-                        {!(role === 'homeowner' && ticket.status.toLowerCase() !== 'menunggu konfirmasi pelanggan') && (
+                        {!(role === 'homeowner' && localTicket.status.toLowerCase() !== 'menunggu konfirmasi pelanggan') && (
                             <div className="lg:hidden bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
                                     Aksi Tersedia
@@ -259,7 +315,7 @@ export function ComplaintDetailModal({
                                 <div className="space-y-3">
                                     {renderActions ? renderActions : (
                                         <div className="space-y-3">
-                                            {role === 'homeowner' && ticket.status.toLowerCase() === 'menunggu konfirmasi pelanggan' && (
+                                            {role === 'homeowner' && localTicket.status.toLowerCase() === 'menunggu konfirmasi pelanggan' && (
                                                 <button
                                                     onClick={() => setIsRatingModalOpen(true)}
                                                     className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-black hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
@@ -282,11 +338,11 @@ export function ComplaintDetailModal({
                             <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-100 shadow-sm">
                                 <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6 pb-4 border-b border-gray-100">
                                     <div className="text-start">
-                                        <h3 className="text-lg font-bold text-gray-900 leading-tight">{ticket.topic}</h3>
-                                        <p className="text-[11px] text-gray-500 font-medium">ID Tiket: {ticket.id}</p>
+                                        <h3 className="text-lg font-bold text-gray-900 leading-tight">{localTicket.topic}</h3>
+                                        <p className="text-[11px] text-gray-500 font-medium">ID Tiket: {localTicket.id}</p>
                                     </div>
                                     <div className="shrink-0">
-                                        <StatusBadge ticket={ticket} />
+                                        <StatusBadge ticket={localTicket} />
                                     </div>
                                 </div>
 
@@ -297,7 +353,7 @@ export function ComplaintDetailModal({
                                         </h4>
                                         <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
                                             <p className="text-sm text-gray-600 leading-relaxed">
-                                                {ticket.description}
+                                                {localTicket.description || localTicket.desc}
                                             </p>
                                         </div>
                                     </div>
@@ -305,22 +361,22 @@ export function ComplaintDetailModal({
                                     <div className="grid grid-cols-2 gap-y-6 gap-x-4 pb-6 border-b border-gray-50">
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Kategori</p>
-                                            <p className="font-semibold text-sm text-gray-800">{ticket.category}</p>
+                                            <p className="font-semibold text-sm text-gray-800">{localTicket.category}</p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Ruangan & Perangkat</p>
-                                            <p className="font-semibold text-sm text-gray-800">{ticket.device}</p>
+                                            <p className="font-semibold text-sm text-gray-800">{localTicket.device}</p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Tanggal Masuk</p>
                                             <p className="font-semibold text-sm text-gray-800">
-                                                {(ticket.timeline && ticket.timeline[ticket.timeline.length - 1]?.time) || ticket.date}
+                                                {(localTicket.timeline && localTicket.timeline[localTicket.timeline.length - 1]?.time) || localTicket.date}
                                             </p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Terakhir Update</p>
                                             <p className="font-semibold text-sm text-gray-800">
-                                                {(ticket.timeline && ticket.timeline[0]?.time) || ticket.updatedAt || ticket.date}
+                                                {(localTicket.timeline && localTicket.timeline[0]?.time) || localTicket.updatedAt || localTicket.date}
                                             </p>
                                         </div>
                                     </div>
@@ -329,9 +385,9 @@ export function ComplaintDetailModal({
                                         <h4 className="font-bold text-gray-800 text-[11px] mb-4 uppercase tracking-wider">
                                             Upload Files
                                         </h4>
-                                        {ticket.files && ticket.files.length > 0 ? (
+                                        {localTicket.files && localTicket.files.length > 0 ? (
                                             <div className="flex flex-wrap gap-4">
-                                                {ticket.files.map((file, idx) => (
+                                                {localTicket.files.map((file, idx) => (
                                                     <div key={idx} className="w-24 h-24 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                                                         <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
                                                     </div>
@@ -350,9 +406,9 @@ export function ComplaintDetailModal({
                                     Riwayat Progres Pengaduan
                                 </h3>
                                 <div className="space-y-6 pl-1">
-                                    {ticket.timeline && ticket.timeline.map((step, idx) => (
+                                    {localTicket.timeline && localTicket.timeline.map((step, idx) => (
                                         <div key={idx} className="relative flex gap-5">
-                                            {idx !== ticket.timeline.length - 1 && (
+                                            {idx !== localTicket.timeline.length - 1 && (
                                                 <div className="absolute left-[7px] top-6 bottom-[-28px] w-[1px] bg-gray-200"></div>
                                             )}
                                             <div className="relative z-10 shrink-0 mt-1">
@@ -376,7 +432,7 @@ export function ComplaintDetailModal({
                             </div>
 
                             {/* BOX: HASIL PENILAIAN (If available) */}
-                            {ticket.status?.toLowerCase() === 'selesai' && ticket.rating && (
+                            {localTicket.status?.toLowerCase() === 'selesai' && localTicket.rating && (
                                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex items-center gap-4">
@@ -384,15 +440,15 @@ export function ComplaintDetailModal({
                                                 <User className="w-6 h-6 text-gray-400" />
                                             </div>
                                             <div className="text-start">
-                                                <h4 className="font-bold text-gray-900 text-sm leading-tight">{ticket.technicianInfo?.name || ticket.technician?.fullName || 'Teknisi'}</h4>
-                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Rate: {ticket.rating.stars || ticket.rating}/5</p>
+                                                <h4 className="font-bold text-gray-900 text-sm leading-tight">{localTicket.technicianInfo?.name || localTicket.technician?.fullName || 'Teknisi'}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Rate: {localTicket.rating.stars || localTicket.rating}/5</p>
                                             </div>
                                         </div>
                                         <div className="flex gap-1">
                                             {[1, 2, 3, 4, 5].map((s) => (
                                                 <Star 
                                                     key={s} 
-                                                    className={`w-5 h-5 ${s <= (ticket.rating.stars || ticket.rating) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} 
+                                                    className={`w-5 h-5 ${s <= (localTicket.rating.stars || localTicket.rating) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} 
                                                 />
                                             ))}
                                         </div>
@@ -400,7 +456,7 @@ export function ComplaintDetailModal({
                                     <div className="p-6 text-start bg-gray-50/30">
                                         <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Ulasan</h5>
                                         <p className="text-xs text-gray-600 leading-relaxed italic">
-                                            "{ticket.rating.review || 'Tidak ada ulasan tertulis.'}"
+                                            "{localTicket.rating.review || 'Tidak ada ulasan tertulis.'}"
                                         </p>
                                     </div>
                                 </div>
@@ -421,28 +477,28 @@ export function ComplaintDetailModal({
                                         <User className="w-4 h-4 text-blue-600 shrink-0" />
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Nama Pelanggan</p>
-                                            <p className="text-sm font-semibold text-gray-900">{ticket.clientInfo?.name || ticket.client || ticket.homeowner?.fullName}</p>
+                                            <p className="text-sm font-semibold text-gray-900">{localTicket.clientInfo?.name || localTicket.client || localTicket.homeowner?.fullName}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Mail className="w-4 h-4 text-teal-600 shrink-0" />
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Email</p>
-                                            <span className="text-sm font-medium text-gray-700">{ticket.clientInfo?.email || ticket.homeowner?.email || '-'}</span>
+                                            <span className="text-sm font-medium text-gray-700">{localTicket.clientInfo?.email || localTicket.homeowner?.email || '-'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Phone className="w-4 h-4 text-amber-600 shrink-0" />
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Phone</p>
-                                            <span className="text-sm font-medium text-gray-700">{ticket.clientInfo?.phone || ticket.homeowner?.phoneNumber || '-'}</span>
+                                            <span className="text-sm font-medium text-gray-700">{localTicket.clientInfo?.phone || localTicket.homeowner?.phoneNumber || '-'}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <MapPin className="w-4 h-4 text-red-600 shrink-0" />
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Alamat</p>
-                                            <p className="text-sm font-medium text-gray-700 leading-relaxed">{ticket.clientInfo?.address || ticket.homeowner?.address || '-'}</p>
+                                            <p className="text-sm font-medium text-gray-700 leading-relaxed">{localTicket.clientInfo?.address || localTicket.homeowner?.address || '-'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -459,32 +515,32 @@ export function ComplaintDetailModal({
                                         <User className="w-4 h-4 text-purple-600 shrink-0" />
                                         <div>
                                             <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Nama Teknisi</p>
-                                            <p className="text-sm font-semibold text-gray-900">{ticket.technicianInfo?.name || ticket.technician?.fullName || '-'}</p>
+                                            <p className="text-sm font-semibold text-gray-900">{localTicket.technicianInfo?.name || localTicket.technician?.fullName || '-'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Phone className="w-4 h-4 text-blue-600 shrink-0" />
                                         <div>
                                             <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">No Phone</p>
-                                            <p className="text-sm font-medium text-gray-700">{ticket.technicianInfo?.phone || ticket.technician?.phoneNumber || '-'}</p>
+                                            <p className="text-sm font-medium text-gray-700">{localTicket.technicianInfo?.phone || localTicket.technician?.phoneNumber || '-'}</p>
                                         </div>
                                     </div>
 
                                     {/* SLA PERFORMANCE SECTION (Internal Only) */}
-                                    {role?.toLowerCase() !== 'homeowner' && ticket.technician && (
+                                    {role?.toLowerCase() !== 'homeowner' && localTicket.technician && (
                                         <div className="mt-4 pt-4 border-t border-gray-50">
                                             <div className="flex items-center justify-between mb-3">
                                                 <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">SLA Performance</p>
-
+ 
                                                 {/* Overall Assessment - Compact */}
-                                                {(ticket.responsePoints > 0 || ticket.repairPoints > 0) && (
-                                                    <div className={`px-2 py-0.5 rounded-md border flex items-center gap-1.5 ${(ticket.responsePoints + ticket.repairPoints) / (ticket.repairPoints > 0 ? 2 : 1) >= 70
+                                                {(localTicket.responsePoints > 0 || localTicket.repairPoints > 0) && (
+                                                    <div className={`px-2 py-0.5 rounded-md border flex items-center gap-1.5 ${(localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1) >= 70
                                                             ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
                                                             : 'bg-red-50 border-red-100 text-red-700'
                                                         }`}>
                                                         <span className="text-[9px] font-black uppercase">
-                                                            {(ticket.responsePoints + ticket.repairPoints) / (ticket.repairPoints > 0 ? 2 : 1) >= 70 ? 'Aman' : 'Bahaya'}
-                                                            {['admin', 'superadmin'].includes(role?.toLowerCase()) && ` • ${Math.round((ticket.responsePoints + ticket.repairPoints) / (ticket.repairPoints > 0 ? 2 : 1))}`}
+                                                            {(localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1) >= 70 ? 'Aman' : 'Bahaya'}
+                                                            {['admin', 'superadmin'].includes(role?.toLowerCase()) && ` • ${Math.round((localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1))}`}
                                                         </span>
                                                     </div>
                                                 )}
@@ -498,22 +554,21 @@ export function ComplaintDetailModal({
                                                         <span className="text-[10px] font-mono font-bold text-gray-700 shrink-0">
                                                             {getDurationFromTimeline('response')}
                                                         </span>
-
-                                                        {ticket.responsePoints > 0 && (
+ 
+                                                        {localTicket.responsePoints > 0 && (
                                                             <>
                                                                 {['admin', 'superadmin'].includes(role?.toLowerCase()) && (
-                                                                    <span className={`w-5 h-5 flex items-center justify-center bg-white border-2 text-[8px] font-black rounded-full shrink-0 ${getPerformanceIndicator(ticket.responsePoints).color.replace('text-', 'border-').replace('600', '500')} ${getPerformanceIndicator(ticket.responsePoints).color}`}>
-                                                                        {ticket.responsePoints}
+                                                                    <span className={`w-5 h-5 flex items-center justify-center bg-white border-2 text-[8px] font-black rounded-full shrink-0 ${getPerformanceIndicator(localTicket.responsePoints).color.replace('text-', 'border-').replace('600', '500')} ${getPerformanceIndicator(localTicket.responsePoints).color}`}>
+                                                                        {localTicket.responsePoints}
                                                                     </span>
                                                                 )}
-                                                                <span className={`px-1 rounded text-[7px] font-bold uppercase whitespace-nowrap ${getPerformanceIndicator(ticket.responsePoints).bg} ${getPerformanceIndicator(ticket.responsePoints).color} shrink-0`}>
-                                                                    {getPerformanceIndicator(ticket.responsePoints).label}
+                                                                <span className={`px-1 rounded text-[7px] font-bold uppercase whitespace-nowrap ${getPerformanceIndicator(localTicket.responsePoints).bg} ${getPerformanceIndicator(localTicket.responsePoints).color} shrink-0`}>
+                                                                    {getPerformanceIndicator(localTicket.responsePoints).label}
                                                                 </span>
                                                             </>
                                                         )}
                                                     </div>
                                                 </div>
-
                                                 {/* Repair Box */}
                                                 <div className="bg-gray-50/50 p-2 rounded-lg border border-gray-100 flex flex-col gap-1.5">
                                                     <p className="text-[8px] text-gray-400 font-bold uppercase">Repair</p>
@@ -521,16 +576,16 @@ export function ComplaintDetailModal({
                                                         <span className="text-[10px] font-mono font-bold text-gray-700 shrink-0">
                                                             {getDurationFromTimeline('repair')}
                                                         </span>
-
-                                                        {ticket.repairPoints > 0 && (
+ 
+                                                        {localTicket.repairPoints > 0 && (
                                                             <>
                                                                 {['admin', 'superadmin'].includes(role?.toLowerCase()) && (
-                                                                    <span className={`w-5 h-5 flex items-center justify-center bg-white border-2 text-[8px] font-black rounded-full shrink-0 ${getPerformanceIndicator(ticket.repairPoints).color.replace('text-', 'border-').replace('600', '500')} ${getPerformanceIndicator(ticket.repairPoints).color}`}>
-                                                                        {ticket.repairPoints}
+                                                                    <span className={`w-5 h-5 flex items-center justify-center bg-white border-2 text-[8px] font-black rounded-full shrink-0 ${getPerformanceIndicator(localTicket.repairPoints).color.replace('text-', 'border-').replace('600', '500')} ${getPerformanceIndicator(localTicket.repairPoints).color}`}>
+                                                                        {localTicket.repairPoints}
                                                                     </span>
                                                                 )}
-                                                                <span className={`px-1 rounded text-[7px] font-bold uppercase whitespace-nowrap ${getPerformanceIndicator(ticket.repairPoints).bg} ${getPerformanceIndicator(ticket.repairPoints).color} shrink-0`}>
-                                                                    {getPerformanceIndicator(ticket.repairPoints).label}
+                                                                <span className={`px-1 rounded text-[7px] font-bold uppercase whitespace-nowrap ${getPerformanceIndicator(localTicket.repairPoints).bg} ${getPerformanceIndicator(localTicket.repairPoints).color} shrink-0`}>
+                                                                    {getPerformanceIndicator(localTicket.repairPoints).label}
                                                                 </span>
                                                             </>
                                                         )}
@@ -543,7 +598,7 @@ export function ComplaintDetailModal({
                             </div>
 
                             {/* BOX: ROLE ACTIONS SLOT (DESKTOP) */}
-                            {!(role === 'homeowner' && ticket.status.toLowerCase() !== 'menunggu konfirmasi pelanggan') && (
+                            {!(role === 'homeowner' && localTicket.status.toLowerCase() !== 'menunggu konfirmasi pelanggan') && (
                                 <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
                                         Aksi Tersedia
@@ -551,7 +606,7 @@ export function ComplaintDetailModal({
                                     <div className="space-y-3">
                                         {renderActions ? renderActions : (
                                             <div className="space-y-3">
-                                                {role === 'homeowner' && ticket.status.toLowerCase() === 'menunggu konfirmasi pelanggan' && (
+                                                {role === 'homeowner' && localTicket.status.toLowerCase() === 'menunggu konfirmasi pelanggan' && (
                                                     <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 text-center shadow-sm animate-pulse">
                                                         <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-100">
                                                             <CheckCircle2 className="w-6 h-6" />
@@ -569,7 +624,7 @@ export function ComplaintDetailModal({
                                                 {role === 'technician' && (
                                                     <div className="space-y-3 pt-2">
                                                         {/* Active Management Buttons (Only for non-closed statuses) */}
-                                                        {!['selesai', 'menunggu konfirmasi pelanggan'].includes(ticket.status.toLowerCase()) && (
+                                                        {!['selesai', 'menunggu konfirmasi pelanggan'].includes(localTicket.status.toLowerCase()) && (
                                                             <>
                                                                 <button
                                                                     onClick={() => setIsProgressModalOpen(true)}
@@ -579,22 +634,22 @@ export function ComplaintDetailModal({
                                                                 </button>
 
                                                                 <button
-                                                                    disabled={!ticket.hasStartedRepair}
+                                                                    disabled={!localTicket.hasStartedRepair}
                                                                     onClick={() => handleStatusUpdate('menunggu konfirmasi pelanggan')}
-                                                                    className={`w-full py-3 border rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs ${ticket.hasStartedRepair
+                                                                    className={`w-full py-3 border rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs ${localTicket.hasStartedRepair
                                                                             ? 'bg-[#009B7C] text-white border-transparent hover:bg-[#00856a] shadow-lg shadow-emerald-100'
                                                                             : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed shadow-none'
                                                                         }`}
                                                                 >
-                                                                    <CheckCircle2 className={`w-4 h-4 ${ticket.hasStartedRepair ? 'text-white' : 'text-gray-200'}`} /> Perbaikan Selesai
+                                                                    <CheckCircle2 className={`w-4 h-4 ${localTicket.hasStartedRepair ? 'text-white' : 'text-gray-200'}`} /> Perbaikan Selesai
                                                                 </button>
                                                             </>
                                                         )}
 
                                                         {/* DATA LOG ACCESS SYSTEM (Visibility Logic) */}
-                                                        {ticket.status.toLowerCase() !== 'selesai' && (
+                                                        {localTicket.status.toLowerCase() !== 'selesai' && (
                                                             <>
-                                                                {(!ticket.logRequestStatus || ticket.logRequestStatus === 'none') && (
+                                                                {(!localTicket.logRequestStatus || localTicket.logRequestStatus === 'none') && (
                                                                     <button
                                                                         onClick={() => setIsLogReasonModalOpen(true)}
                                                                         className="w-full py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-red-200"
@@ -603,7 +658,8 @@ export function ComplaintDetailModal({
                                                                     </button>
                                                                 )}
 
-                                                                {(ticket.logRequestStatus === 'pending' || ticket.logRequestStatus === 'requested') && (
+                                                                {/* DATA LOG ACCESS SYSTEM (Visibility Logic) */}
+                                                                {(localTicket.logRequestStatus === 'pending' || localTicket.logRequestStatus === 'requested') && (
                                                                     <button
                                                                         disabled
                                                                         className="w-full py-3 bg-red-50 text-red-400 border border-red-100 rounded-xl font-bold flex items-center justify-center gap-2 text-xs cursor-not-allowed"
@@ -614,7 +670,7 @@ export function ComplaintDetailModal({
                                                             </>
                                                         )}
 
-                                                        {ticket.logRequestStatus === 'rejected' && (
+                                                        {localTicket.logRequestStatus === 'rejected' && (
                                                             <button
                                                                 disabled
                                                                 className="w-full py-3 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-2 text-xs opacity-80"
@@ -623,7 +679,7 @@ export function ComplaintDetailModal({
                                                             </button>
                                                         )}
 
-                                                        {ticket.logRequestStatus === 'granted' && (
+                                                        {localTicket.logRequestStatus === 'granted' && (
                                                             <button
                                                                 onClick={() => alert("Membuka Halaman Data Log Perangkat...")}
                                                                 className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"

@@ -85,6 +85,38 @@ const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }
     );
 };
 
+const UrgencyBadge = ({ level, pingCount }) => {
+    if ((!level || level === 'low') && !pingCount) return null;
+
+    const mainBadgeStyles = {
+        high: 'bg-red-50 text-red-600 border-red-100',
+        critical: 'bg-red-900 text-white border-red-900 animate-pulse'
+    };
+
+    const mainLabels = {
+        high: '🔥 Prioritas (Alihan)',
+        critical: '🚨 KRITIS'
+    };
+
+    return (
+        <div className="flex flex-wrap gap-1 items-center">
+            {/* Render Kotak Ping (Max 3) */}
+            {Array.from({ length: pingCount || 0 }).map((_, i) => (
+                <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black uppercase shadow-sm">
+                    ⚠️ Ping
+                </span>
+            ))}
+            
+            {/* Render Badge Status Utama (High/Critical) */}
+            {(level === 'high' || level === 'critical') && (
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase border ${mainBadgeStyles[level]}`}>
+                    {mainLabels[level]}
+                </span>
+            )}
+        </div>
+    );
+};
+
 const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket }) => {
     const { timer, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
     const displayStatus = formatStatusDisplay(item.status, 'technician');
@@ -92,11 +124,17 @@ const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket })
 
     return (
         <tr className="hover:bg-gray-50/50 transition-colors group border-b border-gray-50">
-            <td className="w-[15%] px-6 py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">{item.id}</td>
-            <td className="w-[20%] px-6 py-4 text-gray-500 whitespace-nowrap">{item.date}</td>
-            <td className="w-[18%] px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{item.customer}</td>
-            <td className="w-[15%] px-6 py-4 text-gray-500 whitespace-nowrap">{item.location}</td>
-            <td className="w-[20%] px-6 py-4 whitespace-nowrap">
+            <td className="px-6 py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">{item.id}</td>
+            <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{item.date}</td>
+            <td className="px-6 py-4 text-gray-600 font-medium whitespace-nowrap" title={item.topic}>
+                <div className="flex flex-col gap-1">
+                    <span className="truncate">{item.topic}</span>
+                    <UrgencyBadge level={item.urgencyLevel} pingCount={item.pingCount} />
+                </div>
+            </td>
+            <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{item.customer}</td>
+            <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{item.location}</td>
+            <td className="px-6 py-4 whitespace-nowrap">
                 <TicketStatusBadge
                     status={item.status}
                     rating={item.rating}
@@ -140,6 +178,7 @@ export function PengaduanKlienPage({ onNavigate }) {
     const [complaints, setComplaints] = useState([]);
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [apiError, setApiError] = useState(null); // Menangkap error API
     const [toast, setToast] = useState({ show: false, message: '' });
 
     const token = localStorage.getItem('bieon_token');
@@ -147,6 +186,7 @@ export function PengaduanKlienPage({ onNavigate }) {
     const fetchData = async () => {
         try {
             setIsLoading(true);
+            setApiError(null);
             const response = await fetch('/api/complaints/technician', {
                 headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
                 cache: 'no-store'
@@ -180,13 +220,28 @@ export function PengaduanKlienPage({ onNavigate }) {
                             targetDate: item.assignedAt ? new Date(new Date(item.assignedAt).getTime() + (48 * 60 * 60 * 1000)).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA'
                         } : null,
                         logRequestStatus: item.logRequestStatus || 'none',
-                        logReason: item.logReason || ''
+                        logReason: item.logReason || '',
+                        urgencyLevel: item.urgencyLevel || 'low',
+                        pingCount: item.pingCount || 0,
+                        rating: item.rating?.stars || '-'
                     };
                 });
                 setComplaints(formattedComplaints);
+
+                // Sinkronisasi selectedTicket jika sedang dibuka di modal
+                if (selectedTicket) {
+                    const refreshedTicket = formattedComplaints.find(c => c.originalId === selectedTicket.originalId);
+                    if (refreshedTicket) {
+                        setSelectedTicket(refreshedTicket);
+                    }
+                }
+            } else {
+                const errJson = await response.json().catch(() => ({}));
+                setApiError((errJson.message || `Error ${response.status}`) + (errJson.error ? `: ${errJson.error}` : ""));
             }
         } catch (error) {
             console.error("Gagal menarik data pengaduan teknisi:", error);
+            setApiError("Koneksi gagal atau server tidak merespons.");
         } finally {
             setIsLoading(false);
         }
@@ -228,12 +283,26 @@ export function PengaduanKlienPage({ onNavigate }) {
         }
     };
 
-    const stats = {
-        waiting: complaints.filter(c => c.status === 'menunggu respons' || c.status === 'overdue respons').length,
-        processing: complaints.filter(c => c.status === 'diproses' || c.status === 'overdue perbaikan').length,
-        completed: complaints.filter(c => c.status === 'selesai' || c.status === 'menunggu konfirmasi pelanggan').length,
-        avgRating: 4.8
-    };
+    const stats = useMemo(() => {
+        const waitingCount = complaints.filter(c => ['menunggu respons', 'overdue respons'].includes(c.status?.toLowerCase())).length;
+        const hasOverdueWaiting = complaints.some(c => c.status?.toLowerCase() === 'overdue respons');
+        const processingCount = complaints.filter(c => ['diproses', 'overdue perbaikan'].includes(c.status?.toLowerCase())).length;
+        const completedCount = complaints.filter(c => c.status?.toLowerCase() === 'selesai').length;
+        
+        // Calculate Technician's average rating
+        const ratedTickets = complaints.filter(c => typeof c.rating === 'number');
+        const avg = ratedTickets.length > 0
+            ? (ratedTickets.reduce((acc, curr) => acc + curr.rating, 0) / ratedTickets.length).toFixed(1)
+            : '0.0';
+
+        return { 
+            waiting: waitingCount, 
+            hasOverdue: hasOverdueWaiting,
+            processing: processingCount, 
+            completed: completedCount, 
+            avgRating: avg 
+        };
+    }, [complaints]);
 
     const processedData = useMemo(() => {
         let result = [...complaints];
@@ -301,9 +370,11 @@ export function PengaduanKlienPage({ onNavigate }) {
                             <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
                                 <FileText className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </div>
-                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50 text-red-600 rounded-full text-[9px] md:text-[10px] font-bold border border-red-100 whitespace-nowrap">
-                                <AlertCircle className="w-2.5 h-2.5 md:w-3 md:h-3" /> Urgent
-                            </div>
+                            {stats.hasOverdue && (
+                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50 text-red-600 rounded-full text-[9px] md:text-[10px] font-bold border border-red-100 whitespace-nowrap animate-pulse">
+                                    <AlertCircle className="w-2.5 h-2.5 md:w-3 md:h-3" /> Urgent
+                                </div>
+                            )}
                         </div>
                         <div>
                             <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Menunggu Respons</div>
@@ -340,7 +411,10 @@ export function PengaduanKlienPage({ onNavigate }) {
                         </div>
                         <div>
                             <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Rata-Rata Penilaian</div>
-                            <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.avgRating}</div>
+                            <div className="flex items-baseline gap-1">
+                                <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.avgRating}</div>
+                                <Star className="w-4 h-4 md:w-5 md:h-5 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)] transition-transform group-hover:rotate-[15deg]" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -404,14 +478,17 @@ export function PengaduanKlienPage({ onNavigate }) {
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('date')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Dibuat {getSortIcon('date')}</div>
                                     </th>
+                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('topic')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Topik Kendala {getSortIcon('topic')}</div>
+                                    </th>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('customer')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Pelanggan {getSortIcon('customer')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('location')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Lokasi {getSortIcon('location')}</div>
                                     </th>
-                                    <th className="px-6 py-4 font-normal whitespace-nowrap">
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status</div>
+                                    <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('status')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status {getSortIcon('status')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal whitespace-nowrap">
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Aksi</div>
@@ -421,12 +498,14 @@ export function PengaduanKlienPage({ onNavigate }) {
                             <tbody className="divide-y divide-gray-100">
                                 {isLoading ? (
                                     <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500 animate-pulse font-bold">Memuat Tugas...</td></tr>
+                                ) : apiError ? (
+                                    <tr><td colSpan={6} className="px-6 py-20 text-center text-red-500 font-bold bg-red-50">{apiError}</td></tr>
                                 ) : currentData.length > 0 ? (
                                     currentData.map((item, idx) => (
                                         <TechnicianComplaintRow key={idx} item={item} handleStartProcess={handleStartProcess} setSelectedTicket={setSelectedTicket} />
                                     ))
                                 ) : (
-                                    <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500">Belum ada tiket pengaduan.</td></tr>
+                                    <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500 italic">Belum ada tiket pengaduan untuk akun ini.</td></tr>
                                 )}
                             </tbody>
                         </table>

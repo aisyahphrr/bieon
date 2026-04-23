@@ -65,7 +65,7 @@ export function TicketStatusBadge({ status, rating, assignedAt, processStartedAt
         <span className="ml-1 animate-bounce text-[10px]">⚠️</span>
       )}
       
-      {isEscalated && !['selesai', 'ditolak'].includes(s) && (
+      {isEscalated && !['selesai', 'ditolak'].includes(s) && role !== 'homeowner' && (
         <span className="ml-1 bg-red-600 text-white w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-black animate-pulse shadow-sm shadow-red-500/50" title="Eskalasi / Prioritas Tinggi">!</span>
       )}
       

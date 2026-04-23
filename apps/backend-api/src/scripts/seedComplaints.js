@@ -120,7 +120,7 @@ const initialComplaints = [
         status: 'menunggu konfirmasi pelanggan',
         category: 'Lingkungan',
         description: 'Teknisi sudah menyelesaikan tugas, menunggu konfirmasi pelanggan.',
-        dynamicDates: { 
+        dynamicDates: {
             completedAtOffset: 1 * 60 * 60 * 1000, // 1 hour ago
             processStartedAtOffset: 24 * 60 * 60 * 1000, // 24 hours ago
             assignedAtOffset: 25 * 60 * 60 * 1000 // 25 hours ago
@@ -139,9 +139,9 @@ const initialComplaints = [
         status: 'selesai',
         category: 'Konektivitas',
         description: 'Tiket sudah selesai dan diberikan rating oleh pelanggan.',
-        dynamicDates: { 
-            completedAtOffset: 48 * 60 * 60 * 1000, 
-            processStartedAtOffset: 72 * 60 * 60 * 1000 
+        dynamicDates: {
+            completedAtOffset: 48 * 60 * 60 * 1000,
+            processStartedAtOffset: 72 * 60 * 60 * 1000
         },
         rating: 5,
         review: 'Sangat cepat dan ramah!',
@@ -160,9 +160,9 @@ const initialComplaints = [
         status: 'selesai',
         category: 'Kualitas Air',
         description: 'Filter air tersumbat, sudah dibersihkan.',
-        dynamicDates: { 
+        dynamicDates: {
             completedAtOffset: 5 * 24 * 60 * 60 * 1000, // 5 days ago
-            processStartedAtOffset: 6 * 24 * 60 * 60 * 1000 
+            processStartedAtOffset: 6 * 24 * 60 * 60 * 1000
         },
         rating: 4,
         review: 'Cukup oke, tapi teknisi agak telat datangnya.',
@@ -171,17 +171,6 @@ const initialComplaints = [
             { time: 'Dynamic', desc: 'Selesai.', status: 'selesai' }
         ]
     },
-    // --- DATA HISTORIS ---
-    {
-        id: 'TCK-0105',
-        topic: 'Smart Plug kipas exhaust tidak bisa di-ON-kan via web',
-        device: 'Smart Plug (Exhaust) - R3 Kitchen',
-        technicianName: null,
-        status: 'unassigned',
-        category: 'Energi & Kelistrikan',
-        description: 'Saya sudah mencoba menyalakan kipas exhaust melalui web dashboard tapi tidak ada respons.',
-        timeline: [{ time: '26 Feb 2026, 08:15', desc: 'Laporan pengaduan berhasil dibuat.', status: 'unassigned' }]
-    }
 ];
 
 const seedDB = async () => {
