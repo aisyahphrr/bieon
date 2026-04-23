@@ -26,15 +26,45 @@ import { SuperAdminLayout } from './SuperAdminLayout';
 
 export default function AdminTariff({ onNavigate }) {
 
-    const golonganOptions = [
-        'R1 - 450 VA (Subsidi)',
-        'R1 - 900 VA (Subsidi)',
-        'R1M - 900 VA (Non-Subsidi)',
-        'R1 - 1300 VA',
-        'R1 - 2200 VA',
-        'R2 - 3500 s.d 5500 VA',
-        'R3 - 6600 VA ke atas'
+    const PLN_SEGMENT_ORDER = [
+        'Rumah Tangga',
+        'Bisnis',
+        'Industri',
+        'Pemerintah & PJU',
+        'Layanan Khusus'
     ];
+
+    const makePlnKey = (label) => String(label || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+    const FALLBACK_PLN_CATEGORIES = [
+        { label: 'R1 - 450 VA (Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
+        { label: 'R1 - 900 VA (Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
+        { label: 'R1M - 900 VA (Non-Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
+        { label: 'R1 - 1300 VA', segment: 'Rumah Tangga', isShortcut: true },
+        { label: 'R1 - 2200 VA', segment: 'Rumah Tangga', isShortcut: true },
+        { label: 'R2 - 3500 s.d 5500 VA', segment: 'Rumah Tangga', isShortcut: true },
+        { label: 'R3 - 6600 VA ke atas', segment: 'Rumah Tangga', isShortcut: true },
+
+        { label: 'B-1/TR - 450–5.500 VA', segment: 'Bisnis', isShortcut: false },
+        { label: 'B-2/TR - 6.600 VA–200 kVA', segment: 'Bisnis', isShortcut: false },
+        { label: 'B-3/TM - >200 kVA', segment: 'Bisnis', isShortcut: false },
+
+        { label: 'I-3/TM - >200 kVA', segment: 'Industri', isShortcut: false },
+        { label: 'I-4/TT - ≥30.000 kVA', segment: 'Industri', isShortcut: false },
+
+        { label: 'P-1/TR - 6.600 VA–200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
+        { label: 'P-2/TM - >200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
+        { label: 'P-3/TR - Penerangan Jalan Umum (PJU)', segment: 'Pemerintah & PJU', isShortcut: false },
+
+        { label: 'L - TR/TM/TT', segment: 'Layanan Khusus', isShortcut: false },
+    ].map((c) => ({ ...c, key: makePlnKey(c.label) }));
+
+    const [plnCategories, setPlnCategories] = useState(FALLBACK_PLN_CATEGORIES);
+    const [plnCategoriesLoading, setPlnCategoriesLoading] = useState(true);
 
     // --- CAROUSEL STATES ---
     const [activeSlide, setActiveSlide] = useState(0);
@@ -43,14 +73,34 @@ export default function AdminTariff({ onNavigate }) {
     // --- API DATA STATES ---
     const [categoryStats, setCategoryStats] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [dataErrors, setDataErrors] = useState({
+        current: null,
+        history: null,
+        distribution: null,
+        trend: null
+    });
+
+    const shortcutGolonganOptions = useMemo(
+        () => plnCategories.filter((c) => c.isShortcut).map((c) => c.label),
+        [plnCategories]
+    );
+
+    const allGolonganOptions = useMemo(
+        () => plnCategories.map((c) => c.label),
+        [plnCategories]
+    );
+
+    useEffect(() => {
+        if (activeSlide >= shortcutGolonganOptions.length) setActiveSlide(0);
+    }, [activeSlide, shortcutGolonganOptions.length]);
 
     useEffect(() => {
         if (!isAutoPlayEnabled) return;
         const interval = setInterval(() => {
-            setActiveSlide(prev => (prev + 1) % golonganOptions.length);
+            setActiveSlide(prev => (prev + 1) % Math.max(1, shortcutGolonganOptions.length));
         }, 7000); // 7s auto scroll
         return () => clearInterval(interval);
-    }, [isAutoPlayEnabled]);
+    }, [isAutoPlayEnabled, shortcutGolonganOptions.length]);
 
     const handleManualSlide = (index) => {
         setActiveSlide(index);
@@ -103,11 +153,11 @@ export default function AdminTariff({ onNavigate }) {
         const dragDistance = clientX - dragStartX;
         if (dragDistance > 50) {
             // Swiped Right -> Prev
-            setActiveSlide(prev => (prev - 1 + golonganOptions.length) % golonganOptions.length);
+            setActiveSlide(prev => (prev - 1 + shortcutGolonganOptions.length) % Math.max(1, shortcutGolonganOptions.length));
             setIsAutoPlayEnabled(false);
         } else if (dragDistance < -50) {
             // Swiped Left -> Next
-            setActiveSlide(prev => (prev + 1) % golonganOptions.length);
+            setActiveSlide(prev => (prev + 1) % Math.max(1, shortcutGolonganOptions.length));
             setIsAutoPlayEnabled(false);
         }
         setDragStartX(null);
@@ -118,6 +168,7 @@ export default function AdminTariff({ onNavigate }) {
     // --- Form States ---
     const [formGolongan, setFormGolongan] = useState('');
     const [showFormGolDropdown, setShowFormGolDropdown] = useState(false);
+    const [formGolonganSearch, setFormGolonganSearch] = useState('');
     const [newTariff, setNewTariff] = useState('');
     const [note, setNote] = useState('');
 
@@ -195,28 +246,66 @@ export default function AdminTariff({ onNavigate }) {
     // --- Fetch All Dashboard Data ---
     const fetchAllData = async () => {
         setIsLoading(true);
+        setDataErrors({
+            current: null,
+            history: null,
+            distribution: null,
+            trend: null
+        });
         try {
             const token = localStorage.getItem('bieon_token');
             const headers = { 'Authorization': `Bearer ${token}` };
 
-            const [currentRes, historyRes, distributionRes, trendRes] = await Promise.all([
-                fetch('/api/admin/tariffs/current', { headers }),
+            const [currentRes, historyRes, distributionRes, trendRes] = await Promise.allSettled([
+                fetch('/api/admin/tariffs/current?scope=all', { headers }),
                 fetch('/api/admin/tariffs/history', { headers }),
                 fetch('/api/admin/tariffs/distribution', { headers }),
                 fetch('/api/admin/tariffs/trend', { headers })
             ]);
 
-            const currentData = await currentRes.json();
-            const historyData = await historyRes.json();
-            const distData = await distributionRes.json();
-            const trendData = await trendRes.json();
+            const extractResponseData = async (result, key) => {
+                if (result.status !== 'fulfilled') {
+                    setDataErrors((prev) => ({ ...prev, [key]: 'Request gagal dikirim.' }));
+                    return null;
+                }
 
-            if (currentData.success) setCategoryStats(currentData.data);
-            if (historyData.success) setHistoryData(historyData.data);
-            if (distData.success) setPieData(distData.data);
-            if (trendData.success) setMultiLineChartData(trendData.data);
+                if (!result.value.ok) {
+                    setDataErrors((prev) => ({ ...prev, [key]: `HTTP ${result.value.status}` }));
+                    return null;
+                }
+
+                const payload = await result.value.json();
+                if (!payload?.success) {
+                    setDataErrors((prev) => ({ ...prev, [key]: payload?.message || 'Data tidak valid.' }));
+                    return null;
+                }
+
+                return payload.data;
+            };
+
+            const [currentData, nextHistoryData, distData, trendData] = await Promise.all([
+                extractResponseData(currentRes, 'current'),
+                extractResponseData(historyRes, 'history'),
+                extractResponseData(distributionRes, 'distribution'),
+                extractResponseData(trendRes, 'trend')
+            ]);
+
+            setCategoryStats(Array.isArray(currentData) ? currentData : []);
+            setHistoryData(Array.isArray(nextHistoryData) ? nextHistoryData : []);
+            setPieData(Array.isArray(distData) ? distData : []);
+            setMultiLineChartData(Array.isArray(trendData) ? trendData : []);
         } catch (error) {
             console.error('Gagal mengambil data tarif:', error);
+            setDataErrors({
+                current: 'Terjadi kesalahan saat memuat data.',
+                history: 'Terjadi kesalahan saat memuat data.',
+                distribution: 'Terjadi kesalahan saat memuat data.',
+                trend: 'Terjadi kesalahan saat memuat data.'
+            });
+            setCategoryStats([]);
+            setHistoryData([]);
+            setPieData([]);
+            setMultiLineChartData([]);
         } finally {
             setIsLoading(false);
         }
@@ -225,6 +314,48 @@ export default function AdminTariff({ onNavigate }) {
     useEffect(() => {
         fetchAllData();
     }, []);
+
+    useEffect(() => {
+        const fetchPlnCategories = async () => {
+            try {
+                setPlnCategoriesLoading(true);
+                const res = await fetch('/api/admin/tariffs/public/categories?scope=all');
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                const data = await res.json();
+                if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+                    setPlnCategories(data.data);
+                } else {
+                    setPlnCategories(FALLBACK_PLN_CATEGORIES);
+                }
+            } catch (err) {
+                console.error('Gagal mengambil kategori PLN:', err);
+                setPlnCategories(FALLBACK_PLN_CATEGORIES);
+            } finally {
+                setPlnCategoriesLoading(false);
+            }
+        };
+
+        fetchPlnCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const filteredFormCategories = useMemo(() => {
+        const query = formGolonganSearch.trim().toLowerCase();
+        if (!query) return plnCategories;
+        return plnCategories.filter((c) => String(c.label || '').toLowerCase().includes(query));
+    }, [plnCategories, formGolonganSearch]);
+
+    const groupedFormCategories = useMemo(() => {
+        const groups = {};
+        filteredFormCategories.forEach((c) => {
+            const seg = c.segment || 'Lainnya';
+            if (!groups[seg]) groups[seg] = [];
+            groups[seg].push(c);
+        });
+        return groups;
+    }, [filteredFormCategories]);
 
     // Badge styling mapping
     const getBadgeStyle = (category) => {
@@ -366,6 +497,8 @@ export default function AdminTariff({ onNavigate }) {
         name: '-', currentTariff: 0, percentage: 0,
         effectiveDate: '-', skNo: '-', totalChanges: 0, lastChangeSince: '-'
     };
+    const hasTrendData = multiLineChartData.length > 0;
+    const hasPieData = pieData.length > 0;
 
     return (
         <SuperAdminLayout activeMenu="PLN Listrik" onNavigate={onNavigate} title="Manajemen Tarif Listrik">
@@ -380,7 +513,7 @@ export default function AdminTariff({ onNavigate }) {
                         onScroll={handleTabsScroll}
                         className="flex gap-1.5 p-1.5 bg-gray-200/50 rounded-2xl w-full sm:max-w-max overflow-x-auto shadow-inner scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     >
-                        {golonganOptions.map((opt, idx) => (
+                        {allGolonganOptions.map((opt, idx) => (
                             <button
                                 key={opt}
                                 onClick={() => handleManualSlide(idx)}
@@ -465,7 +598,7 @@ export default function AdminTariff({ onNavigate }) {
                     </div>
 
                     {/* Card 2 - Effective Date (Blue) */}
-                    <div className="bg-[#3B82F6] rounded-[1.25rem] shadow-md shadow-blue-500/20 relative flex flex-col justify-between text-white border-0 min-h-[160px] cursor-grab active:cursor-grabbing animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
+                    <div className="bg-[#F59E0B] rounded-[1.25rem] shadow-md shadow-orange-500/20 relative flex flex-col justify-between text-white border-0 min-h-[160px] cursor-grab active:cursor-grabbing animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
                         <div className="p-5 flex-1 flex flex-col justify-center pt-6">
                             <p className="text-[12px] font-semibold text-white/90 tracking-wide mb-1">Berlaku Sejak</p>
                             <h3 className="text-[34px] font-extrabold tracking-tight leading-none">{activeData.effectiveDate}</h3>
@@ -501,20 +634,31 @@ export default function AdminTariff({ onNavigate }) {
                         <div className="mb-6">
                             <h2 className="text-xl font-bold text-gray-900 leading-tight">Tren Perubahan Tarif Listrik</h2>
                             <p className="text-xs text-gray-500 mt-1 italic">Komparasi nilai pergerakan tarif antar golongan di BIEON.</p>
+                            {dataErrors.trend && (
+                                <p className="text-[11px] text-amber-600 font-semibold mt-2">
+                                    Data tren belum tersedia: {dataErrors.trend}
+                                </p>
+                            )}
                         </div>
-                        <div className="h-[300px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={multiLineChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#9CA3AF' }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#9CA3AF' }} domain={['dataMin - 50', 'dataMax + 50']} />
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                                    <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: '#f3f4f6', strokeWidth: 2 }} />
-                                    <Line type="monotone" dataKey="r1" name="R1" stroke="#10B981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                    <Line type="monotone" dataKey="r2" name="R2" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                    <Line type="monotone" dataKey="r3" name="R3" stroke="#A855F7" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
+                        {hasTrendData ? (
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={multiLineChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#9CA3AF' }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#9CA3AF' }} domain={['dataMin - 50', 'dataMax + 50']} />
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                                        <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: '#f3f4f6', strokeWidth: 2 }} />
+                                        <Line type="monotone" dataKey="r1" name="R1" stroke="#10B981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                        <Line type="monotone" dataKey="r2" name="R2" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                        <Line type="monotone" dataKey="r3" name="R3" stroke="#A855F7" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="h-[300px] w-full flex items-center justify-center text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                <p className="text-sm font-semibold text-gray-500">Data tren tarif belum tersedia.</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* CHART 2: Sebaran Pelanggan (Pie) */}
@@ -522,42 +666,53 @@ export default function AdminTariff({ onNavigate }) {
                         <div className="mb-2">
                             <h2 className="text-xl font-bold text-gray-900 leading-tight">Sebaran Konsumen BIEON</h2>
                             <p className="text-xs text-gray-500 mt-1 italic">Distribusi pelanggan aktif berdasarkan klasifikasi PLN.</p>
+                            {dataErrors.distribution && (
+                                <p className="text-[11px] text-amber-600 font-semibold mt-2">
+                                    Data sebaran belum tersedia: {dataErrors.distribution}
+                                </p>
+                            )}
                         </div>
-                        <div className="h-[300px] w-full flex items-center justify-center">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={pieData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={90}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <RechartsTooltip
-                                        content={({ active, payload }) => {
-                                            if (active && payload && payload.length) {
-                                                return (
-                                                    <div className="bg-white border p-3 rounded-xl shadow-lg">
-                                                        <p className="text-xs font-bold text-gray-700">{payload[0].name}</p>
-                                                        <p className="text-sm font-bold mt-1" style={{ color: payload[0].payload.fill }}>
-                                                            {payload[0].value}% Pengguna
-                                                        </p>
-                                                    </div>
-                                                )
-                                            }
-                                            return null;
-                                        }}
-                                    />
-                                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
+                        {hasPieData ? (
+                            <div className="h-[300px] w-full flex items-center justify-center">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={pieData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={90}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {pieData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip
+                                            content={({ active, payload }) => {
+                                                if (active && payload && payload.length) {
+                                                    return (
+                                                        <div className="bg-white border p-3 rounded-xl shadow-lg">
+                                                            <p className="text-xs font-bold text-gray-700">{payload[0].name}</p>
+                                                            <p className="text-sm font-bold mt-1" style={{ color: payload[0].payload.fill }}>
+                                                                {payload[0].value}% Pengguna
+                                                            </p>
+                                                        </div>
+                                                    )
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="h-[300px] w-full flex items-center justify-center text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                <p className="text-sm font-semibold text-gray-500">Data sebaran konsumen belum tersedia.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -602,18 +757,70 @@ export default function AdminTariff({ onNavigate }) {
                                             <>
                                                 <div className="fixed inset-0 z-[35]" onClick={() => setShowFormGolDropdown(false)}></div>
                                                 <div className="absolute left-0 top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[40] max-h-[200px] overflow-y-auto modal-custom-scrollbar">
-                                                    {golonganOptions.map((opt) => (
-                                                        <button
-                                                            key={opt}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setFormGolongan(opt);
-                                                                setShowFormGolDropdown(false);
-                                                            }}
-                                                            className={`w-full text-left px-5 py-3 text-[12px] font-bold transition-colors ${formGolongan === opt ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                        >
-                                                            {opt}
-                                                        </button>
+                                                    <div className="px-4 pb-2">
+                                                        <input
+                                                            type="text"
+                                                            value={formGolonganSearch}
+                                                            onChange={(e) => setFormGolonganSearch(e.target.value)}
+                                                            placeholder="Cari golongan (mis. R1, B-2, PJU...)"
+                                                            className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-[12px] font-bold text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                                                        />
+                                                    </div>
+
+                                                    {plnCategoriesLoading && (
+                                                        <div className="px-5 pb-2 text-[11px] font-bold text-gray-400">
+                                                            Memuat kategori...
+                                                        </div>
+                                                    )}
+
+                                                    {filteredFormCategories.length === 0 && (
+                                                        <div className="px-5 py-3 text-[12px] font-bold text-gray-400">
+                                                            Tidak ada hasil.
+                                                        </div>
+                                                    )}
+
+                                                    {PLN_SEGMENT_ORDER.filter((seg) => groupedFormCategories[seg]?.length).map((seg) => (
+                                                        <div key={seg} className="pb-1">
+                                                            <div className="px-5 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                {seg}
+                                                            </div>
+                                                            {groupedFormCategories[seg].map((cat) => (
+                                                                <button
+                                                                    key={cat.key || cat.label}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setFormGolongan(cat.label);
+                                                                        setShowFormGolDropdown(false);
+                                                                        setFormGolonganSearch('');
+                                                                    }}
+                                                                    className={`w-full text-left px-5 py-3 text-[12px] font-bold transition-colors ${formGolongan === cat.label ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                >
+                                                                    {cat.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    ))}
+
+                                                    {Object.keys(groupedFormCategories).filter((seg) => !PLN_SEGMENT_ORDER.includes(seg)).map((seg) => (
+                                                        <div key={seg} className="pb-1">
+                                                            <div className="px-5 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                {seg}
+                                                            </div>
+                                                            {groupedFormCategories[seg].map((cat) => (
+                                                                <button
+                                                                    key={cat.key || cat.label}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setFormGolongan(cat.label);
+                                                                        setShowFormGolDropdown(false);
+                                                                        setFormGolonganSearch('');
+                                                                    }}
+                                                                    className={`w-full text-left px-5 py-3 text-[12px] font-bold transition-colors ${formGolongan === cat.label ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                >
+                                                                    {cat.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
                                                     ))}
                                                 </div>
                                             </>
@@ -787,7 +994,7 @@ export default function AdminTariff({ onNavigate }) {
                                                     >
                                                         Semua Golongan
                                                     </button>
-                                                    {golonganOptions.map((opt) => (
+                                                    {allGolonganOptions.map((opt) => (
                                                         <button
                                                             key={opt}
                                                             onClick={() => { setFilterGolongan(opt); setShowFilterDropdown(false); }}

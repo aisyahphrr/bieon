@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const CalendarIcon = () => (
@@ -63,6 +63,43 @@ const FlagId = () => (
 
 import { useNavigate } from 'react-router-dom';
 
+const PLN_SEGMENT_ORDER = [
+    'Rumah Tangga',
+    'Bisnis',
+    'Industri',
+    'Pemerintah & PJU',
+    'Layanan Khusus'
+];
+
+const makePlnKey = (label) => String(label || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+const FALLBACK_PLN_CATEGORIES = [
+    { label: 'R1 - 450 VA (Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R1 - 900 VA (Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R1M - 900 VA (Non-Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R1 - 1300 VA', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R1 - 2200 VA', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R2 - 3500 s.d 5500 VA', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R3 - 6600 VA ke atas', segment: 'Rumah Tangga', isShortcut: true },
+
+    { label: 'B-1/TR - 450–5.500 VA', segment: 'Bisnis', isShortcut: false },
+    { label: 'B-2/TR - 6.600 VA–200 kVA', segment: 'Bisnis', isShortcut: false },
+    { label: 'B-3/TM - >200 kVA', segment: 'Bisnis', isShortcut: false },
+
+    { label: 'I-3/TM - >200 kVA', segment: 'Industri', isShortcut: false },
+    { label: 'I-4/TT - ≥30.000 kVA', segment: 'Industri', isShortcut: false },
+
+    { label: 'P-1/TR - 6.600 VA–200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
+    { label: 'P-2/TM - >200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
+    { label: 'P-3/TR - Penerangan Jalan Umum (PJU)', segment: 'Pemerintah & PJU', isShortcut: false },
+
+    { label: 'L - TR/TM/TT', segment: 'Layanan Khusus', isShortcut: false },
+].map((c) => ({ ...c, key: makePlnKey(c.label) }));
+
 const Setup = ({ tempData }) => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
@@ -83,33 +120,43 @@ const Setup = ({ tempData }) => {
     const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
     const [showPlnDropdown, setShowPlnDropdown] = useState(false);
     const [selectedPln, setSelectedPln] = useState('');
-    const [plnOptions, setPlnOptions] = useState([]);
+    const [plnCategories, setPlnCategories] = useState([]);
+    const [plnSearch, setPlnSearch] = useState('');
 
     // Fetch PLN options on mount
     useEffect(() => {
         const fetchPlnOptions = async () => {
             try {
-                const response = await fetch('/api/admin/tariffs/public/categories');
+                const response = await fetch('/api/admin/tariffs/public/categories?scope=all');
                 const data = await response.json();
-                if (data.success) {
-                    setPlnOptions(data.data.map(cat => cat.label));
+                if (data.success && Array.isArray(data.data)) {
+                    setPlnCategories(data.data);
+                    return;
                 }
             } catch (error) {
                 console.error('Failed to fetch PLN options:', error);
-                // Fallback to basic residential
-                setPlnOptions([
-                    'R-1/TR - 450 VA (Subsidi)',
-                    'R-1/TR - 900 VA (Subsidi)',
-                    'R-1M/TR - 900 VA (Non-Subsidi)',
-                    'R-1/TR - 1.300 VA',
-                    'R-1/TR - 2.200 VA',
-                    'R-2/TR - 3.500 VA s.d 5.500 VA',
-                    'R-3/TR - 6.600 VA ke atas'
-                ]);
             }
+
+            setPlnCategories(FALLBACK_PLN_CATEGORIES);
         };
         fetchPlnOptions();
     }, []);
+
+    const filteredPlnCategories = useMemo(() => {
+        const query = plnSearch.trim().toLowerCase();
+        if (!query) return plnCategories;
+        return plnCategories.filter((c) => String(c.label || '').toLowerCase().includes(query));
+    }, [plnCategories, plnSearch]);
+
+    const groupedPlnCategories = useMemo(() => {
+        const groups = {};
+        filteredPlnCategories.forEach((c) => {
+            const seg = c.segment || 'Lainnya';
+            if (!groups[seg]) groups[seg] = [];
+            groups[seg].push(c);
+        });
+        return groups;
+    }, [filteredPlnCategories]);
 
     // Calendar States
     const [showCalendar, setShowCalendar] = useState(false);
@@ -466,19 +513,65 @@ const Setup = ({ tempData }) => {
                                             {showPlnDropdown && (
                                                 <>
                                                     <div className="fixed inset-0 z-10" onClick={() => setShowPlnDropdown(false)}></div>
-                                                    <div className="absolute top-full mb-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 max-h-[220px] overflow-y-auto custom-scrollbar">
-                                                        {plnOptions.map((pln) => (
-                                                            <button
-                                                                key={pln}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedPln(pln);
-                                                                    setShowPlnDropdown(false);
-                                                                }}
-                                                                className={`w-full text-left px-5 py-3 text-[13px] transition-colors ${selectedPln === pln ? 'text-[#009b7c] bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                            >
-                                                                {pln}
-                                                            </button>
+                                                    <div className="absolute top-full mb-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 max-h-[260px] overflow-y-auto custom-scrollbar">
+                                                        <div className="px-4 pb-2">
+                                                            <input
+                                                                type="text"
+                                                                value={plnSearch}
+                                                                onChange={(e) => setPlnSearch(e.target.value)}
+                                                                placeholder="Cari golongan (mis. R1, B-2, PJU...)"
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-[#009b7c]/10 transition-all"
+                                                            />
+                                                        </div>
+
+                                                        {filteredPlnCategories.length === 0 && (
+                                                            <div className="px-5 py-4 text-[12px] text-slate-500 font-semibold">
+                                                                Tidak ada hasil untuk “{plnSearch}”
+                                                            </div>
+                                                        )}
+
+                                                        {PLN_SEGMENT_ORDER.filter((seg) => groupedPlnCategories[seg]?.length).map((seg) => (
+                                                            <div key={seg} className="pb-1">
+                                                                <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    {seg}
+                                                                </div>
+                                                                {groupedPlnCategories[seg].map((cat) => (
+                                                                    <button
+                                                                        key={cat.key || cat.label}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setSelectedPln(cat.label);
+                                                                            setShowPlnDropdown(false);
+                                                                            setPlnSearch('');
+                                                                        }}
+                                                                        className={`w-full text-left px-5 py-3 text-[13px] transition-colors ${selectedPln === cat.label ? 'text-[#009b7c] bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                    >
+                                                                        {cat.label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        ))}
+
+                                                        {Object.keys(groupedPlnCategories).filter((seg) => !PLN_SEGMENT_ORDER.includes(seg)).map((seg) => (
+                                                            <div key={seg} className="pb-1">
+                                                                <div className="px-5 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    {seg}
+                                                                </div>
+                                                                {groupedPlnCategories[seg].map((cat) => (
+                                                                    <button
+                                                                        key={cat.key || cat.label}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setSelectedPln(cat.label);
+                                                                            setShowPlnDropdown(false);
+                                                                            setPlnSearch('');
+                                                                        }}
+                                                                        className={`w-full text-left px-5 py-3 text-[13px] transition-colors ${selectedPln === cat.label ? 'text-[#009b7c] bg-emerald-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                    >
+                                                                        {cat.label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 </>

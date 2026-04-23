@@ -12,6 +12,9 @@ router.get('/public/categories', plnTariffController.getCategories);
 // GET /api/admin/tariffs/current
 router.get('/current', authMiddleware, roleMiddleware('SuperAdmin'), plnTariffController.getCurrentTariffs);
 
+// GET /api/admin/tariffs/summary
+router.get('/summary', authMiddleware, roleMiddleware('SuperAdmin'), plnTariffController.getPlnSummary);
+
 // GET /api/admin/tariffs/history
 router.get('/history', authMiddleware, roleMiddleware('SuperAdmin'), plnTariffController.getHistory);
 

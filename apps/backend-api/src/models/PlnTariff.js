@@ -1,18 +1,14 @@
 const mongoose = require('mongoose');
+const { isValidPlnTariffCategoryLabel } = require('../constants/plnTariffCategories');
 
 const plnTariffSchema = new mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: [
-            'R1 - 450 VA (Subsidi)',
-            'R1 - 900 VA (Subsidi)',
-            'R1M - 900 VA (Non-Subsidi)',
-            'R1 - 1300 VA',
-            'R1 - 2200 VA',
-            'R2 - 3500 s.d 5500 VA',
-            'R3 - 6600 VA ke atas'
-        ]
+        validate: {
+            validator: (value) => isValidPlnTariffCategoryLabel(value),
+            message: (props) => `Kategori PLN tidak valid: ${props.value}`
+        }
     },
     tariff: { type: Number, required: true },           // Rp per kWh
     effectiveDate: { type: Date, required: true },       // Tanggal mulai berlaku
