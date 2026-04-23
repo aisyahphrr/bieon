@@ -83,6 +83,33 @@ const Setup = ({ tempData }) => {
     const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
     const [showPlnDropdown, setShowPlnDropdown] = useState(false);
     const [selectedPln, setSelectedPln] = useState('');
+    const [plnOptions, setPlnOptions] = useState([]);
+
+    // Fetch PLN options on mount
+    useEffect(() => {
+        const fetchPlnOptions = async () => {
+            try {
+                const response = await fetch('/api/admin/tariffs/public/categories');
+                const data = await response.json();
+                if (data.success) {
+                    setPlnOptions(data.data.map(cat => cat.label));
+                }
+            } catch (error) {
+                console.error('Failed to fetch PLN options:', error);
+                // Fallback to basic residential
+                setPlnOptions([
+                    'R-1/TR - 450 VA (Subsidi)',
+                    'R-1/TR - 900 VA (Subsidi)',
+                    'R-1M/TR - 900 VA (Non-Subsidi)',
+                    'R-1/TR - 1.300 VA',
+                    'R-1/TR - 2.200 VA',
+                    'R-2/TR - 3.500 VA s.d 5.500 VA',
+                    'R-3/TR - 6.600 VA ke atas'
+                ]);
+            }
+        };
+        fetchPlnOptions();
+    }, []);
 
     // Calendar States
     const [showCalendar, setShowCalendar] = useState(false);
@@ -440,15 +467,7 @@ const Setup = ({ tempData }) => {
                                                 <>
                                                     <div className="fixed inset-0 z-10" onClick={() => setShowPlnDropdown(false)}></div>
                                                     <div className="absolute top-full mb-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200 max-h-[220px] overflow-y-auto custom-scrollbar">
-                                                        {[
-                                                            'R1 - 450 VA (Subsidi)',
-                                                            'R1 - 900 VA (Subsidi)',
-                                                            'R1M - 900 VA (Non-Subsidi)',
-                                                            'R1 - 1300 VA',
-                                                            'R1 - 2200 VA',
-                                                            'R2 - 3500 s.d 5500 VA',
-                                                            'R3 - 6600 VA ke atas'
-                                                        ].map((pln) => (
+                                                        {plnOptions.map((pln) => (
                                                             <button
                                                                 key={pln}
                                                                 type="button"

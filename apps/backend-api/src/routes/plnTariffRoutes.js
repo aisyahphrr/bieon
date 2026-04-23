@@ -6,6 +6,9 @@ const plnTariffController = require('../controllers/plnTariffController');
 
 // Semua route dilindungi: wajib login sebagai SuperAdmin
 
+// Public route untuk daftar kategori
+router.get('/public/categories', plnTariffController.getCategories);
+
 // GET /api/admin/tariffs/current
 router.get('/current', authMiddleware, roleMiddleware('SuperAdmin'), plnTariffController.getCurrentTariffs);
 
