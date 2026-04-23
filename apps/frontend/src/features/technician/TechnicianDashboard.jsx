@@ -238,7 +238,7 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="px-6 py-5 border-b border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">Monitoring Status Pelanggan</h2>
-                  <p className="text-gray-600 text-sm mt-1">Daftar Pelanggan dan status sistem mereka</p>
+                  <p className="text-gray-600 text-sm mt-1">Status Sistem Per Pelanggan</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                   <div className="relative flex-1 sm:w-64">
