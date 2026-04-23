@@ -11,6 +11,7 @@ const kendaliPerangkatRoutes = require("./routes/kendaliPerangkatRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const technicianAccessRoutes = require("./routes/technicianAccessRoutes");
 const technicianDashboardRoutes = require("./routes/technicianDashboardRoutes");
+const plnTariffRoutes = require("./routes/plnTariffRoutes");
 
 // Middleware
 app.use(cors());
@@ -31,5 +32,6 @@ app.use('/api/kendaliperangkat', kendaliPerangkatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/technician-access', technicianAccessRoutes);
 app.use('/api/technician/dashboard', technicianDashboardRoutes);
+app.use('/api/admin/tariffs', plnTariffRoutes);
 
 module.exports = app;

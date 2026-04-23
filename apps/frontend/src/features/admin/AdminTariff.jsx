@@ -40,20 +40,9 @@ export default function AdminTariff({ onNavigate }) {
     const [activeSlide, setActiveSlide] = useState(0);
     const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(true);
 
-    const categoryStats = useMemo(() => {
-        return golonganOptions.map((gol, i) => {
-            const baseTarif = 1300 + (i * 150.25);
-            return {
-                name: gol,
-                currentTariff: baseTarif,
-                percentage: (i % 2 === 0 ? 1 : -1) * (1.2 + i * 0.4),
-                effectiveDate: `1 ${i % 2 === 0 ? 'Januari' : 'Juli'} 2026`,
-                skNo: `SK Menteri ESDM No. ${15 + i}/2026`,
-                totalChanges: 3 + i,
-                lastChangeSince: `Jan ${2024 + (i % 2)}`
-            };
-        });
-    }, []);
+    // --- API DATA STATES ---
+    const [categoryStats, setCategoryStats] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!isAutoPlayEnabled) return;
@@ -195,30 +184,47 @@ export default function AdminTariff({ onNavigate }) {
         return `${day} ${monthNames[actualMonth]} ${actualYear}`;
     };
 
-    // --- Data Charts ---
-    const multiLineChartData = [
-        { name: 'Q1 (2025)', r1: 1300, r2: 1450, r3: 1600 },
-        { name: 'Q2 (2025)', r1: 1330, r2: 1480, r3: 1620 },
-        { name: 'Q3 (2025)', r1: 1315, r2: 1460, r3: 1610 },
-        { name: 'Q4 (2025)', r1: 1350, r2: 1500, r3: 1640 },
-        { name: 'Q1 (2026)', r1: 1340, r2: 1520, r3: 1670 }
-    ];
+    // --- Data Charts (Dynamic) ---
+    const [multiLineChartData, setMultiLineChartData] = useState([]);
+    const [pieData, setPieData] = useState([]);
+    const PIE_COLORS = ['#10B981', '#3B82F6', '#A855F7', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
-    const pieData = [
-        { name: 'R1 - 450 VA', value: 35 },
-        { name: 'R1 - 900 VA', value: 45 },
-        { name: 'R2 (3500+ VA)', value: 15 },
-        { name: 'R3 (6600+ VA)', value: 5 },
-    ];
-    const PIE_COLORS = ['#10B981', '#3B82F6', '#A855F7', '#F59E0B'];
+    // --- History Data (Dynamic) ---
+    const [historyData, setHistoryData] = useState([]);
 
-    // --- Dummy Data Table ---
-    const [historyData, setHistoryData] = useState([
-        { id: 'TRF-104', tariff: 1444.70, date: '1 April 2026', author: 'Super Admin', timestamp: '01 Apr 2026, 08:00', note: 'Penyesuaian tarif kuartal', percentage: -2.38, category: 'R1 - 900 VA (Subsidi)' },
-        { id: 'TRF-103', tariff: 1680.00, date: '1 Januari 2026', author: 'Super Admin', timestamp: '02 Jan 2026, 09:15', note: 'Kenaikan inflasi tahunan', percentage: 4.21, category: 'R3 - 6600 VA ke atas' },
-        { id: 'TRF-102', tariff: 1420.20, date: '1 Oktober 2025', author: 'Super Admin', timestamp: '01 Okt 2025, 08:30', note: 'Penyesuaian daya nasional', percentage: -1.41, category: 'R1 - 450 VA (Subsidi)' },
-        { id: 'TRF-101', tariff: 1540.50, date: '1 Juli 2025', author: 'Super Admin', timestamp: '05 Jul 2025, 14:20', note: 'Penetapan tarif dasar', percentage: 0, category: 'R2 - 3500 s.d 5500 VA' },
-    ]);
+    // --- Fetch All Dashboard Data ---
+    const fetchAllData = async () => {
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            const [currentRes, historyRes, distributionRes, trendRes] = await Promise.all([
+                fetch('/api/admin/tariffs/current', { headers }),
+                fetch('/api/admin/tariffs/history', { headers }),
+                fetch('/api/admin/tariffs/distribution', { headers }),
+                fetch('/api/admin/tariffs/trend', { headers })
+            ]);
+
+            const currentData = await currentRes.json();
+            const historyData = await historyRes.json();
+            const distData = await distributionRes.json();
+            const trendData = await trendRes.json();
+
+            if (currentData.success) setCategoryStats(currentData.data);
+            if (historyData.success) setHistoryData(historyData.data);
+            if (distData.success) setPieData(distData.data);
+            if (trendData.success) setMultiLineChartData(trendData.data);
+        } catch (error) {
+            console.error('Gagal mengambil data tarif:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllData();
+    }, []);
 
     // Badge styling mapping
     const getBadgeStyle = (category) => {
@@ -290,16 +296,51 @@ export default function AdminTariff({ onNavigate }) {
         return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-gray-400" /> : <ArrowDown className="w-3.5 h-3.5 text-gray-400" />;
     };
 
-    const handleUpdateTariff = () => {
+    const handleUpdateTariff = async () => {
         if (!formGolongan || !newTariff || !selectedDate) {
             showToast("Harap isi Golongan, Nominal Tarif, dan Tanggal Berlaku!");
             return;
         }
-        showToast(`Tarif untuk ${formGolongan} berhasil diupdate!`);
-        setNewTariff('');
-        setSelectedDate('');
-        setNote('');
-        setFormGolongan('');
+
+        try {
+            const token = localStorage.getItem('bieon_token');
+
+            // Convert selectedDate dari format Indonesia ke ISO
+            const monthMap = { 'Januari': 0, 'Februari': 1, 'Maret': 2, 'April': 3, 'Mei': 4, 'Juni': 5, 'Juli': 6, 'Agustus': 7, 'September': 8, 'Oktober': 9, 'November': 10, 'Desember': 11 };
+            const parts = selectedDate.split(' ');
+            const dateISO = new Date(parseInt(parts[2]), monthMap[parts[1]], parseInt(parts[0])).toISOString();
+
+            const response = await fetch('/api/admin/tariffs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    category: formGolongan,
+                    tariff: parseFloat(newTariff),
+                    effectiveDate: dateISO,
+                    note
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast(`Tarif untuk ${formGolongan} berhasil diperbarui!`);
+                setNewTariff('');
+                setSelectedDate('');
+                setNote('');
+                setFormGolongan('');
+                // Refresh semua data
+                await fetchAllData();
+            } else {
+                showToast(data.message || 'Gagal memperbarui tarif.');
+            }
+        } catch (error) {
+            console.error('Error update tarif:', error);
+            showToast('Terjadi kesalahan saat memperbarui tarif.');
+        }
     };
 
     const CustomTooltip = ({ active, payload, label }) => {
@@ -321,7 +362,10 @@ export default function AdminTariff({ onNavigate }) {
         return null;
     };
 
-    const activeData = categoryStats[activeSlide];
+    const activeData = categoryStats[activeSlide] || {
+        name: '-', currentTariff: 0, percentage: 0,
+        effectiveDate: '-', skNo: '-', totalChanges: 0, lastChangeSince: '-'
+    };
 
     return (
         <SuperAdminLayout activeMenu="PLN Listrik" onNavigate={onNavigate} title="Manajemen Tarif Listrik">
