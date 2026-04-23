@@ -39,7 +39,17 @@ exports.getComplaintsByOwner = async (req, res) => {
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber')
             .sort({ createdAt: -1 });
-        res.status(200).json(complaints);
+
+        // Filter timeline for homeowners
+        const formattedComplaints = complaints.map(c => {
+            const complaintObj = c.toObject();
+            if (req.user.role?.toLowerCase() === 'homeowner') {
+                complaintObj.timeline = complaintObj.timeline.filter(item => item.visibility !== 'internal');
+            }
+            return complaintObj;
+        });
+
+        res.status(200).json(formattedComplaints);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data pengaduan', error: error.message });
     }
@@ -53,16 +63,51 @@ exports.getAllComplaints = async (req, res) => {
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber')
             .sort({ createdAt: -1 });
-        res.status(200).json(complaints);
+        // Filter timeline for homeowners
+        const formattedComplaints = complaints.map(c => {
+            const complaintObj = c.toObject();
+            if (req.user.role?.toLowerCase() === 'homeowner') {
+                complaintObj.timeline = complaintObj.timeline.filter(item => item.visibility !== 'internal');
+            }
+            return complaintObj;
+        });
+
+        res.status(200).json(formattedComplaints);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil semua data pengaduan', error: error.message });
+    }
+};
+
+// [Public/Authenticated] GET COMPLAINT BY ID
+exports.getComplaintById = async (req, res) => {
+    try {
+        await checkAndUpdateSLAStatuses();
+        const complaint = await Complaint.findById(req.params.id)
+            .populate('homeowner', 'fullName email phoneNumber address bieonId')
+            .populate('technician', 'fullName phoneNumber');
+        
+        if (!complaint) return res.status(404).json({ message: 'Tiket tidak ditemukan' });
+
+        // Filter timeline based on role
+        const complaintObj = complaint.toObject();
+        if (req.user.role?.toLowerCase() === 'homeowner') {
+            complaintObj.timeline = complaintObj.timeline.filter(item => item.visibility !== 'internal');
+        }
+
+        res.status(200).json(complaintObj);
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal mengambil data pengaduan', error: error.message });
     }
 };
 
 // [Technician] GET COMPLAINTS BY TECHNICIAN
 exports.getComplaintsByTechnician = async (req, res) => {
     try {
-        await checkAndUpdateSLAStatuses();
+        try {
+            await checkAndUpdateSLAStatuses();
+        } catch (slaError) {
+            console.error("SLA Auto-update failed:", slaError);
+        }
         const techId = req.user.userId;
         const complaints = await Complaint.find({ technician: techId })
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
@@ -278,9 +323,11 @@ exports.assignTechnician = async (req, res) => {
             // LOGIKA ALIHKAN (RE-ASSIGN)
             timelineMsg = `Tiket dialihkan dari ${oldTechName} ke ${newTech.fullName} karena melewati batas waktu.`;
             complaint.isEscalated = true; // Mark as priority
+            complaint.urgencyLevel = 'high'; // SET KE HIGH SAAT DIALIHKAN
         } else {
             // LOGIKA PENUGASAN BARU
             timelineMsg = `Tiket telah ditugaskan ke teknisi: ${newTech.fullName}. Menunggu respon teknisi.`;
+            complaint.urgencyLevel = 'low'; // Initial assign is low
         }
 
         // RESET SLA
@@ -294,7 +341,8 @@ exports.assignTechnician = async (req, res) => {
         complaint.timeline.unshift({
             time: nowStr,
             desc: timelineMsg,
-            status: 'menunggu respons'
+            status: 'menunggu respons',
+            visibility: oldTechName ? 'internal' : 'public'
         });
 
         await complaint.save();
@@ -310,6 +358,47 @@ exports.assignTechnician = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengassign teknisi', error: error.message });
+    }
+};
+
+// [SuperAdmin] PING TECHNICIAN
+exports.pingComplaint = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const complaint = await Complaint.findById(id);
+        if (!complaint) return res.status(404).json({ message: 'Tiket tidak ditemukan' });
+
+        const currentUrgency = complaint.urgencyLevel || 'low';
+        const currentPingCount = complaint.pingCount || 0;
+        let newUrgency = currentUrgency;
+
+        if (currentUrgency === 'low') {
+            newUrgency = 'medium';
+        } else if (currentUrgency === 'high') {
+            newUrgency = 'critical';
+        }
+
+        complaint.urgencyLevel = newUrgency;
+        complaint.pingCount = Math.min(currentPingCount + 1, 3); // MAKSIMAL 3 KOTAK PING
+
+        const nowStr = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        
+        complaint.timeline.unshift({
+            time: nowStr,
+            desc: `SuperAdmin mengirimkan PING (Teguran ke-${complaint.pingCount}). Urgensi ditingkatkan menjadi: ${newUrgency.toUpperCase()}.`,
+            status: complaint.status,
+            visibility: 'internal'
+        });
+
+        await complaint.save();
+        res.status(200).json({ 
+            message: 'Berhasil mengirimkan PING', 
+            urgencyLevel: newUrgency, 
+            pingCount: complaint.pingCount,
+            complaint 
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal mengirimkan PING', error: error.message });
     }
 };
 
@@ -331,7 +420,8 @@ async function checkAndUpdateSLAStatuses() {
                     $each: [{
                         time: now.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                         desc: 'Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.',
-                        status: 'overdue respons'
+                        status: 'overdue respons',
+                        visibility: 'internal'
                     }],
                     $position: 0
                 }
@@ -353,7 +443,8 @@ async function checkAndUpdateSLAStatuses() {
                     $each: [{
                         time: now.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                         desc: 'Batas waktu perbaikan terlampaui (56 jam). Status otomatis berubah menjadi Overdue Perbaikan.',
-                        status: 'overdue perbaikan'
+                        status: 'overdue perbaikan',
+                        visibility: 'internal'
                     }],
                     $position: 0
                 }

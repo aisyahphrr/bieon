@@ -65,6 +65,38 @@ const SLADisplay = ({ createdAt, assignedAt, processStartedAt, status }) => {
     );
 };
 
+const UrgencyBadge = ({ level, pingCount }) => {
+    if ((!level || level === 'low') && !pingCount) return null;
+
+    const mainBadgeStyles = {
+        high: 'bg-red-50 text-red-600 border-red-100',
+        critical: 'bg-red-900 text-white border-red-900 animate-pulse'
+    };
+
+    const mainLabels = {
+        high: '🔥 Prioritas (Alihan)',
+        critical: '🚨 KRITIS'
+    };
+
+    return (
+        <div className="flex flex-wrap gap-1 items-center">
+            {/* Render Kotak Ping (Max 3) */}
+            {Array.from({ length: pingCount || 0 }).map((_, i) => (
+                <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black uppercase shadow-sm">
+                    ⚠️ Ping
+                </span>
+            ))}
+            
+            {/* Render Badge Status Utama (High/Critical) */}
+            {(level === 'high' || level === 'critical') && (
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase border ${mainBadgeStyles[level]}`}>
+                    {mainLabels[level]}
+                </span>
+            )}
+        </div>
+    );
+};
+
 // Sub-component for individual table rows to handle SLA hooks correctly
 const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, handlePing, handleReject, handleTransfer }) => {
     const { timer, points, isOverdue, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
@@ -77,7 +109,12 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
             <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
             <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-gray-500 font-medium whitespace-nowrap">{item.date}</td>
             <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
-            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] font-medium text-gray-900 max-w-[300px]" title={item.topic}>
+                <div className="flex flex-col gap-1">
+                    <span className="truncate">{item.topic}</span>
+                    <UrgencyBadge level={item.urgencyLevel} pingCount={item.pingCount} />
+                </div>
+            </td>
             <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
                 <span className={item.technician === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
                     {item.technician === 'Unassigned' ? 'Menunggu Teknisi' : item.technician}
@@ -220,9 +257,19 @@ export default function AdminComplaint({ onNavigate }) {
                     completedAt: item.completedAt || null,
                     logRequestStatus: item.logRequestStatus || 'none',
                     logReason: item.logReason || '',
+                    urgencyLevel: item.urgencyLevel || 'low',
+                    pingCount: item.pingCount || 0,
                     updatedAt: new Date(item.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')
                 }));
                 setComplaints(formattedComplaints);
+                
+                // Keep selectedTicket synchronized if it's currently being viewed in modal
+                if (selectedTicket) {
+                    const refreshedTicket = formattedComplaints.find(c => c.originalId === selectedTicket.originalId);
+                    if (refreshedTicket) {
+                        setSelectedTicket(refreshedTicket);
+                    }
+                }
             } else {
                 const errJson = await complaintsRes.json().catch(() => ({}));
                 setComplaints([{ id: 'ERR-API', topic: `API Error: ${complaintsRes.status} - ${errJson.message || 'Unknown'}`, status: 'unassigned' }]);
@@ -247,11 +294,25 @@ export default function AdminComplaint({ onNavigate }) {
         }
     }, [token]);
 
+    const statsMetrics = useMemo(() => {
+        const active = complaints.filter(c => !['selesai', 'ditolak'].includes(c.status?.toLowerCase())).length;
+        const overdue = complaints.filter(c => ['overdue respons', 'overdue perbaikan'].includes(c.status?.toLowerCase())).length;
+        const finished = complaints.filter(c => c.status?.toLowerCase() === 'selesai').length;
+        
+        // Calculate Global CSAT from tickets with rating
+        const ratedTickets = complaints.filter(c => c.status?.toLowerCase() === 'selesai' && typeof c.rating === 'number');
+        const avg = ratedTickets.length > 0 
+            ? (ratedTickets.reduce((acc, curr) => acc + curr.rating, 0) / ratedTickets.length).toFixed(1)
+            : '0.0';
+
+        return { active, overdue, finished, avg };
+    }, [complaints]);
+
     const stats = [
-        { label: 'Total Tiket Aktif (BIEON)', value: '12', trend: '↑ 5% dari minggu lalu', color: 'blue', icon: Activity },
-        { label: 'Tiket Overdue (Batas SLA)', value: '1', trend: '↑ Naik 1 kasus', color: 'red', icon: AlertCircle },
-        { label: 'Total Diselesaikan', value: '142', trend: 'Rata-rata 24 jam', color: 'emerald', icon: CheckCircle2 },
-        { label: 'Global CSAT', value: '4.6', trend: '↓ Turun 0.1 poin', color: 'amber', icon: Star, isRating: true }
+        { label: 'Total Tiket Aktif (BIEON)', value: statsMetrics.active, trend: 'Tiket sedang berjalan', color: 'blue', icon: Activity },
+        { label: 'Tiket Overdue (Batas SLA)', value: statsMetrics.overdue, trend: statsMetrics.overdue > 0 ? 'Perlu tindakan segera' : 'Sesuai target SLA', color: 'red', icon: AlertCircle },
+        { label: 'Total Diselesaikan', value: statsMetrics.finished, trend: 'Tiket status selesai', color: 'emerald', icon: CheckCircle2 },
+        { label: 'Global CSAT', value: statsMetrics.avg, trend: 'Rata-rata kepuasan', color: 'amber', icon: Star, isRating: true }
     ];
 
     const processedData = useMemo(() => {
@@ -437,22 +498,22 @@ export default function AdminComplaint({ onNavigate }) {
 
     const confirmPing = async () => {
         try {
-            const response = await fetch(`/api/complaints/${selectedTicket.originalId}/status`, {
+            const response = await fetch(`/api/complaints/${selectedTicket.originalId}/ping`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                    note: `SA mengirimkan PING: ${selectedPingType}`
-                })
+                }
             });
 
             if (response.ok) {
-                alert(`Peringatan "${selectedPingType}" telah dikirim ke teknisi ${selectedTicket.technician}`);
+                const resData = await response.json();
+                alert(`Ping Berhasil! Urgensi tiket kini menjadi: ${resData.urgencyLevel.toUpperCase()}`);
                 setIsPingModalOpen(false);
                 setSelectedPingType('');
                 fetchData();
+            } else {
+                alert("Gagal mengirimkan PING.");
             }
         } catch (error) {
             console.error("Error sending ping:", error);
@@ -541,7 +602,12 @@ export default function AdminComplaint({ onNavigate }) {
                             </div>
 
                             <div className="relative z-10 flex flex-col items-start md:flex-row md:items-end md:justify-between mt-auto gap-1 md:gap-0 mt-3 md:mt-0">
-                                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-none">{stat.value}{stat.isRating && <span className="text-xl md:text-2xl ml-1 text-amber-400">★</span>}</h3>
+                                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-none flex items-baseline gap-1">
+                                    {stat.value}
+                                    {stat.isRating && (
+                                        <Star className="w-5 h-5 md:w-6 md:h-6 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)] transition-transform group-hover:rotate-[15deg]" />
+                                    )}
+                                </h3>
 
                                 <div className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold border transition-colors whitespace-nowrap mt-1 md:mt-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                                     {stat.trend}

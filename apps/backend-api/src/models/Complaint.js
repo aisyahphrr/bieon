@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const complaintTimelineSchema = new mongoose.Schema({
     time: { type: String, required: true },
     desc: { type: String, required: true },
-    status: { type: String }
+    status: { type: String },
+    visibility: { type: String, enum: ['public', 'internal'], default: 'public' }
 }, { _id: false });
 
 const complaintSchema = new mongoose.Schema({
@@ -37,7 +38,9 @@ const complaintSchema = new mongoose.Schema({
     repairDuration: { type: String, default: null },
     logRequestStatus: { type: String, enum: ['none', 'pending', 'granted', 'rejected', 'requested'], default: 'none' },
     logReason: { type: String, default: '' },
-    hasStartedRepair: { type: Boolean, default: false }
+    hasStartedRepair: { type: Boolean, default: false },
+    urgencyLevel: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'low' },
+    pingCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Complaint', complaintSchema);
