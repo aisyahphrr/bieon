@@ -371,15 +371,17 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Zap className="w-7 h-7 text-white" />
               </div>
               <div>
-                <span className="text-3xl font-bold text-gray-900">Rp {plnTariff}</span>
-                <p className="text-sm font-medium text-gray-500 mt-1">Tarif PLN/kWh</p>
+                <span className="text-3xl font-bold text-gray-900">7 Golongan</span>
+                <p className="text-sm font-medium text-gray-500 mt-1">Tarif Aktif</p>
               </div>
             </div>
             <button
-              onClick={() => setShowPlnModal(true)}
+              onClick={() => {
+                if (onNavigate) onNavigate('admin-tarif');
+              }}
               className="w-full py-3 bg-[#f97316] hover:bg-[#ea580c] text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
             >
-              <Edit2 className="w-4 h-4" /> Update Tarif PLN
+              <Settings className="w-4 h-4" /> Kelola Golongan Tarif
             </button>
           </div>
 
