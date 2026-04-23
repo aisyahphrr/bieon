@@ -7,7 +7,6 @@ import {
     ShieldCheck,
     Search,
     Filter,
-    Download,
     Calendar,
     Star,
     ArrowUp,
@@ -25,13 +24,16 @@ import {
     Send,
     Phone,
     XCircle,
-    Activity
+    Activity,
+    Download
 } from 'lucide-react';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import { useSLA } from '../../hooks/useSLA';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 import { formatStatusDisplay, getActionButtons, getPerformanceIndicator } from '../../utils/complaintHelpers';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const SLADisplay = ({ createdAt, assignedAt, processStartedAt, status }) => {
     const { timer, points, level, isOverdue, type } = useSLA(createdAt, assignedAt, processStartedAt, status);
@@ -141,8 +143,15 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
                 </div>
             </td>
             <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
-                <div className="flex items-center justify-center gap-2">
-                    {actions.map((btn, idx) => (
+                <div className="flex items-center justify-start gap-2">
+                    {actions
+                        .filter(btn => {
+                            // Sembunyikan Detail jika ada tombol aksi utama (Ping, Alihkan, Tugaskan, Tolak)
+                            const hasMainAction = actions.some(b => ['assign', 'ping', 'reassign', 'reject'].includes(b.action));
+                            if (hasMainAction && btn.action === 'detail') return false;
+                            return true;
+                        })
+                        .map((btn, idx) => (
                         <button
                             key={idx}
                             onClick={() => {
@@ -286,6 +295,218 @@ export default function AdminComplaint({ onNavigate }) {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleExport = () => {
+        const doc = new jsPDF('portrait');
+        
+        // Header PDF
+        doc.setFontSize(18);
+        doc.setTextColor(0, 155, 124); // Admin Teal #009B7C
+        doc.text('BIEON - Laporan Pengaduan Pelanggan', 14, 22);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+
+        // Definisi Kolom sesuai urutan tabel: ID, Tanggal, Customer, Topik, Teknisi, Status
+        const tableColumn = ["ID Tiket", "Tanggal", "Customer", "Topik Kendala", "Teknisi", "Status"];
+        const tableRows = [];
+
+        // Isi Data dari State processedData (data yang sedang terfilter)
+        processedData.forEach(ticket => {
+            const ticketData = [
+                ticket.id,
+                ticket.date,
+                ticket.customer,
+                ticket.topic,
+                ticket.technician,
+                ticket.status.toUpperCase()
+            ];
+            tableRows.push(ticketData);
+        });
+
+        // Generate Tabel
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [0, 155, 124], textColor: [255, 255, 255], fontStyle: 'bold' },
+            styles: { fontSize: 8, cellPadding: 2 },
+            alternateRowStyles: { fillColor: [245, 245, 245] }
+        });
+
+        // Download
+        doc.save(`BIEON_Laporan_Admin_${new Date().getTime()}.pdf`);
+    };
+
+    // Helper to calculate duration for PDF
+    const calculateDuration = (start, end) => {
+        if (!start || !end) return '-';
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const diffMs = endDate - startDate;
+        if (diffMs < 0) return '0 Menit';
+        
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        
+        const remainingHours = diffHours % 24;
+        const remainingMins = diffMins % 60;
+        
+        let result = '';
+        if (diffDays > 0) result += `${diffDays} Hari `;
+        if (remainingHours > 0) result += `${remainingHours} Jam `;
+        if (remainingMins > 0 || result === '') result += `${remainingMins} Menit`;
+        
+        return result.trim();
+    };
+
+    const handleExportSingleDetailPDF = (ticket) => {
+        if (!ticket) return;
+        const doc = new jsPDF('portrait');
+        const primaryColor = [0, 155, 124]; // Admin Teal #009B7C
+        
+        // Header & Logo Branding
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text('LAPORAN DETAIL PENGADUAN', 105, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`ID TIKET: ${ticket.id.replace('+P', '')}`, 105, 30, { align: 'center' });
+
+        // Section 1: Informasi Dasar
+        doc.setTextColor(40);
+        doc.setFontSize(14);
+        doc.text('INFORMASI PENGADUAN', 14, 55);
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.line(14, 58, 65, 58);
+
+        doc.setFontSize(10);
+        const infoData = [
+            ['Teknisi', `: ${ticket.technician} (${ticket.technicianInfo?.phone || '-'})`],
+            ['Rating Teknisi', `: ${ticket.rating !== '-' ? ticket.rating + '/5' : 'Belum dinilai'}`],
+            ['Nama Pelanggan', `: ${ticket.customer}`],
+            ['Alamat', `: ${ticket.location}`],
+            ['Topik Kendala', `: ${ticket.topic || '-'}`],
+            ['Kategori', `: ${ticket.category || 'Umum'}`],
+            ['Deskripsi Masalah', `: ${ticket.description || '-'}`],
+            ['Lampiran Foto', `: ${ticket.photos && ticket.photos.length > 0 ? ticket.photos.length + ' Foto (Tersedia di Dashboard)' : 'Tidak ada foto'}`],
+            ['Waktu Dibuat', `: ${ticket.date}`],
+            ['Waktu Selesai', `: ${ticket.completedAt ? new Date(ticket.completedAt).toLocaleString('id-ID') : '-'}`],
+            ['Durasi Pengerjaan', `: ${ticket.duration || '-'}`]
+        ];
+
+        autoTable(doc, {
+            startY: 65,
+            body: infoData,
+            theme: 'plain',
+            styles: { fontSize: 10, cellPadding: 2 },
+            columnStyles: { 0: { fontStyle: 'bold', width: 40 }, 1: { cellWidth: 'auto' } },
+            margin: { bottom: 25 }
+        });
+
+        // Section 2: SLA Performance Metrics
+        let currentY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.text('SLA PERFORMANCE & POINTS', 14, currentY);
+        doc.line(14, currentY + 3, 75, currentY + 3);
+
+        const timeline = ticket.timeline || [];
+        
+        // Use pre-calculated durations from ticket if available
+        const responseTime = ticket.responseDuration && ticket.responseDuration !== '00:00:00' 
+            ? ticket.responseDuration 
+            : '-';
+        const repairTime = ticket.repairDuration && ticket.repairDuration !== '00:00:00' 
+            ? ticket.repairDuration 
+            : '-';
+
+        const resPts = ticket.technicianInfo?.responsePoints || ticket.responsePoints || 0;
+        const repPts = ticket.technicianInfo?.repairPoints || ticket.repairPoints || 0;
+        const totalPts = resPts + repPts;
+
+        let overallStatus = 'NEEDS IMPROVEMENT';
+        if (totalPts >= 100) overallStatus = 'EXCELLENT';
+        else if (totalPts >= 50) overallStatus = 'GOOD';
+
+        const slaData = [
+            ['Respon Teknisi', '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? 'OVERDUE' : 'SESUAI SLA', `${resPts} Pts`],
+            ['Perbaikan Unit', '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? 'OVERDUE' : 'SESUAI SLA', `${repPts} Pts`]
+        ];
+
+        autoTable(doc, {
+            startY: currentY + 8,
+            head: [['Aspek SLA', 'Target', 'Capaian', 'Status', 'Poin']],
+            body: slaData,
+            theme: 'grid',
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [240, 240, 240], textColor: [40, 40, 40], fontStyle: 'bold' },
+            columnStyles: { 3: { fontStyle: 'bold' }, 4: { fontStyle: 'bold', halign: 'center' } },
+            margin: { bottom: 25 },
+            didParseCell: (data) => {
+                if (data.column.index === 3 && data.cell.section === 'body') {
+                    if (data.cell.text[0] === 'OVERDUE') data.cell.styles.textColor = [220, 38, 38];
+                    if (data.cell.text[0] === 'SESUAI SLA') data.cell.styles.textColor = [16, 185, 129];
+                }
+            }
+        });
+
+        // Section Summary
+        currentY = doc.lastAutoTable.finalY + 4;
+        doc.setFillColor(242, 248, 245);
+        doc.rect(14, currentY, 182, 12, 'F');
+        doc.setFontSize(10);
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`OVERALL PERFORMANCE: ${totalPts} POINTS - ${overallStatus}`, 105, currentY + 8, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(40);
+
+        // Section 3: Riwayat Progres
+        currentY = currentY + 28;
+        doc.setFontSize(14);
+        doc.text('RIWAYAT PROGRES PENGADUAN', 14, currentY);
+        doc.line(14, currentY + 3, 85, currentY + 3);
+
+        const timelineData = timeline.length > 0 ? timeline.map(t => [
+            t.time || '-',
+            (t.status || 'UPDATE').toUpperCase(),
+            (t.desc || t.note || t.notes || '-').replace(/\s*\((?=.*(Respons|Durasi|Poin|Rating)).*?\)/gi, '').trim()
+        ]) : [['-', 'TIDAK ADA DATA PROGRES', '-']];
+
+        autoTable(doc, {
+            startY: currentY + 8,
+            head: [['Tanggal & Waktu', 'Aktivitas', 'Catatan/Keterangan']],
+            body: timelineData,
+            theme: 'striped',
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: primaryColor, textColor: [255, 255, 255] },
+            columnStyles: { 0: { width: 50 }, 1: { width: 45, fontStyle: 'bold' } },
+            margin: { bottom: 25 }
+        });
+
+        // Footer & Page Numbers
+        const pageCount = doc.internal.getNumberOfPages();
+        for(let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            
+            // Separator Line
+            doc.setDrawColor(230, 230, 230);
+            doc.setLineWidth(0.2);
+            doc.line(14, 282, 196, 282);
+
+            doc.setFontSize(7);
+            doc.setTextColor(180);
+            doc.text('Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON Smart Green Living.', 105, 287, { align: 'center' });
+            doc.text(`Halaman ${i} dari ${pageCount}`, 105, 292, { align: 'center' });
+        }
+
+        doc.save(`BIEON_SA_Detail_${ticket.id.replace('+P', '')}.pdf`);
     };
 
     useEffect(() => {
@@ -669,7 +890,7 @@ export default function AdminComplaint({ onNavigate }) {
                                 </div>
 
                                 <button
-                                    onClick={() => alert("Eksport PDF...")}
+                                    onClick={handleExport}
                                     className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
                                 >
                                     <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
@@ -704,7 +925,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('status')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status {getSortIcon('status')}</div>
                                     </th>
-                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap text-center text-[11px] font-bold uppercase tracking-wider">Aksi</th>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap text-left text-[11px] font-bold uppercase tracking-wider">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -884,6 +1105,16 @@ export default function AdminComplaint({ onNavigate }) {
                                     className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                                 >
                                     <MessageSquare className="w-3.5 h-3.5 text-[#009B7C]" /> Chat Teknisi (WA)
+                                </button>
+                            )}
+
+                            {/* EXPORT DETAIL ACTION (Khusus SA jika status Selesai) */}
+                            {selectedTicket?.status?.toLowerCase() === 'selesai' && (
+                                <button
+                                    onClick={() => handleExportSingleDetailPDF(selectedTicket)}
+                                    className="w-full py-4 bg-white border-2 border-emerald-100 text-emerald-700 font-bold rounded-2xl text-[11px] uppercase tracking-wider hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-center gap-2 group active:scale-95"
+                                >
+                                    <Download className="w-4 h-4 group-hover:animate-bounce" /> Ekspor Detail Pengaduan (PDF)
                                 </button>
                             )}
                         </div>

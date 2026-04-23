@@ -422,3 +422,58 @@ exports.deleteTechnician = async (req, res) => {
         });
     }
 };
+// ========================================================
+// GET /api/admin/bieon-systems/:homeownerId
+// Mengambil daftar BIEON ID (Hub) milik homeowner tertentu
+// ========================================================
+exports.getBieonSystemsByOwner = async (req, res) => {
+    try {
+        const { homeownerId } = req.params;
+        const hubs = await Hub.find({ owner: homeownerId }).select('bieonId -_id');
+        
+        res.status(200).json({
+            success: true,
+            data: hubs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Gagal mengambil data BIEON sistem.',
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
+// GET /api/admin/all-bieon-systems
+// Mengambil daftar SEMUA BIEON ID (Hub) secara global
+// ========================================================
+exports.getAllBieonSystems = async (req, res) => {
+    try {
+        // Ambil ID unik dan pemiliknya
+        const hubs = await Hub.find().select('bieonId owner -_id').lean();
+        
+        // Kita gunakan Set atau Map untuk memastikan kombinasi ID unik (jika ada duplikasi di DB)
+        const uniqueHubs = [];
+        const seen = new Set();
+        
+        hubs.forEach(h => {
+            const key = `${h.bieonId}-${h.owner}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueHubs.push(h);
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: uniqueHubs
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Gagal mengambil daftar BIEON sistem.',
+            error: error.message,
+        });
+    }
+};

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Filter,
@@ -23,173 +23,38 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 
-// Module-level constant — avoids re-creation on every render
-const INITIAL_HISTORY_DATA = [
-  {
-    id: 'TCK-0105',
-    topic: 'Smart Plug kipas exhaust tidak bisa di-ON-kan via web',
-    date: '24 Feb 2026',
-    finishedDate: '26 Feb 2026, 08:15',
-    client: 'Bpk. Johan',
-    location: 'Kartika Wanasari',
-    duration: '2 Jam 15 Menit',
-    rating: { stars: 5, review: "Penanganan sangat cepat and teknisi sangat sopan. Masalah langsung beres!" },
-    category: 'Kenyamanan',
-    device: 'Smart Plug - Kipas Exhaust',
-    description: 'Kipas exhaust di ruang produksi tidak merespon saat diaktifkan melalui dashboard web, lampu indikator pada smart plug berkedip merah.',
-    clientInfo: {
-      name: 'Bpk. Johan',
-      email: 'johan.p@email.com',
-      phone: '0812-3456-7890',
-      address: 'Kartika Wanasari Blok A1 No. 5, Bogor',
-      idBieon: 'BIE-10294'
-    },
-    technicianInfo: {
-      name: 'Teknisi BPJS',
-      phone: '0855-1234-5678',
-      targetDate: '26 Feb 2026, 12:00'
-    },
-    status: 'Selesai',
-    sla: 'On Track',
-    files: [
-      { name: 'plug_error.jpg', url: 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=200&h=200&fit=crop' }
-    ],
-    timeline: [
-      { time: '26 Feb 2026, 08:15', desc: 'Pengaduan diselesaikan dan telah dikonfirmasi oleh pelanggan.', status: 'Selesai' },
-      { time: '26 Feb 2026, 08:00', desc: 'Teknisi menyatakan perbaikan telah selesai. Menunggu konfirmasi dari pelanggan.', status: 'Menunggu Konfirmasi Pelanggan' },
-      { time: '26 Feb 2026, 06:15', desc: 'Teknisi melakukan penggantian unit Smart Plug dan melakukan re-pairing ke Hub.', status: 'Diproses' },
-      { time: '25 Feb 2026, 14:00', desc: 'Permintaan data log dikonfirmasi oleh SuperAdmin.', status: 'Baru' },
-    ]
-  },
-  {
-    id: 'TCK-0085',
-    topic: 'Notifikasi Door Sensor sering telat masuk',
-    date: '18 Feb 2026',
-    finishedDate: '20 Feb 2026, 09:15',
-    client: 'Ibu Rina',
-    location: 'Jl. Melati Bogor',
-    duration: '1 Hari 4 Jam',
-    rating: { stars: 4, review: "Sudah oke sekarang, notifikasi muncul cepat. Thanks BIEON." },
-    category: 'Keamanan',
-    device: 'Door Sensor - Pintu Utama',
-    description: 'Notifikasi saat pintu terbuka sering masuk 5-10 menit setelah kejadian, padahal internet stabil.',
-    clientInfo: {
-      name: 'Ibu Rina',
-      email: 'rina.sari@email.com',
-      phone: '0813-9988-7766',
-      address: 'Jl. Melati IV No. 12, Cluster Melati, Bogor',
-      idBieon: 'BIE-88392'
-    },
-    technicianInfo: {
-      name: 'Teknisi BPJS',
-      phone: '0855-1234-5678',
-      targetDate: '20 Feb 2026, 10:00'
-    },
-    status: 'Selesai',
-    sla: 'On Track',
-    timeline: [
-      { time: '20 Feb 2026, 09:15', desc: 'Selesai dengan konfigurasi ulang firmware hub.', status: 'Selesai' }
-    ]
-  },
-  {
-    id: 'TCK-0102',
-    topic: 'Angka PM2.5 udara selalu stuck di angka 0',
-    date: '23 Feb 2026',
-    finishedDate: '25 Feb 2026, 14:30',
-    client: 'Bpk. Andi',
-    location: 'Perum Dramaga',
-    duration: '45 Menit',
-    rating: { stars: 3, review: "Lama ya nunggunya, tapi akhirnya dibenerin juga." },
-    category: 'Kenyamanan',
-    device: 'Air Quality Center',
-    description: 'Sensor PM2.5 tidak menunjukkan perubahan angka meskipun ada asap di dekat sensor.',
-    clientInfo: {
-      name: 'Bpk. Andi',
-      email: 'andi.h@email.com',
-      phone: '0877-6655-4433',
-      address: 'Perum Dramaga Hijau Blok B3, Bogor',
-      idBieon: 'BIE-77621'
-    },
-    technicianInfo: {
-      name: 'Teknisi BPJS',
-      phone: '0855-1234-5678',
-      targetDate: '25 Feb 2026, 17:00'
-    },
-    status: 'Selesai',
-    sla: 'Delayed',
-    timeline: [
-      { time: '25 Feb 2026, 14:30', desc: 'Pembersihan sensor PM2.5 berhasil dilakukan.', status: 'Selesai' }
-    ]
-  },
-  {
-    id: 'TCK-0070',
-    topic: 'Ingin memindahkan posisi sensor gas agak ke kanan',
-    date: '14 Feb 2026',
-    finishedDate: '15 Feb 2026, 16:45',
-    client: 'Ibu Siti',
-    location: 'Sentul City',
-    duration: '5 Jam 30 Menit',
-    rating: { stars: 2, review: "Masang nya agak miring sih, tapi ya sudahlah." },
-    category: 'Keamanan',
-    device: 'Gas Detector',
-    description: 'Relokasi sensor gas karena ada perubahan layout kitchen set.',
-    clientInfo: {
-      name: 'Ibu Siti',
-      email: 'siti.w@email.com',
-      phone: '0812-1122-3344',
-      address: 'Green Mountain Sentul City, Bogor',
-      idBieon: 'BIE-55443'
-    },
-    technicianInfo: {
-      name: 'Teknisi BPJS',
-      phone: '0855-1234-5678',
-      targetDate: '15 Feb 2026, 15:00'
-    },
-    status: 'Selesai',
-    sla: 'Delayed',
-    timeline: [
-      { time: '15 Feb 2026, 16:45', desc: 'Relokasi selesai.', status: 'Selesai' }
-    ]
-  },
-  {
-    id: 'TCK-0098',
-    topic: 'Nilai tegangan Power Meter tiba-tiba hilang',
-    date: '22 Feb 2026',
-    finishedDate: '24 Feb 2026, 10:00',
-    client: 'Bpk. Budi',
-    location: 'Cibinong',
-    duration: '1 Hari 2 Jam',
-    rating: { stars: 5, review: "Mantap pak teknisi, gesit banget." },
-    category: 'Konsumsi Energi',
-    device: 'Power Meter Utama',
-    description: 'Pembacaan voltase di dashboard menunjukkan 0V padahal listrik di rumah nyala.',
-    clientInfo: {
-      name: 'Bpk. Budi',
-      email: 'budi.t@email.com',
-      phone: '0811-2233-4455',
-      address: 'Jl. Raya Cibinong No. 45, Bogor',
-      idBieon: 'BIE-99001'
-    },
-    technicianInfo: {
-      name: 'Teknisi BPJS',
-      phone: '0855-1234-5678',
-      targetDate: '24 Feb 2026, 12:00'
-    },
-    status: 'Selesai',
-    sla: 'On Track',
-    timeline: [
-      { time: '24 Feb 2026, 10:00', desc: 'Koneksi kabel CT diperbaiki.', status: 'Selesai' }
-    ]
-  }
-];
+// Helper function to calculate duration between ticket creation and completion
+const calculateDuration = (start, end) => {
+    if (!start || !end) return '-';
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffMs = endDate - startDate;
+    if (diffMs < 0) return '0 Menit';
+    
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    const remainingHours = diffHours % 24;
+    const remainingMins = diffMins % 60;
+    
+    let result = '';
+    if (diffDays > 0) result += `${diffDays} Hari `;
+    if (remainingHours > 0) result += `${remainingHours} Jam `;
+    if (remainingMins > 0 || result === '') result += `${remainingMins} Menit`;
+    
+    return result.trim();
+};
 
 export function RiwayatPerbaikanPage() {
-  // States
-  const [searchQuery, setSearchQuery] = useState('');
+    // States
+    const [complaints, setComplaints] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua Kategori');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -259,20 +124,52 @@ export function RiwayatPerbaikanPage() {
     }
   };
 
-  // Helper: Parse Bieon Date String (e.g., '26 Feb 2026, 08:15')
-  const parseBieonDate = (dateStr) => {
-    if (!dateStr) return null;
-    try {
-      // Remove comma and anything after (time part) for date comparison
-      const cleanedDate = dateStr.split(',')[0].trim();
-      const dateObj = new Date(cleanedDate);
-      return isNaN(dateObj.getTime()) ? null : dateObj;
-    } catch (e) {
-      return null;
-    }
-  };
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setIsLoading(true);
+        const token = localStorage.getItem('bieon_token');
+        const response = await fetch('/api/complaints/technician', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Filter ONLY 'selesai' status and MAP data
+          const historyData = data
+            .filter(item => item.status?.toLowerCase() === 'selesai')
+            .map(item => {
+              const safeId = item._id ? item._id.toString() : '';
+              return {
+                ...item,
+                originalId: safeId,
+                id: `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}`,
+                date: new Date(item.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+                finishedDate: new Date(item.completedAt || item.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                client: item.homeowner?.fullName || 'Pelanggan Bieon',
+                location: item.homeowner?.address || '-',
+                duration: calculateDuration(item.createdAt, item.completedAt || item.updatedAt),
+                rating: { 
+                    stars: item.rating?.stars || 0, 
+                    review: item.rating?.note || "Tidak ada ulasan." 
+                },
+                category: item.category || 'Umum',
+                device: item.device_parameters?.[0]?.param_name || 'Perangkat Bieon'
+              };
+            });
+          setComplaints(historyData);
+        }
+      } catch (error) {
+        console.error("Error fetching history:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const historyData = INITIAL_HISTORY_DATA;
+    fetchHistory();
+  }, []);
+
+  const historyData = complaints;
 
   // Filter & Sort Logic
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -287,7 +184,7 @@ export function RiwayatPerbaikanPage() {
       // Date Range Filter
       let matchesDate = true;
       if (dateRange.start || dateRange.end) {
-        const finishedDate = parseBieonDate(item.finishedDate);
+        const finishedDate = new Date(item.completedAt || item.updatedAt);
         if (finishedDate) {
           if (dateRange.start) {
             const start = new Date(dateRange.start);
@@ -340,40 +237,186 @@ export function RiwayatPerbaikanPage() {
     return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-gray-600" /> : <ArrowDown className="w-3.5 h-3.5 text-gray-600" />;
   };
 
-  // PDF Export Logic
+  // Standardized PDF Export Logic
   const handleExportPDF = () => {
-    const doc = new jsPDF('landscape');
+    const doc = new jsPDF('portrait');
 
     // Header BIEON
-    doc.setFontSize(20);
-    doc.setTextColor(35, 92, 80); // #235C50
-    doc.text('BIEON - Riwayat Aktivitas Teknisi', 14, 20);
+    doc.setFontSize(18);
+    doc.setTextColor(15, 158, 120); // #0F9E78 (BIEON Teal)
+    doc.text('BIEON - Riwayat Aktivitas Teknisi', 14, 22);
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 28);
+    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
 
-    const tableColumn = ["ID Tiket", "Tanggal Selesai", "Pelanggan", "Lokasi", "Topik Kendala", "Durasi", "Rating"];
-    const tableRows = filteredData.map(item => [
-      item.id,
+    // Columns matching the UI table order
+    const tableColumn = ["ID Tiket", "Dibuat", "Pelanggan", "Lokasi", "Topik Kendala", "Durasi", "Rating"];
+    const tableRows = processedData.map(item => [
+      item.id.replace('+P', '').trim(),
       item.finishedDate,
       item.client,
       item.location,
-      item.topic.length > 50 ? item.topic.substring(0, 50) + '...' : item.topic,
+      item.topic.length > 40 ? item.topic.substring(0, 40) + '...' : item.topic,
       item.duration,
       `${item.rating.stars}/5`
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 35,
-      styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillStyle: 'D', fillColor: [35, 92, 80], textColor: [255, 255, 255] },
-      alternateRowStyles: { fillColor: [245, 245, 245] }
+      startY: 40,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2.5 },
+      headStyles: { fillColor: [15, 158, 120], textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [245, 248, 247] }
     });
 
-    doc.save(`BIEON_Riwayat_Teknisi_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`BIEON_Riwayat_Teknisi_${new Date().getTime()}.pdf`);
+  };
+
+  // Export Detail Single Ticket (PDF)
+  const handleExportSingleDetailPDF = (ticket) => {
+    if (!ticket) return;
+    const doc = new jsPDF('portrait');
+    const primaryColor = [15, 158, 120]; // BIEON Teal
+    
+    // Header & Logo Branding
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.text('LAPORAN DETAIL PERBAIKAN', 105, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`ID TIKET: ${ticket.id.replace('+P', '')}`, 105, 30, { align: 'center' });
+
+    // Section 1: Informasi Dasar
+    doc.setTextColor(40);
+    doc.setFontSize(14);
+    doc.text('INFORMASI PENGADUAN', 14, 55);
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.line(14, 58, 65, 58);
+
+    doc.setFontSize(10);
+    const infoData = [
+        ['Nama Pelanggan', `: ${ticket.client}`],
+        ['Alamat', `: ${ticket.location}`],
+        ['Topik Kendala', `: ${ticket.topic}`],
+        ['Kategori', `: ${ticket.category}`],
+        ['Rating Layanan', `: ${ticket.rating?.stars !== '-' ? ticket.rating.stars + '/5' : 'Belum dinilai'}`],
+        ['Deskripsi Masalah', `: ${ticket.desc || ticket.description || '-'}`],
+        ['Waktu Dibuat', `: ${ticket.date}`],
+        ['Waktu Selesai', `: ${ticket.finishedDate || '-'}`],
+        ['Durasi Pengerjaan', `: ${ticket.duration || '-'}`]
+    ];
+
+    autoTable(doc, {
+        startY: 65,
+        body: infoData,
+        theme: 'plain',
+        styles: { fontSize: 10, cellPadding: 2 },
+        columnStyles: { 0: { fontStyle: 'bold', width: 38 }, 1: { cellWidth: 'auto' } },
+        margin: { bottom: 25 }
+    });
+
+    // Section 2: SLA Performance Metrics
+    let currentY = doc.lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.text('SLA PERFORMANCE', 14, currentY);
+    doc.line(14, currentY + 3, 60, currentY + 3);
+
+    const timeline = ticket.timeline || [];
+    
+    // Use pre-calculated durations from ticket if available
+    const responseTime = ticket.responseDuration && ticket.responseDuration !== '00:00:00' 
+        ? ticket.responseDuration 
+        : '-';
+    const repairTime = ticket.repairDuration && ticket.repairDuration !== '00:00:00' 
+        ? ticket.repairDuration 
+        : '-';
+
+    // Calculate Points for Internal Status Logic
+    const resPts = ticket.responsePoints || 0;
+    const repPts = ticket.repairPoints || 0;
+    const totalPts = resPts + repPts;
+    let overallStatus = 'NEEDS IMPROVEMENT';
+    if (totalPts >= 100) overallStatus = 'EXCELLENT';
+    else if (totalPts >= 50) overallStatus = 'GOOD';
+
+    const slaData = [
+        ['Respon Teknisi', '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? 'OVERDUE' : 'SESUAI SLA'],
+        ['Perbaikan Unit', '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? 'OVERDUE' : 'SESUAI SLA']
+    ];
+
+    autoTable(doc, {
+        startY: currentY + 8,
+        head: [['Aspek SLA', 'Target', 'Capaian', 'Status']],
+        body: slaData,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [240, 240, 240], textColor: [40, 40, 40], fontStyle: 'bold' },
+        columnStyles: { 3: { fontStyle: 'bold' } },
+        margin: { bottom: 25 },
+        didParseCell: (data) => {
+            if (data.column.index === 3 && data.cell.section === 'body') {
+                if (data.cell.text[0] === 'OVERDUE') data.cell.styles.textColor = [220, 38, 38];
+                if (data.cell.text[0] === 'SESUAI SLA') data.cell.styles.textColor = [16, 185, 129];
+            }
+        }
+    });
+
+    // Section Summary (Overall Status)
+    currentY = doc.lastAutoTable.finalY + 4;
+    doc.setFillColor(242, 248, 245);
+    doc.rect(14, currentY, 182, 12, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`OVERALL PERFORMANCE STATUS: ${overallStatus}`, 105, currentY + 8, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(40);
+
+    // Section 3: Riwayat Progres Pengaduan
+    currentY = currentY + 28;
+    doc.setFontSize(14);
+    doc.text('RIWAYAT PROGRES PENGADUAN', 14, currentY);
+    doc.line(14, currentY + 3, 85, currentY + 3);
+
+    const timelineData = timeline.length > 0 ? timeline.map(t => [
+        t.time || '-',
+        (t.status || 'UPDATE').toUpperCase(),
+        (t.desc || t.note || t.notes || '-').replace(/\s*\((?=.*(Respons|Durasi|Poin|Rating)).*?\)/gi, '').trim()
+    ]) : [['-', 'TIDAK ADA DATA PROGRES', '-']];
+
+    autoTable(doc, {
+        startY: currentY + 8,
+        head: [['Tanggal & Waktu', 'Aktivitas', 'Catatan/Keterangan']],
+        body: timelineData,
+        theme: 'striped',
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: primaryColor, textColor: [255, 255, 255] },
+        columnStyles: { 0: { width: 50 }, 1: { width: 45, fontStyle: 'bold' } },
+        margin: { bottom: 25 }
+    });
+
+    // Footer & Page Numbers (Adopted from SA)
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        
+        // Separator Line
+        doc.setDrawColor(230, 230, 230);
+        doc.setLineWidth(0.2);
+        doc.line(14, 282, 196, 282);
+
+        doc.setFontSize(7);
+        doc.setTextColor(180);
+        doc.text('Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON Smart Green Living.', 105, 287, { align: 'center' });
+        doc.text(`Halaman ${i} dari ${pageCount}`, 105, 292, { align: 'center' });
+    }
+
+    doc.save(`BIEON_Detail_Teknisi_${ticket.id.replace('+P', '')}.pdf`);
   };
 
   // getStatusBadge replaced by shared TicketStatusBadge component
@@ -415,8 +458,8 @@ export function RiwayatPerbaikanPage() {
               {showCategoryDropdown && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowCategoryDropdown(false)}></div>
-                  <div className="absolute top-full mt-2 right-0 sm:left-0 w-[200px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
-                    {['Semua Kategori', 'Kenyamanan', 'Keamanan', 'Konsumsi Energi', 'Kualitas Air'].map(cat => (
+                  <div className="absolute top-full mt-2 right-0 sm:left-0 w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                    {['Semua Kategori', 'Energi & Kelistrikan', 'Kualitas Air', 'Keamanan', 'Kenyamanan & Udara', 'Perangkat Aktuator', 'Lainnya'].map(cat => (
                       <button
                         key={cat}
                         onClick={() => { setSelectedCategory(cat); setShowCategoryDropdown(false); setCurrentPage(1); }}
@@ -610,7 +653,16 @@ export function RiwayatPerbaikanPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {paginatedData.map((item) => (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="8" className="px-3 md:px-4 lg:px-6 py-20 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="w-8 h-8 border-4 border-gray-100 border-t-teal-500 rounded-full animate-spin"></div>
+                        <p className="text-sm font-bold text-gray-400">Memuat riwayat...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-3 md:px-4 lg:px-6 py-4 font-bold text-gray-900 tracking-tight whitespace-nowrap">
                       {item.id}
@@ -659,7 +711,12 @@ export function RiwayatPerbaikanPage() {
 
           {/* Mobile Card List */}
           <div className="md:hidden divide-y divide-gray-100 pb-2">
-            {paginatedData.map((item) => (
+            {isLoading ? (
+              <div className="p-10 text-center">
+                <div className="w-8 h-8 border-4 border-gray-100 border-t-teal-500 rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-sm font-bold text-gray-400">Memuat riwayat...</p>
+              </div>
+            ) : paginatedData.map((item) => (
               <div key={item.id} className="p-5 active:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[11px] font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-100">{item.id}</span>
@@ -756,13 +813,14 @@ export function RiwayatPerbaikanPage() {
         isOpen={!!selectedTicket}
         onClose={() => setSelectedTicket(null)}
         ticket={selectedTicket}
+        role="technician"
         renderActions={
           <div className="bg-emerald-50 rounded-2xl p-6 shadow-sm border border-emerald-100 border-dashed text-center">
             <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
             <p className="font-bold text-emerald-900 text-sm mb-1">Riwayat Selesai</p>
             <p className="text-xs text-emerald-700 leading-relaxed px-2">Tiket ini telah diselesaikan dan dikonfirmasi oleh pelanggan.</p>
             <button
-              onClick={handleExportPDF}
+              onClick={() => handleExportSingleDetailPDF(selectedTicket)}
               className="mt-4 w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-xs hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" /> Ekspor Riwayat (PDF)

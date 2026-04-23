@@ -31,6 +31,8 @@ import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
 import { formatStatusDisplay, getActionButtons } from '../../utils/complaintHelpers';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export function HomeownerComplaint({ onNavigate }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -124,7 +126,8 @@ export function HomeownerComplaint({ onNavigate }) {
                 const safeId = item._id ? item._id.toString() : '';
                 return {
                     ...item,
-                    id: safeId, // Map backend _id to id for table
+                    originalId: safeId, // Save DB ID to hit PUT endpoints
+                    id: safeId ? `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}` : 'TCK-000000',
                     description: item.desc || 'No Description',
                     date: new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                     technician: item.technician ? item.technician.fullName : 'Menunggu Teknisi',
@@ -243,7 +246,47 @@ export function HomeownerComplaint({ onNavigate }) {
     const currentComplaints = filteredComplaints.slice(startIndex, startIndex + rowsPerPage);
 
     const handleExport = () => {
-        alert("Exporting data to CSV...");
+        const doc = new jsPDF('portrait');
+        
+        // Header PDF
+        doc.setFontSize(18);
+        doc.setTextColor(15, 158, 120); // Teal BIEON
+        doc.text('Laporan Pengaduan BIEON - Riwayat Saya', 14, 22);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+
+        // Definisi Kolom sesuai urutan tabel: ID, Tanggal, Topik, Perangkat, Teknisi, Status
+        const tableColumn = ["ID Tiket", "Tanggal", "Topik Kendala", "Perangkat", "Teknisi", "Status"];
+        const tableRows = [];
+
+        // Isi Data dari State filteredComplaints (data yang sedang terfilter)
+        filteredComplaints.forEach(ticket => {
+            const ticketData = [
+                ticket.id,
+                ticket.date,
+                ticket.topic,
+                ticket.device,
+                ticket.technician,
+                ticket.status.toUpperCase()
+            ];
+            tableRows.push(ticketData);
+        });
+
+        // Generate Tabel
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [15, 158, 120], textColor: [255, 255, 255], fontStyle: 'bold' },
+            styles: { fontSize: 8, cellPadding: 2 },
+            alternateRowStyles: { fillColor: [245, 245, 245] }
+        });
+
+        // Download
+        doc.save(`BIEON_Riwayat_Pengaduan_${new Date().getTime()}.pdf`);
     };
 
     const handleFileChange = async (e) => {
@@ -586,7 +629,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                     currentComplaints.map(ticket => (
                                         <tr key={ticket.id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="py-3 md:py-4 pr-2 md:pr-4 font-bold text-gray-900">
-                                                {ticket.id ? ticket.id.substring(Math.max(0, ticket.id.length - 6)).toUpperCase() : '000000'}
+                                                {ticket.id}
                                             </td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.date}</td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4 truncate max-w-[200px]" title={ticket.topic}>{ticket.topic}</td>
@@ -629,7 +672,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 <div key={ticket.id} className="p-4 hover:bg-gray-50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
                                         <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">
-                                            {ticket.id ? ticket.id.substring(Math.max(0, ticket.id.length - 6)).toUpperCase() : '000000'}
+                                            {ticket.id}
                                         </span>
                                         <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{ticket.date}</span>
                                     </div>

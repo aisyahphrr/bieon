@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
     Search,
     Filter,
@@ -11,161 +11,120 @@ import {
     ArrowUpDown,
     ChevronDown,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Loader2,
+    FileText,
+    ClipboardList
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
 
-// ─── Static data outside component — prevents re-creation on every render ───
-
-const BASE_COMFORT_DATA = [
-    { time: '26 Feb 2026, 11:30:00', room: 'R5 - Ruang Produksi', temp: 24.0, humidity: '55%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 11:15:00', room: 'R1 - Ruang Keluarga', temp: 25.5, humidity: '60%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 11:00:00', room: 'R2 - Kamar Tidur', temp: 23.0, humidity: '50%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 10:45:00', room: 'R5 - Ruang Produksi', temp: 24.5, humidity: '58%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 10:30:00', room: 'R5 - Ruang Produksi', temp: 24.0, humidity: '55%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 10:15:00', room: 'R1 - Ruang Keluarga', temp: 26.0, humidity: '65%', status: 'Tidak Nyaman' },
-    { time: '26 Feb 2026, 10:00:00', room: 'R5 - Ruang Produksi', temp: 27.5, humidity: '55%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 09:45:00', room: 'R3 - Dapur', temp: 30.5, humidity: '70%', status: 'Tidak Nyaman' },
-    { time: '26 Feb 2026, 09:30:00', room: 'R5 - Ruang Produksi', temp: 31.5, humidity: '65%', status: 'Tidak Nyaman' },
-    { time: '26 Feb 2026, 09:15:00', room: 'R2 - Kamar Tidur', temp: 24.0, humidity: '55%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 09:00:00', room: 'R5 - Ruang Produksi', temp: 28.5, humidity: '58%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 08:45:00', room: 'R4 - Garasi', temp: 32.0, humidity: '75%', status: 'Tidak Nyaman' },
-    { time: '26 Feb 2026, 08:30:00', room: 'R1 - Ruang Keluarga', temp: 24.5, humidity: '55%', status: 'Nyaman' },
-    { time: '26 Feb 2026, 08:15:00', room: 'R2 - Kamar Tidur', temp: 25.0, humidity: '100%+', status: 'Out of Range' },
-];
-const COMFORT_HISTORY_DATA = [
-    ...BASE_COMFORT_DATA.map((d, i) => ({ ...d, id: i + 1 })),
-    ...BASE_COMFORT_DATA.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-    ...BASE_COMFORT_DATA.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
-];
-
-const BASE_SECURITY_DATA = [
-    { time: '26 Feb 2026, 11:30:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
-    { time: '26 Feb 2026, 11:15:00', room: 'R1 - Pintu Utama', door: 'Terbuka', motion: 'Terdeteksi Gerak', status: 'Waspada' },
-    { time: '26 Feb 2026, 11:00:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Bahaya' },
-    { time: '26 Feb 2026, 10:45:00', room: 'R1 - Pintu Utama', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
-    { time: '26 Feb 2026, 10:30:00', room: 'R2 - Jendela Kamar', door: 'Terbuka', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-    { time: '26 Feb 2026, 10:15:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Bahaya' },
-    { time: '26 Feb 2026, 10:00:00', room: 'R1 - Pintu Utama', door: 'Terbuka (>10 mnt)', motion: 'Tidak Ada Gerak', status: 'Aman' },
-    { time: '26 Feb 2026, 09:45:00', room: 'R3 - Dapur', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Aman' },
-    { time: '26 Feb 2026, 09:30:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Aman' },
-    { time: '26 Feb 2026, 09:15:00', room: 'R1 - Jendela Living', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-    { time: '26 Feb 2026, 09:00:00', room: 'R1 - Pintu Utama', door: 'Terbuka', motion: 'Terdeteksi Gerak', status: 'Aman' },
-    { time: '26 Feb 2026, 08:45:00', room: 'R1 - Pintu Belakang', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-    { time: '26 Feb 2026, 08:30:00', room: 'R5 - Ruang Produksi', door: 'Tertutup', motion: 'Terdeteksi Gerak', status: 'Aman' },
-    { time: '26 Feb 2026, 08:15:00', room: 'R4 - Garasi', door: 'Tertutup', motion: 'Tidak Ada Gerak', status: 'Waspada' },
-];
-const SECURITY_HISTORY_DATA = [
-    ...BASE_SECURITY_DATA.map((d, i) => ({ ...d, id: i + 1 })),
-    ...BASE_SECURITY_DATA.map((d, i) => ({ ...d, id: i + 15, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-    ...BASE_SECURITY_DATA.map((d, i) => ({ ...d, id: i + 29, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
-];
-
-const BASE_WATER_DATA = [
-    { time: '26 Feb 2026, 11:30:00', device: 'Toren Air', ph: 7.2, turbidity: '2 NTU', temp: '24.0°C', tds: '150 ppm', status: 'Layak Pakai' },
-    { time: '26 Feb 2026, 11:15:00', device: 'Pipa Distribusi', ph: 7.1, turbidity: '1 NTU', temp: '24.0°C', tds: '148 ppm', status: 'Layak Pakai' },
-    { time: '26 Feb 2026, 10:45:00', device: 'Toren Air', ph: 7.0, turbidity: '4 NTU', temp: '24.0°C', tds: '160 ppm', status: 'Tidak Layak' },
-    { time: '26 Feb 2026, 10:15:00', device: 'Toren Air', ph: 6.0, turbidity: '2 NTU', temp: '25.0°C', tds: '150 ppm', status: 'Tidak Layak' },
-    { time: '26 Feb 2026, 10:00:00', device: 'Toren Air', ph: 6.5, turbidity: '5 NTU', temp: '25.0°C', tds: '310 ppm', status: 'Tidak Layak' },
-    { time: '26 Feb 2026, 09:45:00', device: 'Pipa Distribusi', ph: 7.0, turbidity: '1 NTU', temp: '23.5°C', tds: '125 ppm', status: 'Layak Pakai' },
-    { time: '26 Feb 2026, 09:30:00', device: 'Toren Air', ph: 8.8, turbidity: '2 NTU', temp: '24.0°C', tds: '160 ppm', status: 'Tidak Layak' },
-    { time: '26 Feb 2026, 08:15:00', device: 'Pipa Distribusi', ph: '14+', turbidity: '2 NTU', temp: '24.0°C', tds: '145 ppm', status: 'Out of Range' },
-];
-const WATER_HISTORY_DATA = [
-    ...BASE_WATER_DATA.map((d, i) => ({ ...d, id: i + 1 })),
-    ...BASE_WATER_DATA.map((d, i) => ({ ...d, id: i + 9, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-    ...BASE_WATER_DATA.map((d, i) => ({ ...d, id: i + 17, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
-];
-
-const BASE_ENERGY_DATA = [
-    { time: '26 Feb 2026, 11:30:00', device: 'Power Meter Utama', kwh: '1455.10 kWh', voltage: '220.5 V', current: '4.0 A', power: '850 W', pf: '0.96' },
-    { time: '26 Feb 2026, 11:15:00', device: 'Power Meter Utama', kwh: '1454.67 kWh', voltage: '220.5 V', current: '3.9 A', power: '845 W', pf: '0.95' },
-    { time: '26 Feb 2026, 11:00:00', device: 'Power Meter Utama', kwh: '1454.25 kWh', voltage: '221.0 V', current: '2.1 A', power: '450 W', pf: '0.97' },
-    { time: '26 Feb 2026, 10:45:00', device: 'Power Meter Utama', kwh: '1454.02 kWh', voltage: '220.2 V', current: '2.0 A', power: '440 W', pf: '0.96' },
-    { time: '26 Feb 2026, 09:00:00', device: 'Power Meter Utama', kwh: '1452.71 kWh', voltage: '222.2 V', current: '1.3 A', power: '280 W', pf: '0.91' },
-    { time: '26 Feb 2026, 08:15:00', device: 'Power Meter Utama', kwh: '1452.32 kWh', voltage: '221.9 V', current: '1.1 A', power: '230 W', pf: '0.89' },
-];
-const ENERGY_HISTORY_DATA = [
-    ...BASE_ENERGY_DATA.map((d, i) => ({ ...d, id: i + 1 })),
-    ...BASE_ENERGY_DATA.map((d, i) => ({ ...d, id: i + 7, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-    ...BASE_ENERGY_DATA.map((d, i) => ({ ...d, id: i + 13, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
-];
-
-const BASE_DEVICE_LOG_DATA = [
-    { time: '26 Feb 2026, 11:30:00', room: 'R1 - Ruang Keluarga', actuator: 'Smart TV', status: 'OFF', trigger: 'Manual (Web)' },
-    { time: '26 Feb 2026, 11:15:00', room: 'R3 - Dapur', actuator: 'Smart Plug (Kulkas)', status: 'ON', trigger: 'Jadwal Otomatis' },
-    { time: '26 Feb 2026, 10:45:00', room: 'R5 - Ruang Produksi', actuator: 'Kipas Exhaust', status: 'OFF', trigger: 'Otomasi (Suhu 24°C)' },
-    { time: '26 Feb 2026, 10:30:00', room: 'R2 - Kamar Tidur', actuator: 'AC Split', status: 'OFF', trigger: 'Manual (Web)' },
-    { time: '26 Feb 2026, 09:45:00', room: 'R5 - Ruang Produksi', actuator: 'Kipas Exhaust', status: 'ON', trigger: 'Otomasi (Suhu > 31°C)' },
-    { time: '26 Feb 2026, 08:15:00', room: 'R3 - Dapur', actuator: 'Coffee Maker', status: 'ON', trigger: 'Jadwal Otomatis' },
-];
-const DEVICE_LOG_HISTORY_DATA = [
-    ...BASE_DEVICE_LOG_DATA.map((d, i) => ({ ...d, id: i + 1 })),
-    ...BASE_DEVICE_LOG_DATA.map((d, i) => ({ ...d, id: i + 7, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-    ...BASE_DEVICE_LOG_DATA.map((d, i) => ({ ...d, id: i + 13, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
-];
-
-const BASE_ALERT_DATA = [
-    { time: '26 Feb 2026, 11:30:00', category: 'Keamanan', room: 'R1 - Pintu Utama', status: 'Waspada', message: 'Pintu utama dibuka menggunakan akses PIN.' },
-    { time: '26 Feb 2026, 11:15:00', category: 'Keamanan', room: 'R4 - Garasi', status: 'Bahaya', message: 'Terdeteksi pergerakan tidak wajar di area garasi!' },
-    { time: '26 Feb 2026, 10:45:00', category: 'Air Sanitasi', room: 'Toren Air', status: 'Bahaya', message: 'Kekeruhan air meningkat drastis (18 NTU). Status: Tidak Layak.' },
-    { time: '26 Feb 2026, 10:15:00', category: 'Energi', room: 'Power Meter Utama', status: 'Waspada', message: 'Beban daya melebihi 1000 W. Mendekati batas limit harian.' },
-    { time: '26 Feb 2026, 09:15:00', category: 'Gas', room: 'R3 - Dapur', status: 'Bahaya', message: 'Terdeteksi peningkatan kadar gas. Kualitas udara memburuk.' },
-    { time: '26 Feb 2026, 08:15:00', category: 'Air Sanitasi', room: 'Toren Air', status: 'Info', message: 'Siklus pembersihan filter air otomatis selesai.' },
-];
-const ALERT_HISTORY_DATA = [
-    ...BASE_ALERT_DATA.map((d, i) => ({ ...d, id: i + 1 })),
-    ...BASE_ALERT_DATA.map((d, i) => ({ ...d, id: i + 7, time: `25 Feb 2026, ${d.time.split(', ')[1]}` })),
-    ...BASE_ALERT_DATA.map((d, i) => ({ ...d, id: i + 13, time: `24 Feb 2026, ${d.time.split(', ')[1]}` })),
-];
-
 export function HomeownerHistory({ onNavigate }) {
     const [activeTab, setActiveTab] = useState('Kenyamanan');
-    const [showNotifications, setShowNotifications] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isExportingAll, setIsExportingAll] = useState(false);
+    const [error, setError] = useState(null);
 
     // Search, Filter, Pagination, Sort states
-    const [showRoleDropdown, setShowRoleDropdown] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRoomFilter, setSelectedRoomFilter] = useState('');
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
     const [showRowsDropdown, setShowRowsDropdown] = useState(false);
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     const tabs = [
-        { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Kenyamanan' },
-        { id: 'Keamanan',         full: 'Keamanan',         short: 'Keamanan' },
-        { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Kualitas Air' },
-        { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Konsumsi Energi' },
-        { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log Perangkat' },
-        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi' }
+        { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Kenyamanan', endpoint: '/api/history/environment' },
+        { id: 'Keamanan',         full: 'Keamanan',         short: 'Keamanan', endpoint: '/api/history/security' },
+        { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Kualitas Air', endpoint: '/api/history/water' },
+        { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Konsumsi Energi', endpoint: '/api/history/energy' },
+        { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log Perangkat', endpoint: '/api/history/activity' },
+        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi', endpoint: '/api/history/alerts' }
     ];
 
-    // Reference module-level constants (no re-creation per render)
-    const comfortHistoryData    = COMFORT_HISTORY_DATA;
-    const securityHistoryData   = SECURITY_HISTORY_DATA;
-    const waterHistoryData      = WATER_HISTORY_DATA;
-    const energyHistoryData     = ENERGY_HISTORY_DATA;
-    const deviceLogHistoryData  = DEVICE_LOG_HISTORY_DATA;
-    const alertHistoryData      = ALERT_HISTORY_DATA;
+    const formatDateTime = (dateStr) => {
+        const date = new Date(dateStr);
+        return date.toLocaleString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    };
 
-    // Logic to process data based on Search, Filter, and Sort
+    const mapItemData = (tabId, item, index) => {
+        const base = {
+            id: item._id || index,
+            time: formatDateTime(item.date || item.timestamp || item.createdAt)
+        };
+
+        if (tabId === 'Kenyamanan') {
+            return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity, status: item.status };
+        }
+        if (tabId === 'Keamanan') {
+            return { ...base, room: item.room, door: item.door, motion: item.motion, status: item.status };
+        }
+        if (tabId === 'Kualitas Air') {
+            return { ...base, device: item.device, ph: item.ph, turbidity: item.turbidity, temp: item.temperature, tds: item.tds, status: item.status };
+        }
+        if (tabId === 'Konsumsi Energi') {
+            return { 
+                ...base, 
+                device: item.device?.name || item.device || 'Power Meter Utama', 
+                kwh: item.totalKwh + ' kWh', 
+                voltage: item.voltage + ' V', 
+                current: item.current + ' A', 
+                power: item.power + ' W', 
+                pf: item.pf 
+            };
+        }
+        if (tabId === 'Log Perangkat') {
+            return { ...base, room: item.room, actuator: item.actuator, status: item.status, trigger: item.trigger };
+        }
+        if (tabId === 'Notifikasi & Alert') {
+            return { ...base, category: item.category, room: item.room, status: item.status || item.type, message: item.message };
+        }
+        return item;
+    };
+
+    const fetchHistory = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const currentTabConfig = tabs.find(t => t.id === activeTab);
+            
+            const response = await fetch(currentTabConfig.endpoint, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Gagal mengambil data riwayat');
+            
+            const result = await response.json();
+            const mappedData = result.data.map((item, index) => mapItemData(activeTab, item, index));
+            setHistoryData(mappedData);
+        } catch (err) {
+            console.error('FETCH ERROR:', err);
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        fetchHistory();
+    }, [fetchHistory]);
+
     const processedData = useMemo(() => {
-        let sourceData = [];
-        if (activeTab === 'Kenyamanan') sourceData = comfortHistoryData;
-        else if (activeTab === 'Keamanan') sourceData = securityHistoryData;
-        else if (activeTab === 'Kualitas Air') sourceData = waterHistoryData;
-        else if (activeTab === 'Konsumsi Energi') sourceData = energyHistoryData;
-        else if (activeTab === 'Log Perangkat') sourceData = deviceLogHistoryData;
-        else if (activeTab === 'Notifikasi & Alert') sourceData = alertHistoryData;
-        else return [];
+        let filtered = [...historyData];
 
-        let filtered = [...sourceData];
-
-        // Apply Filter by Room or Device
         if (selectedRoomFilter) {
             filtered = filtered.filter(item => {
                 if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) return item.device === selectedRoomFilter;
@@ -173,7 +132,6 @@ export function HomeownerHistory({ onNavigate }) {
             });
         }
 
-        // Apply Search
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(item => {
@@ -205,13 +163,11 @@ export function HomeownerHistory({ onNavigate }) {
             });
         }
 
-        // Apply Sorting
         if (sortConfig.key) {
             filtered.sort((a, b) => {
                 let aVal = a[sortConfig.key];
                 let bVal = b[sortConfig.key];
 
-                // Custom sort for numeric values
                 if (sortConfig.key === 'temp' && activeTab === 'Kenyamanan') {
                     aVal = parseFloat(aVal);
                     bVal = parseFloat(bVal);
@@ -227,6 +183,9 @@ export function HomeownerHistory({ onNavigate }) {
                 } else if (['kwh', 'voltage', 'current', 'power', 'pf'].includes(sortConfig.key)) {
                     aVal = parseFloat(aVal.toString().replace(/[^0-9.]/g, ''));
                     bVal = parseFloat(bVal.toString().replace(/[^0-9.]/g, ''));
+                } else if (sortConfig.key === 'time') {
+                    aVal = new Date(aVal).getTime();
+                    bVal = new Date(bVal).getTime();
                 }
 
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -236,72 +195,147 @@ export function HomeownerHistory({ onNavigate }) {
         }
 
         return filtered;
-    }, [activeTab, searchQuery, selectedRoomFilter, sortConfig,
-        comfortHistoryData, securityHistoryData, waterHistoryData,
-        energyHistoryData, deviceLogHistoryData, alertHistoryData]);
+    }, [activeTab, historyData, searchQuery, selectedRoomFilter, sortConfig]);
 
-    // Available rooms/devices for filter dropdown
     const availableFilters = useMemo(() => {
-        if (activeTab === 'Kenyamanan') return Array.from(new Set(comfortHistoryData.map(d => d.room)));
-        if (activeTab === 'Keamanan') return Array.from(new Set(securityHistoryData.map(d => d.room)));
-        if (activeTab === 'Kualitas Air') return Array.from(new Set(waterHistoryData.map(d => d.device)));
-        if (activeTab === 'Konsumsi Energi') return Array.from(new Set(energyHistoryData.map(d => d.device)));
-        if (activeTab === 'Log Perangkat') return Array.from(new Set(deviceLogHistoryData.map(d => d.room)));
-        if (activeTab === 'Notifikasi & Alert') return Array.from(new Set(alertHistoryData.map(d => d.room)));
-        return [];
-    }, [activeTab]);
+        if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) {
+            return Array.from(new Set(historyData.map(d => d.device)));
+        }
+        return Array.from(new Set(historyData.map(d => d.room)));
+    }, [activeTab, historyData]);
 
     const activeTabsConfigured = ['Kenyamanan', 'Keamanan', 'Kualitas Air', 'Konsumsi Energi', 'Log Perangkat', 'Notifikasi & Alert'];
 
-    // Pagination bounds
     const totalItems = processedData.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
     const startIndex = (currentPage - 1) * rowsPerPage;
     const currentData = processedData.slice(startIndex, startIndex + rowsPerPage);
 
-    // Helper functions
     const requestSort = (key) => {
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
         setSortConfig({ key, direction });
     };
 
-    const handleExport = () => {
-        if (processedData.length === 0) return alert("Tidak ada data untuk diekspor!");
+    const generateTableConfig = (tabId, data) => {
         let headers = [];
-        let csvMapper;
+        let body = [];
 
-        if (activeTab === 'Kenyamanan') {
-            headers = ["Waktu", "Ruangan", "Suhu(°C)", "Kelembapan", "Status"];
-            csvMapper = (e) => `"${e.time}","${e.room}","${e.temp}","${e.humidity}","${e.status}"`;
-        } else if (activeTab === 'Keamanan') {
-            headers = ["Waktu", "Ruangan", "Sensor Pintu", "Sensor Gerak", "Status"];
-            csvMapper = (e) => `"${e.time}","${e.room}","${e.door}","${e.motion}","${e.status}"`;
-        } else if (activeTab === 'Kualitas Air') {
-            headers = ["Waktu", "Perangkat", "pH", "Kekeruhan", "Suhu", "Padatan Terlarut (TDS)", "Status"];
-            csvMapper = (e) => `"${e.time}","${e.device}","${e.ph}","${e.turbidity}","${e.temp}","${e.tds}","${e.status}"`;
-        } else if (activeTab === 'Konsumsi Energi') {
-            headers = ["Waktu", "Perangkat", "kWh Kumulatif", "Voltase", "Arus", "Beban Daya (W)", "Power Factor"];
-            csvMapper = (e) => `"${e.time}","${e.device}","${e.kwh}","${e.voltage}","${e.current}","${e.power}","${e.pf}"`;
-        } else if (activeTab === 'Log Perangkat') {
-            headers = ["Waktu", "Ruangan", "Perangkat (Aktuator)", "Status", "Pemicu (Trigger)"];
-            csvMapper = (e) => `"${e.time}","${e.room}","${e.actuator}","${e.status}","${e.trigger}"`;
-        } else if (activeTab === 'Notifikasi & Alert') {
-            headers = ["Waktu", "Kategori", "Ruangan", "Tingkat Bahaya", "Pesan Detail Alert"];
-            csvMapper = (e) => `"${e.time}","${e.category}","${e.room}","${e.status}","${e.message}"`;
+        if (tabId === 'Kenyamanan') {
+            headers = [["Waktu", "Ruangan", "Suhu", "Kelembapan", "Status"]];
+            body = data.map(e => [e.time, e.room, `${e.temp}°C`, e.humidity, e.status]);
+        } else if (tabId === 'Keamanan') {
+            headers = [["Waktu", "Ruangan", "Pintu", "Gerak", "Status"]];
+            body = data.map(e => [e.time, e.room, e.door, e.motion, e.status]);
+        } else if (tabId === 'Kualitas Air') {
+            headers = [["Waktu", "Perangkat", "pH", "Kekeruhan", "Suhu", "TDS", "Status"]];
+            body = data.map(e => [e.time, e.device, e.ph, e.turbidity, e.temp, e.tds, e.status]);
+        } else if (tabId === 'Konsumsi Energi') {
+            headers = [["Waktu", "Perangkat", "Energi", "Voltase", "Arus", "Beban", "PF"]];
+            body = data.map(e => [e.time, e.device, e.kwh, e.voltage, e.current, e.power, e.pf]);
+        } else if (tabId === 'Log Perangkat') {
+            headers = [["Waktu", "Ruangan", "Perangkat", "Status", "Pemicu"]];
+            body = data.map(e => [e.time, e.room, e.actuator, e.status, e.trigger]);
+        } else if (tabId === 'Notifikasi & Alert') {
+            headers = [["Waktu", "Kategori", "Ruangan", "Level", "Pesan"]];
+            body = data.map(e => [e.time, e.category, e.room, e.status, e.message]);
         }
+        return { headers, body };
+    };
 
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + headers.join(",") + "\n"
-            + processedData.map(csvMapper).join("\n");
+    const handleExportPDF = () => {
+        if (!processedData || processedData.length === 0) return alert("Tidak ada data untuk diekspor!");
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `BIEON_${activeTab}_History.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        try {
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.width;
+
+            doc.setFontSize(22);
+            doc.setTextColor(35, 92, 80);
+            doc.text(`Laporan Riwayat: ${activeTab}`, 15, 20);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`BIEON Smart Green Living System`, 15, 28);
+            doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 15, 33);
+            doc.line(15, 38, pageWidth - 15, 38);
+
+            const { headers, body } = generateTableConfig(activeTab, processedData);
+
+            autoTable(doc, {
+                startY: 45,
+                head: headers,
+                body: body,
+                theme: 'striped',
+                headStyles: { fillColor: [35, 92, 80], textColor: [255, 255, 255], fontSize: 10, halign: 'center' },
+                bodyStyles: { fontSize: 9, halign: 'center' },
+                margin: { left: 15, right: 15 }
+            });
+
+            doc.save(`BIEON_${activeTab}_History_${new Date().getTime()}.pdf`);
+        } catch (pdfError) {
+            console.error('PDF ERROR:', pdfError);
+            alert("Gagal membuat PDF.");
+        }
+    };
+
+    const handleExportAllPDF = async () => {
+        setIsExportingAll(true);
+        try {
+            const token = localStorage.getItem('bieon_token');
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const pageWidth = doc.internal.pageSize.width;
+
+            // --- COVER PAGE ---
+            doc.setFontSize(28);
+            doc.setTextColor(35, 92, 80);
+            doc.text("LAPORAN AUDIT SISTEM BIEON", pageWidth / 2, 80, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.setTextColor(100);
+            doc.text("Smart Green Living Monitoring System", pageWidth / 2, 92, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`Periode Laporan: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
+            doc.text(`Dihasilkan pada: ${new Date().toLocaleString('id-ID')}`, pageWidth / 2, 118, { align: 'center' });
+            
+            doc.setDrawColor(35, 92, 80);
+            doc.setLineWidth(1);
+            doc.line(pageWidth / 2 - 30, 125, pageWidth / 2 + 30, 125);
+
+            // Fetch and Append each tab as a new page
+            for (let i = 0; i < tabs.length; i++) {
+                const tab = tabs[i];
+                const res = await fetch(tab.endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) continue;
+                
+                const result = await res.json();
+                const mapped = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
+
+                doc.addPage();
+                doc.setFontSize(18);
+                doc.setTextColor(35, 92, 80);
+                doc.text(`Kategori: ${tab.full}`, 15, 20);
+                doc.line(15, 25, pageWidth - 15, 25);
+
+                const { headers, body } = generateTableConfig(tab.id, mapped);
+                autoTable(doc, {
+                    startY: 32,
+                    head: headers,
+                    body: body,
+                    theme: 'striped',
+                    headStyles: { fillColor: [35, 92, 80] },
+                    margin: { left: 15, right: 15 }
+                });
+            }
+
+            doc.save(`BIEON_Full_Report_${new Date().getTime()}.pdf`);
+        } catch (err) {
+            console.error('EXPORT ALL ERROR:', err);
+            alert("Gagal mengekspor laporan lengkap.");
+        } finally {
+            setIsExportingAll(false);
+        }
     };
 
     const getSortIcon = (key) => {
@@ -309,36 +343,16 @@ export function HomeownerHistory({ onNavigate }) {
         return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-gray-600" /> : <ArrowDown className="w-3.5 h-3.5 text-gray-600" />;
     };
 
-    // getStatusBadge is now handled by the shared <StatusBadge> component
-
     return (
         <HomeownerLayout
             currentPage="history"
             onNavigate={onNavigate}
             hideBottomNav={false}
         >
-            {/* Custom Scrollbar Styles for horizontal scrolling table */}
-            <style>
-                {`
-                .custom-scrollbar::-webkit-scrollbar { height: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-                .custom-scrollbar::-webkit-scrollbar-button:single-button { background-color: #f1f5f9; display: block; border-radius: 4px; width: 16px; }
-                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:decrement { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='8,2 2,5 8,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
-                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:decrement:hover { background-color: #e2e8f0; }
-                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:increment { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='%2364748b'%3E%3Cpolygon points='2,2 8,5 2,8'/%3E%3C/svg%3E"); background-size: 8px; background-position: center; background-repeat: no-repeat; }
-                .custom-scrollbar::-webkit-scrollbar-button:single-button:horizontal:increment:hover { background-color: #e2e8f0; }
-                `}
-            </style>
-
-            {/* Main Content */}
             <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8">
                 <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#235C50] mb-6 sm:mb-8">Riwayat Aktivitas</h1>
 
-                {/* Tabs, Search, Filters, and Export Row */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
-                    {/* Tabs Container */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex bg-white rounded-xl border-t border-l border-gray-200 w-full lg:w-auto shrink shadow-sm overflow-hidden">
                         {tabs.map((tab) => (
                             <button
@@ -348,7 +362,7 @@ export function HomeownerHistory({ onNavigate }) {
                                     setCurrentPage(1);
                                     setSearchQuery('');
                                     setSelectedRoomFilter('');
-                                    setSortConfig({ key: null, direction: 'asc' });
+                                    setSortConfig({ key: 'time', direction: 'desc' });
                                 }}
                                 className={`px-2 sm:px-3 lg:px-4 xl:px-5 py-2.5 text-[11px] sm:text-xs md:text-[13px] font-semibold transition-colors border-b border-r border-gray-200 ${activeTab === tab.id
                                     ? 'bg-[#EDF5F1] text-[#235C50]'
@@ -361,9 +375,7 @@ export function HomeownerHistory({ onNavigate }) {
                         ))}
                     </div>
 
-
                     <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
-                        {/* Search Input */}
                         <div className="relative w-full sm:w-[150px] md:w-[220px] shrink group">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                             <input
@@ -372,15 +384,13 @@ export function HomeownerHistory({ onNavigate }) {
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                                 className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
-                                disabled={availableFilters.length === 0}
                             />
                         </div>
 
                         <div className="relative shrink-0">
                             <button
                                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                                disabled={availableFilters.length === 0}
-                                className={`flex items-center justify-center gap-2 sm:px-4 py-2.5 w-10 sm:w-auto bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'} ${availableFilters.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`flex items-center justify-center gap-2 sm:px-4 py-2.5 w-10 sm:w-auto bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
                             >
                                 <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-teal-500' : 'text-gray-400'}`} />
                                 <span className={`hidden sm:inline ${selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}`}>
@@ -411,7 +421,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                     setCurrentPage(1);
                                                     setShowFilterDropdown(false);
                                                 }}
-                                                className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
                                                 {r}
                                             </button>
@@ -421,15 +431,39 @@ export function HomeownerHistory({ onNavigate }) {
                             )}
                         </div>
                         
-                        <button onClick={handleExport} className="shrink-0 flex items-center justify-center gap-2 w-10 sm:w-auto px-0 sm:px-5 py-2.5 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-colors shadow-sm font-medium text-sm">
-                            <Download className="w-4 h-4" />
-                            <span className="hidden sm:inline">Export</span>
+                        {/* Compact Export Tab Button */}
+                        <button 
+                            onClick={handleExportPDF} 
+                            title={`Export PDF Tab ${activeTab}`}
+                            className="shrink-0 flex items-center justify-center w-10 h-10 bg-white border border-gray-200 text-[#235C50] rounded-xl hover:bg-gray-50 transition-all shadow-sm"
+                        >
+                            <Download className="w-5 h-5" />
+                        </button>
+
+                        {/* Premium Laporan Lengkap Button */}
+                        <button 
+                            onClick={handleExportAllPDF} 
+                            disabled={isExportingAll}
+                            className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-all shadow-md font-semibold text-sm disabled:opacity-70 disabled:cursor-wait group"
+                        >
+                            {isExportingAll ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <ClipboardList className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            )}
+                            <span className="hidden sm:inline">Laporan Lengkap</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Table Area */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative min-h-[400px]">
+                    {isLoading && (
+                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center">
+                            <Loader2 className="w-10 h-10 text-teal-600 animate-spin mb-3" />
+                            <p className="text-gray-500 font-medium animate-pulse">Memuat data riwayat...</p>
+                        </div>
+                    )}
+
                     <div className="overflow-x-auto custom-scrollbar pb-2">
                         <table className="w-full text-left text-[13px] sm:text-[14px] text-gray-700 table-auto min-w-[600px] lg:min-w-[1000px]">
                             <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
@@ -516,13 +550,6 @@ export function HomeownerHistory({ onNavigate }) {
                                             <th onClick={() => requestSort('pf')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Power Factor {getSortIcon('pf')}</div>
                                             </th>
-                                        </>
-                                    )}
-
-                                    {(!activeTabsConfigured.includes(activeTab)) && (
-                                        <>
-                                            <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal whitespace-nowrap">Kolom 1</th>
-                                            <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal whitespace-nowrap">Kolom 2</th>
                                         </>
                                     )}
 
@@ -639,26 +666,16 @@ export function HomeownerHistory({ onNavigate }) {
                                     ) : (
                                         <tr>
                                             <td colSpan={(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) ? 7 : 5} className="px-6 py-20 text-center text-gray-500">
-                                                Tidak ada data yang cocok dengan pencarian Anda.
+                                                {isLoading ? 'Sedang memuat data...' : (error ? `Error: ${error}` : 'Tidak ada data yang tersedia.')}
                                             </td>
                                         </tr>
                                     )
-                                ) : (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-20 text-center text-gray-500">
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className="text-lg font-medium mb-1">Tidak ada data</div>
-                                                <div className="text-sm">Data belum tersedia untuk tab {activeTab}.</div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
+                                ) : null}
                             </tbody>
                         </table>
                     </div>
 
-                    {/* Pagination */}
-                    {activeTabsConfigured.includes(activeTab) && (
+                    {totalItems > 0 && (
                         <div className="flex flex-row items-center justify-between px-3 sm:px-6 py-4 border-t border-gray-200 gap-2 sm:gap-4">
                             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
                                 <span className="hidden sm:inline">Rows per page:</span>
@@ -694,13 +711,13 @@ export function HomeownerHistory({ onNavigate }) {
                             </div>
 
                             <div className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap">
-                                {totalItems === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
+                                {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
                             </div>
 
                             <div className="flex items-center gap-2 text-xs sm:text-sm">
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1 || totalItems === 0}
+                                    disabled={currentPage === 1}
                                     className="px-2 sm:px-4 py-1 sm:py-1.5 border border-gray-200 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed flex items-center justify-center"
                                 >
                                     <ChevronLeft className="w-4 h-4 sm:hidden" />
@@ -708,7 +725,7 @@ export function HomeownerHistory({ onNavigate }) {
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages || totalItems === 0}
+                                    disabled={currentPage === totalPages}
                                     className="px-2 sm:px-4 py-1 sm:py-1.5 border border-gray-200 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed flex items-center justify-center"
                                 >
                                     <span className="hidden sm:inline">Next</span>
