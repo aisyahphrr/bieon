@@ -24,7 +24,7 @@ import {
     MessageSquare
 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 import { useSLA } from '../../hooks/useSLA';
@@ -183,6 +183,50 @@ export function PengaduanKlienPage({ onNavigate }) {
 
     const token = localStorage.getItem('bieon_token');
 
+    const handleExport = () => {
+        const doc = new jsPDF('portrait');
+        
+        // Header PDF
+        doc.setFontSize(18);
+        doc.setTextColor(15, 158, 120); // Teal BIEON
+        doc.text('Laporan Pengaduan BIEON - Taskboard Teknisi', 14, 22);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+
+        // Definisi Kolom sesuai urutan tabel: ID, Tanggal, Topik, Pelanggan, Lokasi, Status
+        const tableColumn = ["ID Tiket", "Tanggal", "Topik Kendala", "Pelanggan", "Lokasi", "Status"];
+        const tableRows = [];
+
+        // Isi Data dari State processedData (data yang sedang terfilter)
+        processedData.forEach(ticket => {
+            const ticketData = [
+                ticket.id,
+                ticket.date,
+                ticket.topic,
+                ticket.customer,
+                ticket.location,
+                ticket.status.toUpperCase()
+            ];
+            tableRows.push(ticketData);
+        });
+
+        // Generate Tabel
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [15, 158, 120], textColor: [255, 255, 255], fontStyle: 'bold' },
+            styles: { fontSize: 8, cellPadding: 2 }, // Perkecil font sedikit untuk portrait
+            alternateRowStyles: { fillColor: [245, 245, 245] }
+        });
+
+        // Download
+        doc.save(`BIEON_Laporan_Teknisi_${new Date().getTime()}.pdf`);
+    };
+
     const fetchData = async () => {
         try {
             setIsLoading(true);
@@ -307,7 +351,13 @@ export function PengaduanKlienPage({ onNavigate }) {
     const processedData = useMemo(() => {
         let result = [...complaints];
         if (selectedStatusFilter) {
-            result = result.filter(c => c.status === selectedStatusFilter.toLowerCase());
+            const filter = selectedStatusFilter.toLowerCase();
+            result = result.filter(c => {
+                const s = c.status?.toLowerCase();
+                if (filter === 'menunggu respons') return s === 'menunggu respons' || s === 'overdue respons';
+                if (filter === 'diproses') return s === 'diproses' || s === 'overdue perbaikan';
+                return s === filter;
+            });
         }
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
@@ -464,6 +514,10 @@ export function PengaduanKlienPage({ onNavigate }) {
                                         </>
                                     )}
                                 </div>
+                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent">
+                                    <Download className="w-4 h-4 shrink-0" />
+                                    <span className="hidden sm:inline-block">Export</span>
+                                </button>
                             </div>
                         </div>
                     </div>

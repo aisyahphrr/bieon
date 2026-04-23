@@ -7,8 +7,8 @@ export const formatStatusDisplay = (status, role, timeElapsedMinutes = 0) => {
     
     // Dynamic Overdue Label Logic (Frontend-side transformation)
     let displayStatus = s;
-    if (s === 'menunggu respons' && timeElapsedMinutes > 30) displayStatus = 'overdue respons';
-    if (s === 'diproses' && timeElapsedMinutes > 3360) displayStatus = 'overdue perbaikan';
+    if (s === 'menunggu respons' && timeElapsedMinutes > 15) displayStatus = 'overdue respons';
+    if (s === 'diproses' && timeElapsedMinutes > 2880) displayStatus = 'overdue perbaikan';
 
     // Role-based aliasing
     if (role === 'homeowner') {
@@ -59,9 +59,9 @@ export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
         if (s.includes('respons')) {
             const btns = [{ action: 'detail', label: 'Detail', variant: 'info' }];
             // ONLY show 'Alihkan' if status is already overdue (mapped in backend or helpers)
-            if (s === 'overdue respons' || timeElapsedMinutes >= 30) { 
+            if (s === 'overdue respons' || timeElapsedMinutes >= 15) { 
                 btns.unshift({ action: 'reassign', label: 'Alihkan', variant: 'primary' });
-            } else if (timeElapsedMinutes >= 15) {
+            } else if (timeElapsedMinutes >= 8) {
                 btns.unshift({ action: 'ping', label: 'Ping Teknisi', variant: 'danger' });
             }
             return btns;
@@ -70,9 +70,9 @@ export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
         if (s.includes('proses') || s.includes('perbaikan')) {
             const btns = [{ action: 'detail', label: 'Detail', variant: 'info' }];
             // ONLY show 'Alihkan' if status is already overdue
-            if (s === 'overdue perbaikan' || timeElapsedMinutes >= 3360) {
+            if (s === 'overdue perbaikan' || timeElapsedMinutes >= 2880) {
                 btns.unshift({ action: 'reassign', label: 'Alihkan', variant: 'primary' });
-            } else if (timeElapsedMinutes >= 2880) {
+            } else if (timeElapsedMinutes >= 1440) {
                 btns.unshift({ action: 'ping', label: 'Ping Teknisi', variant: 'danger' });
             }
             return btns;

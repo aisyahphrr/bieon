@@ -120,4 +120,20 @@ router.delete(
     adminController.deleteTechnician
 );
 
+// GET /api/admin/all-bieon-systems
+router.get(
+    '/all-bieon-systems',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getAllBieonSystems
+);
+
+// GET /api/admin/bieon-systems/:homeownerId
+router.get(
+    '/bieon-systems/:homeownerId',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getBieonSystemsByOwner
+);
+
 module.exports = router;
