@@ -481,9 +481,11 @@ export default function SuperAdminDashboard({ onNavigate }) {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
               {PLN_SEGMENT_ORDER.map((seg) => (
                 <div key={seg} className="relative group/item">
-                  <div className="h-full bg-gray-50/50 hover:bg-white border border-gray-100 hover:border-orange-200 rounded-2xl p-5 transition-all hover:shadow-md">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{seg}</p>
-                    <div className="flex items-baseline gap-1">
+                  <div className="h-full flex flex-col bg-gray-50/50 hover:bg-white border border-gray-100 hover:border-orange-200 rounded-2xl p-5 transition-all hover:shadow-md">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 line-clamp-2 min-h-[2.5em]">
+                      {seg}
+                    </p>
+                    <div className="flex items-baseline gap-1 mt-auto">
                       <span className="text-2xl font-black text-gray-800">{plnSegmentCounts[seg] || 0}</span>
                       <span className="text-[10px] font-bold text-gray-400">GOLONGAN</span>
                     </div>
