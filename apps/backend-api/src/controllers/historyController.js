@@ -123,3 +123,35 @@ exports.getAlertHistory = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// 7. PUT /api/history/alerts/:id/read
+exports.markAlertAsRead = async (req, res) => {
+    try {
+        await Alert.findByIdAndUpdate(req.params.id, { isRead: true });
+        res.status(200).json({ success: true, message: 'Notifikasi ditandai sebagai dibaca' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 8. PUT /api/history/alerts/read-all
+exports.markAllAsRead = async (req, res) => {
+    try {
+        const ownerId = getTargetHomeownerId(req);
+        await Alert.updateMany({ owner: ownerId, isRead: false }, { isRead: true });
+        res.status(200).json({ success: true, message: 'Semua notifikasi ditandai sebagai dibaca' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 9. PUT /api/history/alerts/reset-read
+exports.resetAllRead = async (req, res) => {
+    try {
+        const ownerId = getTargetHomeownerId(req);
+        await Alert.updateMany({ owner: ownerId }, { isRead: false });
+        res.status(200).json({ success: true, message: 'Status baca berhasil di-reset' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

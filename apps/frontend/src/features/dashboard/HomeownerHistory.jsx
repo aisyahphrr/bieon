@@ -60,9 +60,11 @@ export function HomeownerHistory({ onNavigate }) {
     };
 
     const mapItemData = (tabId, item, index) => {
+        const rawTime = item.date || item.timestamp || item.createdAt;
         const base = {
             id: item._id || index,
-            time: formatDateTime(item.date || item.timestamp || item.createdAt)
+            time: formatDateTime(rawTime),
+            rawTime: rawTime
         };
 
         if (tabId === 'Kenyamanan') {
@@ -82,7 +84,7 @@ export function HomeownerHistory({ onNavigate }) {
                 voltage: item.voltage + ' V', 
                 current: item.current + ' A', 
                 power: item.power + ' W', 
-                pf: item.pf 
+                pf: item.pf + ' PF' 
             };
         }
         if (tabId === 'Log Perangkat') {
@@ -184,8 +186,8 @@ export function HomeownerHistory({ onNavigate }) {
                     aVal = parseFloat(aVal.toString().replace(/[^0-9.]/g, ''));
                     bVal = parseFloat(bVal.toString().replace(/[^0-9.]/g, ''));
                 } else if (sortConfig.key === 'time') {
-                    aVal = new Date(aVal).getTime();
-                    bVal = new Date(bVal).getTime();
+                    aVal = new Date(a.rawTime).getTime();
+                    bVal = new Date(b.rawTime).getTime();
                 }
 
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -536,7 +538,7 @@ export function HomeownerHistory({ onNavigate }) {
                                     {activeTab === 'Konsumsi Energi' && (
                                         <>
                                             <th onClick={() => requestSort('kwh')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">kWh Kumulatif {getSortIcon('kwh')}</div>
+                                                <div className="flex items-center gap-1">kWh {getSortIcon('kwh')}</div>
                                             </th>
                                             <th onClick={() => requestSort('voltage')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Voltase {getSortIcon('voltage')}</div>
@@ -545,7 +547,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                 <div className="flex items-center gap-1">Arus {getSortIcon('current')}</div>
                                             </th>
                                             <th onClick={() => requestSort('power')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Beban Daya (W) {getSortIcon('power')}</div>
+                                                <div className="flex items-center gap-1">Beban Daya {getSortIcon('power')}</div>
                                             </th>
                                             <th onClick={() => requestSort('pf')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">Power Factor {getSortIcon('pf')}</div>

@@ -12,5 +12,8 @@ router.get('/water', historyController.getWaterHistory);
 router.get('/energy', historyController.getEnergyHistory);
 router.get('/activity', historyController.getActivityHistory);
 router.get('/alerts', historyController.getAlertHistory);
+router.put('/alerts/:id/read', historyController.markAlertAsRead);
+router.put('/alerts/read-all', historyController.markAllAsRead);
+router.put('/alerts/reset-read', historyController.resetAllRead);
 
 module.exports = router;

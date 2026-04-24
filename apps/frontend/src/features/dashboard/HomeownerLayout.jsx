@@ -49,6 +49,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
   const [isTechnicianMode, setIsTechnicianMode] = useState(false);
   const [showTechReportModal, setShowTechReportModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [hasUnread, setHasUnread] = useState(false);
   const roleDropdownRef = useRef(null);
 
   useEffect(() => {
@@ -73,7 +74,29 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       }
     };
 
+    const fetchUnreadStatus = async () => {
+      try {
+        const token = localStorage.getItem('bieon_token');
+        if (!token) return;
+        const response = await fetch('/api/history/alerts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          const unread = result.data?.some(n => !n.isRead);
+          setHasUnread(unread);
+        }
+      } catch (error) {
+        console.error("Gagal cek unread:", error);
+      }
+    };
+
     fetchProfile();
+    fetchUnreadStatus();
+
+    // Re-check unread every 30 seconds
+    const interval = setInterval(fetchUnreadStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -179,6 +202,15 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showRoleDropdown]);
 
+  const handleNotificationNavigate = (menuId) => {
+    if (menuId === 'pengaduan') {
+      navigate('/pengaduan');
+    } else if (onNavigate) {
+      onNavigate(menuId);
+    }
+    setShowNotif(false);
+  };
+
   useEffect(() => {
     const handleOpenNotif = () => setShowNotif(true);
     window.addEventListener('open-notifications', handleOpenNotif);
@@ -231,9 +263,14 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                 <div className="relative flex">
                   <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
                     <Bell className="w-5 h-5 text-gray-600" />
-                    <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    {hasUnread && <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
                   </button>
-                  <NotificationPopup isOpen={showNotif} onClose={() => setShowNotif(false)} role="homeowner" />
+                  <NotificationPopup 
+                    isOpen={showNotif} 
+                    onClose={() => setShowNotif(false)} 
+                    role="homeowner" 
+                    onNavigate={handleNotificationNavigate}
+                  />
                 </div>
               )}
 

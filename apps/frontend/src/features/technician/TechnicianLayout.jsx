@@ -13,7 +13,31 @@ const NAV_ITEMS = [
 export default function TechnicianLayout({ children, activeMenu, setActiveMenu, onNavigate }) {
   const [showNotif, setShowNotif] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const fetchUnreadStatus = async () => {
+      try {
+        const token = localStorage.getItem('bieon_token');
+        if (!token) return;
+        const response = await fetch('/api/history/alerts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          const unread = result.data?.some(n => !n.isRead);
+          setHasUnread(unread);
+        }
+      } catch (error) {
+        console.error("Gagal cek unread:", error);
+      }
+    };
+
+    fetchUnreadStatus();
+    const interval = setInterval(fetchUnreadStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Open notification from external event (e.g. bell icon in child page)
   useEffect(() => {
@@ -86,9 +110,14 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                   className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
                 >
                   <Bell className="w-5 h-5 text-gray-600" />
-                  <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  {hasUnread && <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                 </button>
-                <NotificationPopup isOpen={showNotif} onClose={() => setShowNotif(false)} role="technician" />
+                <NotificationPopup 
+                  isOpen={showNotif} 
+                  onClose={() => setShowNotif(false)} 
+                  role="technician" 
+                  onNavigate={setActiveMenu}
+                />
               </div>
               
               {/* Profile Dropdown */}

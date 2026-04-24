@@ -11,10 +11,11 @@ const alertSchema = new mongoose.Schema({
     message: { type: String, required: true },
     type: { 
         type: String, 
-        enum: ['Info', 'Warning', 'Danger', 'Waspada', 'Bahaya'], 
+        enum: ['Info', 'Warning', 'Danger', 'Waspada', 'Bahaya', 'Success'], 
         default: 'Info' 
     },
     isRead: { type: Boolean, default: false },
+    link: { type: String }, // e.g., "admin-complaint", "pengaduan"
     date: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -21,13 +21,37 @@ import {
   ArrowLeft,
   Database
 } from 'lucide-react';
+import NotificationPopup from '../../components/NotificationPopup';
 
 export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Super Admin Dashboard" }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationsRead, setNotificationsRead] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+
+  useEffect(() => {
+    const fetchUnreadStatus = async () => {
+      try {
+        const token = localStorage.getItem('bieon_token');
+        if (!token) return;
+        const response = await fetch('/api/history/alerts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          const unread = result.data?.some(n => !n.isRead);
+          setHasUnread(unread);
+        }
+      } catch (error) {
+        console.error("Gagal cek unread:", error);
+      }
+    };
+
+    fetchUnreadStatus();
+    const interval = setInterval(fetchUnreadStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const menuItems = [
     { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
@@ -136,79 +160,15 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5 hidden sm:block"
                 >
                   <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
-                  {!notificationsRead && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-[#009b7c] rounded-full animate-pulse"></span>}
+                  {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-[#009b7c] rounded-full animate-pulse"></span>}
                 </button>
 
-                {showNotifications && (
-                  <div className="fixed top-[82px] right-0 w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-[70] text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center justify-between p-4 border-b border-gray-50 mb-2">
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                          <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <Bell className="w-5 h-5 text-[#009b7c]" />
-                        <h3 className="font-bold text-gray-900">Notifikasi & Alert</h3>
-                      </div>
-                      <button
-                        onClick={() => setNotificationsRead(true)}
-                        className={`text-xs font-bold ${notificationsRead ? 'text-gray-400 cursor-not-allowed' : 'text-[#009b7c] hover:underline'}`}
-                        disabled={notificationsRead}
-                      >
-                        Tandai semua dibaca
-                      </button>
-                    </div>
-
-                    <div className="space-y-2 max-h-[60vh] overflow-y-auto px-2 pb-2 custom-scrollbar">
-                      {/* Card 1: SLA Violation */}
-                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-red-50/50 border-red-100 border-l-4 border-l-red-500 hover:bg-red-50/80'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-red-100'}`}>
-                          <AlertTriangle className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-red-600'}`} />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-gray-900 mb-1">Pelanggaran SLA: Teknisi Daffa</h4>
-                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Teknisi Daffa telah melewati batas SLA perbaikan ({'>'} 48 Jam) untuk tiket TCK-0085 (Bpk. Andi). Segera lakukan eskalasi atau alihkan penugasan!</p>
-                          <p className="text-[10px] font-bold text-gray-400">10 Menit yang lalu</p>
-                        </div>
-                      </div>
-
-                      {/* Card 2: Delete confirmation */}
-                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-amber-50/50 border-amber-100 border-l-4 border-l-amber-500 hover:bg-amber-50/80'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-amber-100'}`}>
-                          <Hourglass className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-amber-600'}`} />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-gray-900 mb-1">Menunggu Konfirmasi Hapus Akun</h4>
-                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Tindakan hapus permanen untuk akun Homeowner Bpk. Rudi (USR-088) telah diteruskan. Sistem sedang menunggu konfirmasi persetujuan dari email Project Owner.</p>
-                          <p className="text-[10px] font-bold text-gray-400">30 Menit yang lalu</p>
-                        </div>
-                      </div>
-
-                      {/* Card 3: New client */}
-                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-blue-50/50 border-blue-100 border-l-4 border-l-blue-500 hover:bg-blue-50/80'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-blue-100'}`}>
-                          <User className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-blue-600'}`} />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-gray-900 mb-1">Klien Baru Terdaftar</h4>
-                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Klien baru (Ibu Sarah - Perum Mutiara) telah berhasil melakukan setup Hub Node dan menyetujui dokumen Terms & Conditions BIEON.</p>
-                          <p className="text-[10px] font-bold text-gray-400">2 Jam yang lalu</p>
-                        </div>
-                      </div>
-
-                      {/* Card 4: System update */}
-                      <div className={`rounded-2xl p-4 border flex gap-4 transition-all cursor-pointer ${notificationsRead ? 'bg-gray-50/50 border-gray-100 border-l-4 border-l-gray-300 opacity-60 grayscale' : 'bg-[#009b7c]/5 border-emerald-100 border-l-4 border-l-[#009b7c] hover:bg-[#009b7c]/10'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${notificationsRead ? 'bg-gray-200' : 'bg-emerald-100'}`}>
-                          <Database className={`w-4 h-4 ${notificationsRead ? 'text-gray-500' : 'text-[#009b7c]'}`} />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-gray-900 mb-1">OTA Update Berhasil</h4>
-                          <p className={`text-xs font-medium leading-relaxed mb-2 ${notificationsRead ? 'text-gray-500' : 'text-gray-600'}`}>Pembaruan perangkat lunak (Over-The-Air Update) versi 2.1 untuk seluruh Hub Node di regional wilayah Bogor telah berhasil diterapkan tanpa kendala.</p>
-                          <p className="text-[10px] font-bold text-gray-400">Kemarin, 23:30</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <NotificationPopup 
+                  isOpen={showNotifications} 
+                  onClose={() => setShowNotifications(false)} 
+                  role="admin"
+                  onNavigate={handleNavigate}
+                />
               </div>
 
               <div className="relative z-50">

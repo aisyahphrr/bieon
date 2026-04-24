@@ -1,11 +1,15 @@
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
+const Alert = require('../models/Alert');
 
 // [Homeowner] CREATE COMPLAINT
 exports.createComplaint = async (req, res) => {
     try {
         const { topic, category, device, desc, files } = req.body;
         const userId = req.user.userId;
+
+        // Get user info for notification details
+        const sender = await User.findById(userId);
 
         const now = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
 
@@ -25,6 +29,34 @@ exports.createComplaint = async (req, res) => {
         });
 
         await newComplaint.save();
+
+        // --- NOTIFIKASI OTOMATIS ---
+        
+        // 1. Notif untuk Homeowner (Konfirmasi)
+        await Alert.create({
+            owner: userId,
+            category: 'Sistem',
+            title: 'Pengaduan Terkirim',
+            message: `Tiket pengaduan "${topic}" Anda berhasil dibuat. Mohon tunggu respon admin.`,
+            type: 'Info',
+            link: 'pengaduan'
+        });
+
+        // 2. Notif untuk Semua Admin (Cari yang mengandung kata 'admin' secara case-insensitive)
+        const admins = await User.find({ role: { $regex: /admin/i } });
+        const adminAlerts = admins.map(admin => ({
+            owner: admin._id,
+            category: 'Sistem',
+            title: 'Tiket Pengaduan Baru',
+            message: `Ada pengaduan baru dari ${sender?.fullName || 'User'} (${sender?.bieonId || 'BIEON ID'}). Topik: ${topic}`,
+            type: 'Warning',
+            link: 'admin-complaint'
+        }));
+        
+        if (adminAlerts.length > 0) {
+            await Alert.insertMany(adminAlerts);
+        }
+
         res.status(201).json({ message: 'Tiket pengaduan berhasil dibuat!', complaint: newComplaint });
     } catch (error) {
         res.status(500).json({ message: 'Gagal membuat pengaduan', error: error.message });
@@ -160,6 +192,19 @@ exports.updateComplaintStatus = async (req, res) => {
                 desc: `Teknisi mulai memproses pengaduan.`,
                 status: 'diproses'
             });
+
+            // Notif untuk Admin (Teknisi mulai kerja)
+            const tech = await User.findById(complaint.technician);
+            const admins = await User.find({ role: { $regex: /admin/i } });
+            const adminAlerts = admins.map(admin => ({
+                owner: admin._id,
+                category: 'Sistem',
+                title: 'Teknisi Mulai Memproses',
+                message: `Teknisi ${tech?.fullName || 'Teknisi'} telah mulai mengerjakan tiket "${complaint.topic}".`,
+                type: 'Info',
+                link: 'admin-complaint'
+            }));
+            if (adminAlerts.length > 0) await Alert.insertMany(adminAlerts);
         }
         // 2. Teknisi Klik "Selesai" (Update Status ke Menunggu Konfirmasi Pelanggan) -> Selesaikan SLA Perbaikan
         else if (status === 'menunggu konfirmasi pelanggan' && complaint.processStartedAt) {
@@ -188,6 +233,16 @@ exports.updateComplaintStatus = async (req, res) => {
                 desc: `Teknisi menyatakan perbaikan selesai.`,
                 status: 'menunggu konfirmasi pelanggan'
             });
+
+            // Notif untuk Homeowner (Konfirmasi Selesai)
+            await Alert.create({
+                owner: complaint.homeowner,
+                category: 'Sistem',
+                title: 'Perbaikan Selesai',
+                message: `Teknisi telah menyelesaikan perbaikan tiket "${complaint.topic}". Silakan konfirmasi dan beri penilaian.`,
+                type: 'Success',
+                link: 'pengaduan'
+            });
         }
         // 3. Homeowner Konfirmasi Selesai & Beri Rating
         else if (status === 'selesai') {
@@ -203,6 +258,30 @@ exports.updateComplaintStatus = async (req, res) => {
                 status: 'selesai'
             });
             complaint.completedAt = nowTime;
+
+            // Notif untuk Teknisi (Pekerjaan Selesai & Rating)
+            if (complaint.technician) {
+                await Alert.create({
+                    owner: complaint.technician,
+                    category: 'Sistem',
+                    title: 'Pekerjaan Selesai',
+                    message: `Tiket "${complaint.topic}" telah selesai. Anda mendapat rating ${rating?.stars || 0}★.`,
+                    type: 'Success',
+                    link: 'pengaduan'
+                });
+            }
+
+            // Notif untuk Admin (Tiket Selesai & Feedback)
+            const admins = await User.find({ role: { $regex: /admin/i } });
+            const adminAlerts = admins.map(admin => ({
+                owner: admin._id,
+                category: 'Sistem',
+                title: 'Tiket Selesai (Feedback)',
+                message: `Tiket "${complaint.topic}" selesai. Rating: ${rating?.stars || 0}★. Ulasan: ${rating?.review || '-'}`,
+                type: 'Info',
+                link: 'admin-complaint'
+            }));
+            if (adminAlerts.length > 0) await Alert.insertMany(adminAlerts);
         }
         // 4. Status Lainnya (Ditolak, Cancelled, dll)
         else {
@@ -211,6 +290,45 @@ exports.updateComplaintStatus = async (req, res) => {
                 desc: note || `Status diperbarui menjadi ${status}.`,
                 status: status
             });
+
+            // Notif KHUSUS jika DITOLAK
+            if (status === 'ditolak') {
+                await Alert.create({
+                    owner: complaint.homeowner,
+                    category: 'Sistem',
+                    title: 'Pengaduan Ditolak',
+                    message: `Maaf, pengaduan "${complaint.topic}" Anda ditolak. Alasan: ${note || 'Tidak disebutkan.'}`,
+                    type: 'Danger',
+                    link: 'pengaduan'
+                });
+            }
+
+            // Notif KHUSUS jika DIBATALKAN (oleh Homeowner)
+            if (status === 'batal' || status === 'cancelled') {
+                // Notif ke Admin
+                const admins = await User.find({ role: { $regex: /admin/i } });
+                const adminAlerts = admins.map(admin => ({
+                    owner: admin._id,
+                    category: 'Sistem',
+                    title: 'Tiket Dibatalkan',
+                    message: `Tiket "${complaint.topic}" telah dibatalkan oleh pelanggan.`,
+                    type: 'Info',
+                    link: 'admin-complaint'
+                }));
+                if (adminAlerts.length > 0) await Alert.insertMany(adminAlerts);
+
+                // Notif ke Teknisi (jika sudah ada yang ditugaskan)
+                if (complaint.technician) {
+                    await Alert.create({
+                        owner: complaint.technician,
+                        category: 'Sistem',
+                        title: 'Tiket Dibatalkan',
+                        message: `Tiket "${complaint.topic}" yang Anda tangani telah dibatalkan oleh pelanggan.`,
+                        type: 'Warning',
+                        link: 'pengaduan'
+                    });
+                }
+            }
         }
 
         complaint.status = status || complaint.status;
@@ -244,6 +362,17 @@ exports.updateProgress = async (req, res) => {
         });
 
         await complaint.save();
+
+        // Notif untuk Homeowner (Update Progres)
+        await Alert.create({
+            owner: complaint.homeowner,
+            category: 'Sistem',
+            title: 'Update Perbaikan',
+            message: `Teknisi memperbarui progres: "${desc}".`,
+            type: 'Info',
+            link: 'pengaduan'
+        });
+
         res.status(200).json({ message: 'Progres berhasil diperbarui', complaint });
     } catch (error) {
         res.status(500).json({ message: 'Gagal memperbarui progres', error: error.message });
@@ -269,6 +398,19 @@ exports.requestDataLog = async (req, res) => {
         });
 
         await complaint.save();
+
+        // Notif untuk Semua Admin (Minta Akses Log)
+        const admins = await User.find({ role: { $regex: /admin/i } });
+        const adminAlerts = admins.map(admin => ({
+            owner: admin._id,
+            category: 'Sistem',
+            title: 'Permintaan Data Log',
+            message: `Teknisi meminta akses log untuk tiket ${complaint.topic}. Alasan: ${reason || '-'}`,
+            type: 'Warning',
+            link: 'admin-complaint'
+        }));
+        if (adminAlerts.length > 0) await Alert.insertMany(adminAlerts);
+
         res.status(200).json({ message: 'Permintaan data log dikirim', complaint });
     } catch (error) {
         res.status(500).json({ message: 'Gagal meminta data log', error: error.message });
@@ -295,6 +437,17 @@ exports.grantDataLog = async (req, res) => {
         });
 
         await complaint.save();
+
+        // Notif untuk Teknisi (Izin Log)
+        await Alert.create({
+            owner: complaint.technician,
+            category: 'Sistem',
+            title: isApproved ? 'Akses Log Diberikan' : 'Akses Log Ditolak',
+            message: isApproved ? `SuperAdmin menyetujui akses data log untuk tiket ${complaint.topic}.` : `Maaf, akses data log untuk tiket ${complaint.topic} ditolak oleh SuperAdmin.`,
+            type: isApproved ? 'Success' : 'Danger',
+            link: 'pengaduan'
+        });
+
         res.status(200).json({ message: isApproved ? 'Akses data log diberikan' : 'Akses data log ditolak', complaint });
     } catch (error) {
         res.status(500).json({ message: 'Gagal memproses akses data log', error: error.message });
@@ -347,6 +500,45 @@ exports.assignTechnician = async (req, res) => {
 
         await complaint.save();
 
+        // --- NOTIFIKASI PENUGASAN (DENGAN DE-DUPLIKASI) ---
+        const tenSecondsAgo = new Date(Date.now() - 10000);
+        
+        // 1. Notif untuk Teknisi
+        const existingTechAlert = await Alert.findOne({
+            owner: technicianId,
+            title: 'Tugas Perbaikan Baru',
+            createdAt: { $gt: tenSecondsAgo }
+        });
+
+        if (!existingTechAlert) {
+            await Alert.create({
+                owner: technicianId,
+                category: 'Sistem',
+                title: 'Tugas Perbaikan Baru',
+                message: `Anda ditugaskan untuk menangani pengaduan: "${complaint.topic}". Segera cek detail tugas.`,
+                type: 'Info',
+                link: 'pengaduan'
+            });
+        }
+
+        // 2. Notif untuk Homeowner
+        const existingHomeownerAlert = await Alert.findOne({
+            owner: complaint.homeowner,
+            title: 'Teknisi Ditugaskan',
+            createdAt: { $gt: tenSecondsAgo }
+        });
+
+        if (!existingHomeownerAlert) {
+            await Alert.create({
+                owner: complaint.homeowner,
+                category: 'Sistem',
+                title: 'Teknisi Ditugaskan',
+                message: `Teknisi ${newTech.fullName} telah ditugaskan untuk menangani pengaduan Anda.`,
+                type: 'Success',
+                link: 'pengaduan'
+            });
+        }
+
         // Ambil data terbaru yang sudah di-populate untuk respons
         const updatedComplaint = await Complaint.findById(id)
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
@@ -391,6 +583,19 @@ exports.pingComplaint = async (req, res) => {
         });
 
         await complaint.save();
+
+        // Notif untuk Teknisi (PING!)
+        if (complaint.technician) {
+            await Alert.create({
+                owner: complaint.technician,
+                category: 'Sistem',
+                title: `TEGURAN PING #${complaint.pingCount}`,
+                message: `Admin mengirimkan PING! Segera selesaikan tiket ${complaint.topic}. Status urgensi: ${newUrgency.toUpperCase()}`,
+                type: 'Danger',
+                link: 'pengaduan'
+            });
+        }
+
         res.status(200).json({ 
             message: 'Berhasil mengirimkan PING', 
             urgencyLevel: newUrgency, 
@@ -405,52 +610,88 @@ exports.pingComplaint = async (req, res) => {
 // --- SLA AUTO-CHECK HELPER ---
 async function checkAndUpdateSLAStatuses() {
     const now = new Date();
+    const nowStr = now.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
     
     // 1. Check Overdue Respons (assignedAt > 30 mins ago)
     const overdueResponsTime = new Date(now.getTime() - (30 * 60 * 1000));
-    await Complaint.updateMany(
-        { 
-            status: 'menunggu respons', 
-            assignedAt: { $lt: overdueResponsTime }
-        },
-        { 
-            $set: { status: 'overdue respons' },
-            $push: { 
-                timeline: {
-                    $each: [{
-                        time: now.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
-                        desc: 'Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.',
-                        status: 'overdue respons',
-                        visibility: 'internal'
-                    }],
-                    $position: 0
-                }
-            }
-        }
-    );
+    const pendingRespons = await Complaint.find({ 
+        status: 'menunggu respons', 
+        assignedAt: { $lt: overdueResponsTime }
+    }).populate('homeowner', 'bieonId');
+
+    for (const comp of pendingRespons) {
+        // Update Status & Timeline
+        comp.status = 'overdue respons';
+        comp.timeline.unshift({
+            time: nowStr,
+            desc: 'Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.',
+            status: 'overdue respons',
+            visibility: 'internal'
+        });
+        await comp.save();
+
+        // Kirim Notif ke Teknisi
+        await Alert.create({
+            owner: comp.technician,
+            category: 'Sistem',
+            title: 'SLA Overdue Respons',
+            message: `Peringatan: Tiket ${comp.topic} telah melewati batas waktu respon 30 menit!`,
+            type: 'Danger',
+            link: 'pengaduan'
+        });
+
+        // Kirim Notif ke Semua Admin
+        const admins = await User.find({ role: { $regex: /admin/i } });
+        const adminAlerts = admins.map(admin => ({
+            owner: admin._id,
+            category: 'Sistem',
+            title: 'KRITIS: SLA Overdue',
+            message: `Tiket dari ${comp.homeowner?.bieonId || 'User'} Overdue Respons! Segera alihkan teknisi.`,
+            type: 'Danger',
+            link: 'admin-complaint'
+        }));
+        if (adminAlerts.length > 0) await Alert.insertMany(adminAlerts);
+    }
 
     // 2. Check Overdue Perbaikan (processStartedAt > 56 hours ago)
     const overdueRepairTime = new Date(now.getTime() - (56 * 60 * 60 * 1000));
-    await Complaint.updateMany(
-        { 
-            status: 'diproses', 
-            processStartedAt: { $lt: overdueRepairTime }
-        },
-        { 
-            $set: { status: 'overdue perbaikan' },
-            $push: { 
-                timeline: {
-                    $each: [{
-                        time: now.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
-                        desc: 'Batas waktu perbaikan terlampaui (56 jam). Status otomatis berubah menjadi Overdue Perbaikan.',
-                        status: 'overdue perbaikan',
-                        visibility: 'internal'
-                    }],
-                    $position: 0
-                }
-            }
-        }
-    );
+    const pendingRepair = await Complaint.find({ 
+        status: 'diproses', 
+        processStartedAt: { $lt: overdueRepairTime }
+    }).populate('homeowner', 'bieonId');
+
+    for (const comp of pendingRepair) {
+        comp.status = 'overdue perbaikan';
+        comp.timeline.unshift({
+            time: nowStr,
+            desc: 'Batas waktu perbaikan terlampaui (56 jam). Status otomatis berubah menjadi Overdue Perbaikan.',
+            status: 'overdue perbaikan',
+            visibility: 'internal'
+        });
+        await comp.save();
+
+        // Notif Teknisi
+        await Alert.create({
+            owner: comp.technician,
+            category: 'Sistem',
+            title: 'SLA Overdue Perbaikan',
+            message: `Peringatan: Perbaikan tiket ${comp.topic} telah melewati batas 56 jam!`,
+            type: 'Danger',
+            link: 'pengaduan'
+        });
+
+        // Notif Admin
+        const admins = await User.find({ role: { $regex: /admin/i } });
+        const adminAlerts = admins.map(admin => ({
+            owner: admin._id,
+            category: 'Sistem',
+            title: 'SLA Overdue Perbaikan',
+            message: `Tiket ${comp.homeowner?.bieonId || 'User'} telah melewati batas waktu perbaikan.`,
+            type: 'Warning',
+            link: 'admin-complaint'
+        }));
+        if (adminAlerts.length > 0) await Alert.insertMany(adminAlerts);
+    }
 
     // 3. Migration for legacy 'Baru' status to 'unassigned'
     await Complaint.updateMany({ status: 'Baru' }, { $set: { status: 'unassigned' } });

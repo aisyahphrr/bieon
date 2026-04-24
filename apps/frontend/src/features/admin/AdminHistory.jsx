@@ -194,14 +194,14 @@ export default function AdminHistory({ onNavigate }) {
             id: item._id || index,
             time: formatDateTime(rawDate),
             timestamp: new Date(rawDate).getTime(),
-            status: item.status || 'Normal'
+            status: item.status || item.type || 'Normal'
         };
         if (tabId === 'Kenyamanan') return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity };
         if (tabId === 'Keamanan') return { ...base, room: item.room, door: item.door, motion: item.motion };
         if (tabId === 'Kualitas Air') return { ...base, device: item.device?.name || item.device || 'Sensor Air', ph: item.ph, turbidity: cleanValue(item.turbidity), temp: cleanValue(item.temperature), tds: cleanValue(item.tds) };
-        if (tabId === 'Konsumsi Energi') return { ...base, device: item.device?.name || item.device || 'Power Meter', kwh: cleanValue(item.totalKwh), voltage: cleanValue(item.voltage), current: cleanValue(item.current), power: cleanValue(item.power), pf: item.pf };
+        if (tabId === 'Konsumsi Energi') return { ...base, device: item.device?.name || item.device || 'Power Meter', kwh: cleanValue(item.totalKwh), voltage: cleanValue(item.voltage), current: cleanValue(item.current), power: cleanValue(item.power), pf: item.pf + ' PF' };
         if (tabId === 'Log Perangkat') return { ...base, room: item.room, actuator: item.actuator, trigger: item.trigger };
-        if (tabId === 'Notifikasi & Alert') return { ...base, category: item.category, room: item.room, message: item.message };
+        if (tabId === 'Notifikasi & Alert') return { ...base, status: item.type || item.status || 'Normal', category: item.category, room: item.room, message: item.message, isRead: item.isRead };
         return item;
     };
 
@@ -274,6 +274,10 @@ export default function AdminHistory({ onNavigate }) {
             filtered.sort((a, b) => {
                 let aVal = a[sortConfig.key], bVal = b[sortConfig.key];
                 if (sortConfig.key === 'time') { aVal = a.timestamp; bVal = b.timestamp; }
+                else if (typeof aVal === 'string' && !isNaN(parseFloat(aVal.replace(/[^0-9.-]/g, '')))) {
+                    aVal = parseFloat(aVal.replace(/[^0-9.-]/g, ''));
+                    bVal = parseFloat(bVal.replace(/[^0-9.-]/g, ''));
+                }
                 if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -519,7 +523,22 @@ export default function AdminHistory({ onNavigate }) {
                         </div>
                         <div className="flex items-center gap-3 w-full lg:w-auto">
                             <div className="relative flex-1 lg:w-56 xl:w-64"><Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" /><input type="text" placeholder="Cari data..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#009b7c]/10 shadow-sm" /></div>
-                            <div className="relative"><button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}><Filter className="w-4 h-4" /><span>{selectedRoomFilter || 'Semua'}</span><ChevronDown className="w-4 h-4" /></button>{showFilterDropdown && (<div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-30"><button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>Semua</button>{availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{f}</button>)}</div>)}</div>
+                                <div className="relative">
+                                    <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}>
+                                        <Filter className="w-4 h-4" />
+                                        <span>{selectedRoomFilter || 'Semua'}</span>
+                                        <ChevronDown className="w-4 h-4" />
+                                    </button>
+                                    {showFilterDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-20" onClick={() => setShowFilterDropdown(false)}></div>
+                                            <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-30">
+                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>Semua</button>
+                                                {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{f}</button>)}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                         </div>
                     </div>
 
@@ -532,14 +551,39 @@ export default function AdminHistory({ onNavigate }) {
                                         <th onClick={() => requestSort('time')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Waktu {getSortIcon('time')}</div></th>
                                         {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Kategori {getSortIcon('category')}</div></th>}
                                         <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Perangkat' : 'Ruangan'} {getSortIcon(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')}</div></th>
-                                        {activeTab === 'Kenyamanan' && (<><th className="px-6 py-5 text-center">Suhu</th><th className="px-6 py-5 text-center">Kelembapan</th></>)}
-                                        {activeTab === 'Keamanan' && (<><th className="px-6 py-5 text-center">Pintu</th><th className="px-6 py-5 text-center">Gerak</th></>)}
-                                        {activeTab === 'Kualitas Air' && (<><th className="px-6 py-5 text-center">pH</th><th className="px-6 py-5 text-center">Kekeruhan</th><th className="px-6 py-5 text-center">Suhu</th><th className="px-6 py-5 text-center">TDS</th></>)}
-                                        {activeTab === 'Konsumsi Energi' && (<><th className="px-6 py-5 text-center">Energi</th><th className="px-6 py-5 text-center">Voltase</th><th className="px-6 py-5 text-center">Arus</th><th className="px-6 py-5 text-center">Beban</th><th className="px-6 py-5 text-center">PF</th></>)}
-                                        {activeTab === 'Log Perangkat' && <th className="px-6 py-5">Aktuator</th>}
-                                        {activeTab !== 'Konsumsi Energi' && <th className="px-6 py-5 text-center">Status</th>}
-                                        {activeTab === 'Log Perangkat' && <th className="px-6 py-5">Pemicu</th>}
-                                        {activeTab === 'Notifikasi & Alert' && <th className="px-6 py-5">Pesan</th>}
+                                        {activeTab === 'Kenyamanan' && (
+                                            <>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Suhu {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('humidity')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Kelembapan {getSortIcon('humidity')}</div></th>
+                                            </>
+                                        )}
+                                        {activeTab === 'Keamanan' && (
+                                            <>
+                                                <th onClick={() => requestSort('door')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Pintu {getSortIcon('door')}</div></th>
+                                                <th onClick={() => requestSort('motion')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Gerak {getSortIcon('motion')}</div></th>
+                                            </>
+                                        )}
+                                        {activeTab === 'Kualitas Air' && (
+                                            <>
+                                                <th onClick={() => requestSort('ph')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">pH {getSortIcon('ph')}</div></th>
+                                                <th onClick={() => requestSort('turbidity')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Kekeruhan {getSortIcon('turbidity')}</div></th>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Suhu {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('tds')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Padatan Terlarut (TDS) {getSortIcon('tds')}</div></th>
+                                            </>
+                                        )}
+                                        {activeTab === 'Konsumsi Energi' && (
+                                            <>
+                                                <th onClick={() => requestSort('kwh')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">kWh {getSortIcon('kwh')}</div></th>
+                                                <th onClick={() => requestSort('voltage')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Voltase {getSortIcon('voltage')}</div></th>
+                                                <th onClick={() => requestSort('current')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Arus {getSortIcon('current')}</div></th>
+                                                <th onClick={() => requestSort('power')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Beban Daya {getSortIcon('power')}</div></th>
+                                                <th onClick={() => requestSort('pf')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Power Factor {getSortIcon('pf')}</div></th>
+                                            </>
+                                        )}
+                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('actuator')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Perangkat (Aktuator) {getSortIcon('actuator')}</div></th>}
+                                        {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{activeTab === 'Notifikasi & Alert' ? 'Tingkat Bahaya' : 'Status'} {getSortIcon('status')}</div></th>}
+                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('trigger')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pemicu (Trigger) {getSortIcon('trigger')}</div></th>}
+                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('message')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pesan Detail Alert {getSortIcon('message')}</div></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -553,7 +597,7 @@ export default function AdminHistory({ onNavigate }) {
                                             {activeTab === 'Kualitas Air' && (<><td className="px-6 py-4 text-center">{item.ph}</td><td className="px-6 py-4 text-center">{item.turbidity} NTU</td><td className="px-6 py-4 text-center">{item.temp}°C</td><td className="px-6 py-4 text-center">{item.tds} ppm</td></>)}
                                             {activeTab === 'Konsumsi Energi' && (<><td className="px-6 py-4 text-center">{Number(item.kwh).toFixed(2)} kWh</td><td className="px-6 py-4 text-center">{item.voltage} V</td><td className="px-6 py-4 text-center">{item.current} A</td><td className="px-6 py-4 text-center">{item.power} W</td><td className="px-6 py-4 text-center">{item.pf}</td></>)}
                                             {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.actuator}</td>}
-                                            {activeTab !== 'Konsumsi Energi' && <td className="px-6 py-4 text-center"><div className="flex justify-center"><StatusBadge status={item.status} /></div></td>}
+                                            {activeTab !== 'Konsumsi Energi' && <td className="px-6 py-4 text-center"><div className="flex justify-center"><StatusBadge status={item.status} isRead={item.isRead} /></div></td>}
                                             {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.trigger}</td>}
                                             {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-xs text-gray-500 max-w-md">{item.message}</td>}
                                         </tr>
@@ -562,7 +606,7 @@ export default function AdminHistory({ onNavigate }) {
                             </table>
                         </div>
                         <div className="flex flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/30">
-                            <div className="flex items-center gap-3"><span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Rows:</span><div className="relative"><button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm">{rowsPerPage} <ChevronDown className="w-3 h-3 text-gray-400" /></button>{showRowsDropdown && (<div className="absolute bottom-full left-0 mb-2 w-16 bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 z-20">{[5, 10, 20, 50].map(val => (<button key={val} onClick={() => { setRowsPerPage(val); setCurrentPage(1); setShowRowsDropdown(false); }} className={`w-full text-left px-4 py-1.5 text-xs ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{val}</button>))}</div>)}</div></div>
+                            <div className="flex items-center gap-3"><span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Rows:</span><div className="relative"><button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm">{rowsPerPage} <ChevronDown className="w-3 h-3 text-gray-400" /></button>{showRowsDropdown && (<><div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div><div className="absolute bottom-full left-0 mb-2 w-16 bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 z-20">{[5, 10, 20, 50].map(val => (<button key={val} onClick={() => { setRowsPerPage(val); setCurrentPage(1); setShowRowsDropdown(false); }} className={`w-full text-left px-4 py-1.5 text-xs ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{val}</button>))}</div></>)}</div></div>
                             <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">{totalItems > 0 ? `${startIndex + 1}-${Math.min(startIndex + rowsPerPage, totalItems)} OF ${totalItems}` : '0 OF 0'}</div>
                             <div className="flex items-center gap-2"><button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-40"><ChevronLeft className="w-5 h-5 text-gray-600" /></button><button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-40"><ChevronRight className="w-5 h-5 text-gray-600" /></button></div>
                         </div>

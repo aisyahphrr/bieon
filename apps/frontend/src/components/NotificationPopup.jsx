@@ -1,299 +1,218 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Bell, AlertTriangle, Briefcase, 
   User, Award, Hourglass, Server, Activity, 
   Fan, Flame, Zap, Lock, LogIn, CheckCircle, CheckCheck
 } from 'lucide-react';
 
-const notificationData = {
-  technician: [
-    {
-      id: 1,
-      type: 'danger',
-      title: 'Peringatan SLA: TCK-0085',
-      message: 'Waktu penyelesaian tiket Bpk. Andi telah melewati batas SLA (48 Jam). Mohon segera update status perbaikan!',
-      time: '5 Menit yang lalu',
-      icon: AlertTriangle,
-    },
-    {
-      id: 2,
-      type: 'warning',
-      title: 'Penugasan Tiket Baru',
-      message: 'Anda ditugaskan pada tiket TCK-0092 (Sensor Gas Bocor) di Perum Dramaga. Segera lakukan respons awal.',
-      time: '30 Menit yang lalu',
-      icon: Briefcase,
-    },
-    {
-      id: 3,
-      type: 'info',
-      title: 'Akses Data Log Disetujui',
-      message: 'SuperAdmin telah memberikan akses log riwayat untuk Hub Node milik Ibu Siti (USR002).',
-      time: '2 Jam yang lalu',
-      icon: LogIn,
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'Tiket TCK-0070 Selesai',
-      message: 'Kerja bagus! Tiket telah ditutup. Pelanggan memberikan penilaian ⭐ 5/5 untuk pelayanan Anda.',
-      time: 'Kemarin, 14:30',
-      icon: Award,
-    }
-  ],
-  admin: [
-    {
-      id: 1,
-      type: 'danger',
-      title: 'Pelanggaran SLA: Teknisi Daffa',
-      message: 'Teknisi Daffa telah melewati batas SLA perbaikan (> 48 Jam) untuk tiket TCK-0085 (Bpk. Andi). Segera lakukan eskalasi atau alihkan penugasan!',
-      time: '10 Menit yang lalu',
-      icon: AlertTriangle,
-    },
-    {
-      id: 2,
-      type: 'warning',
-      title: 'Menunggu Konfirmasi Hapus Akun',
-      message: 'Tindakan hapus permanen untuk akun Homeowner Bpk. Rudi (USR-088) telah diteruskan. Sistem sedang menunggu konfirmasi persetujuan dari email Project Owner.',
-      time: '30 Menit yang lalu',
-      icon: Hourglass,
-    },
-    {
-      id: 3,
-      type: 'info',
-      title: 'Klien Baru Terdaftar',
-      message: 'Klien baru (Ibu Sarah - Perum Mutiara) telah berhasil melakukan setup Hub Node dan menyetujui dokumen Terms & Conditions BIEON.',
-      time: '2 Jam yang lalu',
-      icon: User,
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'OTA Update Berhasil',
-      message: 'Pembaruan perangkat lunak (Over-The-Air Update) versi 2.1 untuk seluruh Hub Node di regional wilayah Bogor telah berhasil diterapkan tanpa kendala.',
-      time: 'Kemarin, 23:30',
-      icon: Server,
-    }
-  ],
-  homeowner: [
-    {
-      id: 1,
-      type: 'purple',
-      title: 'Motion Detected',
-      message: 'Gerakan terdeteksi di ruang tamu',
-      time: '2 min ago',
-      icon: Activity,
-    },
-    {
-      id: 2,
-      type: 'info',
-      title: 'Suhu Tinggi - Kipas Auto ON',
-      message: 'Suhu ruang produksi 31°C, kipas otomatis menyala',
-      time: '5 min ago',
-      icon: Fan,
-    },
-    {
-      id: 3,
-      type: 'danger',
-      title: 'Gas Berbahaya Terdeteksi',
-      message: 'Konsentrasi gas di dapur melebihi batas',
-      time: '10 min ago',
-      icon: AlertTriangle,
-    },
-    {
-      id: 4,
-      type: 'warning',
-      title: 'Peringatan Token PLN',
-      message: 'Sisa token PLN hampir habis (Rp50.000)',
-      time: '1 hour ago',
-      icon: Zap,
-    },
-    {
-      id: 5,
-      type: 'purple',
-      title: 'Door Sensor Alert',
-      message: 'Pintu depan terbuka tanpa otoritas',
-      time: '15 min ago',
-      icon: Lock,
-    },
-    // Duplicated dummy data to test scrolling
-    {
-      id: 6,
-      type: 'purple',
-      title: 'Motion Detected (Archive)',
-      message: 'Gerakan terdeteksi di ruang tamu',
-      time: '2 hours ago',
-      icon: Activity,
-    },
-    {
-      id: 7,
-      type: 'info',
-      title: 'Suhu Tinggi (Archive)',
-      message: 'Suhu ruang produksi 31°C, kipas otomatis menyala',
-      time: '3 hours ago',
-      icon: Fan,
-    },
-    {
-      id: 8,
-      type: 'danger',
-      title: 'Gas Berbahaya (Archive)',
-      message: 'Konsentrasi gas di dapur melebihi batas',
-      time: '4 hours ago',
-      icon: AlertTriangle,
-    },
-    {
-      id: 9,
-      type: 'warning',
-      title: 'Tagihan Air',
-      message: 'Tagihan air PDAM bulan ini Rp125.000',
-      time: '1 day ago',
-      icon: Zap,
-    },
-    {
-      id: 10,
-      type: 'success',
-      title: 'Sistem Optimal',
-      message: 'Semua sistem berjalan dengan normal dan optimal hari ini.',
-      time: '1 day ago',
-      icon: CheckCircle,
-    }
-  ]
-};
-
 const typeStyles = {
-  danger: {
-    border: 'border-[#ff3b30]',
-    bg: 'bg-red-50',
-    iconText: 'text-[#ff3b30]',
-    iconBg: 'bg-red-100'
-  },
-  warning: {
-    border: 'border-[#ff9500]',
-    bg: 'bg-orange-50',
-    iconText: 'text-[#ff9500]',
-    iconBg: 'bg-amber-100'
-  },
-  info: {
-    border: 'border-[#007aff]',
-    bg: 'bg-blue-50',
-    iconText: 'text-[#007aff]',
-    iconBg: 'bg-blue-100'
-  },
-  success: {
-    border: 'border-[#34c759]',
-    bg: 'bg-green-50',
-    iconText: 'text-[#34c759]',
-    iconBg: 'bg-green-100'
-  },
-  purple: {
-    border: 'border-[#af52de]',
-    bg: 'bg-purple-50',
-    iconText: 'text-[#af52de]',
-    iconBg: 'bg-purple-100'
-  }
+  danger: { border: 'border-[#ff3b30]', bg: 'bg-red-50', iconText: 'text-[#ff3b30]', iconBg: 'bg-red-100', icon: AlertTriangle, accent: 'bg-red-500' },
+  warning: { border: 'border-[#ff9500]', bg: 'bg-orange-50', iconText: 'text-[#ff9500]', iconBg: 'bg-amber-100', icon: Zap, accent: 'bg-amber-500' },
+  info: { border: 'border-[#007aff]', bg: 'bg-blue-50', iconText: 'text-[#007aff]', iconBg: 'bg-blue-100', icon: LogIn, accent: 'bg-blue-500' },
+  success: { border: 'border-[#34c759]', bg: 'bg-green-50', iconText: 'text-[#34c759]', iconBg: 'bg-green-100', icon: CheckCircle, accent: 'bg-green-500' },
+  purple: { border: 'border-[#af52de]', bg: 'bg-purple-50', iconText: 'text-[#af52de]', iconBg: 'bg-purple-100', icon: Activity, accent: 'bg-purple-500' },
+  sistem: { border: 'border-teal-500', bg: 'bg-teal-50', iconText: 'text-teal-600', iconBg: 'bg-teal-100', icon: Server, accent: 'bg-teal-500' }
 };
 
-const NotificationPopup = ({ 
-  isOpen, 
-  onClose, 
-  role = 'homeowner' // 'technician', 'admin', 'homeowner'
-}) => {
-  const [isAllRead, setIsAllRead] = useState(false);
-  const [readIds, setReadIds] = useState(new Set());
-  const [dynamicNotifs, setDynamicNotifs] = useState([]);
+const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate }) => {
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const popupRef = useRef(null);
+  const token = localStorage.getItem('bieon_token');
 
-  React.useEffect(() => {
-    const handleAddNotif = (e) => {
-      setDynamicNotifs(prev => [e.detail, ...prev]);
+  // Handle Click Outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        // Cek apakah yang diklik bukan tombol lonceng (karena tombol lonceng punya logic toggle sendiri)
+        if (!event.target.closest('button')) {
+          onClose();
+        }
+      }
     };
-    window.addEventListener('add-notification', handleAddNotif);
-    return () => window.removeEventListener('add-notification', handleAddNotif);
-  }, []);
 
-  if (!isOpen) return null;
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
-  const baseNotifications = notificationData[role] || [];
-  const notifications = role === 'homeowner' ? [...dynamicNotifs, ...baseNotifications] : baseNotifications;
-
-  const isRead = (id) => isAllRead || readIds.has(id);
-  const handleRead = (id) => {
-    if (!isAllRead) {
-      setReadIds(prev => new Set(prev).add(id));
+  const fetchNotifications = async () => {
+    if (!token) return;
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/history/alerts', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setNotifications(result.data || []);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil notifikasi:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen]);
+
+  const handleRead = async (notif) => {
+    try {
+      const id = notif._id;
+      // Optimistic Update
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+
+      // Jika ada link, arahkan ke halaman tersebut
+      if (notif.link && onNavigate) {
+        onNavigate(notif.link);
+        onClose(); // Tutup popup setelah navigasi
+      }
+
+      // Update to backend
+      await fetch(`/api/history/alerts/${id}/read`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Gagal menandai baca:", error);
+    }
+  };
+
+  const resetReadStatus = async () => {
+    try {
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: false })));
+      await fetch('/api/history/alerts/reset-read', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Gagal reset status baca:", error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      await fetch('/api/history/alerts/read-all', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Gagal menandai semua baca:", error);
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed right-3 sm:right-0 top-[68px] sm:top-[56px] md:top-[73px] z-[50] w-[calc(100vw-24px)] sm:w-[420px] max-h-[75vh] sm:max-h-none sm:h-[calc(100vh-56px)] md:h-[calc(100vh-73px)] bg-white/95 sm:bg-white/80 backdrop-blur-md shadow-2xl sm:shadow-[-10px_0_40px_rgba(0,0,0,0.08)] flex flex-col border border-gray-100 sm:border-y-0 sm:border-r-0 sm:border-l overflow-hidden rounded-[24px] sm:rounded-none sm:rounded-l-[32px] animate-in fade-in zoom-in-95 sm:slide-in-from-right-8 sm:zoom-in-100 duration-300" >
+    <div 
+      ref={popupRef}
+      className="fixed right-4 top-[72px] md:top-[85px] z-[70] w-[calc(100vw-32px)] sm:w-[400px] h-auto max-h-[80vh] bg-white/95 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex flex-col border border-gray-100 rounded-[32px] overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300"
+    >
       
       {/* Header */}
-      <div className="px-5 py-4 flex items-center justify-between border-b border-gray-50 flex-shrink-0 bg-transparent z-10">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-gray-50 flex-shrink-0 bg-white/50">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={onClose} 
-            className="p-1.5 -ml-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-700"
-          >
-            <ArrowLeft className="w-5 h-5 stroke-[2.5px]" />
-          </button>
-          <div className="flex items-center gap-2">
+          <div className="p-2 bg-emerald-50 rounded-xl">
             <Bell className="w-5 h-5 text-[#059669] stroke-[2.5px]" />
-            <h2 className="text-gray-900 font-bold text-[17px] tracking-tight">Notifikasi & Alert</h2>
           </div>
+          <h2 className="text-gray-900 font-bold text-[17px] tracking-tight">Notifikasi</h2>
         </div>
-        {!isAllRead && (
-          <button 
-            onClick={() => setIsAllRead(true)}
-            className="text-[13px] text-[#059669] font-medium tracking-wide hover:text-emerald-700 transition-colors"
-          >
-            Tandai semua dibaca
+        <div className="flex items-center gap-4">
+          <button onClick={resetReadStatus} className="text-[11px] text-gray-400 font-bold hover:text-gray-600 transition-colors uppercase tracking-wider">
+            Reset
           </button>
+          <button onClick={markAllAsRead} className="text-[13px] text-[#059669] font-bold hover:text-emerald-700 transition-colors">
+            Baca Semua
+          </button>
+        </div>
+      </div>
+
+      {/* Content List */}
+      <div className="overflow-y-auto w-full p-4 space-y-3 custom-scrollbar">
+        {isLoading && notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+            <div className="w-8 h-8 border-3 border-gray-100 border-t-emerald-500 rounded-full animate-spin mb-3" />
+            <p className="text-xs font-bold uppercase tracking-widest opacity-60">Memuat...</p>
+          </div>
+        ) : notifications.length > 0 ? (
+          notifications.map((notif) => {
+            const msg = (notif.message + " " + notif.title + " " + (notif.category || '')).toLowerCase();
+            let type = notif.type?.toLowerCase();
+
+            if (!type || !typeStyles[type]) {
+               if (msg.includes('bahaya') || msg.includes('gas') || msg.includes('melebihi')) type = 'danger';
+               else if (msg.includes('waspada') || msg.includes('token') || msg.includes('peringatan')) type = 'warning';
+               else if (msg.includes('gerak') || msg.includes('pintu') || msg.includes('keamanan')) type = 'purple';
+               else if (msg.includes('berhasil') || msg.includes('selesai') || msg.includes('optimal')) type = 'success';
+               else type = 'info';
+            }
+
+            const style = typeStyles[type] || typeStyles.info;
+            const Icon = style.icon;
+
+            return (
+              <div 
+                key={notif._id}
+                onClick={() => handleRead(notif)}
+                className={`group relative rounded-[24px] p-4 border transition-all duration-300 cursor-pointer overflow-hidden
+                  ${notif.isRead 
+                    ? 'bg-gray-50/40 border-gray-100 opacity-60 grayscale-[0.5]' 
+                    : `${style.bg} ${style.border} hover:scale-[1.02] shadow-sm hover:shadow-md active:scale-95`
+                  }`}
+              >
+                <div className="flex gap-4">
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-300
+                    ${notif.isRead ? 'bg-gray-200' : style.iconBg}`}>
+                    <Icon className={`w-5 h-5 ${notif.isRead ? 'text-gray-500' : style.iconText}`} strokeWidth={2.5} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`text-sm font-bold truncate mb-0.5 ${notif.isRead ? 'text-gray-600' : 'text-gray-900'}`}>
+                      {notif.title || notif.category}
+                    </h4>
+                    <p className={`text-[13px] leading-relaxed ${notif.isRead ? 'text-gray-400' : 'text-gray-600 font-medium'}`}>
+                      {notif.message}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-[11px] font-medium text-gray-400">
+                        {notif.date ? new Date(notif.date).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', ':') : 'Baru saja'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 relative">
+              <Bell className="w-8 h-8 text-gray-200" />
+              <div className="absolute top-5 right-5 w-3 h-3 bg-white rounded-full border-4 border-gray-50" />
+            </div>
+            <h3 className="text-gray-900 font-bold text-base mb-1">Hening Sekali...</h3>
+            <p className="text-gray-400 text-[13px] font-medium leading-relaxed">
+              Belum ada notifikasi baru untukmu saat ini. Cek kembali nanti ya!
+            </p>
+          </div>
         )}
       </div>
 
-      {/* Content / List Items */}
-      <div className="flex-1 overflow-y-auto w-full p-4 space-y-4 bg-transparent custom-scrollbar pb-6 hidden-scrollbar">
-        {notifications.map((notif) => {
-          const style = typeStyles[notif.type] || typeStyles.info;
-          const Icon = notif.icon;
-
-          return (
-            <div 
-              key={notif.id}
-              onClick={() => handleRead(notif.id)}
-              className={`relative flex items-start gap-4 p-4 rounded-2xl border-l-[5px] transition-all duration-300 group cursor-pointer shadow-sm
-                ${!isRead(notif.id) 
-                  ? `${style.bg} ${style.border} hover:-translate-y-0.5 hover:shadow-md` 
-                  : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 border-l-gray-300'
-                }`}
-            >
-              {/* Icon Container */}
-              <div className={`shrink-0 w-11 h-11 rounded-[14px] flex items-center justify-center transition-colors duration-300
-                ${!isRead(notif.id) ? style.iconBg : 'bg-gray-200'} `}>
-                <Icon className={`w-5 h-5 stroke-[2px] transition-colors duration-300 ${!isRead(notif.id) ? style.iconText : 'text-gray-500'} `} />
-              </div>
-
-              {/* Text Content */}
-              <div className="flex-1 min-w-0 pt-0.5">
-                <h3 className="text-gray-900 font-bold text-[15px] leading-snug mb-1.5 tracking-tight group-hover:text-gray-950 transition-colors">
-                  {notif.title}
-                </h3>
-                <p className="text-[#64748b] text-[13.5px] leading-relaxed mb-2.5">
-                  {notif.message}
-                </p>
-                <div className="text-[#94a3b8] text-[12px] font-medium tracking-wide">
-                  {notif.time}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="p-3 bg-gray-50/50 flex justify-center border-t border-gray-50">
+        <button 
+          onClick={onClose}
+          className="w-12 h-1.5 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors"
+          title="Tutup"
+        />
       </div>
-      
-      {/* Custom Scrollbar Styles for the component only - Tailwind allows arbitrary CSS but we can add directly */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .hidden-scrollbar::-webkit-scrollbar {
-          width: 0px;
-          background: transparent;
-        }
-      `}} />
     </div>
   );
 };
