@@ -68,7 +68,6 @@ export default function AdminTariff({ onNavigate }) {
 
     // --- CAROUSEL STATES ---
     const [activeSlide, setActiveSlide] = useState(0);
-    const [isAutoPlayEnabled, setIsAutoPlayEnabled] = useState(true);
 
     // --- API DATA STATES ---
     const [categoryStats, setCategoryStats] = useState([]);
@@ -80,31 +79,14 @@ export default function AdminTariff({ onNavigate }) {
         trend: null
     });
 
-    const shortcutGolonganOptions = useMemo(
-        () => plnCategories.filter((c) => c.isShortcut).map((c) => c.label),
-        [plnCategories]
-    );
+    const activeSegmentName = PLN_SEGMENT_ORDER[activeSlide] || PLN_SEGMENT_ORDER[0];
 
-    const allGolonganOptions = useMemo(
-        () => plnCategories.map((c) => c.label),
-        [plnCategories]
-    );
+    const subCategoriesInSegment = useMemo(() => {
+        return plnCategories.filter((c) => c.segment === activeSegmentName);
+    }, [plnCategories, activeSegmentName]);
 
-    useEffect(() => {
-        if (activeSlide >= shortcutGolonganOptions.length) setActiveSlide(0);
-    }, [activeSlide, shortcutGolonganOptions.length]);
-
-    useEffect(() => {
-        if (!isAutoPlayEnabled) return;
-        const interval = setInterval(() => {
-            setActiveSlide(prev => (prev + 1) % Math.max(1, shortcutGolonganOptions.length));
-        }, 7000); // 7s auto scroll
-        return () => clearInterval(interval);
-    }, [isAutoPlayEnabled, shortcutGolonganOptions.length]);
-
-    const handleManualSlide = (index) => {
+    const handleSegmentClick = (index) => {
         setActiveSlide(index);
-        setIsAutoPlayEnabled(false); // Pause auto-play if user manually clicks
     };
 
     // --- TABS SCROLL PROGRESS HANDLERS ---
@@ -130,7 +112,6 @@ export default function AdminTariff({ onNavigate }) {
             const maxScroll = scrollWidth - clientWidth;
             tabsScrollRef.current.scrollLeft = (val / 100) * maxScroll;
         }
-        setIsAutoPlayEnabled(false);
     };
 
     const scrollTabs = (dir) => {
@@ -138,29 +119,6 @@ export default function AdminTariff({ onNavigate }) {
             const amount = dir === 'left' ? -200 : 200;
             tabsScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
         }
-        setIsAutoPlayEnabled(false);
-    };
-
-    // --- Drag/Swipe Event Handlers for Carousel ---
-    const [dragStartX, setDragStartX] = useState(null);
-
-    const onDragStart = (clientX) => {
-        setDragStartX(clientX);
-    };
-
-    const onDragEnd = (clientX) => {
-        if (dragStartX === null) return;
-        const dragDistance = clientX - dragStartX;
-        if (dragDistance > 50) {
-            // Swiped Right -> Prev
-            setActiveSlide(prev => (prev - 1 + shortcutGolonganOptions.length) % Math.max(1, shortcutGolonganOptions.length));
-            setIsAutoPlayEnabled(false);
-        } else if (dragDistance < -50) {
-            // Swiped Left -> Next
-            setActiveSlide(prev => (prev + 1) % Math.max(1, shortcutGolonganOptions.length));
-            setIsAutoPlayEnabled(false);
-        }
-        setDragStartX(null);
     };
 
 
@@ -372,6 +330,11 @@ export default function AdminTariff({ onNavigate }) {
     const [filterGolongan, setFilterGolongan] = useState('All');
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
+    const [currentPage, setCurrentPage] = useState(1);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, filterGolongan, sortConfig]);
 
     const requestSort = (key) => {
         let direction = 'asc';
@@ -421,6 +384,13 @@ export default function AdminTariff({ onNavigate }) {
         }
         return sortableItems;
     }, [historyData, sortConfig, searchQuery, filterGolongan]);
+
+    const itemsPerPage = 10;
+    const totalPages = Math.max(1, Math.ceil(sortedHistory.length / itemsPerPage));
+    const paginatedHistory = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return sortedHistory.slice(start, start + itemsPerPage);
+    }, [sortedHistory, currentPage]);
 
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />;
@@ -493,10 +463,32 @@ export default function AdminTariff({ onNavigate }) {
         return null;
     };
 
-    const activeData = categoryStats[activeSlide] || {
-        name: '-', currentTariff: 0, percentage: 0,
-        effectiveDate: '-', skNo: '-', totalChanges: 0, lastChangeSince: '-'
-    };
+    const activeSubCategoryStats = useMemo(() => {
+        return subCategoriesInSegment.map(sub => {
+            const stat = categoryStats.find(s => s.name === sub.label) || {
+                name: sub.label,
+                currentTariff: 0,
+                percentage: 0,
+                effectiveDate: '-',
+                skNo: '-',
+                totalChanges: 0,
+                lastChangeSince: '-'
+            };
+            return stat;
+        });
+    }, [subCategoriesInSegment, categoryStats]);
+
+    // Aggregate Data for Cards
+    const totalSubCategories = activeSubCategoryStats.length;
+    const avgTariff = activeSubCategoryStats.length > 0 
+        ? activeSubCategoryStats.reduce((sum, s) => sum + (s.currentTariff || 0), 0) / activeSubCategoryStats.length 
+        : 0;
+    
+    // For "Update Terakhir", we can take the most recent effectiveDate or just use standard text
+    const lastUpdateDate = activeSubCategoryStats.length > 0 && activeSubCategoryStats[0].effectiveDate !== '-' 
+        ? activeSubCategoryStats[0].effectiveDate 
+        : 'Belum Ada Data';
+
     const hasTrendData = multiLineChartData.length > 0;
     const hasPieData = pieData.length > 0;
 
@@ -513,12 +505,12 @@ export default function AdminTariff({ onNavigate }) {
                         onScroll={handleTabsScroll}
                         className="flex gap-1.5 p-1.5 bg-gray-200/50 rounded-2xl w-full sm:max-w-max overflow-x-auto shadow-inner scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     >
-                        {allGolonganOptions.map((opt, idx) => (
+                        {PLN_SEGMENT_ORDER.map((opt, idx) => (
                             <button
                                 key={opt}
-                                onClick={() => handleManualSlide(idx)}
-                                className={`px-4 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-300 ${activeSlide === idx
-                                    ? 'bg-white text-emerald-600 shadow-sm'
+                                onClick={() => handleSegmentClick(idx)}
+                                className={`px-6 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap transition-all duration-300 ${activeSlide === idx
+                                    ? 'bg-white text-[#009B7C] shadow-sm ring-1 ring-emerald-500/20'
                                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
                                     }`}
                             >
@@ -561,69 +553,99 @@ export default function AdminTariff({ onNavigate }) {
                     </div>
                 </div>
 
-                {/* CAROUSEL SLIDE (The 3 Cards) */}
-                <div
-                    className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 select-none"
-                    key={activeSlide}
-                    onTouchStart={(e) => onDragStart(e.touches[0].clientX)}
-                    onTouchEnd={(e) => onDragEnd(e.changedTouches[0].clientX)}
-                    onMouseDown={(e) => onDragStart(e.clientX)}
-                    onMouseUp={(e) => onDragEnd(e.clientX)}
-                    onMouseLeave={(e) => {
-                        if (dragStartX !== null) onDragEnd(e.clientX);
-                    }}
-                >
-                    {/* Card 1 - Current Tarif (Green) */}
-                    <div className="bg-[#10B981] rounded-[1.25rem] shadow-md shadow-emerald-500/20 relative flex flex-col justify-between text-white border-0 min-h-[160px] cursor-grab active:cursor-grabbing animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="p-5 flex-1 flex flex-col justify-center pt-6">
-                            <p className="text-[12px] font-semibold text-white/90 tracking-wide mb-1">Tarif Saat Ini</p>
-                            <h3 className="text-[34px] font-extrabold tracking-tight leading-none mb-1">
-                                Rp {activeData.currentTariff.toFixed(2)}
-                            </h3>
-                            <p className="text-[11px] font-medium text-white/80">per kWh</p>
+                {/* 2 ELONGATED CARDS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 select-none">
+                    {/* Card 1 - Info Golongan */}
+                    <div className="bg-gradient-to-r from-[#10B981] to-[#059669] rounded-[1.25rem] shadow-md shadow-emerald-500/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex-1">
+                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">Informasi Golongan</p>
+                            <h3 className="text-[28px] font-extrabold tracking-tight leading-none mb-2">{activeSegmentName}</h3>
+                            <div className="flex items-center gap-2">
+                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold">{totalSubCategories} Sub-Golongan</span>
+                            </div>
                         </div>
-                        <div className="absolute top-5 right-5 p-2 rounded-xl bg-white/20 backdrop-blur-sm">
-                            <Zap className="w-6 h-6 text-white" strokeWidth={2.5} />
-                        </div>
-                        <div className="mx-5 mb-5 bg-black/20 rounded-[0.5rem] px-4 py-2.5 flex items-center gap-2">
-                            {activeData.percentage > 0 ? (
-                                <TrendingUp className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                            ) : (
-                                <TrendingDown className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                            )}
-                            <span className="text-[11px] font-bold text-white">
-                                {activeData.percentage > 0 ? '+' : ''}{activeData.percentage.toFixed(2)}% dari periode sebelumnya
-                            </span>
+                        <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm hidden sm:block">
+                            <Zap className="w-8 h-8 text-white" strokeWidth={2.5} />
                         </div>
                     </div>
 
-                    {/* Card 2 - Effective Date (Blue) */}
-                    <div className="bg-[#F59E0B] rounded-[1.25rem] shadow-md shadow-orange-500/20 relative flex flex-col justify-between text-white border-0 min-h-[160px] cursor-grab active:cursor-grabbing animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
-                        <div className="p-5 flex-1 flex flex-col justify-center pt-6">
-                            <p className="text-[12px] font-semibold text-white/90 tracking-wide mb-1">Berlaku Sejak</p>
-                            <h3 className="text-[34px] font-extrabold tracking-tight leading-none">{activeData.effectiveDate}</h3>
+                    {/* Card 2 - Ringkasan Tarif */}
+                    <div className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] rounded-[1.25rem] shadow-md shadow-orange-500/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
+                        <div className="flex-1">
+                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">Rata-rata Tarif</p>
+                            <h3 className="text-[28px] font-extrabold tracking-tight leading-none mb-2">Rp {avgTariff.toFixed(2)}</h3>
+                            <div className="flex items-center gap-2">
+                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Update: {lastUpdateDate}</span>
+                            </div>
                         </div>
-                        <div className="absolute top-5 right-5 p-2 rounded-xl bg-white/20 backdrop-blur-sm">
-                            <Calendar className="w-6 h-6 text-white" strokeWidth={2.5} />
-                        </div>
-                        <div className="mx-5 mb-5 opacity-90 px-1 py-2.5 flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-white" strokeWidth={2.5} />
-                            <span className="text-[11px] font-medium text-white">{activeData.skNo}</span>
+                        <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm hidden sm:block">
+                            <TrendingUp className="w-8 h-8 text-white" strokeWidth={2.5} />
                         </div>
                     </div>
+                </div>
 
-                    {/* Card 3 - Total Changes (Purple) */}
-                    <div className="bg-[#A855F7] rounded-[1.25rem] shadow-md shadow-purple-500/20 relative flex flex-col justify-between text-white border-0 min-h-[160px] cursor-grab active:cursor-grabbing animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
-                        <div className="p-5 flex-1 flex flex-col justify-center pt-6">
-                            <p className="text-[12px] font-semibold text-white/90 tracking-wide mb-1">Total Perubahan</p>
-                            <h3 className="text-[34px] font-extrabold tracking-tight leading-none">{activeData.totalChanges}</h3>
+                {/* SUB-CATEGORIES MATRIX / TABLE */}
+                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
+                    <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900 leading-tight">Matriks Sub-Golongan: {activeSegmentName}</h2>
+                            <p className="text-xs text-gray-500 mt-1 italic">Rincian tarif untuk setiap jenis pelanggan pada golongan ini.</p>
                         </div>
-                        <div className="absolute top-5 right-5 p-2 rounded-xl bg-white/20 backdrop-blur-sm">
-                            <History className="w-6 h-6 text-white" strokeWidth={2.5} />
-                        </div>
-                        <div className="mx-5 mb-5 opacity-90 px-1 py-2.5 flex items-center gap-2">
-                            <span className="text-[11px] font-medium text-white">sejak {activeData.lastChangeSince}</span>
-                        </div>
+                    </div>
+                    <div className="overflow-x-auto custom-scrollbar-x pb-4 px-4 pt-4">
+                        <table className="w-full text-left min-w-[800px]">
+                            <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
+                                <tr>
+                                    <th className="px-6 py-4 font-normal rounded-tl-xl"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sub-Golongan</div></th>
+                                    <th className="px-6 py-4 font-normal"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Tarif Saat Ini</div></th>
+                                    <th className="px-6 py-4 font-normal"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Perubahan</div></th>
+                                    <th className="px-6 py-4 font-normal"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Berlaku Sejak</div></th>
+                                    <th className="px-6 py-4 font-normal rounded-tr-xl"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total Perubahan</div></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {activeSubCategoryStats.map((stat, idx) => (
+                                    <tr key={idx} className="hover:bg-[#F8FAFB]/50 transition-colors group">
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm font-bold text-gray-900">{stat.name}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-emerald-600 text-[15px]">
+                                                Rp {stat.currentTariff.toFixed(2)}
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 font-medium">per kWh</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {stat.percentage !== 0 ? (
+                                                <div className={`flex items-center gap-1 text-[12px] font-bold px-2.5 py-1 rounded-full w-fit ${stat.percentage > 0 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                                                    {stat.percentage > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                                                    {stat.percentage > 0 ? '+' : ''}{stat.percentage.toFixed(2)}%
+                                                </div>
+                                            ) : (
+                                                <div className="text-[11px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full w-fit border border-gray-200">Tetap (0%)</div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-[12px] font-bold text-gray-800">{stat.effectiveDate}</div>
+                                            <div className="text-[10px] text-gray-400 font-medium">{stat.skNo}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-1.5 text-[12px] font-bold text-gray-700">
+                                                <History className="w-4 h-4 text-purple-500" />
+                                                {stat.totalChanges} kali
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {activeSubCategoryStats.length === 0 && (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-8 text-center">
+                                            <p className="text-sm font-semibold text-gray-500">Tidak ada data sub-golongan.</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -1044,7 +1066,7 @@ export default function AdminTariff({ onNavigate }) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {sortedHistory.map((item) => (
+                                    {paginatedHistory.map((item) => (
                                         <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-bold text-gray-900">{item.id}</div>
@@ -1083,6 +1105,32 @@ export default function AdminTariff({ onNavigate }) {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Pagination UI */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem]">
+                                <span className="text-xs text-gray-500 font-medium">
+                                    Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedHistory.length)} dari {sortedHistory.length} data
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </button>
+                                    <span className="text-xs font-bold text-gray-700 mx-2">Halaman {currentPage} dari {totalPages}</span>
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                     </div>
 
