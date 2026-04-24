@@ -480,14 +480,12 @@ export default function AdminTariff({ onNavigate }) {
 
     // Aggregate Data for Cards
     const totalSubCategories = activeSubCategoryStats.length;
-    const avgTariff = activeSubCategoryStats.length > 0 
-        ? activeSubCategoryStats.reduce((sum, s) => sum + (s.currentTariff || 0), 0) / activeSubCategoryStats.length 
-        : 0;
     
-    // For "Update Terakhir", we can take the most recent effectiveDate or just use standard text
-    const lastUpdateDate = activeSubCategoryStats.length > 0 && activeSubCategoryStats[0].effectiveDate !== '-' 
-        ? activeSubCategoryStats[0].effectiveDate 
-        : 'Belum Ada Data';
+    // Calculate Min and Max Tariff instead of Average
+    const tariffs = activeSubCategoryStats.map(s => s.currentTariff || 0).filter(t => t > 0);
+    const minTariff = tariffs.length > 0 ? Math.min(...tariffs) : 0;
+    const maxTariff = tariffs.length > 0 ? Math.max(...tariffs) : 0;
+    const isSingleTariff = minTariff === maxTariff;
 
     const hasTrendData = multiLineChartData.length > 0;
     const hasPieData = pieData.length > 0;
@@ -569,13 +567,15 @@ export default function AdminTariff({ onNavigate }) {
                         </div>
                     </div>
 
-                    {/* Card 2 - Ringkasan Tarif */}
+                    {/* Card 2 - Rentang Tarif */}
                     <div className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] rounded-[1.25rem] shadow-md shadow-orange-500/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
                         <div className="flex-1">
-                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">Rata-rata Tarif</p>
-                            <h3 className="text-[28px] font-extrabold tracking-tight leading-none mb-2">Rp {avgTariff.toFixed(2)}</h3>
+                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">Rentang Tarif</p>
+                            <h3 className="text-[24px] xl:text-[28px] font-extrabold tracking-tight leading-none mb-2">
+                                {isSingleTariff ? `Rp ${minTariff.toFixed(2)}` : `Rp ${minTariff.toFixed(2)} - ${maxTariff.toFixed(2)}`}
+                            </h3>
                             <div className="flex items-center gap-2">
-                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Update: {lastUpdateDate}</span>
+                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Tipe Tarif Aktif</span>
                             </div>
                         </div>
                         <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm hidden sm:block">
@@ -596,50 +596,49 @@ export default function AdminTariff({ onNavigate }) {
                         <table className="w-full text-left min-w-[800px]">
                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                 <tr>
-                                    <th className="px-6 py-4 font-normal rounded-tl-xl"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sub-Golongan</div></th>
-                                    <th className="px-6 py-4 font-normal"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Tarif Saat Ini</div></th>
-                                    <th className="px-6 py-4 font-normal"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Perubahan</div></th>
-                                    <th className="px-6 py-4 font-normal"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Berlaku Sejak</div></th>
-                                    <th className="px-6 py-4 font-normal rounded-tr-xl"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total Perubahan</div></th>
+                                    <th className="px-6 py-4 font-normal rounded-tl-xl w-2/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sub-Golongan & Status</div></th>
+                                    <th className="px-6 py-4 font-normal w-1/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Tarif Saat Ini</div></th>
+                                    <th className="px-6 py-4 font-normal rounded-tr-xl text-right w-1/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Aksi</div></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {activeSubCategoryStats.map((stat, idx) => (
                                     <tr key={idx} className="hover:bg-[#F8FAFB]/50 transition-colors group">
                                         <td className="px-6 py-4">
-                                            <div className="text-sm font-bold text-gray-900">{stat.name}</div>
+                                            <div className="flex items-center justify-between max-w-sm">
+                                                <div className="text-sm font-bold text-gray-900">{stat.name}</div>
+                                                {stat.percentage !== 0 ? (
+                                                    <div className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${stat.percentage > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                        {stat.percentage > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                                        {stat.percentage > 0 ? '+' : ''}{stat.percentage.toFixed(2)}%
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">Tetap</div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-bold text-emerald-600 text-[15px]">
+                                            <div className="font-bold text-[#009B7C] text-[15px]">
                                                 Rp {stat.currentTariff.toFixed(2)}
                                             </div>
                                             <div className="text-[10px] text-gray-400 font-medium">per kWh</div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            {stat.percentage !== 0 ? (
-                                                <div className={`flex items-center gap-1 text-[12px] font-bold px-2.5 py-1 rounded-full w-fit ${stat.percentage > 0 ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
-                                                    {stat.percentage > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                                                    {stat.percentage > 0 ? '+' : ''}{stat.percentage.toFixed(2)}%
-                                                </div>
-                                            ) : (
-                                                <div className="text-[11px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full w-fit border border-gray-200">Tetap (0%)</div>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-[12px] font-bold text-gray-800">{stat.effectiveDate}</div>
-                                            <div className="text-[10px] text-gray-400 font-medium">{stat.skNo}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1.5 text-[12px] font-bold text-gray-700">
-                                                <History className="w-4 h-4 text-purple-500" />
-                                                {stat.totalChanges} kali
-                                            </div>
+                                        <td className="px-6 py-4 text-right">
+                                            <button
+                                                onClick={() => {
+                                                    setFormGolongan(stat.name);
+                                                    document.getElementById('update-form-section')?.scrollIntoView({ behavior: 'smooth' });
+                                                }}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-[#E1F2EB] text-gray-600 hover:text-[#009B7C] rounded-lg text-xs font-bold transition-colors"
+                                            >
+                                                <Zap className="w-3.5 h-3.5" /> Update
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
                                 {activeSubCategoryStats.length === 0 && (
                                     <tr>
-                                        <td colSpan="5" className="px-6 py-8 text-center">
+                                        <td colSpan="3" className="px-6 py-8 text-center">
                                             <p className="text-sm font-semibold text-gray-500">Tidak ada data sub-golongan.</p>
                                         </td>
                                     </tr>
@@ -741,7 +740,7 @@ export default function AdminTariff({ onNavigate }) {
                 {/* MAIN TWO ROW STACK: FORM & HISTORY */}
                 <div className="flex flex-col gap-8 pb-10">
                     {/* UPDATE FORM */}
-                    <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 h-fit">
+                    <div id="update-form-section" className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 h-fit">
                         <div className="mb-6 border-b border-gray-100 pb-4">
                             <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 leading-tight mb-2">
                                 <Zap className="w-5 h-5 text-[#009b7c]" /> Update Tarif Listrik PLN
