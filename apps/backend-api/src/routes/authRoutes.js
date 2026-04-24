@@ -9,5 +9,7 @@ router.post('/login', authController.login);
 
 // Ambil profil diri sendiri (Memerlukan Token)
 router.get('/me', authMiddleware, authController.getMe);
+router.put('/settings', authMiddleware, authController.updateSettings);
+router.post('/logout', authMiddleware, authController.logout);
 
 module.exports = router;

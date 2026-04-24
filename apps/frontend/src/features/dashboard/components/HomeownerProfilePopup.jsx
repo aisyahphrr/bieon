@@ -4,7 +4,6 @@ import { X, Edit2, Plus, Settings, LogOut, ChevronDown, Check, User, Camera, Zap
 export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, userProfile }) {
   const [view, setView] = useState('main'); // 'main', 'edit', 'settings'
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80');
-  const [userHubs, setUserHubs] = useState([]);
   const fileInputRef = useRef(null);
 
   // Form State
@@ -28,20 +27,6 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
         dob: userProfile.dateOfBirth || '',
         address: userProfile.address || ''
       });
-      
-      // Fetch hubs for this user
-      const fetchHubs = async () => {
-        try {
-          const response = await fetch(`/api/hubs/user/${userProfile._id}`);
-          if (response.ok) {
-            const data = await response.json();
-            setUserHubs(data);
-          }
-        } catch (error) {
-          console.error('Gagal mengambil hubs:', error);
-        }
-      };
-      fetchHubs();
     }
   }, [userProfile]);
 
@@ -58,9 +43,27 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // In real app, save to backend here
-    setView('main');
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem('bieon_token');
+      const response = await fetch('/api/auth/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      if (response.ok) {
+        setView('main');
+        window.location.reload();
+      } else {
+        alert('Gagal menyimpan pembaruan profil');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Terjadi kesalahan saat menyimpan profil');
+    }
   };
 
   const handlePhotoUpload = (e) => {
@@ -161,33 +164,25 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   </button>
                 </div>
                 
-                <div className="space-y-4 px-2 mb-6">
-                  {userHubs.length > 0 ? (
-                    userHubs.map((device, idx) => (
-                      <div key={idx} className="flex items-center gap-4 p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors group">
-                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-slate-200 group-hover:border-emerald-200 transition-colors flex items-center justify-center bg-slate-50">
-                          <Zap className="w-6 h-6 text-emerald-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-[14px] font-bold text-slate-800 tracking-tight">{device.name}</div>
-                          <div className="text-[11px] font-bold text-slate-400">Id_BIEON: {device.bieonId}</div>
-                        </div>
-                        <button className="px-4 py-1.5 bg-emerald-50 text-[#009b7c] text-[11px] font-bold rounded-full hover:bg-[#009b7c] hover:text-white transition-all opacity-80 group-hover:opacity-100">
-                          Detail
-                        </button>
+                <div className="px-2 mb-6">
+                  {userProfile?.bieonId ? (
+                    <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors group">
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-emerald-100 group-hover:border-emerald-300 transition-colors flex items-center justify-center bg-white">
+                        <Zap className="w-6 h-6 text-emerald-500" />
                       </div>
-                    ))
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[14px] font-bold text-slate-800 tracking-tight">ID BIEON Master</div>
+                        <div className="text-[12px] font-bold text-emerald-600 font-mono mt-0.5">{userProfile.bieonId}</div>
+                      </div>
+                      <button className="px-4 py-1.5 bg-emerald-50 text-[#009b7c] text-[11px] font-bold rounded-full hover:bg-[#009b7c] hover:text-white transition-all opacity-80 group-hover:opacity-100">
+                        Tersambung
+                      </button>
+                    </div>
                   ) : (
-                    <div className="text-center py-8 text-slate-400 text-sm font-medium">
-                      Belum ada perangkat terdaftar.
+                    <div className="text-center py-8 text-slate-400 text-sm font-medium border border-dashed border-slate-200 rounded-xl">
+                      Belum ada perangkat BIEON terdaftar.
                     </div>
                   )}
-                </div>
-
-                <div className="px-2">
-                    <button className="w-full py-3.5 bg-slate-100 text-slate-700 font-bold text-[13px] rounded-xl hover:bg-slate-200 transition-all">
-                    See All
-                    </button>
                 </div>
               </div>
 
@@ -205,8 +200,24 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                     <span className="text-[15px] font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Settings</span>
                   </button>
                   <button 
-                    onClick={() => {
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('bieon_token');
+                        if (token) {
+                          await fetch('/api/auth/logout', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                          });
+                        }
+                      } catch (e) { console.error('Logout error', e); }
+                      
+                      localStorage.removeItem('bieon_token');
+                      localStorage.removeItem('bieon_user_role');
+                      localStorage.removeItem('bieon_tech_access');
+                      localStorage.removeItem('bieon_tech_access_expiry');
+                      
                       if (onNavigate) onNavigate('landing');
+                      else window.location.href = '/login';
                       onClose();
                     }}
                     className="w-full flex items-center gap-4 group transition-all p-3 -mx-3 rounded-xl hover:bg-red-50/50"
