@@ -346,7 +346,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       )}
 
       {/* Popups & Modals */}
-      <HomeownerProfilePopup isOpen={showProfilePopup} onClose={() => setShowProfilePopup(false)} user={userProfile} />
+      <HomeownerProfilePopup isOpen={showProfilePopup} onClose={() => setShowProfilePopup(false)} userProfile={userProfile} />
       <TechReportModal
         isOpen={showTechReportModal}
         onClose={() => setShowTechReportModal(false)}

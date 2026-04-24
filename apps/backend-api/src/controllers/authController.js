@@ -95,3 +95,38 @@ exports.getMe = async (req, res) => {
         res.status(500).json({ message: 'Gagal mengambil data profil', error: error.message });
     }
 };
+
+// Fungsi untuk update data profile / settings
+exports.updateSettings = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const updates = req.body;
+
+        const allowedUpdates = {};
+        if (updates.username !== undefined) allowedUpdates.username = updates.username;
+        if (updates.fullName !== undefined) allowedUpdates.fullName = updates.fullName;
+        if (updates.phoneNo !== undefined) allowedUpdates.phoneNumber = updates.phoneNo;
+        if (updates.dob !== undefined) allowedUpdates.dateOfBirth = updates.dob;
+        if (updates.address !== undefined) allowedUpdates.address = updates.address;
+        if (updates.email !== undefined) allowedUpdates.email = updates.email;
+
+        const updatedUser = await User.findByIdAndUpdate(userId, allowedUpdates, { new: true }).select('-password');
+        
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User tidak ditemukan' });
+        }
+
+        res.status(200).json({ message: 'Profil berhasil diperbarui', user: updatedUser });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal memperbarui profil', error: error.message });
+    }
+};
+
+// Fungsi Logout (hanya memberikan response sukses)
+exports.logout = async (req, res) => {
+    try {
+        res.status(200).json({ message: 'Logout berhasil' });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal melakukan logout', error: error.message });
+    }
+};
