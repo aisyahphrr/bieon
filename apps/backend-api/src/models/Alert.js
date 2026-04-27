@@ -4,7 +4,7 @@ const alertSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     category: { 
         type: String, 
-        enum: ['Keamanan', 'Air Sanitasi', 'Energi', 'Gas', 'Sistem'],
+        enum: ['Keamanan', 'Air Sanitasi', 'Energi', 'Sistem', 'Pengaduan'],
         default: 'Sistem'
     },
     room: { type: String }, // e.g., "R1 - Pintu Utama"

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Bell, AlertTriangle, Briefcase, 
   User, Award, Hourglass, Server, Activity, 
-  Fan, Flame, Zap, Lock, LogIn, CheckCircle, CheckCheck
+  Fan, Flame, Zap, Lock, LogIn, CheckCircle, CheckCheck, MessageSquare
 } from 'lucide-react';
 
 const typeStyles = {
@@ -11,14 +11,24 @@ const typeStyles = {
   info: { border: 'border-[#007aff]', bg: 'bg-blue-50', iconText: 'text-[#007aff]', iconBg: 'bg-blue-100', icon: LogIn, accent: 'bg-blue-500' },
   success: { border: 'border-[#34c759]', bg: 'bg-green-50', iconText: 'text-[#34c759]', iconBg: 'bg-green-100', icon: CheckCircle, accent: 'bg-green-500' },
   purple: { border: 'border-[#af52de]', bg: 'bg-purple-50', iconText: 'text-[#af52de]', iconBg: 'bg-purple-100', icon: Activity, accent: 'bg-purple-500' },
-  sistem: { border: 'border-teal-500', bg: 'bg-teal-50', iconText: 'text-teal-600', iconBg: 'bg-teal-100', icon: Server, accent: 'bg-teal-500' }
+  sistem: { border: 'border-teal-500', bg: 'bg-teal-50', iconText: 'text-teal-600', iconBg: 'bg-teal-100', icon: Server, accent: 'bg-teal-500' },
+  pengaduan: { border: 'border-amber-500', bg: 'bg-amber-50', iconText: 'text-amber-600', iconBg: 'bg-amber-100', icon: MessageSquare, accent: 'bg-amber-500' }
 };
 
-const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate }) => {
+const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, onUnreadChange }) => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const popupRef = useRef(null);
   const token = localStorage.getItem('bieon_token');
+
+  // Notify parent about unread status
+  useEffect(() => {
+    if (onUnreadChange) {
+      const hasUnread = notifications.some(n => !n.isRead);
+      onUnreadChange(hasUnread);
+    }
+  }, [notifications, onUnreadChange]);
+
 
   // Handle Click Outside
   useEffect(() => {
@@ -147,13 +157,20 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate }) 
             const msg = (notif.message + " " + notif.title + " " + (notif.category || '')).toLowerCase();
             let type = notif.type?.toLowerCase();
 
-            if (!type || !typeStyles[type]) {
+            const category = notif.category?.toLowerCase();
+            if (category === 'keamanan') type = 'purple';
+            else if (category === 'air sanitasi' || category === 'kualitas air') type = 'info';
+            else if (category === 'energi') type = 'warning';
+            else if (category === 'pengaduan') type = 'pengaduan';
+            else if (category === 'sistem') type = 'sistem';
+            else if (!type || !typeStyles[type]) {
                if (msg.includes('bahaya') || msg.includes('gas') || msg.includes('melebihi')) type = 'danger';
                else if (msg.includes('waspada') || msg.includes('token') || msg.includes('peringatan')) type = 'warning';
                else if (msg.includes('gerak') || msg.includes('pintu') || msg.includes('keamanan')) type = 'purple';
                else if (msg.includes('berhasil') || msg.includes('selesai') || msg.includes('optimal')) type = 'success';
                else type = 'info';
             }
+
 
             const style = typeStyles[type] || typeStyles.info;
             const Icon = style.icon;
@@ -184,8 +201,14 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate }) 
                     
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-[11px] font-medium text-gray-400">
-                        {notif.date ? new Date(notif.date).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', ':') : 'Baru saja'}
+                        {notif.date ? new Date(notif.date).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace('.', ':') : 'Baru saja'}
                       </span>
+                      {notif.link && !notif.isRead && (
+                        <span className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full shadow-sm animate-pulse">
+                          TINDAKAN DIPERLUKAN
+                        </span>
+                      )}
+
                     </div>
                   </div>
                 </div>

@@ -168,6 +168,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   onClose={() => setShowNotifications(false)} 
                   role="admin"
                   onNavigate={handleNavigate}
+                  onUnreadChange={setHasUnread}
                 />
               </div>
 

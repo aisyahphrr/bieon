@@ -50,6 +50,49 @@ export function ComplaintDetailModal({
     const [isLogReasonModalOpen, setIsLogReasonModalOpen] = React.useState(false);
     const [logReason, setLogReason] = React.useState('');
 
+    // --- DATE & TIME HELPERS ---
+    const parseDate = (str) => {
+        if (!str) return null;
+        // Handle ISO String format
+        if (typeof str === 'string' && (str.includes('T') || str.match(/^\d{4}-/))) {
+            return new Date(str);
+        }
+        if (str instanceof Date) return str;
+        
+        // Format Indo Legacy: "22 Apr 2026, 17:00:00"
+        const parts = String(str).match(/(\d+)\s+(\w+)\s+(\d+),\s+(\d+):(\d+):(\d+)/);
+        if (!parts) return null;
+        const monthMap = { 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'Mei': 4, 'Jun': 5, 'Jul': 6, 'Agu': 7, 'Sep': 8, 'Okt': 9, 'Nov': 10, 'Des': 11 };
+        return new Date(parts[3], monthMap[parts[2]], parts[1], parts[4], parts[5], parts[6]);
+    };
+
+    const formatDisplayTime = (str) => {
+        if (!str) return '-';
+        // If it's already a well-formatted string with seconds, return it
+        if (typeof str === 'string' && str.match(/\d+:\d+:\d+/) && str.includes(',')) return str;
+        
+        const date = new Date(str);
+        if (isNaN(date.getTime())) return str; // Fallback to original string
+
+        return date.toLocaleString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        }).replace(/\./g, ':');
+    };
+
+    const formatDiff = (ms) => {
+        if (ms < 0) ms = 0;
+        const hours = Math.floor(ms / (1000 * 60 * 60));
+        const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    };
+
+
     // Sync local state when ticket prop changes
     React.useEffect(() => {
         if (ticket) {
@@ -180,22 +223,7 @@ export function ComplaintDetailModal({
     const getDurationFromTimeline = (type) => {
         if (!localTicket?.timeline || localTicket.timeline.length === 0) return '00:00:00';
 
-        const parseDate = (str) => {
-            if (!str) return null;
-            // Format Indo: "22 Apr 2026, 17:00:00"
-            const parts = str.match(/(\d+)\s+(\w+)\s+(\d+),\s+(\d+):(\d+):(\d+)/);
-            if (!parts) return null;
-            const monthMap = { 'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'Mei': 4, 'Jun': 5, 'Jul': 6, 'Agu': 7, 'Sep': 8, 'Okt': 9, 'Nov': 10, 'Des': 11 };
-            return new Date(parts[3], monthMap[parts[2]], parts[1], parts[4], parts[5], parts[6]);
-        };
 
-        const formatDiff = (ms) => {
-            if (ms < 0) ms = 0;
-            const hours = Math.floor(ms / (1000 * 60 * 60));
-            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        };
 
         if (type === 'response') {
             if (localTicket.responseDuration && localTicket.responseDuration !== '00:00:00') return localTicket.responseDuration;
@@ -369,15 +397,11 @@ export function ComplaintDetailModal({
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Tanggal Masuk</p>
-                                            <p className="font-semibold text-sm text-gray-800">
-                                                {(localTicket.timeline && localTicket.timeline[localTicket.timeline.length - 1]?.time) || localTicket.date}
-                                            </p>
+                                                {formatDisplayTime(localTicket.timeline?.[localTicket.timeline.length - 1]?.time || localTicket.createdAt)}
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">Terakhir Update</p>
-                                            <p className="font-semibold text-sm text-gray-800">
-                                                {(localTicket.timeline && localTicket.timeline[0]?.time) || localTicket.updatedAt || localTicket.date}
-                                            </p>
+                                                {formatDisplayTime(localTicket.timeline?.[0]?.time || localTicket.updatedAt || localTicket.createdAt)}
                                         </div>
                                     </div>
 
@@ -415,7 +439,7 @@ export function ComplaintDetailModal({
                                                 <div className={`w-3.5 h-3.5 rounded-full ring-4 ring-white ${idx === 0 ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
                                             </div>
                                             <div>
-                                                <div className="text-[10px] text-gray-400 mb-1">{step.time}</div>
+                                                <div className="text-[10px] text-gray-400 mb-1">{formatDisplayTime(step.time)}</div>
                                                 <div className={`text-sm font-medium leading-relaxed ${step.desc?.toLowerCase().includes('ping') ? 'text-amber-700 font-bold' : 'text-gray-800'}`}>
                                                     {step.desc?.toLowerCase().includes('ping') && <AlertCircle className="w-3.5 h-3.5 inline mr-1 text-amber-500 mb-0.5" />}
                                                     {step.desc?.replace(/\s*\(Respons:.*?, Poin:.*?\)/gi, '').replace(/\s*\(Durasi:.*?, Poin:.*?\)/gi, '')}

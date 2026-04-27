@@ -117,6 +117,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                   onClose={() => setShowNotif(false)} 
                   role="technician" 
                   onNavigate={setActiveMenu}
+                  onUnreadChange={setHasUnread}
                 />
               </div>
               
