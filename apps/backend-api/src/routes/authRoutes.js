@@ -11,5 +11,6 @@ router.post('/login', authController.login);
 router.get('/me', authMiddleware, authController.getMe);
 router.put('/settings', authMiddleware, authController.updateSettings);
 router.post('/logout', authMiddleware, authController.logout);
+router.post('/firebase-login', authController.firebaseLogin);
 
 module.exports = router;

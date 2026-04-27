@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const admin = require('../config/firebaseAdmin');
 
 // Fungsi Registrasi
 exports.register = async (req, res) => {
@@ -114,7 +115,7 @@ exports.updateSettings = async (req, res) => {
         if (updates.email !== undefined) allowedUpdates.email = updates.email;
 
         const updatedUser = await User.findByIdAndUpdate(userId, allowedUpdates, { new: true }).select('-password');
-        
+
         if (!updatedUser) {
             return res.status(404).json({ message: 'User tidak ditemukan' });
         }
@@ -131,5 +132,48 @@ exports.logout = async (req, res) => {
         res.status(200).json({ message: 'Logout berhasil' });
     } catch (error) {
         res.status(500).json({ message: 'Gagal melakukan logout', error: error.message });
+    }
+};
+
+
+exports.firebaseLogin = async (req, res) => {
+    try {
+        const { token } = req.body;
+
+        // 1. Validasi token ke server Firebase (Otomatis mengecek keaslian)
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        const { email, name, picture } = decodedToken;
+
+        // 2. Cari user di MongoDB berdasarkan email
+        let user = await User.findOne({ email });
+
+        // 3. Jika user belum ada (Baru pertama kali login), buatkan akun otomatis!
+        if (!user) {
+            const crypto = require('crypto');
+            // Bikin password acak yang sangat rumit karena user ini pakai Google
+            const randomPassword = crypto.randomBytes(32).toString('hex');
+            
+            user = new User({
+                email: email,
+                fullName: name,
+                role: 'Homeowner', // Default role
+                password: randomPassword
+            });
+            await user.save();
+        }
+
+        // 4. Jika sukses, buatkan JWT bieon_token seperti sistem login Anda saat ini
+        const bieonToken = jwt.sign(
+            { userId: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // 5. Kirim kembali ke frontend
+        res.status(200).json({ success: true, token: bieonToken, user });
+
+    } catch (error) {
+        console.error("Firebase Login Error:", error);
+        res.status(401).json({ success: false, message: 'Token tidak valid', detail: error.message });
     }
 };

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { User, Lock, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { auth, googleProvider } from '../../config/firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -23,7 +25,45 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      
+      const response = await fetch('/api/auth/firebase-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: idToken })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login Google gagal');
+      }
+
+      localStorage.setItem('bieon_token', data.token);
+
+      const userRole = data.user?.role;
+      if (userRole === 'SuperAdmin') {
+        navigate('/admin');
+      } else if (userRole === 'Technician') {
+        navigate('/teknisi');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Gagal login menggunakan Google');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -165,12 +205,20 @@ const Login = () => {
           {/* Google Button */}
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 rounded-xl py-3.5 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow group"
+            onClick={handleGoogleLogin}
+            disabled={googleLoading || loading}
+            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 rounded-xl py-3.5 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow group disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <div className="group-hover:scale-110 transition-transform">
-              <GoogleIcon />
-            </div>
-            <span className="text-[14px] font-bold text-slate-700">Continue with Google</span>
+            {googleLoading ? (
+              <Loader2 size={20} className="animate-spin text-slate-500" />
+            ) : (
+              <div className="group-hover:scale-110 transition-transform">
+                <GoogleIcon />
+              </div>
+            )}
+            <span className="text-[14px] font-bold text-slate-700">
+              {googleLoading ? 'Memproses Google...' : 'Continue with Google'}
+            </span>
           </button>
 
           {/* Footer Links */}
