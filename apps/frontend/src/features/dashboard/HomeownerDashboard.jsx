@@ -1021,7 +1021,7 @@ export function HomeownerDashboard({ onNavigate }) {
                 {/* Item 1 */}
                 <div className="text-center px-2 flex flex-col items-center">
                   <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
-                    {chartType === 'daily' ? 'Konsumsi Beban Saat Ini' : 'Daya Bulan Ini'}
+                    {chartType === 'daily' ? 'Konsumsi Beban Saat Ini' : 'Konsumsi Beban Bulan Ini'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     947 <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
@@ -1031,7 +1031,7 @@ export function HomeownerDashboard({ onNavigate }) {
                 {/* Item 2 */}
                 <div className="text-center px-2 flex flex-col items-center">
                   <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
-                    {chartType === 'daily' ? 'Konsumsi Beban Berjalan' : 'Total Tahun Ini'}
+                    {chartType === 'daily' ? 'Konsumsi Beban Berjalan' : 'Total Konsumsi Beban Tahun Ini'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     7.85 <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
@@ -1041,7 +1041,7 @@ export function HomeownerDashboard({ onNavigate }) {
                 {/* Item 3 */}
                 <div className="text-center px-2 flex flex-col items-center">
                   <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
-                    {chartType === 'daily' ? 'Rata-rata beban per jam' : 'Rata-rata/Bulan'}
+                    {chartType === 'daily' ? 'Rata-rata beban /jam' : 'Rata-rata beban/bulan'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     0.462 <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
