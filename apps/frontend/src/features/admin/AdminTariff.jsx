@@ -1004,7 +1004,7 @@ export default function AdminTariff({ onNavigate }) {
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Cari ID, Keterangan..."
+                                        placeholder="Cari Keterangan..."
                                         className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-emerald-500/10 transition-all custom-scrollbar-hide h-9"
                                     />
                                 </div>
@@ -1057,14 +1057,11 @@ export default function AdminTariff({ onNavigate }) {
                             <table className="w-full text-left min-w-[800px]">
                                 <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                     <tr>
-                                        <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('id')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">ID PERUBAHAN {getSortIcon('id')}</div>
+                                        <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('category')}>
+                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">GOLONGAN PLN {getSortIcon('category')}</div>
                                         </th>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('tariff')}>
                                             <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">TARIF (RP/KWH) {getSortIcon('tariff')}</div>
-                                        </th>
-                                        <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('category')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">GOLONGAN PLN {getSortIcon('category')}</div>
                                         </th>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('date')}>
                                             <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">TANGGAL BERLAKU {getSortIcon('date')}</div>
@@ -1081,7 +1078,10 @@ export default function AdminTariff({ onNavigate }) {
                                     {paginatedHistory.map((item) => (
                                         <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group">
                                             <td className="px-6 py-4">
-                                                <div className="text-sm font-bold text-gray-900">{item.id}</div>
+                                                {/* COLOR CODED BADGE DEPENDING ON CATEGORY */}
+                                                <span className={`inline-flex px-3 py-1.5 rounded-xl font-bold text-[10px] ${getBadgeStyle(item.category)}`}>
+                                                    {item.category}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="font-bold text-gray-900 text-sm">
@@ -1095,12 +1095,6 @@ export default function AdminTariff({ onNavigate }) {
                                                 ) : (
                                                     <div className="text-[10px] text-gray-400 font-medium mt-1">Tarif Dasar</div>
                                                 )}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                {/* COLOR CODED BADGE DEPENDING ON CATEGORY */}
-                                                <span className={`inline-flex px-3 py-1.5 rounded-xl font-bold text-[10px] ${getBadgeStyle(item.category)}`}>
-                                                    {item.category}
-                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-[13px] font-bold text-gray-800">{item.date}</div>
