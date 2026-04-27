@@ -103,7 +103,7 @@ export function DeviceControlPage({ onNavigate }) {
   });
   const [showUnassignedPopup, setShowUnassignedPopup] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
-  const [productRegForm, setProductRegForm] = useState({ id: "", name: "", category: "sensor", aspect: "none" });
+  const [productRegForm, setProductRegForm] = useState({ id: "", name: "", category: "sensor", aspect: "none", controlCategory: "smart-switch" });
   const [registeredProducts, setRegisteredProducts] = useState([]);
 
   // Technician Access States
@@ -385,7 +385,7 @@ export function DeviceControlPage({ onNavigate }) {
           productId: productRegForm.id,
           productName: productRegForm.name,
           category: productRegForm.category,
-          aspect: productRegForm.category === 'sensor' ? productRegForm.aspect : 'none'
+          aspect: productRegForm.category === 'sensor' ? productRegForm.aspect : productRegForm.controlCategory
         })
       });
       const data = await response.json();
@@ -484,7 +484,7 @@ export function DeviceControlPage({ onNavigate }) {
     // Map Category
     if (category === "sensor") {
       backendCategory = "Sensor";
-    } else if (["smart-plug", "smart-switch", "remote"].includes(category)) {
+    } else if (category === "control" || ["smart-plug", "smart-switch", "remote"].includes(category)) {
       backendCategory = "Control Actuator System";
     }
 
@@ -1757,18 +1757,6 @@ export function DeviceControlPage({ onNavigate }) {
                         placeholder="Contoh: 54304000..."
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Nama Produk (Stiker)</label>
-                      <input
-                        required
-                        type="text"
-                        value={productRegForm.name}
-                        onChange={(e) => setProductRegForm({ ...productRegForm, name: e.target.value })}
-                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold"
-                        placeholder="Contoh: SNZB-02D"
-                      />
-                    </div>
-
                     <div className="space-y-4">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Pilih Jenis</label>
                       <div className="grid grid-cols-2 gap-3">
@@ -1790,6 +1778,21 @@ export function DeviceControlPage({ onNavigate }) {
                         </button>
                       </div>
                     </div>
+
+                    {productRegForm.category === 'control' && (
+                      <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Kategori Smart Device</label>
+                        <select
+                          value={productRegForm.controlCategory}
+                          onChange={(e) => setProductRegForm({ ...productRegForm, controlCategory: e.target.value })}
+                          className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none font-bold text-gray-700"
+                        >
+                          <option value="smart-switch">Smart Switch</option>
+                          <option value="smart-plug">Smart Plug</option>
+                          <option value="remote">Remote</option>
+                        </select>
+                      </div>
+                    )}
 
                     {productRegForm.category === 'sensor' && (
                       <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -1815,6 +1818,18 @@ export function DeviceControlPage({ onNavigate }) {
                         </div>
                       </div>
                     )}
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Nama Produk</label>
+                      <input
+                        required
+                        type="text"
+                        value={productRegForm.name}
+                        onChange={(e) => setProductRegForm({ ...productRegForm, name: e.target.value })}
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold"
+                        placeholder="Contoh: SNZB-02D"
+                      />
+                    </div>
                     <button type="submit" className="w-full py-3.5 bg-[#009b7c] text-white rounded-xl font-bold text-base shadow-lg shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4">
                       Registrasi & Lanjut
                     </button>
@@ -1872,7 +1887,7 @@ export function DeviceControlPage({ onNavigate }) {
                         </div>
                       </div>
 
-                      <div className="space-y-3">
+                      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
                         {registeredProducts.filter(p => p.category === 'sensor').length > 0 ? (
                           registeredProducts.filter(p => p.category === 'sensor').map((product) => (
                             <div key={product.productId} className="space-y-1.5">
@@ -1889,7 +1904,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   setSelectedCategory("sensor");
                                   setSelectedProduct(product);
                                   setSelectedDeviceType(product.productName); // Selalu set sebagai fallback
-                                  
+
                                   // Mapping aspek untuk konfigurasi
                                   if (product.aspect === 'air') {
                                     setSelectedDeviceType("Sensor Kualitas Air");
@@ -1903,7 +1918,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   } else {
                                     setActiveSensorAspect(null);
                                   }
-                                  
+
                                   setDeviceForm({ name: product.productName, location: "", notes: "" });
                                   setStep("add-device-form");
                                 }}
@@ -1945,7 +1960,7 @@ export function DeviceControlPage({ onNavigate }) {
                         </div>
                       </div>
 
-                      <div className="space-y-3">
+                      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
                         {registeredProducts.filter(p => p.category === 'control').length > 0 ? (
                           registeredProducts.filter(p => p.category === 'control').map((product) => (
                             <button
@@ -2028,6 +2043,73 @@ export function DeviceControlPage({ onNavigate }) {
                   </div>
 
                   <div className="space-y-6">
+                    {isEditingDevice && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Pilih Jenis</label>
+                          <select
+                            value={selectedCategory === "sensor" ? "sensor" : "control"}
+                            disabled
+                            className="w-full p-4 bg-gray-100 border-2 border-gray-100 rounded-2xl outline-none font-bold text-gray-500 cursor-not-allowed"
+                          >
+                            <option value="sensor">Sensor</option>
+                            <option value="control">Control</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Tipe / Spesifik</label>
+                          <select
+                            value={selectedDeviceType}
+                            onChange={(e) => setSelectedDeviceType(e.target.value)}
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold text-gray-700"
+                          >
+                            {selectedCategory === "sensor" ? (
+                              <>
+                                <option value="Sensor Kenyamanan">Sensor Kenyamanan</option>
+                                <option value="Sensor Kualitas Air">Sensor Kualitas Air</option>
+                                <option value="Sensor Keamanan">Sensor Keamanan</option>
+                              </>
+                            ) : (
+                              <>
+                                <option value="smart-switch">Smart Switch</option>
+                                <option value="smart-plug">Smart Plug</option>
+                                <option value="remote">Remote</option>
+                              </>
+                            )}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {isEditingDevice && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Device ID</label>
+                          <input
+                            type="text"
+                            value={deviceForm.customId !== undefined ? deviceForm.customId : isEditingDevice}
+                            onChange={(e) => setDeviceForm({ ...deviceForm, customId: e.target.value })}
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none text-gray-700 font-mono text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Hub Node</label>
+                          <select
+                            value={selectedHub?.id || ""}
+                            onChange={(e) => {
+                              const hub = currentBieon.hubs.find(h => h.id === e.target.value);
+                              setSelectedHub(hub);
+                            }}
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold text-gray-700"
+                          >
+                            {currentBieon?.hubs.map((h) => (
+                              <option key={h.id} value={h.id}>{h.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Nama Perangkat</label>
                       <input
