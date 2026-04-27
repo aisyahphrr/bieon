@@ -1,37 +1,45 @@
 const SEGMENTS = Object.freeze([
+    'Subsidi Rumah Tangga',
     'Rumah Tangga',
     'Bisnis',
     'Industri',
     'Pemerintah & PJU',
-    'Layanan Khusus'
+    'Pelayanan Sosial'
 ]);
 
 const BASE_CATEGORIES = [
-    // Rumah Tangga (Shortcut 7)
-    { label: 'R1 - 450 VA (Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
-    { label: 'R1 - 900 VA (Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
-    { label: 'R1M - 900 VA (Non-Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
-    { label: 'R1 - 1300 VA', segment: 'Rumah Tangga', isShortcut: true },
-    { label: 'R1 - 2200 VA', segment: 'Rumah Tangga', isShortcut: true },
-    { label: 'R2 - 3500 s.d 5500 VA', segment: 'Rumah Tangga', isShortcut: true },
-    { label: 'R3 - 6600 VA ke atas', segment: 'Rumah Tangga', isShortcut: true },
+    // Subsidi Rumah Tangga
+    { label: 'R-1/TR - 450 VA (Subsidi)', segment: 'Subsidi Rumah Tangga', isShortcut: true },
+    { label: 'R-1/TR - 900 VA (Subsidi)', segment: 'Subsidi Rumah Tangga', isShortcut: true },
+
+    // Rumah Tangga
+    { label: 'R-1/TR - 900 VA (Non-Subsidi)', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R-1/TR - 1.300 VA', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R-1/TR - 2.200 VA', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R-2/TR - 3.500-5.500 VA', segment: 'Rumah Tangga', isShortcut: true },
+    { label: 'R-3/TR, TM - > 6.600 VA', segment: 'Rumah Tangga', isShortcut: true },
 
     // Bisnis
-    { label: 'B-1/TR - 450–5.500 VA', segment: 'Bisnis', isShortcut: false },
-    { label: 'B-2/TR - 6.600 VA–200 kVA', segment: 'Bisnis', isShortcut: false },
-    { label: 'B-3/TM - >200 kVA', segment: 'Bisnis', isShortcut: false },
+    { label: 'B-2/TR - 6.600 VA-200 kVA', segment: 'Bisnis', isShortcut: false },
+    { label: 'B-3/TM, TT - > 200 kVA', segment: 'Bisnis', isShortcut: false },
 
     // Industri
-    { label: 'I-3/TM - >200 kVA', segment: 'Industri', isShortcut: false },
-    { label: 'I-4/TT - ≥30.000 kVA', segment: 'Industri', isShortcut: false },
+    { label: 'I-3/TM - > 200 kVA', segment: 'Industri', isShortcut: false },
+    { label: 'I-4/TT - > 30.000 kVA', segment: 'Industri', isShortcut: false },
 
     // Pemerintah & PJU
-    { label: 'P-1/TR - 6.600 VA–200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
-    { label: 'P-2/TM - >200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
-    { label: 'P-3/TR - Penerangan Jalan Umum (PJU)', segment: 'Pemerintah & PJU', isShortcut: false },
+    { label: 'P-1/TR - 6.600 VA-200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
+    { label: 'P-2/TM - > 200 kVA', segment: 'Pemerintah & PJU', isShortcut: false },
+    { label: 'P-3/TR - Penerangan Jalan Umum', segment: 'Pemerintah & PJU', isShortcut: false },
+    { label: 'L/TR, TM, TT', segment: 'Pemerintah & PJU', isShortcut: false },
 
-    // Layanan Khusus
-    { label: 'L - TR/TM/TT', segment: 'Layanan Khusus', isShortcut: false },
+    // Pelayanan Sosial
+    { label: 'S-1/TR - 450 VA', segment: 'Pelayanan Sosial', isShortcut: false },
+    { label: 'S-1/TR - 900 VA', segment: 'Pelayanan Sosial', isShortcut: false },
+    { label: 'S-1/TR - 1.300 VA', segment: 'Pelayanan Sosial', isShortcut: false },
+    { label: 'S-1/TR - 2.200 VA', segment: 'Pelayanan Sosial', isShortcut: false },
+    { label: 'S-1/TR - 3.500 VA-200 kVA', segment: 'Pelayanan Sosial', isShortcut: false },
+    { label: 'S-2/TM - > 200 kVA', segment: 'Pelayanan Sosial', isShortcut: false },
 ];
 
 const makeKey = (label) => String(label || '')

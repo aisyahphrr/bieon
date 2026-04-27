@@ -290,7 +290,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
     setShowPlnModal(false);
   };
 
-  const PLN_SEGMENT_ORDER = ['Rumah Tangga', 'Bisnis', 'Industri', 'Pemerintah & PJU', 'Layanan Khusus'];
+  const PLN_SEGMENT_ORDER = [
+    'Subsidi Rumah Tangga',
+    'Rumah Tangga',
+    'Bisnis',
+    'Industri',
+    'Pemerintah & PJU',
+    'Pelayanan Sosial'
+  ];
   const plnSegmentCounts = plnCategories.reduce((acc, c) => {
     const seg = c.segment || 'Lainnya';
     acc[seg] = (acc[seg] || 0) + 1;
@@ -478,7 +485,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
               {PLN_SEGMENT_ORDER.map((seg) => (
                 <div key={seg} className="relative group/item">
                   <div className="h-full flex flex-col bg-gray-50/50 hover:bg-white border border-gray-100 hover:border-orange-200 rounded-2xl p-5 transition-all hover:shadow-md">
