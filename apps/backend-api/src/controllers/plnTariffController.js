@@ -215,7 +215,7 @@ exports.getDistribution = async (req, res) => {
  */
 exports.getTrend = async (req, res) => {
     try {
-        const trendCategories = ['R1 - 1300 VA', 'R2 - 3500 s.d 5500 VA', 'R3 - 6600 VA ke atas'];
+        const trendCategories = ['R-1/TR - 1.300 VA', 'R-2/TR - 3.500-5.500 VA', 'R-3/TR, TM - > 6.600 VA'];
         const trendCategorySet = new Set(trendCategories.map(normalizeCategoryLabel));
         const allTariffs = await PlnTariff.find()
             .sort({ effectiveDate: 1 })
@@ -230,9 +230,9 @@ exports.getTrend = async (req, res) => {
             const key = `Q${q} (${d.getFullYear()})`;
             if (!quarterMap[key]) quarterMap[key] = { name: key, r1: null, r2: null, r3: null };
 
-            if (item.category === 'R1 - 1300 VA') quarterMap[key].r1 = item.tariff;
-            if (item.category === 'R2 - 3500 s.d 5500 VA') quarterMap[key].r2 = item.tariff;
-            if (item.category === 'R3 - 6600 VA ke atas') quarterMap[key].r3 = item.tariff;
+            if (item.category === 'R-1/TR - 1.300 VA') quarterMap[key].r1 = item.tariff;
+            if (item.category === 'R-2/TR - 3.500-5.500 VA') quarterMap[key].r2 = item.tariff;
+            if (item.category === 'R-3/TR, TM - > 6.600 VA') quarterMap[key].r3 = item.tariff;
         });
 
         const trendData = Object.values(quarterMap).filter(q => q.r1 || q.r2 || q.r3);
