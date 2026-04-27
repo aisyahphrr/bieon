@@ -39,11 +39,11 @@ export function HomeownerHistory({ onNavigate }) {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     const tabs = [
-        { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Kenyamanan', endpoint: '/api/history/environment' },
-        { id: 'Keamanan',         full: 'Keamanan',         short: 'Keamanan', endpoint: '/api/history/security' },
-        { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Kualitas Air', endpoint: '/api/history/water' },
-        { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Konsumsi Energi', endpoint: '/api/history/energy' },
-        { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log Perangkat', endpoint: '/api/history/activity' },
+        { id: 'Kenyamanan', full: 'Kenyamanan', short: 'Kenyamanan', endpoint: '/api/history/environment' },
+        { id: 'Keamanan', full: 'Keamanan', short: 'Keamanan', endpoint: '/api/history/security' },
+        { id: 'Kualitas Air', full: 'Kualitas Air', short: 'Kualitas Air', endpoint: '/api/history/water' },
+        { id: 'Konsumsi Energi', full: 'Konsumsi Energi', short: 'Energi', endpoint: '/api/history/energy' },
+        { id: 'Log Perangkat', full: 'Log Perangkat', short: 'Log Perangkat', endpoint: '/api/history/activity' },
         { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi', endpoint: '/api/history/alerts' }
     ];
 
@@ -77,14 +77,14 @@ export function HomeownerHistory({ onNavigate }) {
             return { ...base, device: item.device, ph: item.ph, turbidity: item.turbidity, temp: item.temperature, tds: item.tds, status: item.status };
         }
         if (tabId === 'Konsumsi Energi') {
-            return { 
-                ...base, 
-                device: item.device?.name || item.device || 'Power Meter Utama', 
-                kwh: item.totalKwh + ' kWh', 
-                voltage: item.voltage + ' V', 
-                current: item.current + ' A', 
-                power: item.power + ' W', 
-                pf: item.pf + ' PF' 
+            return {
+                ...base,
+                device: item.device?.name || item.device || 'Power Meter Utama',
+                kwh: item.totalKwh + ' kWh',
+                voltage: item.voltage + ' V',
+                current: item.current + ' A',
+                power: item.power + ' W',
+                pf: item.pf + ' PF'
             };
         }
         if (tabId === 'Log Perangkat') {
@@ -102,13 +102,13 @@ export function HomeownerHistory({ onNavigate }) {
         try {
             const token = localStorage.getItem('bieon_token');
             const currentTabConfig = tabs.find(t => t.id === activeTab);
-            
+
             const response = await fetch(currentTabConfig.endpoint, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!response.ok) throw new Error('Gagal mengambil data riwayat');
-            
+
             const result = await response.json();
             const mappedData = result.data.map((item, index) => mapItemData(activeTab, item, index));
             setHistoryData(mappedData);
@@ -292,15 +292,15 @@ export function HomeownerHistory({ onNavigate }) {
             doc.setFontSize(28);
             doc.setTextColor(35, 92, 80);
             doc.text("LAPORAN AUDIT SISTEM BIEON", pageWidth / 2, 80, { align: 'center' });
-            
+
             doc.setFontSize(14);
             doc.setTextColor(100);
             doc.text("Smart Green Living Monitoring System", pageWidth / 2, 92, { align: 'center' });
-            
+
             doc.setFontSize(12);
             doc.text(`Periode Laporan: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
             doc.text(`Dihasilkan pada: ${new Date().toLocaleString('id-ID')}`, pageWidth / 2, 118, { align: 'center' });
-            
+
             doc.setDrawColor(35, 92, 80);
             doc.setLineWidth(1);
             doc.line(pageWidth / 2 - 30, 125, pageWidth / 2 + 30, 125);
@@ -310,7 +310,7 @@ export function HomeownerHistory({ onNavigate }) {
                 const tab = tabs[i];
                 const res = await fetch(tab.endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (!res.ok) continue;
-                
+
                 const result = await res.json();
                 const mapped = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
 
@@ -355,27 +355,35 @@ export function HomeownerHistory({ onNavigate }) {
                 <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#235C50] mb-6 sm:mb-8">Riwayat Aktivitas</h1>
 
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex bg-white rounded-xl border-t border-l border-gray-200 w-full lg:w-auto shrink shadow-sm overflow-hidden">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => {
-                                    setActiveTab(tab.id);
-                                    setCurrentPage(1);
-                                    setSearchQuery('');
-                                    setSelectedRoomFilter('');
-                                    setSortConfig({ key: 'time', direction: 'desc' });
-                                }}
-                                className={`px-2 sm:px-3 lg:px-4 xl:px-5 py-2.5 text-[11px] sm:text-xs md:text-[13px] font-semibold transition-colors border-b border-r border-gray-200 ${activeTab === tab.id
-                                    ? 'bg-[#EDF5F1] text-[#235C50]'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                                    }`}
-                            >
-                                <span className="hidden xl:inline">{tab.full}</span>
-                                <span className="inline xl:hidden">{tab.short}</span>
-                            </button>
-                        ))}
+                    <div className="w-full lg:w-auto overflow-hidden">
+                        <style>{`
+                            .tabs-scroll-container::-webkit-scrollbar { display: none; }
+                            .tabs-scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
+                        `}</style>
+                        <div className="flex bg-white rounded-xl border-t border-l border-gray-200 w-full lg:w-auto shadow-sm overflow-x-auto tabs-scroll-container flex-nowrap">
+                            {tabs.map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => {
+                                        setActiveTab(tab.id);
+                                        setCurrentPage(1);
+                                        setSearchQuery('');
+                                        setSelectedRoomFilter('');
+                                        setSortConfig({ key: 'time', direction: 'desc' });
+                                    }}
+                                    className={`px-4 sm:px-6 py-3.5 text-[11px] sm:text-[13px] font-bold transition-all border-b border-r border-gray-200 shrink-0 whitespace-nowrap flex items-center justify-center ${activeTab === tab.id
+                                        ? 'bg-[#EDF5F1] text-[#235C50] border-b-2 border-b-[#235C50]'
+                                        : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <span className="hidden xl:inline">{tab.full}</span>
+                                    <span className="inline xl:hidden">{tab.short}</span>
+                                </button>
+
+                            ))}
+                        </div>
                     </div>
+
 
                     <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
                         <div className="relative w-full sm:w-[150px] md:w-[220px] shrink group">
@@ -432,10 +440,10 @@ export function HomeownerHistory({ onNavigate }) {
                                 </>
                             )}
                         </div>
-                        
+
                         {/* Compact Export Tab Button */}
-                        <button 
-                            onClick={handleExportPDF} 
+                        <button
+                            onClick={handleExportPDF}
                             title={`Export PDF Tab ${activeTab}`}
                             className="shrink-0 flex items-center justify-center w-10 h-10 bg-white border border-gray-200 text-[#235C50] rounded-xl hover:bg-gray-50 transition-all shadow-sm"
                         >
@@ -443,8 +451,8 @@ export function HomeownerHistory({ onNavigate }) {
                         </button>
 
                         {/* Premium Laporan Lengkap Button */}
-                        <button 
-                            onClick={handleExportAllPDF} 
+                        <button
+                            onClick={handleExportAllPDF}
                             disabled={isExportingAll}
                             className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-all shadow-md font-semibold text-sm disabled:opacity-70 disabled:cursor-wait group"
                         >
@@ -682,13 +690,13 @@ export function HomeownerHistory({ onNavigate }) {
                             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
                                 <span className="hidden sm:inline">Rows per page:</span>
                                 <div className="relative">
-                                    <button 
+                                    <button
                                         onClick={() => setShowRowsDropdown(!showRowsDropdown)}
                                         className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-medium transition-all"
                                     >
                                         {rowsPerPage} <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                     </button>
-                                    
+
                                     {showRowsDropdown && (
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div>

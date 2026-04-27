@@ -161,8 +161,8 @@ export default function AdminHistory({ onNavigate }) {
     };
 
     const tabs = [
-        { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Kenyamanan', endpoint: '/api/history/environment' },
-        { id: 'Keamanan',         full: 'Keamanan',         short: 'Keamanan', endpoint: '/api/history/security' },
+        { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Nyaman', endpoint: '/api/history/environment' },
+        { id: 'Keamanan',         full: 'Keamanan',         short: 'Aman', endpoint: '/api/history/security' },
         { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Air', endpoint: '/api/history/water' },
         { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Energi', endpoint: '/api/history/energy' },
         { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log', endpoint: '/api/history/activity' },
@@ -518,11 +518,45 @@ export default function AdminHistory({ onNavigate }) {
 
                 <div className="space-y-6">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                        <div className="flex flex-wrap items-center p-1.5 bg-gray-100/80 rounded-2xl w-full lg:w-fit gap-1 shadow-inner">
-                            {tabs.map((tab) => (<button key={tab.id} onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSelectedRoomFilter(''); }} className={`px-5 py-2.5 rounded-[0.95rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-[#009b7c] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>{tab.full}</button>))}
+                        {/* Tab Scroll Area */}
+                        <div className="flex-1 min-w-0 overflow-x-auto tabs-scroll-container">
+                            <style>{`
+                                .tabs-scroll-container::-webkit-scrollbar { display: none; }
+                                .tabs-scroll-container { 
+                                    -ms-overflow-style: none; 
+                                    scrollbar-width: none; 
+                                    -webkit-overflow-scrolling: touch;
+                                }
+                            `}</style>
+                            <div className="inline-flex items-center p-1.5 bg-gray-100/80 rounded-2xl gap-1 shadow-inner w-fit">
+                                {tabs.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSelectedRoomFilter(''); }}
+                                        className={`px-4 sm:px-5 py-2.5 rounded-[0.95rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 flex items-center justify-center ${activeTab === tab.id ? 'bg-[#009b7c] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                                    >
+                                        <span className="hidden xl:inline">{tab.full}</span>
+                                        <span className="inline xl:hidden">{tab.short}</span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-3 w-full lg:w-auto">
-                            <div className="relative flex-1 lg:w-56 xl:w-64"><Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" /><input type="text" placeholder="Cari data..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#009b7c]/10 shadow-sm" /></div>
+
+                        
+                        {/* Search & Filter Area - Locked Right */}
+                        <div className="flex items-center gap-3 w-full lg:w-auto shrink-0 lg:ml-auto">
+                            <div className="relative flex-1 lg:w-56 xl:w-64">
+                                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Cari data..." 
+                                    value={searchQuery} 
+                                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
+                                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#009b7c]/10 shadow-sm" 
+                                />
+                            </div>
+
+
                                 <div className="relative">
                                     <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}>
                                         <Filter className="w-4 h-4" />

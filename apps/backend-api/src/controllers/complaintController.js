@@ -11,7 +11,7 @@ exports.createComplaint = async (req, res) => {
         // Get user info for notification details
         const sender = await User.findById(userId);
 
-        const now = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        const now = new Date().toISOString();
 
         const newComplaint = new Complaint({
             topic,
@@ -35,7 +35,7 @@ exports.createComplaint = async (req, res) => {
         // 1. Notif untuk Homeowner (Konfirmasi)
         await Alert.create({
             owner: userId,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'Pengaduan Terkirim',
             message: `Tiket pengaduan "${topic}" Anda berhasil dibuat. Mohon tunggu respon admin.`,
             type: 'Info',
@@ -46,7 +46,7 @@ exports.createComplaint = async (req, res) => {
         const admins = await User.find({ role: { $regex: /admin/i } });
         const adminAlerts = admins.map(admin => ({
             owner: admin._id,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'Tiket Pengaduan Baru',
             message: `Ada pengaduan baru dari ${sender?.fullName || 'User'} (${sender?.bieonId || 'BIEON ID'}). Topik: ${topic}`,
             type: 'Warning',
@@ -161,7 +161,7 @@ exports.updateComplaintStatus = async (req, res) => {
         if (!complaint) return res.status(404).json({ message: 'Tiket tidak ditemukan' });
 
         const nowTime = new Date();
-        const nowStr = nowTime.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        const nowStr = new Date().toISOString();
         
         // --- LOGIKA SLA BARU ---
         
@@ -198,7 +198,7 @@ exports.updateComplaintStatus = async (req, res) => {
             const admins = await User.find({ role: { $regex: /admin/i } });
             const adminAlerts = admins.map(admin => ({
                 owner: admin._id,
-                category: 'Sistem',
+                category: 'Pengaduan',
                 title: 'Teknisi Mulai Memproses',
                 message: `Teknisi ${tech?.fullName || 'Teknisi'} telah mulai mengerjakan tiket "${complaint.topic}".`,
                 type: 'Info',
@@ -237,7 +237,7 @@ exports.updateComplaintStatus = async (req, res) => {
             // Notif untuk Homeowner (Konfirmasi Selesai)
             await Alert.create({
                 owner: complaint.homeowner,
-                category: 'Sistem',
+                category: 'Pengaduan',
                 title: 'Perbaikan Selesai',
                 message: `Teknisi telah menyelesaikan perbaikan tiket "${complaint.topic}". Silakan konfirmasi dan beri penilaian.`,
                 type: 'Success',
@@ -263,7 +263,7 @@ exports.updateComplaintStatus = async (req, res) => {
             if (complaint.technician) {
                 await Alert.create({
                     owner: complaint.technician,
-                    category: 'Sistem',
+                    category: 'Pengaduan',
                     title: 'Pekerjaan Selesai',
                     message: `Tiket "${complaint.topic}" telah selesai. Anda mendapat rating ${rating?.stars || 0}★.`,
                     type: 'Success',
@@ -275,7 +275,7 @@ exports.updateComplaintStatus = async (req, res) => {
             const admins = await User.find({ role: { $regex: /admin/i } });
             const adminAlerts = admins.map(admin => ({
                 owner: admin._id,
-                category: 'Sistem',
+                category: 'Pengaduan',
                 title: 'Tiket Selesai (Feedback)',
                 message: `Tiket "${complaint.topic}" selesai. Rating: ${rating?.stars || 0}★. Ulasan: ${rating?.review || '-'}`,
                 type: 'Info',
@@ -295,7 +295,7 @@ exports.updateComplaintStatus = async (req, res) => {
             if (status === 'ditolak') {
                 await Alert.create({
                     owner: complaint.homeowner,
-                    category: 'Sistem',
+                    category: 'Pengaduan',
                     title: 'Pengaduan Ditolak',
                     message: `Maaf, pengaduan "${complaint.topic}" Anda ditolak. Alasan: ${note || 'Tidak disebutkan.'}`,
                     type: 'Danger',
@@ -309,7 +309,7 @@ exports.updateComplaintStatus = async (req, res) => {
                 const admins = await User.find({ role: { $regex: /admin/i } });
                 const adminAlerts = admins.map(admin => ({
                     owner: admin._id,
-                    category: 'Sistem',
+                    category: 'Pengaduan',
                     title: 'Tiket Dibatalkan',
                     message: `Tiket "${complaint.topic}" telah dibatalkan oleh pelanggan.`,
                     type: 'Info',
@@ -321,7 +321,7 @@ exports.updateComplaintStatus = async (req, res) => {
                 if (complaint.technician) {
                     await Alert.create({
                         owner: complaint.technician,
-                        category: 'Sistem',
+                        category: 'Pengaduan',
                         title: 'Tiket Dibatalkan',
                         message: `Tiket "${complaint.topic}" yang Anda tangani telah dibatalkan oleh pelanggan.`,
                         type: 'Warning',
@@ -348,7 +348,7 @@ exports.updateProgress = async (req, res) => {
         const complaint = await Complaint.findById(id);
         if (!complaint) return res.status(404).json({ message: 'Tiket tidak ditemukan' });
 
-        const nowStr = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        const nowStr = new Date().toISOString();
 
         // Set flag if it's repair progress
         if (desc.toLowerCase().includes('proses perbaikan')) {
@@ -366,7 +366,7 @@ exports.updateProgress = async (req, res) => {
         // Notif untuk Homeowner (Update Progres)
         await Alert.create({
             owner: complaint.homeowner,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'Update Perbaikan',
             message: `Teknisi memperbarui progres: "${desc}".`,
             type: 'Info',
@@ -390,7 +390,7 @@ exports.requestDataLog = async (req, res) => {
         complaint.logRequestStatus = 'pending';
         complaint.logReason = reason || '';
         
-        const nowStr = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        const nowStr = new Date().toISOString();
         complaint.timeline.unshift({
             time: nowStr,
             desc: `Teknisi meminta akses data log perangkat.${reason ? ` Alasan: ${reason}` : ''}`,
@@ -403,7 +403,7 @@ exports.requestDataLog = async (req, res) => {
         const admins = await User.find({ role: { $regex: /admin/i } });
         const adminAlerts = admins.map(admin => ({
             owner: admin._id,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'Permintaan Data Log',
             message: `Teknisi meminta akses log untuk tiket ${complaint.topic}. Alasan: ${reason || '-'}`,
             type: 'Warning',
@@ -429,7 +429,7 @@ exports.grantDataLog = async (req, res) => {
         const isApproved = req.body.isApproved !== undefined ? req.body.isApproved : true;
         complaint.logRequestStatus = isApproved ? 'granted' : 'rejected';
         
-        const nowStr = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        const nowStr = new Date().toISOString();
         complaint.timeline.unshift({
             time: nowStr,
             desc: isApproved ? 'SuperAdmin memberikan izin akses data log perangkat.' : 'SuperAdmin menolak akses data log perangkat.',
@@ -441,7 +441,7 @@ exports.grantDataLog = async (req, res) => {
         // Notif untuk Teknisi (Izin Log)
         await Alert.create({
             owner: complaint.technician,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: isApproved ? 'Akses Log Diberikan' : 'Akses Log Ditolak',
             message: isApproved ? `SuperAdmin menyetujui akses data log untuk tiket ${complaint.topic}.` : `Maaf, akses data log untuk tiket ${complaint.topic} ditolak oleh SuperAdmin.`,
             type: isApproved ? 'Success' : 'Danger',
@@ -467,7 +467,7 @@ exports.assignTechnician = async (req, res) => {
         if (!newTech) return res.status(404).json({ message: 'Teknisi tidak valid' });
 
         const nowTime = new Date();
-        const nowStr = nowTime.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        const nowStr = new Date().toISOString();
 
         let timelineMsg = '';
         const oldTechName = complaint.technician ? complaint.technician.fullName : null;
@@ -513,7 +513,7 @@ exports.assignTechnician = async (req, res) => {
         if (!existingTechAlert) {
             await Alert.create({
                 owner: technicianId,
-                category: 'Sistem',
+                category: 'Pengaduan',
                 title: 'Tugas Perbaikan Baru',
                 message: `Anda ditugaskan untuk menangani pengaduan: "${complaint.topic}". Segera cek detail tugas.`,
                 type: 'Info',
@@ -531,7 +531,7 @@ exports.assignTechnician = async (req, res) => {
         if (!existingHomeownerAlert) {
             await Alert.create({
                 owner: complaint.homeowner,
-                category: 'Sistem',
+                category: 'Pengaduan',
                 title: 'Teknisi Ditugaskan',
                 message: `Teknisi ${newTech.fullName} telah ditugaskan untuk menangani pengaduan Anda.`,
                 type: 'Success',
@@ -573,7 +573,7 @@ exports.pingComplaint = async (req, res) => {
         complaint.urgencyLevel = newUrgency;
         complaint.pingCount = Math.min(currentPingCount + 1, 3); // MAKSIMAL 3 KOTAK PING
 
-        const nowStr = new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+        const nowStr = new Date().toISOString();
         
         complaint.timeline.unshift({
             time: nowStr,
@@ -588,7 +588,7 @@ exports.pingComplaint = async (req, res) => {
         if (complaint.technician) {
             await Alert.create({
                 owner: complaint.technician,
-                category: 'Sistem',
+                category: 'Pengaduan',
                 title: `TEGURAN PING #${complaint.pingCount}`,
                 message: `Admin mengirimkan PING! Segera selesaikan tiket ${complaint.topic}. Status urgensi: ${newUrgency.toUpperCase()}`,
                 type: 'Danger',
@@ -610,7 +610,7 @@ exports.pingComplaint = async (req, res) => {
 // --- SLA AUTO-CHECK HELPER ---
 async function checkAndUpdateSLAStatuses() {
     const now = new Date();
-    const nowStr = now.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+    const nowStr = now.toISOString();
     
     // 1. Check Overdue Respons (assignedAt > 30 mins ago)
     const overdueResponsTime = new Date(now.getTime() - (30 * 60 * 1000));
@@ -633,7 +633,7 @@ async function checkAndUpdateSLAStatuses() {
         // Kirim Notif ke Teknisi
         await Alert.create({
             owner: comp.technician,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'SLA Overdue Respons',
             message: `Peringatan: Tiket ${comp.topic} telah melewati batas waktu respon 30 menit!`,
             type: 'Danger',
@@ -644,7 +644,7 @@ async function checkAndUpdateSLAStatuses() {
         const admins = await User.find({ role: { $regex: /admin/i } });
         const adminAlerts = admins.map(admin => ({
             owner: admin._id,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'KRITIS: SLA Overdue',
             message: `Tiket dari ${comp.homeowner?.bieonId || 'User'} Overdue Respons! Segera alihkan teknisi.`,
             type: 'Danger',
@@ -673,7 +673,7 @@ async function checkAndUpdateSLAStatuses() {
         // Notif Teknisi
         await Alert.create({
             owner: comp.technician,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'SLA Overdue Perbaikan',
             message: `Peringatan: Perbaikan tiket ${comp.topic} telah melewati batas 56 jam!`,
             type: 'Danger',
@@ -684,7 +684,7 @@ async function checkAndUpdateSLAStatuses() {
         const admins = await User.find({ role: { $regex: /admin/i } });
         const adminAlerts = admins.map(admin => ({
             owner: admin._id,
-            category: 'Sistem',
+            category: 'Pengaduan',
             title: 'SLA Overdue Perbaikan',
             message: `Tiket ${comp.homeowner?.bieonId || 'User'} telah melewati batas waktu perbaikan.`,
             type: 'Warning',

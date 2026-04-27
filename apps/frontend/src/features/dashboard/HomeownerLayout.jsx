@@ -270,6 +270,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                     onClose={() => setShowNotif(false)} 
                     role="homeowner" 
                     onNavigate={handleNotificationNavigate}
+                    onUnreadChange={setHasUnread}
                   />
                 </div>
               )}
