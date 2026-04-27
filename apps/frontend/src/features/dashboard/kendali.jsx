@@ -111,7 +111,7 @@ export function DeviceControlPage({ onNavigate }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('bieon_token');
+        const token = localStorage.getItem('token');
         if (!token) {
           setIsLoading(false);
           return;
@@ -224,7 +224,7 @@ export function DeviceControlPage({ onNavigate }) {
         return;
       }
 
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/technician-access/generate-token', {
         method: 'POST',
         headers: {
@@ -262,7 +262,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!bieonIdInput.trim()) return;
 
     try {
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/hubs/setup', {
         method: 'POST',
         headers: {
@@ -470,7 +470,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!currentBieon || !selectedHub) return;
 
     try {
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const rawControl = forcedMode || (isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : "manual"));
       const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(selectedCategory, selectedDeviceType, rawControl, activeSensorAspect);
 
@@ -534,7 +534,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!currentBieon || !selectedHub) return;
 
     try {
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const rawControl = isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : configMode);
       const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(selectedCategory, selectedDeviceType, rawControl, activeSensorAspect);
 
@@ -700,7 +700,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!confirm("Yakin ingin menghapus device ini?")) return;
 
     try {
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/kendaliperangkat/${deviceId}`, {
         method: 'DELETE',
         headers: {

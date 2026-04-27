@@ -12,14 +12,12 @@ const NAV_ITEMS = [
 
 export default function TechnicianLayout({ children, activeMenu, setActiveMenu, onNavigate }) {
   const [showNotif, setShowNotif] = useState(false);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
-  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const fetchUnreadStatus = async () => {
       try {
-        const token = localStorage.getItem('bieon_token');
+        const token = localStorage.getItem('token');
         if (!token) return;
         const response = await fetch('/api/history/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -46,17 +44,6 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
     return () => window.removeEventListener('open-notifications', handleOpenNotif);
   }, []);
 
-  // Click-outside handler for profile dropdown
-  useEffect(() => {
-    if (!showRoleDropdown) return;
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowRoleDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showRoleDropdown]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F5FFFC] via-[#F5FFFC] to-[#F5FFFC] flex flex-col font-sans">
@@ -121,36 +108,24 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                 />
               </div>
               
-              {/* Profile Dropdown */}
-              <div className="relative" ref={dropdownRef}>
+              {/* Profile - Direct Navigation */}
+              <div className="relative">
                 <button
-                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                  className="flex items-center gap-2 hover:bg-gray-50 p-1 md:p-1.5 rounded-lg transition-all"
+                  onClick={() => setActiveMenu('profile')}
+                  className="flex items-center gap-2 hover:bg-gray-50 p-1 md:p-1.5 rounded-xl transition-all border border-transparent hover:border-teal-100"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0">
-                    TB
+                  <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
+                    {(localStorage.getItem('fullName') || 'T').charAt(0).toUpperCase()}
                   </div>
                   <div className="text-left hidden xl:block">
-                    <div className="text-xs font-semibold text-gray-900">Teknisi BPJS</div>
-                    <div className="text-xs text-gray-500">Teknisi</div>
+                    <div className="text-xs font-bold text-gray-900 leading-tight">
+                      {localStorage.getItem('fullName') || 'Teknisi BPJS'}
+                    </div>
+                    <div className="text-[10px] text-teal-600 font-semibold uppercase tracking-wider">
+                      {localStorage.getItem('role') || 'Teknisi'}
+                    </div>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400 ml-1 hidden lg:block" />
                 </button>
-                
-                {showRoleDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                    <button
-                      onClick={() => { setActiveMenu('profile'); setShowRoleDropdown(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-bold transition-colors border-b border-gray-100 pb-3 mb-1"
-                    >
-                      Lihat Profil Saya
-                    </button>
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-1">Ganti Role (Demo)</div>
-                    <button onClick={() => onNavigate && onNavigate('dashboard')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Homeowner</button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Teknisi</button>
-                    <button onClick={() => onNavigate && onNavigate('admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
-                  </div>
-                )}
               </div>
             </div>
           </div>

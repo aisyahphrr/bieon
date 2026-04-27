@@ -33,7 +33,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   useEffect(() => {
     const fetchUnreadStatus = async () => {
       try {
-        const token = localStorage.getItem('bieon_token');
+        const token = localStorage.getItem('token');
         if (!token) return;
         const response = await fetch('/api/history/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }

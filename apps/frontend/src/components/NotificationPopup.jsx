@@ -19,7 +19,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const popupRef = useRef(null);
-  const token = localStorage.getItem('bieon_token');
+  const token = localStorage.getItem('token');
 
   // Notify parent about unread status
   useEffect(() => {

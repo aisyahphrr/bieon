@@ -52,7 +52,7 @@ const getDefaultPathByRole = (role) => {
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem('bieon_token');
+  const token = localStorage.getItem('token');
   const location = useLocation();
 
   if (!token) {
@@ -63,7 +63,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const currentRole = payload?.role;
 
   if (!payload || !currentRole) {
-    localStorage.removeItem('bieon_token');
+    localStorage.removeItem('token');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -106,7 +106,7 @@ function AppContent() {
         <Route path="/pengaduan" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerComplaint /></ProtectedRoute>} />
 
         {/* Technician Routes */}
-        <Route path="/teknisi" element={<ProtectedRoute allowedRoles={['Technician']}><TechnicianDashboard /></ProtectedRoute>} />
+        <Route path="/teknisi" element={<ProtectedRoute allowedRoles={['Technician']}><TechnicianDashboard onNavigate={handleNavigate} /></ProtectedRoute>} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><SuperAdminDashboard onNavigate={handleNavigate} /></ProtectedRoute>} />

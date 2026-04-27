@@ -73,6 +73,9 @@ exports.login = async (req, res) => {
             { expiresIn: '1d' }
         );
 
+        // Update status menjadi aktif saat login
+        await User.findByIdAndUpdate(user._id, { status: 'aktif' });
+
         res.status(200).json({
             message: 'Login berhasil!',
             token,

@@ -209,7 +209,7 @@ export default function AdminHistory({ onNavigate }) {
         setIsLoadingHomeowners(true);
         setApiError(null);
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const response = await fetch('/api/admin/homeowners', { headers: { 'Authorization': `Bearer ${token}` } });
             const result = await response.json();
             if (result.success && result.data) {
@@ -225,7 +225,7 @@ export default function AdminHistory({ onNavigate }) {
     const fetchAllBieonSystems = async () => {
         setIsLoadingBieon(true);
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const response = await fetch('/api/admin/all-bieon-systems', { 
                 headers: { 'Authorization': `Bearer ${token}` } 
             });
@@ -247,7 +247,7 @@ export default function AdminHistory({ onNavigate }) {
         if (!selectedHomeowner) return;
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const currentTabConfig = tabs.find(t => t.id === activeTab);
             let query = `homeownerId=${selectedHomeowner._id}`;
             if (selectedBieon) query += `&bieonId=${selectedBieon}`;
@@ -317,7 +317,7 @@ export default function AdminHistory({ onNavigate }) {
         if (!selectedHomeowner) return;
         setIsExportingAll(true);
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const doc = new jsPDF('l', 'mm', 'a4'); // Full Landscape
             const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;

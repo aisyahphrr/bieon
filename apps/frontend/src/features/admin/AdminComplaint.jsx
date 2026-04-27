@@ -206,7 +206,7 @@ export default function AdminComplaint({ onNavigate }) {
     const [selectedPingType, setSelectedPingType] = useState('');
 
     // --- Fetch Logic ---
-    const token = localStorage.getItem('bieon_token');
+    const token = localStorage.getItem('token');
 
     const fetchData = async () => {
         try {

@@ -88,7 +88,7 @@ export function ManajemenAkunPage({ onNavigate }) {
             setIsLoading(true);
             setFetchError(null);
             try {
-                const token = localStorage.getItem('bieon_token');
+                const token = localStorage.getItem('token');
                 const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
@@ -122,7 +122,7 @@ export function ManajemenAkunPage({ onNavigate }) {
             const fetchHubs = async () => {
                 setIsLoadingHubs(true);
                 try {
-                    const token = localStorage.getItem('bieon_token');
+                    const token = localStorage.getItem('token');
                     const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners/${selectedHomeowner._id}/stats`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
@@ -216,7 +216,7 @@ export function ManajemenAkunPage({ onNavigate }) {
 
     const handleAddHomeowner = async () => {
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners`, {
                 method: 'POST',
                 headers: { 
@@ -272,7 +272,7 @@ export function ManajemenAkunPage({ onNavigate }) {
         if (!selectedHomeowner) return;
 
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const payload = {
                 fullName: formData.fullName,
                 email: formData.email,
@@ -326,7 +326,7 @@ export function ManajemenAkunPage({ onNavigate }) {
         }
 
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners/${selectedHomeowner._id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` },

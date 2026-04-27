@@ -224,7 +224,7 @@ export default function AdminTariff({ onNavigate }) {
             trend: null
         });
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const headers = { 'Authorization': `Bearer ${token}` };
 
             const [currentRes, historyRes, distributionRes, trendRes] = await Promise.allSettled([
@@ -417,7 +417,7 @@ export default function AdminTariff({ onNavigate }) {
         }
 
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
 
             // Convert selectedDate dari format Indonesia ke ISO
             const monthMap = { 'Januari': 0, 'Februari': 1, 'Maret': 2, 'April': 3, 'Mei': 4, 'Juni': 5, 'Juli': 6, 'Agustus': 7, 'September': 8, 'Oktober': 9, 'November': 10, 'Desember': 11 };

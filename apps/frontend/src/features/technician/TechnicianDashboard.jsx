@@ -143,7 +143,7 @@ export function TechnicianDashboard({ onNavigate }) {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const headers = {
         'Authorization': `Bearer ${token}`
       };

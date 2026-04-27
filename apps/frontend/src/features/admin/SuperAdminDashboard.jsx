@@ -151,7 +151,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const fetchDashboardMetrics = async () => {
     try {
       setMetricsError(null);
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
 
       const response = await fetch('/api/admin/dashboard/metrics', {
         method: 'GET',
@@ -189,7 +189,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const fetchHomeowners = async () => {
     try {
       setHomeownersError(null);
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
 
       const response = await fetch('/api/admin/homeowners', {
         method: 'GET',
@@ -242,7 +242,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const fetchPlnSummary = async () => {
     try {
       setPlnSummaryLoading(true);
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/admin/tariffs/summary', {
         headers: { 'Authorization': `Bearer ${token}` }
       });

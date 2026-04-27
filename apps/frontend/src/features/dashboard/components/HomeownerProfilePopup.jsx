@@ -45,7 +45,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/auth/settings', {
         method: 'PUT',
         headers: {
@@ -202,7 +202,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   <button 
                     onClick={async () => {
                       try {
-                        const token = localStorage.getItem('bieon_token');
+                        const token = localStorage.getItem('token');
                         if (token) {
                           await fetch('/api/auth/logout', {
                             method: 'POST',
@@ -211,7 +211,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                         }
                       } catch (e) { console.error('Logout error', e); }
                       
-                      localStorage.removeItem('bieon_token');
+                      localStorage.removeItem('token');
                       localStorage.removeItem('bieon_user_role');
                       localStorage.removeItem('bieon_tech_access');
                       localStorage.removeItem('bieon_tech_access_expiry');

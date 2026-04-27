@@ -56,7 +56,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
     // Fetch user profile
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('bieon_token');
+        const token = localStorage.getItem('token');
         if (!token) return;
 
         const response = await fetch('/api/auth/me', {
@@ -76,7 +76,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
     const fetchUnreadStatus = async () => {
       try {
-        const token = localStorage.getItem('bieon_token');
+        const token = localStorage.getItem('token');
         if (!token) return;
         const response = await fetch('/api/history/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -142,7 +142,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
   const handleTechReportSubmit = async (reportContent) => {
     try {
-      const token = localStorage.getItem('bieon_token');
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/technician-access/submit-report', {
         method: 'POST',
         headers: {

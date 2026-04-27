@@ -50,8 +50,11 @@ const Login = () => {
         throw new Error(data.message || 'Login gagal. Cek kembali email dan password Anda.');
       }
 
-      // Simpan token ke local storage
-      localStorage.setItem('bieon_token', data.token);
+      // Simpan data ke local storage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.user.id);
+      localStorage.setItem('role', data.user.role);
+      localStorage.setItem('fullName', data.user.fullName);
 
       // Arahkan berdasarkan role
       const userRole = data.user?.role;

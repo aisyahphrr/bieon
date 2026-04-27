@@ -102,7 +102,7 @@ export function ComplaintDetailModal({
 
     if (!isOpen || !localTicket) return null;
 
-    const token = localStorage.getItem('bieon_token');
+    const token = localStorage.getItem('token');
 
     // API Handlers
     const fetchComplaintDetail = async () => {

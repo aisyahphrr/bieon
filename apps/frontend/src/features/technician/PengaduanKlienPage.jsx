@@ -181,7 +181,7 @@ export function PengaduanKlienPage({ onNavigate }) {
     const [apiError, setApiError] = useState(null); // Menangkap error API
     const [toast, setToast] = useState({ show: false, message: '' });
 
-    const token = localStorage.getItem('bieon_token');
+    const token = localStorage.getItem('token');
 
     const handleExport = () => {
         const doc = new jsPDF('portrait');

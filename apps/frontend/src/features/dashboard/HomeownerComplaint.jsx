@@ -88,7 +88,7 @@ export function HomeownerComplaint({ onNavigate }) {
     const fetchUserDevices = async (userId) => {
         try {
             console.log("🔍 FETCHING DEVICES FOR USER:", userId);
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const res = await fetch(`/api/kendali-perangkat/user/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -110,7 +110,7 @@ export function HomeownerComplaint({ onNavigate }) {
         const idToUse = userId || currentUserId;
         try {
             setIsLoading(true);
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             if (!token || !idToUse) {
                 setIsLoading(false);
                 return;
@@ -170,7 +170,7 @@ export function HomeownerComplaint({ onNavigate }) {
     };
 
     React.useEffect(() => {
-        const token = localStorage.getItem('bieon_token');
+        const token = localStorage.getItem('token');
         if (token) {
             const payload = decodeJwtPayload(token);
             if (payload) {
@@ -337,7 +337,7 @@ export function HomeownerComplaint({ onNavigate }) {
         setSubmitSuccess('');
 
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const uploadedFiles = formFiles.map(f => ({ name: f.name, url: f.previewUrl }));
 
             const response = await fetch('/api/complaints', {
@@ -385,7 +385,7 @@ export function HomeownerComplaint({ onNavigate }) {
         if (ratingStars === 0) return;
 
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const response = await fetch(`/api/complaints/${ratingTargetId}/status`, {
                 method: 'PUT',
                 headers: {

@@ -20,6 +20,8 @@ const userSchema = new mongoose.Schema({
 
     // Field Khusus Teknisi
     technicianId: { type: String },
+    nik: { type: String, sparse: true },
+    joinDate: { type: Date },
     assignedRegion: { type: String },
     position: { type: String },
     experience: { type: Number, default: 0 },
@@ -27,6 +29,17 @@ const userSchema = new mongoose.Schema({
     workArea: { type: String },
     coverageAreas: [{ type: String }],
     workSchedule: { type: Map, of: String },
+    certifications: [{
+        name: { type: String },
+        issuer: { type: String },
+        startDate: { type: Date },
+        endDate: { type: Date }
+    }],
+    trainingHistory: [{
+        name: { type: String },
+        instructor: { type: String },
+        endDate: { type: Date }
+    }],
     status: { type: String, enum: ['aktif', 'nonaktif'], default: 'aktif' }
 }, { timestamps: true });
 

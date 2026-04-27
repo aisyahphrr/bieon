@@ -128,7 +128,7 @@ export function RiwayatPerbaikanPage() {
     const fetchHistory = async () => {
       try {
         setIsLoading(true);
-        const token = localStorage.getItem('bieon_token');
+        const token = localStorage.getItem('token');
         const response = await fetch('/api/complaints/technician', {
           headers: { 'Authorization': `Bearer ${token}` }
         });

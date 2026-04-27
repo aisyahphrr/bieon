@@ -100,7 +100,7 @@ export function HomeownerHistory({ onNavigate }) {
         setIsLoading(true);
         setError(null);
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const currentTabConfig = tabs.find(t => t.id === activeTab);
 
             const response = await fetch(currentTabConfig.endpoint, {
@@ -284,7 +284,7 @@ export function HomeownerHistory({ onNavigate }) {
     const handleExportAllPDF = async () => {
         setIsExportingAll(true);
         try {
-            const token = localStorage.getItem('bieon_token');
+            const token = localStorage.getItem('token');
             const doc = new jsPDF('l', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.width;
 
