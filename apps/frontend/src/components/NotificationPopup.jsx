@@ -204,9 +204,21 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
                         {notif.date ? new Date(notif.date).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace('.', ':') : 'Baru saja'}
                       </span>
                       {notif.link && !notif.isRead && (
-                        <span className="flex items-center gap-1.5 px-2 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full shadow-sm animate-pulse">
-                          TINDAKAN DIPERLUKAN
-                        </span>
+                        <>
+                          {role === 'technician' && (
+                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse" title="Tindakan Diperlukan" />
+                          )}
+                          {role === 'homeowner' && (
+                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-md uppercase tracking-wider">
+                              New
+                            </span>
+                          )}
+                          {(role === 'superadmin' || role === 'admin') && (
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-md uppercase tracking-wider">
+                              BUTUH AKSI
+                            </span>
+                          )}
+                        </>
                       )}
 
                     </div>
