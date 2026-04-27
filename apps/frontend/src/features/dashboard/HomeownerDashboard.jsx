@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Home,
   Zap,
@@ -661,6 +661,28 @@ export function HomeownerDashboard({ onNavigate }) {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [toast, setToast] = useState(null);
+  const [liveTemp, setLiveTemp] = useState(26);
+
+  useEffect(() => {
+    const fetchTemp = async () => {
+      try {
+        // Menggunakan endpoint dari microservices/api-services via proxy /api-sensor
+        const res = await fetch('/api-sensor/sensors/suhu');
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+        if (data && data.length > 0) {
+          console.log("🌡️ Data suhu diterima dari database:", data[0].value);
+          setLiveTemp(data[0].value);
+        }
+      } catch (err) {
+        console.error("Gagal fetch suhu real-time:", err);
+      }
+    };
+
+    fetchTemp();
+    const interval = setInterval(fetchTemp, 2000); // Polling setiap 2 detik sesuai permintaan
+    return () => clearInterval(interval);
+  }, []);
 
   const triggerToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -744,13 +766,13 @@ export function HomeownerDashboard({ onNavigate }) {
                             <Thermometer className="w-5 h-5 text-orange-500" />
                           </div>
                           <div className="mb-3">
-                            <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.temp}°C</div>
+                            <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {currentSensors.comfort.temp < 20.5 ? 'Dingin' : currentSensors.comfort.temp <= 27.1 ? 'Nyaman' : 'Panas'}
+                              {(selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) < 20.5 ? 'Dingin' : (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 ? 'Nyaman' : 'Panas'}
                             </div>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                            <div className="h-full bg-gradient-to-r from-orange-500 to-red-500" style={{ width: `${(currentSensors.comfort.temp / 40) * 100}%` }}></div>
+                            <div className="h-full bg-gradient-to-r from-orange-500 to-red-500" style={{ width: `${((selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) / 40) * 100}%` }}></div>
                           </div>
                         </div>
                       )}
@@ -773,7 +795,7 @@ export function HomeownerDashboard({ onNavigate }) {
                           <div className="grid grid-cols-2 gap-3 mt-auto">
                             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
                               <div className="text-[10px] mb-1">Suhu</div>
-                              <div className="font-bold text-lg">{currentSensors.comfort.temp}°C</div>
+                              <div className="font-bold text-lg">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>
                             </div>
                             {currentSensors.comfort.humidity !== null && (
                               <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
@@ -995,34 +1017,45 @@ export function HomeownerDashboard({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-6 bg-[#ebfbf5] rounded-2xl border border-[#bbf7d0]">
-                <div className="text-center py-2 px-1 sm:px-4 relative">
-                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
-                    {chartType === 'daily' ? 'Daya Saat Ini' : 'Daya Bulan Ini'}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 p-4 sm:p-6 bg-[#ebfbf5] rounded-[2rem] border border-[#bbf7d0] items-start">
+                {/* Item 1 */}
+                <div className="text-center px-2 flex flex-col items-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                    {chartType === 'daily' ? 'Konsumsi Beban Saat Ini' : 'Daya Bulan Ini'}
                   </div>
-                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
-                    947 <span className="text-xs sm:text-base font-semibold">{chartType === 'daily' ? 'W' : 'kWh'}</span>
-                  </div>
-                </div>
-                <div className="text-center py-2 px-1 sm:px-4 relative">
-                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
-                    {chartType === 'daily' ? 'Total Hari Ini' : 'Total Tahun Ini'}
-                  </div>
-                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
-                    7.85 <span className="text-xs sm:text-base font-semibold">kWh</span>
+                  <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
+                    947 <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
                   </div>
                 </div>
-                <div className="text-center py-2 px-1 sm:px-4 relative">
-                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">
-                    {chartType === 'daily' ? 'Rata-rata/Jam' : 'Rata-rata/Bulan'}
+
+                {/* Item 2 */}
+                <div className="text-center px-2 flex flex-col items-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                    {chartType === 'daily' ? 'Konsumsi Beban Berjalan' : 'Total Tahun Ini'}
                   </div>
-                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
-                    0.462 <span className="text-xs sm:text-base font-semibold">kWh</span>
+                  <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
+                    7.85 <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
                   </div>
                 </div>
-                <div className="text-center py-2 px-1 sm:px-4">
-                  <div className="text-[9px] sm:text-[10px] text-emerald-600 font-bold mb-1 uppercase tracking-wide">Total (Rp)</div>
-                  <div className="text-base sm:text-2xl font-bold text-[#00a67d]">Rp 78.490</div>
+
+                {/* Item 3 */}
+                <div className="text-center px-2 flex flex-col items-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                    {chartType === 'daily' ? 'Rata-rata beban per jam' : 'Rata-rata/Bulan'}
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
+                    0.462 <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
+                  </div>
+                </div>
+
+                {/* Item 4 */}
+                <div className="text-center px-2 flex flex-col items-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                    Total Biaya Pemakaian Beban Berjalan (Rp)
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
+                    <span className="text-sm sm:text-base font-semibold opacity-60">Rp</span> 78.490
+                  </div>
                 </div>
               </div>
 
@@ -1067,7 +1100,7 @@ export function HomeownerDashboard({ onNavigate }) {
                         tickLine={false}
                         style={{ fontSize: '11px' }}
                         dx={-10}
-                        label={{ value: 'Daya (W)', angle: -90, position: 'insideLeft', offset: 0, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                        label={{ value: 'Konsumsi (kWh)', angle: -90, position: 'insideLeft', offset: 0, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
                       />
                       <Tooltip
                         contentStyle={{
