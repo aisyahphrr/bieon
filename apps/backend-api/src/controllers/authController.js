@@ -272,9 +272,12 @@ exports.requestForgotPasswordOtp = async (req, res) => {
                 await sendOtpWhatsApp({ toPhoneE164: user.phoneNumber, otp, expiresMinutes: OTP_EXPIRES_MINUTES });
             }
         } catch (sendErr) {
-            // Jangan bocorkan apapun: tetap 200, tapi jangan biarkan OTP menggantung.
+            // Ubah status OTP menjadi Expired karena gagal kirim
             await PasswordReset.findByIdAndUpdate(record._id, { status: 'Expired' });
             console.error('OTP Send Error:', sendErr.message || sendErr);
+            
+            // Ganti ini agar user tahu sistem sedang bermasalah dan tidak kebingungan menunggu email
+            return res.status(500).json({ message: 'Sistem gagal mengirimkan email OTP. Pastikan email valid atau coba lagi nanti.' });
         }
 
         return res.status(200).json(buildGenericOtpResponse());

@@ -27,6 +27,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -117,6 +118,39 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      setError('Email wajib diisi');
+      return;
+    }
+
+    setGoogleLoading(true);
+    setError('');
+    setInfo('');
+    try {
+      const response = await fetch('/api/auth/forgot-password/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal mengirimkan email');
+      }
+
+      // Show generic success message (prevent user enumeration)
+      setInfo('Jika akun terdaftar, OTP telah dikirim. Silakan cek email atau WhatsApp Anda.');
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Gagal mengirim OTP. Coba lagi nanti.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white pb-12 pt-8">
       {/* Ambient Background Glows */}
@@ -174,11 +208,16 @@ const Login = () => {
               </div>
             </div>
 
-            {error && (
-              <div className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-100">
-                {error}
-              </div>
-            )}
+              {error && (
+                <div className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-100">
+                  {error}
+                </div>
+              )}
+              {info && (
+                <div className="text-green-600 text-sm font-semibold bg-green-50 p-3 rounded-xl border border-green-100">
+                  {info}
+                </div>
+              )}
 
             {/* Login Button */}
             <div className="pt-4">
@@ -226,10 +265,10 @@ const Login = () => {
 
           {/* Footer Links */}
           <div className="flex justify-between items-center mt-10 text-[13px] text-slate-500 font-medium">
-            <a href="#" className="hover:text-[#009b7c] transition-colors font-bold">Forgot Password</a>
+            <button onClick={() => navigate('/forgot')} className="hover:text-[#009b7c] transition-colors font-bold">Forgot Password</button>
             <div>
               Don't have an account?
-              <button onClick={() => onNavigate && onNavigate('signup')} className="text-[#009b7c] font-bold hover:underline ml-1.5 transition-all">
+              <button onClick={() => navigate('/signup')} className="text-[#009b7c] font-bold hover:underline ml-1.5 transition-all">
                 Sign Up
               </button>
             </div>

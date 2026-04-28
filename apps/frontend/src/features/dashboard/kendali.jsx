@@ -231,6 +231,12 @@ export function DeviceControlPage({ onNavigate }) {
     if (techAccess === 'true') {
       setIsTechnicianMode(true);
     }
+
+    return () => {
+      socket.off('device_telemetry');
+      socket.off('new_unassigned_device');
+      socket.disconnect();
+    };
   }, []); // Hapus userProfile dari dependency agar tidak infinite loop
 
   useEffect(() => {

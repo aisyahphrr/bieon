@@ -1,4 +1,5 @@
 const KendaliPerangkat = require('../models/KendaliPerangkat');
+const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
 
 // 1. Mencatat perangkat yang terdeteksi (tanda icon di UI)
 exports.discoverDevice = async (req, res) => {
@@ -16,6 +17,7 @@ exports.discoverDevice = async (req, res) => {
         });
 
         await newDevice.save();
+        broadcastNewDevice(newDevice);
         res.status(201).json({ message: 'Perangkat baru terdeteksi!', device: newDevice });
     } catch (error) {
         res.status(500).json({ message: 'Gagal mendeteksi perangkat', error: error.message });
@@ -44,6 +46,7 @@ exports.createDevice = async (req, res) => {
         });
 
         await newDevice.save();
+        broadcastNewDevice(newDevice);
         res.status(201).json({ message: 'Perangkat berhasil disimpan ke database!', device: newDevice });
     } catch (error) {
         console.error('SERVER ERROR [createDevice]:', error);
@@ -76,6 +79,11 @@ exports.configureDevice = async (req, res) => {
 
         if (!updatedDevice) {
             return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+        }
+
+        // Emit device telemetry update to connected clients
+        if (updatedDevice.hubId) {
+            broadcastDeviceTelemetry(updatedDevice.hubId, updatedDevice);
         }
 
         res.status(200).json({ message: 'Konfigurasi berhasil simpan!', device: updatedDevice });

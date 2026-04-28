@@ -1,12 +1,27 @@
 const WA_GRAPH_VERSION = process.env.WA_GRAPH_VERSION || 'v19.0';
 
+const isWhatsAppConfigured = () => {
+  const token = process.env.WA_CLOUD_TOKEN || '';
+  const phoneId = process.env.WA_PHONE_NUMBER_ID || '';
+  
+  // Exclude placeholder values
+  const isPlaceholder = (val) => {
+    if (!val) return true;
+    return val.includes('your-') || val.includes('example') || val === 'placeholder';
+  };
+  
+  return !isPlaceholder(token) && !isPlaceholder(phoneId);
+};
+
 exports.sendOtpWhatsApp = async ({ toPhoneE164, otp, expiresMinutes }) => {
+  // Dev fallback: log OTP if WhatsApp not configured
+  if (!isWhatsAppConfigured()) {
+    console.log(`\n💬 DEV MODE: OTP untuk ${toPhoneE164}\n   Kode: ${otp}\n   Berlaku: ${expiresMinutes} menit\n`);
+    return;
+  }
+
   const token = process.env.WA_CLOUD_TOKEN;
   const phoneNumberId = process.env.WA_PHONE_NUMBER_ID;
-
-  if (!token || !phoneNumberId) {
-    throw new Error('WA env belum lengkap (WA_CLOUD_TOKEN/WA_PHONE_NUMBER_ID)');
-  }
 
   const url = `https://graph.facebook.com/${WA_GRAPH_VERSION}/${phoneNumberId}/messages`;
   const body = {
