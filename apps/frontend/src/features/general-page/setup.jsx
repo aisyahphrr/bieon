@@ -283,6 +283,29 @@ const Setup = ({ tempData }) => {
                 }
             }
 
+            // 3. Auto-login (so dashboard has token)
+            const loginRes = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: tempData.email, password: tempData.password })
+            });
+
+            if (!loginRes.ok) {
+                const errText = await loginRes.text();
+                try {
+                    const errJson = JSON.parse(errText);
+                    throw new Error(errJson.message || 'Registrasi berhasil, tapi login otomatis gagal.');
+                } catch (e) {
+                    throw new Error(errText || 'Registrasi berhasil, tapi login otomatis gagal.');
+                }
+            }
+
+            const loginData = await loginRes.json();
+            localStorage.setItem('token', loginData.token);
+            localStorage.setItem('userId', loginData.user.id);
+            localStorage.setItem('role', loginData.user.role);
+            localStorage.setItem('fullName', loginData.user.fullName);
+
             if (navigate) navigate('/dashboard');
         } catch (err) {
             setError(err.message);
