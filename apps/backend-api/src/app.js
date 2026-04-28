@@ -15,6 +15,8 @@ const technicianDashboardRoutes = require("./routes/technicianDashboardRoutes");
 const plnTariffRoutes = require("./routes/plnTariffRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const productRoutes = require("./routes/productRoutes");
+const alertRoutes = require("./routes/alertRoutes");
+require('./models/AccountDeletionRequest');
 
 // Middleware
 app.use(cors());
@@ -39,5 +41,6 @@ app.use('/api/technician/dashboard', technicianDashboardRoutes);
 app.use('/api/admin/tariffs', plnTariffRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/alerts', alertRoutes);
 
 module.exports = app;

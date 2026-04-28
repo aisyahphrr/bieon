@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SuperAdminLayout } from './SuperAdminLayout';
+import { getDeletionRequestBadgeClass, getDeletionRequestStatusMeta } from './deletionRequestUi';
 import {
     Users,
     User,
@@ -51,6 +52,246 @@ const CITY_AREAS = {
     'Lainnya': ['Area Luar Kota', 'Nasional']
 };
 
+const WORK_AREA_COORDINATES = {
+    Jakarta: { lat: -6.2088, lng: 106.8456, label: 'Jakarta' },
+    Bandung: { lat: -6.9175, lng: 107.6191, label: 'Bandung' },
+    Surabaya: { lat: -7.2575, lng: 112.7521, label: 'Surabaya' },
+    Lainnya: { lat: -6.9, lng: 107.6, label: 'Area teknisi' },
+};
+
+const MAP_COLOR_PALETTE = ['#dc2626', '#059669', '#2563eb', '#9333ea', '#ea580c', '#0891b2', '#4f46e5', '#be123c'];
+
+const parseApiResponse = async (response) => {
+    const raw = await response.text();
+
+    if (!raw) return {};
+
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return {};
+    }
+};
+
+const formatLocationAge = (capturedAt) => {
+    if (!capturedAt) return 'Belum pernah dibagikan';
+
+    const diffMs = Date.now() - new Date(capturedAt).getTime();
+    const diffMinutes = Math.max(Math.round(diffMs / 60000), 0);
+
+    if (diffMinutes < 1) return 'Baru saja';
+    if (diffMinutes < 60) return `${diffMinutes} menit lalu`;
+
+    const diffHours = Math.round(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+
+    const diffDays = Math.round(diffHours / 24);
+    return `${diffDays} hari lalu`;
+};
+
+const loadLeafletAssets = async () => {
+    if (window.L) return window.L;
+
+    if (!document.querySelector('link[data-leaflet-css="true"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        link.dataset.leafletCss = 'true';
+        document.head.appendChild(link);
+    }
+
+    await new Promise((resolve, reject) => {
+        const existingScript = document.querySelector('script[data-leaflet-js="true"]');
+
+        if (existingScript && window.L) {
+            resolve();
+            return;
+        }
+
+        if (existingScript) {
+            existingScript.addEventListener('load', resolve, { once: true });
+            existingScript.addEventListener('error', reject, { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.async = true;
+        script.dataset.leafletJs = 'true';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+    });
+
+    return window.L;
+};
+
+function TechnicianLiveMap({
+    technicians,
+    selectedTechnicianId,
+    onSelectTechnician,
+    isLoading,
+    emptyMessage,
+}) {
+    const containerRef = useRef(null);
+    const mapRef = useRef(null);
+    const layerGroupRef = useRef(null);
+
+    useEffect(() => {
+        let disposed = false;
+
+        const initMap = async () => {
+            if (!containerRef.current) return;
+
+            const L = await loadLeafletAssets();
+            if (disposed || !containerRef.current) return;
+
+            if (!mapRef.current) {
+                mapRef.current = L.map(containerRef.current, {
+                    zoomControl: true,
+                    scrollWheelZoom: true,
+                }).setView([-6.2, 106.816666], 8);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19,
+                }).addTo(mapRef.current);
+
+                layerGroupRef.current = L.layerGroup().addTo(mapRef.current);
+            }
+
+            const map = mapRef.current;
+            const group = layerGroupRef.current;
+            group.clearLayers();
+
+            if (!technicians.length) {
+                map.setView([-6.2, 106.816666], 8);
+                setTimeout(() => map.invalidateSize(), 0);
+                return;
+            }
+
+            const bounds = [];
+
+            technicians.forEach((tech) => {
+                if (!tech.mapLocation) return;
+
+                const { lat, lng } = tech.mapLocation;
+                bounds.push([lat, lng]);
+
+                const isSelected = selectedTechnicianId === tech.id;
+                const markerHtml = `
+                    <div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px);">
+                        <div style="
+                            background:${tech.color};
+                            color:#fff;
+                            font-weight:700;
+                            font-size:11px;
+                            padding:4px 10px;
+                            border-radius:999px;
+                            margin-bottom:6px;
+                            box-shadow:0 8px 20px rgba(15,23,42,0.18);
+                            white-space:nowrap;
+                            border:${isSelected ? '2px solid #111827' : '0'};
+                        ">
+                            ${tech.name}
+                        </div>
+                        <div style="
+                            width:${isSelected ? 22 : 18}px;
+                            height:${isSelected ? 22 : 18}px;
+                            border-radius:999px;
+                            background:#fff;
+                            border:4px solid ${tech.color};
+                            box-shadow:0 8px 20px rgba(15,23,42,0.18);
+                        "></div>
+                    </div>
+                `;
+
+                const marker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        html: markerHtml,
+                        className: 'bieon-technician-marker',
+                        iconSize: [140, 52],
+                        iconAnchor: [70, 48],
+                    }),
+                });
+
+                marker.on('click', () => onSelectTechnician?.(tech.id));
+                marker.addTo(group);
+            });
+
+            if (bounds.length === 1) {
+                map.setView(bounds[0], 11);
+            } else if (bounds.length > 1) {
+                map.fitBounds(bounds, { padding: [40, 40] });
+            }
+
+            setTimeout(() => map.invalidateSize(), 0);
+        };
+
+        initMap().catch((error) => {
+            console.error('Gagal memuat Leaflet map:', error);
+        });
+
+        return () => {
+            disposed = true;
+        };
+    }, [technicians, selectedTechnicianId, onSelectTechnician]);
+
+    useEffect(() => {
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+                layerGroupRef.current = null;
+            }
+        };
+    }, []);
+
+    return (
+        <div className="relative w-full h-full min-h-[360px] rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-gray-100">
+            <div ref={containerRef} className="absolute inset-0" />
+
+            {isLoading && (
+                <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[500]">
+                    <div className="px-4 py-3 rounded-2xl bg-white shadow-lg text-sm font-semibold text-gray-700">
+                        Memuat lokasi teknisi...
+                    </div>
+                </div>
+            )}
+
+            {!isLoading && technicians.length === 0 && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center p-6 z-[500]">
+                    <div className="max-w-md text-center">
+                        <p className="text-base font-bold text-gray-800">{emptyMessage}</p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+const resolveWorkAreaLocation = (workArea, fallbackLocation) => {
+    const area = String(workArea || '').trim();
+    const matchedArea = Object.keys(WORK_AREA_COORDINATES).find((key) => area.toLowerCase().includes(key.toLowerCase()));
+
+    if (matchedArea) {
+        return WORK_AREA_COORDINATES[matchedArea];
+    }
+
+    if (fallbackLocation) {
+        return {
+            lat: fallbackLocation.lat,
+            lng: fallbackLocation.lng,
+            label: area || fallbackLocation.label || 'Lokasi teknisi',
+        };
+    }
+
+    return {
+        ...WORK_AREA_COORDINATES.Lainnya,
+        label: area || WORK_AREA_COORDINATES.Lainnya.label,
+    };
+};
+
 export function ManajemenTeknisiPage({ onNavigate }) {
     const [technicians, setTechnicians] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +313,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const [availableClients, setAvailableClients] = useState([]);
     const [selectedClients, setSelectedClients] = useState([]);
     const [isLoadingClients, setIsLoadingClients] = useState(false);
+    const [mapTechnicians, setMapTechnicians] = useState([]);
+    const [isLoadingMap, setIsLoadingMap] = useState(false);
+    const [mapError, setMapError] = useState('');
+    const [selectedMapTechnicianId, setSelectedMapTechnicianId] = useState(null);
 
     const getInitialFormData = () => ({
         name: '',
@@ -115,7 +360,31 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         specializations: Array.isArray(tech.specializations) ? tech.specializations : [],
         coverageAreas: Array.isArray(tech.coverageAreas) ? tech.coverageAreas : [],
         workSchedule: tech.workSchedule || getInitialFormData().workSchedule,
+        currentLocation: tech.currentLocation ? {
+            lat: Number(tech.currentLocation.lat),
+            lng: Number(tech.currentLocation.lng),
+            accuracy: tech.currentLocation.accuracy ?? null,
+            source: tech.currentLocation.source || 'browser',
+            capturedAt: tech.currentLocation.capturedAt || null,
+            label: tech.currentLocation.label || '',
+        } : null,
+        mapLocation: resolveWorkAreaLocation(
+            tech.workArea,
+            tech.currentLocation ? {
+                lat: Number(tech.currentLocation.lat),
+                lng: Number(tech.currentLocation.lng),
+                label: tech.currentLocation.label || '',
+            } : null
+        ),
+        deletionRequest: tech.deletionRequest || null,
     });
+
+    const getMapTechnicianColor = (techId, index) => {
+        if (!techId) return MAP_COLOR_PALETTE[index % MAP_COLOR_PALETTE.length];
+
+        const hash = Array.from(String(techId)).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return MAP_COLOR_PALETTE[hash % MAP_COLOR_PALETTE.length];
+    };
 
     const getAuthHeaders = () => {
         const token = localStorage.getItem('token');
@@ -152,6 +421,41 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     useEffect(() => {
         loadTechnicians();
     }, []);
+
+    const fetchMapLocations = async () => {
+        setIsLoadingMap(true);
+        setMapError('');
+
+        try {
+            const response = await fetch('/api/admin/technicians/locations', {
+                headers: getAuthHeaders(),
+            });
+            const result = await parseApiResponse(response);
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Gagal mengambil lokasi teknisi.');
+            }
+
+            const mapped = (result.data || []).map((tech, index) => ({
+                ...mapApiTechnicianToUi(tech),
+                color: getMapTechnicianColor(tech.technicianId || tech._id, index),
+            }));
+
+            setMapTechnicians(mapped);
+        } catch (error) {
+            setMapError(error.message || 'Terjadi kesalahan saat memuat peta teknisi.');
+            setMapTechnicians([]);
+        } finally {
+            setIsLoadingMap(false);
+        }
+    };
+
+    const openMapModal = async (techId = 'all') => {
+        setMapFilterTech(techId);
+        setSelectedMapTechnicianId(techId === 'all' ? null : techId);
+        setIsMapModalOpen(true);
+        await fetchMapLocations();
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -272,6 +576,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const activeTechnicians = technicians.filter(t => t.status === 'aktif').length;
     const totalClients = technicians.reduce((sum, t) => sum + (t.clientsCount || 0), 0);
     const avgClientsPerTech = totalClients > 0 && activeTechnicians > 0 ? (totalClients / activeTechnicians).toFixed(1) : 0;
+    const visibleMapTechnicians = mapTechnicians.filter((tech) => mapFilterTech === 'all' || tech.id === mapFilterTech);
+    const visibleMapTechniciansWithLocation = visibleMapTechnicians.filter((tech) => tech.mapLocation);
+    const selectedMapTechnician = visibleMapTechnicians.find((tech) => tech._id === selectedMapTechnicianId || tech.id === selectedMapTechnicianId) || null;
 
     const handleAddTechnician = async () => {
         if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.password) {
@@ -283,6 +590,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         setFormError('');
 
         try {
+            // Pastikan tipe data benar
             const payload = {
                 fullName: formData.name,
                 email: formData.email,
@@ -291,12 +599,27 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                 address: formData.address,
                 position: formData.position,
                 experience: Number(formData.experience),
-                specializations: formData.specializations,
+                specializations: Array.isArray(formData.specializations) ? formData.specializations : [],
                 workArea: formData.workArea,
-                coverageAreas: formData.coverageAreas,
-                workSchedule: formData.workSchedule,
+                coverageAreas: Array.isArray(formData.coverageAreas) ? formData.coverageAreas : [],
+                workSchedule: typeof formData.workSchedule === 'object' && !Array.isArray(formData.workSchedule) ? formData.workSchedule : {},
                 status: formData.status,
             };
+
+            // Validasi frontend
+            const requiredFields = ['fullName', 'email', 'password', 'phoneNumber', 'address', 'position', 'workArea'];
+            for (const field of requiredFields) {
+                if (!payload[field] || String(payload[field]).trim() === '') {
+                    setFormError(`Field ${field} wajib diisi.`);
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+            if (payload.password.length < 8) {
+                setFormError('Password minimal 8 karakter.');
+                setIsSubmitting(false);
+                return;
+            }
 
             const response = await fetch('/api/admin/technicians', {
                 method: 'POST',
@@ -331,6 +654,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             return;
         }
 
+        if (!deleteReason.trim()) {
+            setFormError('Alasan penghapusan wajib diisi.');
+            return;
+        }
+
         setIsSubmitting(true);
         setFormError('');
 
@@ -338,6 +666,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             const response = await fetch(`/api/admin/technicians/${selectedTechnician._id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders(),
+                body: JSON.stringify({ reason: deleteReason.trim() }),
             });
             const result = await response.json();
 
@@ -345,11 +674,17 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                 throw new Error(result.message || 'Gagal menghapus teknisi.');
             }
 
-            setSuccessMessage('Akun teknisi berhasil dihapus.');
+            const deletionRequest = result.data?.deletionRequest || null;
+
+            setTechnicians((prev) => prev.map((tech) => (
+                tech._id === selectedTechnician._id
+                    ? { ...tech, deletionRequest }
+                    : tech
+            )));
+            setSuccessMessage(result.message || 'Permintaan penghapusan teknisi berhasil dibuat.');
             setIsDeleteModalOpen(false);
             setDeleteReason('');
             setSelectedTechnician(null);
-            await loadTechnicians();
         } catch (error) {
             setFormError(error.message || 'Terjadi kesalahan saat menghapus teknisi.');
         } finally {
@@ -574,7 +909,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                                 <div className="col-span-2 grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:flex-row">
                                     <button
-                                        onClick={() => setIsMapModalOpen(true)}
+                                        onClick={() => openMapModal('all')}
                                         className="px-4 md:px-5 py-2.5 bg-[#1d4ed8] text-white rounded-xl text-xs md:text-sm font-semibold hover:bg-blue-800 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-blue-100"
                                     >
                                         <MapIcon className="w-4 h-4 shrink-0" />
@@ -621,6 +956,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <div>
                                                 <p className="font-bold text-gray-800 text-sm">{tech.name}</p>
                                                 <p className="text-xs text-gray-400 mt-0.5">{tech.email}</p>
+                                                {tech.deletionRequest && (
+                                                    <p className={`mt-1 text-[11px] font-medium ${getDeletionRequestStatusMeta(tech.deletionRequest).tone === 'danger' ? 'text-red-600' : 'text-amber-700'}`}>
+                                                        {getDeletionRequestStatusMeta(tech.deletionRequest).note}
+                                                    </p>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
@@ -635,10 +975,16 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             </span>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className={`px-2 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${tech.status === 'aktif' ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600'}`}></span>
-                                                {tech.status.charAt(0).toUpperCase() + tech.status.slice(1)}
-                                            </span>
+                                            {(() => {
+                                                const deletionMeta = getDeletionRequestStatusMeta(tech.deletionRequest);
+                                                const isDefaultStatus = !tech.deletionRequest;
+                                                return (
+                                                    <span className={`px-2 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
+                                                        {isDefaultStatus ? `${tech.status.charAt(0).toUpperCase()}${tech.status.slice(1)}` : deletionMeta.label}
+                                                    </span>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex items-center justify-center gap-2">
@@ -663,10 +1009,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => {
-                                                        setMapFilterTech(tech.id);
-                                                        setIsMapModalOpen(true);
-                                                    }}
+                                                    onClick={() => openMapModal(tech.id)}
                                                     className="p-2 bg-cyan-50 text-cyan-500 hover:bg-cyan-100 hover:text-cyan-600 rounded-lg transition-all"
                                                 >
                                                     <MapPin className="w-4 h-4" />
@@ -692,10 +1035,16 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <p className="text-xs text-gray-500">{tech.email}</p>
                                             </div>
                                         </div>
-                                        <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 ${tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600'}`}></span>
-                                            {tech.status.charAt(0).toUpperCase() + tech.status.slice(1)}
-                                        </span>
+                                        {(() => {
+                                            const deletionMeta = getDeletionRequestStatusMeta(tech.deletionRequest);
+                                            const isDefaultStatus = !tech.deletionRequest;
+                                            return (
+                                                <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
+                                                    {isDefaultStatus ? `${tech.status.charAt(0).toUpperCase()}${tech.status.slice(1)}` : deletionMeta.label}
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
 
                                     <div className="p-4 bg-gray-50/50 flex flex-col gap-2.5">
@@ -703,6 +1052,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <span className="font-semibold text-gray-500 w-16">ID:</span>
                                             <span className="font-bold text-gray-900">{tech.id}</span>
                                         </div>
+                                        {tech.deletionRequest && (
+                                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
+                                                {getDeletionRequestStatusMeta(tech.deletionRequest).note}
+                                            </div>
+                                        )}
                                         <div className="flex items-center gap-2 text-xs">
                                             <span className="font-semibold text-gray-500 w-16">Lokasi:</span>
                                             <span className="font-semibold text-gray-700 truncate">{tech.workArea}</span>
@@ -720,7 +1074,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="p-3 border-t border-gray-50 flex items-center justify-between gap-2">
                                         <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">Detail</button>
                                         <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-xl hover:bg-emerald-100 transition-all text-center">Edit</button>
-                                        <button onClick={() => { setMapFilterTech(tech.id); setIsMapModalOpen(true); }} className="flex-1 py-2 bg-cyan-50 text-cyan-600 font-bold text-xs rounded-xl hover:bg-cyan-100 transition-all text-center">Peta</button>
+                                        <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-cyan-50 text-cyan-600 font-bold text-xs rounded-xl hover:bg-cyan-100 transition-all text-center">Peta</button>
                                         <button onClick={() => handleDeleteTechnician(tech)} className="w-[45px] flex items-center justify-center py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all shrink-0">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -976,6 +1330,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <div>
                                     <h2 className="text-2xl font-bold">{selectedTechnician.name}</h2>
                                     <p className="text-xs font-medium text-teal-100 mt-0.5">ID: {selectedTechnician.id}</p>
+                                    {selectedTechnician.deletionRequest && (
+                                        <div className={`mt-3 inline-flex px-3 py-1.5 rounded-full text-[11px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedTechnician.deletionRequest).tone)}`}>
+                                            {getDeletionRequestStatusMeta(selectedTechnician.deletionRequest).label}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
@@ -1002,6 +1361,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <div>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase">Email</p>
                                                 <p className="text-sm font-semibold text-gray-800">{selectedTechnician.email}</p>
+                                                {selectedTechnician.deletionRequest && (
+                                                    <p className="mt-1 text-xs font-medium text-amber-700">{getDeletionRequestStatusMeta(selectedTechnician.deletionRequest).note}</p>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3">
@@ -1202,8 +1564,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <MapIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                 </div>
                                 <div className="mt-0.5 md:mt-0">
-                                    <h2 className="text-lg md:text-xl font-bold leading-tight">Peta Lokasi Pelanggan per Teknisi</h2>
-                                    <p className="text-[11px] md:text-xs font-medium text-blue-100 mt-1 md:mt-1.5 leading-snug">Visualisasi distribusi pelanggan berdasarkan wilayah teknis</p>
+                                    <h2 className="text-lg md:text-xl font-bold leading-tight">Peta Lokasi Teknisi Real-Time</h2>
+                                    <p className="text-[11px] md:text-xs font-medium text-blue-100 mt-1 md:mt-1.5 leading-snug">Super admin dapat melihat persebaran teknisi dari koordinat aktual perangkat teknisi</p>
                                 </div>
                             </div>
                             <button onClick={() => setIsMapModalOpen(false)} className="absolute right-4 top-4 md:static md:w-10 md:h-10 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all shrink-0">
@@ -1237,10 +1599,13 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <select
                                         className="py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                                         value={mapFilterTech}
-                                        onChange={(e) => setMapFilterTech(e.target.value)}
+                                        onChange={(e) => {
+                                            setMapFilterTech(e.target.value);
+                                            setSelectedMapTechnicianId(e.target.value === 'all' ? null : e.target.value);
+                                        }}
                                     >
                                         <option value="all">Semua Teknisi</option>
-                                        {technicians.map(t => (
+                                        {mapTechnicians.map(t => (
                                             <option key={t.id} value={t.id}>{t.name}</option>
                                         ))}
                                     </select>
@@ -1253,47 +1618,106 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Legend:</span>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-red-600 shadow-sm shadow-red-200"></span>
-                                            <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">Budi Santoso</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-sm shadow-emerald-200"></span>
-                                            <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">Andi Wijaya</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm shadow-blue-200"></span>
-                                            <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">Siti Rahmawati</span>
-                                        </div>
+                                        {visibleMapTechnicians.slice(0, 6).map((tech) => (
+                                            <button
+                                                key={tech.id}
+                                                type="button"
+                                                onClick={() => setSelectedMapTechnicianId(tech.id)}
+                                                className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm"
+                                            >
+                                                <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: tech.color }}></span>
+                                                <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">{tech.name}</span>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Map Box Placeholder */}
-                            <div className="relative w-full flex-1 rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-gray-100 flex items-center justify-center">
-                                {/* Simulate Map Iframe */}
-                                <iframe
-                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126907.01427506978!2d106.749001!3d-6.229728!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e945e34b9d%3A0x100c5c76da35150!2sJakarta%2C%20Daerah%2C%20Khusus%20Ibukota%20Jakarta!5e0!3m2!1sid!2sid!4v1703080000000!5m2!1sid!2sid"
-                                    width="100%"
-                                    height="100%"
-                                    style={{ border: 0 }}
-                                    allowFullScreen=""
-                                    loading="lazy"
-                                    referrerPolicy="no-referrer-when-downgrade"
-                                ></iframe>
+                            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-4 flex-1 min-h-0">
+                                <TechnicianLiveMap
+                                    technicians={visibleMapTechniciansWithLocation}
+                                    selectedTechnicianId={selectedMapTechnician?.id || null}
+                                    onSelectTechnician={setSelectedMapTechnicianId}
+                                    isLoading={isLoadingMap}
+                                    emptyMessage="Belum ada pin wilayah teknisi yang tersedia. Lengkapi workArea teknisi agar pin tampil stabil di peta."
+                                />
 
-                                {/* Overlay mock markers */}
-                                <div className="absolute top-[30%] left-[40%] flex flex-col items-center animate-bounce">
-                                    <MapPin className="w-8 h-8 text-red-600 fill-white" />
-                                </div>
-                                <div className="absolute top-[45%] left-[55%] flex flex-col items-center">
-                                    <MapPin className="w-8 h-8 text-emerald-600 fill-white" />
-                                </div>
-                                <div className="absolute top-[20%] left-[65%] flex flex-col items-center">
-                                    <MapPin className="w-8 h-8 text-red-600 fill-white" />
-                                </div>
-                                <div className="absolute top-[60%] left-[30%] flex flex-col items-center">
-                                    <MapPin className="w-8 h-8 text-emerald-600 fill-white" />
+                                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 overflow-y-auto">
+                                    <div className="flex items-center justify-between gap-3 mb-4">
+                                        <div>
+                                            <h3 className="text-sm font-bold text-gray-900">Status Lokasi Teknisi</h3>
+                                            <p className="text-xs text-gray-500 mt-1">Pin peta dikunci ke wilayah kerja teknisi, sedangkan lokasi live tetap ditampilkan sebagai informasi pendukung.</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={fetchMapLocations}
+                                            className="px-3 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-all"
+                                        >
+                                            Refresh
+                                        </button>
+                                    </div>
+
+                                    {mapError && (
+                                        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+                                            {mapError}
+                                        </div>
+                                    )}
+
+                                    {selectedMapTechnician && (
+                                        <div className="mb-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedMapTechnician.color }}></span>
+                                                <p className="text-sm font-bold text-gray-900">{selectedMapTechnician.name}</p>
+                                            </div>
+                                            <div className="space-y-1.5 text-xs text-gray-600">
+                                                <p>ID: <span className="font-semibold text-gray-800">{selectedMapTechnician.id}</span></p>
+                                                <p>Wilayah: <span className="font-semibold text-gray-800">{selectedMapTechnician.workArea || '-'}</span></p>
+                                                <p>Pin Peta: <span className="font-semibold text-gray-800">{selectedMapTechnician.mapLocation?.label || '-'}</span></p>
+                                                <p>Status: <span className="font-semibold text-gray-800">{selectedMapTechnician.status}</span></p>
+                                                <p>Pelanggan: <span className="font-semibold text-gray-800">{selectedMapTechnician.clientsCount}</span></p>
+                                                {selectedMapTechnician.currentLocation && (
+                                                    <>
+                                                        <p>Koordinat Live: <span className="font-semibold text-gray-800">{selectedMapTechnician.currentLocation.lat.toFixed(6)}, {selectedMapTechnician.currentLocation.lng.toFixed(6)}</span></p>
+                                                        <p>Update Live: <span className="font-semibold text-gray-800">{formatLocationAge(selectedMapTechnician.currentLocation.capturedAt)}</span></p>
+                                                        <p>Akurasi: <span className="font-semibold text-gray-800">{selectedMapTechnician.currentLocation.accuracy != null ? `${Math.round(selectedMapTechnician.currentLocation.accuracy)} m` : '-'}</span></p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-3">
+                                        {visibleMapTechnicians.map((tech) => (
+                                            <button
+                                                key={tech.id}
+                                                type="button"
+                                                onClick={() => tech.currentLocation && setSelectedMapTechnicianId(tech.id)}
+                                                className={`w-full text-left rounded-2xl border px-4 py-3 transition-all ${selectedMapTechnician?.id === tech.id ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white'} ${tech.currentLocation ? 'hover:border-blue-200' : 'opacity-80'}`}
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tech.color }}></span>
+                                                            <p className="text-sm font-bold text-gray-900">{tech.name}</p>
+                                                        </div>
+                                                        <p className="mt-1 text-xs text-gray-500">{tech.id} • {tech.workArea || 'Tanpa wilayah'}</p>
+                                                    </div>
+                                                    <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${tech.currentLocation ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
+                                                        {tech.currentLocation ? 'Live tersedia' : 'Pin wilayah'}
+                                                    </span>
+                                                </div>
+                                                {tech.currentLocation ? (
+                                                    <div className="mt-2 text-xs text-gray-600">
+                                                        <p>Pin tetap: {tech.mapLocation?.label || tech.workArea || 'Area teknisi'}</p>
+                                                        <p className="mt-1">Live terakhir: {tech.currentLocation.lat.toFixed(5)}, {tech.currentLocation.lng.toFixed(5)}</p>
+                                                        <p className="mt-1">Diperbarui {formatLocationAge(tech.currentLocation.capturedAt)}</p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="mt-2 text-xs text-gray-500">Pin peta dikunci ke wilayah kerja `{tech.mapLocation?.label || tech.workArea || 'Area teknisi'}`.</p>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1608,6 +2032,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <p className="text-sm font-medium text-gray-600 mb-2">Anda akan menghapus teknisi/karyawan:</p>
                                 <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedTechnician.name}</h3>
                                 <p className="text-sm text-gray-500">ID: {selectedTechnician.id} • {selectedTechnician.email}</p>
+                                {selectedTechnician.deletionRequest?.status === 'pending' && (
+                                    <p className="mt-2 text-xs font-semibold text-amber-700">Akun ini sudah memiliki permintaan approval yang sedang menunggu keputusan Project Owner.</p>
+                                )}
                             </div>
 
                             <div className="bg-red-50 border border-red-100 p-5 rounded-2xl">

@@ -3,6 +3,18 @@ const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 const adminController = require('../controllers/adminController');
+const accountDeletionController = require('../controllers/accountDeletionController');
+
+// Public token-based approval routes
+router.get(
+    '/account-deletion-requests/:token',
+    accountDeletionController.getRequestByToken
+);
+
+router.post(
+    '/account-deletion-requests/:token/decision',
+    accountDeletionController.decideRequest
+);
 
 // Semua route di sini membutuhkan:
 // 1. authMiddleware  -> Memastikan user sudah login (JWT valid)
@@ -86,6 +98,14 @@ router.get(
     authMiddleware,
     roleMiddleware('SuperAdmin'),
     adminController.getAllTechnicians
+);
+
+// GET /api/admin/technicians/:id
+router.get(
+    '/technicians/locations',
+    authMiddleware,
+    roleMiddleware('SuperAdmin'),
+    adminController.getTechnicianLocations
 );
 
 // GET /api/admin/technicians/:id

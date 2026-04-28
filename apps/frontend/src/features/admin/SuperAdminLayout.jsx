@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -24,6 +25,8 @@ import {
 import NotificationPopup from '../../components/NotificationPopup';
 
 export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Super Admin Dashboard" }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -35,12 +38,12 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const response = await fetch('/api/history/alerts', {
+        const response = await fetch('/api/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
           const result = await response.json();
-          const unread = result.data?.some(n => !n.isRead);
+          const unread = result.data?.some(n => !n.isRead && !n.isSeen);
           setHasUnread(unread);
         }
       } catch (error) {
@@ -54,16 +57,50 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   }, []);
 
   const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, id: 'admin' },
-    { name: 'Homeowner', icon: Users, id: 'admin-pelanggan' },
-    { name: 'Teknisi', icon: User, id: 'admin-teknisi' },
-    { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint' },
-    { name: 'PLN Listrik', icon: Zap, id: 'admin-tariff' },
-    { name: 'Riwayat', icon: History, id: 'admin-history' },
+    { name: 'Dashboard', icon: LayoutDashboard, id: 'admin', path: '/admin', activePaths: ['/admin'] },
+    { name: 'Homeowner', icon: Users, id: 'admin-pelanggan', path: '/admin-pelanggan', activePaths: ['/admin-pelanggan', '/admin-client-detail'] },
+    { name: 'Teknisi', icon: User, id: 'admin-teknisi', path: '/admin-teknisi', activePaths: ['/admin-teknisi'] },
+    { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint', path: '/admin-complaint', activePaths: ['/admin-complaint'] },
+    { name: 'PLN Listrik', icon: Zap, id: 'admin-tariff', path: '/admin-tariff', activePaths: ['/admin-tariff'] },
+    { name: 'Riwayat', icon: History, id: 'admin-history', path: '/admin-history', activePaths: ['/admin-history'] },
   ];
 
-  const handleNavigate = (id) => {
-    if (onNavigate) onNavigate(id);
+  const resolvePath = (target) => {
+    const routeMap = {
+      landing: '/',
+      login: '/login',
+      admin: '/admin',
+      'admin-pelanggan': '/admin-pelanggan',
+      'admin-teknisi': '/admin-teknisi',
+      'admin-complaint': '/admin-complaint',
+      'admin-tariff': '/admin-tariff',
+      'admin-history': '/admin-history',
+      dashboard: '/dashboard',
+      teknisi: '/teknisi',
+      pengaduan: '/pengaduan',
+      history: '/history',
+      kendali: '/kendali',
+    };
+
+    if (!target) return null;
+    if (String(target).startsWith('/')) return target;
+    return routeMap[target] || null;
+  };
+
+  const handleNavigate = (target, options = {}) => {
+    const resolvedPath = resolvePath(target);
+
+    if (options.logout) {
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('bieon_temp_data');
+    }
+
+    if (resolvedPath) {
+      navigate(resolvedPath);
+      return;
+    }
+
+    if (onNavigate) onNavigate(target);
   };
 
   return (
@@ -104,12 +141,12 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         {/* Sidebar Menu */}
         <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto custom-scrollbar">
           {menuItems.map((item) => {
-            const isActive = activeMenu === item.name || (activeMenu?.toLowerCase() === item.id);
+            const isActive = item.activePaths.includes(location.pathname) || activeMenu === item.name || (activeMenu?.toLowerCase() === item.id);
             return (
               <button
                 key={item.name}
                 onClick={() => {
-                  handleNavigate(item.id);
+                  handleNavigate(item.path);
                   if (window.innerWidth < 1024) setIsMobileMenuOpen(false);
                 }}
                 className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center px-0'} py-3.5 rounded-2xl transition-all group relative overflow-hidden ${isActive
@@ -129,7 +166,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-white/10 shrink-0">
           <button
-            onClick={() => handleNavigate('landing')}
+            onClick={() => handleNavigate('landing', { logout: true })}
             className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center'} py-3 rounded-2xl hover:bg-white/10 text-white/70 transition-all group font-medium`}
           >
             <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 group-hover:text-red-300" />

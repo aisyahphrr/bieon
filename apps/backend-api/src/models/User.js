@@ -29,6 +29,14 @@ const userSchema = new mongoose.Schema({
     workArea: { type: String },
     coverageAreas: [{ type: String }],
     workSchedule: { type: Map, of: String },
+    currentLocation: {
+        lat: { type: Number },
+        lng: { type: Number },
+        accuracy: { type: Number },
+        source: { type: String, enum: ['browser', 'device', 'manual'], default: 'browser' },
+        capturedAt: { type: Date },
+        label: { type: String }
+    },
     certifications: [{
         name: { type: String },
         issuer: { type: String },

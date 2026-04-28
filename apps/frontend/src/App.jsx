@@ -9,6 +9,9 @@ const Setup = lazy(() => import('./features/general-page/setup'));
 const HomeownerDashboard = lazy(() => import('./features/dashboard/HomeownerDashboard').then(module => ({ default: module.HomeownerDashboard })));
 const HomeownerHistory = lazy(() => import('./features/dashboard/HomeownerHistory').then(module => ({ default: module.HomeownerHistory })));
 const DeviceControlPage = lazy(() => import('./features/dashboard/kendali').then(module => ({ default: module.DeviceControlPage })));
+const ForgotRequest = lazy(() => import('./features/auth/ForgotRequest'));
+const ForgotVerify = lazy(() => import('./features/auth/ForgotVerify'));
+const ForgotReset = lazy(() => import('./features/auth/ForgotReset'));
 const TechnicianDashboard = lazy(() => import('./features/technician/TechnicianDashboard').then(module => ({ default: module.TechnicianDashboard })));
 const HomeownerComplaint = lazy(() => import('./features/dashboard/HomeownerComplaint').then(module => ({ default: module.HomeownerComplaint })));
 const SuperAdminDashboard = lazy(() => import('./features/admin/SuperAdminDashboard'));
@@ -18,6 +21,7 @@ const AdminComplaint = lazy(() => import('./features/admin/AdminComplaint'));
 const ManajemenAkunPage = lazy(() => import('./features/admin/pelanggan').then(module => ({ default: module.ManajemenAkunPage })));
 const ManajemenTeknisiPage = lazy(() => import('./features/admin/teknisi').then(module => ({ default: module.ManajemenTeknisiPage })));
 const AdminTariff = lazy(() => import('./features/admin/AdminTariff'));
+const DeleteApprovalPage = lazy(() => import('./features/admin/DeleteApprovalPage'));
 
 // Loading Screen - Premium Green
 function LoadingScreen() {
@@ -98,12 +102,16 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup setTempData={setTempData} />} />
         <Route path="/setup" element={<Setup tempData={tempData} />} />
+        <Route path="/delete-approval" element={<DeleteApprovalPage />} />
 
         {/* Homeowner Routes */}
         <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerDashboard /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerHistory /></ProtectedRoute>} />
         <Route path="/kendali" element={<ProtectedRoute allowedRoles={['Homeowner']}><DeviceControlPage /></ProtectedRoute>} />
         <Route path="/pengaduan" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerComplaint /></ProtectedRoute>} />
+        <Route path="/forgot" element={<ForgotRequest />} />
+        <Route path="/forgot/verify" element={<ForgotVerify />} />
+        <Route path="/forgot/reset" element={<ForgotReset />} />
 
         {/* Technician Routes */}
         <Route path="/teknisi" element={<ProtectedRoute allowedRoles={['Technician']}><TechnicianDashboard onNavigate={handleNavigate} /></ProtectedRoute>} />

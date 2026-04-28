@@ -89,7 +89,7 @@ export function HomeownerComplaint({ onNavigate }) {
         try {
             console.log("🔍 FETCHING DEVICES FOR USER:", userId);
             const token = localStorage.getItem('token');
-            const res = await fetch(`/api/kendali-perangkat/user/${userId}`, {
+            const res = await fetch(`/api/kendaliperangkat/user/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             console.log("📡 API RESPONSE STATUS:", res.status);
@@ -837,7 +837,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                 key={cat}
                                                                 type="button"
                                                                 onClick={() => {
-                                                                    setFormData({ ...formData, category: cat });
+                                                                    setFormData({ ...formData, category: cat, device: '' });
                                                                     setShowCategoryDropdown(false);
                                                                 }}
                                                                 className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
@@ -852,7 +852,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Pilih Ruangan & Perangkat <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">Ruangan & Perangkat <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
@@ -860,7 +860,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showDeviceDropdown ? 'bg-white border-teal-500 ring-4 ring-teal-500/10' : 'hover:bg-gray-100'}`}
                                             >
                                                 <span className={formData.device ? 'text-gray-900' : 'text-gray-400'}>
-                                                    {formData.device || 'Pilih Ruangan & Perangkat'}
+                                                    {formData.device || 'Ruangan & Perangkat'}
                                                 </span>
                                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDeviceDropdown ? 'rotate-180' : ''}`} />
                                             </button>
@@ -870,7 +870,9 @@ export function HomeownerComplaint({ onNavigate }) {
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowDeviceDropdown(false)}></div>
                                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
                                                         {userDevices.length > 0 ? (
-                                                            userDevices.map((dev) => {
+                                                            userDevices
+                                                                .filter((dev) => !formData.category || dev.category === formData.category)
+                                                                .map((dev) => {
                                                                 const label = `${dev.location || 'Tanpa Lokasi'} - ${dev.name}`;
                                                                 return (
                                                                     <button

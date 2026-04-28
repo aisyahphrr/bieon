@@ -4,23 +4,28 @@ const { Server } = require('socket.io');
 const app = require('./src/app');
 const connectDB = require('./src/config/database');
 const { connectMQTT } = require('./src/config/mqtt');
-
-const server = http.createServer(app);
-const io = new Server(server, {
-    cors: { origin: "*" }
-});
+const { initializeSocket } = require('./src/config/socket');
 
 // Jalankan koneksi ke database
 connectDB();
 
-// Jalankan MQTT & Socket.io
+const PORT = process.env.PORT || 5000;
+
+// Buat HTTP server untuk Express dan Socket.IO
+const server = http.createServer(app);
+
+// Inisialisasi Socket.IO
+const io = new Server(server, {
+    cors: { origin: "*" }
+});
+initializeSocket(server);
+
+// Jalankan MQTT
 connectMQTT(io);
 
 io.on('connection', (socket) => {
     console.log('User connected via Socket.io:', socket.id);
 });
-
-const PORT = process.env.PORT || 5000;
 
 // Nyalakan server
 server.listen(PORT, () => {

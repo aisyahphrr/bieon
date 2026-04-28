@@ -1,4 +1,5 @@
 const User = require('../../models/User');
+const accountDeletionService = require('../admin/accountDeletionService');
 
 const ROLE_TECHNICIAN = 'Technician';
 
@@ -11,6 +12,27 @@ const normalizeWorkSchedule = (workSchedule) => {
         return workSchedule;
     }
     return {};
+};
+
+const normalizeCurrentLocation = (currentLocation) => {
+    if (
+        !currentLocation ||
+        typeof currentLocation.lat !== 'number' ||
+        Number.isNaN(currentLocation.lat) ||
+        typeof currentLocation.lng !== 'number' ||
+        Number.isNaN(currentLocation.lng)
+    ) {
+        return null;
+    }
+
+    return {
+        lat: currentLocation.lat,
+        lng: currentLocation.lng,
+        accuracy: typeof currentLocation.accuracy === 'number' ? currentLocation.accuracy : null,
+        source: currentLocation.source || 'browser',
+        capturedAt: currentLocation.capturedAt || null,
+        label: currentLocation.label || '',
+    };
 };
 
 const toPublicTechnician = (userDoc) => ({
@@ -27,6 +49,7 @@ const toPublicTechnician = (userDoc) => ({
     workArea: userDoc.workArea || '',
     coverageAreas: Array.isArray(userDoc.coverageAreas) ? userDoc.coverageAreas : [],
     workSchedule: normalizeWorkSchedule(userDoc.workSchedule),
+    currentLocation: normalizeCurrentLocation(userDoc.currentLocation),
     status: userDoc.status || 'aktif',
     createdAt: userDoc.createdAt,
     updatedAt: userDoc.updatedAt,
@@ -181,8 +204,10 @@ exports.listTechnicians = async (query = {}) => {
         return { ...tech, clientsCount: count };
     }));
 
+    const dataWithDeletionStatus = await accountDeletionService.attachLatestDeletionRequestSummary(dataWithClientsCount);
+
     return {
-        data: dataWithClientsCount,
+        data: dataWithDeletionStatus,
         total,
         page,
         limit,
@@ -223,7 +248,8 @@ exports.getTechnicianById = async (id) => {
 
     publicTech.clients = formattedClients;
 
-    return publicTech;
+    const [withDeletionStatus] = await accountDeletionService.attachLatestDeletionRequestSummary([publicTech]);
+    return withDeletionStatus;
 };
 
 exports.updateTechnician = async (id, payload) => {
@@ -275,6 +301,65 @@ exports.updateTechnician = async (id, payload) => {
 
     const updated = await technician.save();
     return toPublicTechnician(updated.toObject());
+};
+
+exports.updateTechnicianLocation = async (id, payload) => {
+    const technician = await User.findOne({ _id: id, role: ROLE_TECHNICIAN });
+
+    if (!technician) {
+        const error = new Error('Teknisi tidak ditemukan.');
+        error.status = 404;
+        throw error;
+    }
+
+    const lat = Number(payload?.lat);
+    const lng = Number(payload?.lng);
+    const accuracy = payload?.accuracy !== undefined ? Number(payload.accuracy) : null;
+
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+        const error = new Error('Latitude tidak valid.');
+        error.status = 400;
+        throw error;
+    }
+
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+        const error = new Error('Longitude tidak valid.');
+        error.status = 400;
+        throw error;
+    }
+
+    technician.currentLocation = {
+        lat,
+        lng,
+        accuracy: Number.isFinite(accuracy) ? accuracy : undefined,
+        source: payload?.source || 'browser',
+        capturedAt: payload?.capturedAt ? new Date(payload.capturedAt) : new Date(),
+        label: payload?.label ? String(payload.label).trim() : undefined,
+    };
+
+    const updated = await technician.save();
+    return toPublicTechnician(updated.toObject());
+};
+
+exports.listTechnicianLocations = async () => {
+    const rows = await User.find({ role: ROLE_TECHNICIAN })
+        .select('-password')
+        .sort({ fullName: 1 })
+        .lean();
+
+    const publicData = rows.map(toPublicTechnician);
+
+    const dataWithCounts = await Promise.all(publicData.map(async (tech) => {
+        const clientsCount = await User.countDocuments({ assignedTechnician: tech._id, role: 'Homeowner' });
+
+        return {
+            ...tech,
+            clientsCount,
+            hasLiveLocation: Boolean(tech.currentLocation),
+        };
+    }));
+
+    return accountDeletionService.attachLatestDeletionRequestSummary(dataWithCounts);
 };
 
 exports.deleteTechnician = async (id) => {

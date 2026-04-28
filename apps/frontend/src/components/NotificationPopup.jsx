@@ -7,12 +7,14 @@ import {
 
 const typeStyles = {
   danger: { border: 'border-[#ff3b30]', bg: 'bg-red-50', iconText: 'text-[#ff3b30]', iconBg: 'bg-red-100', icon: AlertTriangle, accent: 'bg-red-500' },
-  warning: { border: 'border-[#ff9500]', bg: 'bg-orange-50', iconText: 'text-[#ff9500]', iconBg: 'bg-amber-100', icon: Zap, accent: 'bg-amber-500' },
+  warning: { border: 'border-yellow-500', bg: 'bg-yellow-50', iconText: 'text-yellow-600', iconBg: 'bg-yellow-100', icon: Zap, accent: 'bg-yellow-500' },
   info: { border: 'border-[#007aff]', bg: 'bg-blue-50', iconText: 'text-[#007aff]', iconBg: 'bg-blue-100', icon: LogIn, accent: 'bg-blue-500' },
   success: { border: 'border-[#34c759]', bg: 'bg-green-50', iconText: 'text-[#34c759]', iconBg: 'bg-green-100', icon: CheckCircle, accent: 'bg-green-500' },
-  purple: { border: 'border-[#af52de]', bg: 'bg-purple-50', iconText: 'text-[#af52de]', iconBg: 'bg-purple-100', icon: Activity, accent: 'bg-purple-500' },
-  sistem: { border: 'border-teal-500', bg: 'bg-teal-50', iconText: 'text-teal-600', iconBg: 'bg-teal-100', icon: Server, accent: 'bg-teal-500' },
-  pengaduan: { border: 'border-amber-500', bg: 'bg-amber-50', iconText: 'text-amber-600', iconBg: 'bg-amber-100', icon: MessageSquare, accent: 'bg-amber-500' }
+  purple: { border: 'border-[#af52de]', bg: 'bg-purple-50', iconText: 'text-[#af52de]', iconBg: 'bg-purple-100', icon: Lock, accent: 'bg-purple-500' },
+  sistem: { border: 'border-slate-500', bg: 'bg-slate-50', iconText: 'text-slate-600', iconBg: 'bg-slate-100', icon: Server, accent: 'bg-slate-500' },
+  pengaduan: { border: 'border-orange-500', bg: 'bg-orange-50', iconText: 'text-orange-600', iconBg: 'bg-orange-100', icon: MessageSquare, accent: 'bg-orange-500' },
+  water: { border: 'border-indigo-600', bg: 'bg-indigo-50', iconText: 'text-indigo-700', iconBg: 'bg-indigo-100', icon: Activity, accent: 'bg-indigo-600' },
+  kenyamanan: { border: 'border-teal-500', bg: 'bg-teal-50', iconText: 'text-teal-600', iconBg: 'bg-teal-100', icon: Fan, accent: 'bg-teal-500' }
 };
 
 const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, onUnreadChange }) => {
@@ -24,7 +26,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
   // Notify parent about unread status
   useEffect(() => {
     if (onUnreadChange) {
-      const hasUnread = notifications.some(n => !n.isRead);
+      const hasUnread = notifications.some(n => !n.isRead && !n.isSeen);
       onUnreadChange(hasUnread);
     }
   }, [notifications, onUnreadChange]);
@@ -53,7 +55,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
     if (!token) return;
     try {
       setIsLoading(true);
-      const response = await fetch('/api/history/alerts', {
+      const response = await fetch('/api/alerts', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -67,9 +69,34 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
     }
   };
 
+  const markAllAsSeenSilent = async () => {
+    try {
+      await fetch('/api/alerts/seen-all', {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error("Gagal menandai lihat (silent):", error);
+    }
+  };
+
+  const wasOpened = useRef(false);
+
   useEffect(() => {
     if (isOpen) {
+      wasOpened.current = true;
       fetchNotifications();
+    } else if (wasOpened.current) {
+      // Ketika popup ditutup, otomatis hilangkan label NEW (isSeen = true), tapi biarkan warnanya
+      setNotifications(prev => {
+         const hasUnread = prev.some(n => !n.isRead && !n.isSeen);
+         if (hasUnread) {
+             markAllAsSeenSilent();
+             return prev.map(n => ({ ...n, isSeen: true }));
+         }
+         return prev;
+      });
+      wasOpened.current = false;
     }
   }, [isOpen]);
 
@@ -86,7 +113,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
       }
 
       // Update to backend
-      await fetch(`/api/history/alerts/${id}/read`, {
+      await fetch(`/api/alerts/${id}/read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -159,7 +186,8 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
 
             const category = notif.category?.toLowerCase();
             if (category === 'keamanan') type = 'purple';
-            else if (category === 'air sanitasi' || category === 'kualitas air') type = 'info';
+            else if (category === 'air sanitasi' || category === 'kualitas air') type = 'water';
+            else if (category === 'kenyamanan') type = 'kenyamanan';
             else if (category === 'energi') type = 'warning';
             else if (category === 'pengaduan') type = 'pengaduan';
             else if (category === 'sistem') type = 'sistem';
@@ -203,7 +231,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
                       <span className="text-[11px] font-medium text-gray-400">
                         {notif.date ? new Date(notif.date).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace('.', ':') : 'Baru saja'}
                       </span>
-                      {notif.link && !notif.isRead && (
+                      {notif.link && !notif.isRead && !notif.isSeen && (
                         <>
                           {role === 'technician' && (
                             <div className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse" title="Tindakan Diperlukan" />

@@ -146,3 +146,26 @@ exports.updateTechnicianProfile = async (req, res) => {
         res.status(500).json({ success: false, message: 'Gagal memperbarui profil' });
     }
 };
+
+/**
+ * Update lokasi live teknisi
+ */
+exports.updateMyLocation = async (req, res) => {
+    try {
+        const technicianService = require('../modules/users/technicianService');
+        const updated = await technicianService.updateTechnicianLocation(req.user.userId, req.body);
+
+        res.status(200).json({
+            success: true,
+            message: 'Lokasi teknisi berhasil diperbarui.',
+            data: updated.currentLocation,
+        });
+    } catch (error) {
+        const statusCode = error.status || 500;
+        res.status(statusCode).json({
+            success: false,
+            message: statusCode >= 500 ? 'Gagal memperbarui lokasi teknisi.' : error.message,
+            error: error.message,
+        });
+    }
+};

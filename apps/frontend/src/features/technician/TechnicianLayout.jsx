@@ -13,18 +13,20 @@ const NAV_ITEMS = [
 export default function TechnicianLayout({ children, activeMenu, setActiveMenu, onNavigate }) {
   const [showNotif, setShowNotif] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const lastLocationSentRef = useRef({ lat: null, lng: null, sentAt: 0 });
+  const watchIdRef = useRef(null);
 
   useEffect(() => {
     const fetchUnreadStatus = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const response = await fetch('/api/history/alerts', {
+        const response = await fetch('/api/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
           const result = await response.json();
-          const unread = result.data?.some(n => !n.isRead);
+          const unread = result.data?.some(n => !n.isRead && !n.isSeen);
           setHasUnread(unread);
         }
       } catch (error) {
@@ -42,6 +44,72 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
     const handleOpenNotif = () => setShowNotif(true);
     window.addEventListener('open-notifications', handleOpenNotif);
     return () => window.removeEventListener('open-notifications', handleOpenNotif);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    if (!token || role !== 'Technician' || !navigator.geolocation) {
+      return undefined;
+    }
+
+    const sendLocation = async (position) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      const now = Date.now();
+      const previous = lastLocationSentRef.current;
+      const latDiff = previous.lat === null ? Infinity : Math.abs(latitude - previous.lat);
+      const lngDiff = previous.lng === null ? Infinity : Math.abs(longitude - previous.lng);
+      const hasMovedEnough = latDiff > 0.00015 || lngDiff > 0.00015;
+      const isStale = now - previous.sentAt > 60000;
+
+      if (!hasMovedEnough && !isStale) {
+        return;
+      }
+
+      try {
+        await fetch('/api/technician/location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            lat: latitude,
+            lng: longitude,
+            accuracy,
+            source: 'browser',
+            capturedAt: new Date(position.timestamp || now).toISOString(),
+          }),
+        });
+
+        lastLocationSentRef.current = {
+          lat: latitude,
+          lng: longitude,
+          sentAt: now,
+        };
+      } catch (error) {
+        console.error('Gagal mengirim lokasi teknisi:', error);
+      }
+    };
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      sendLocation,
+      (error) => {
+        console.error('Gagal membaca lokasi teknisi:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 30000,
+        timeout: 15000,
+      }
+    );
+
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
   }, []);
 
 

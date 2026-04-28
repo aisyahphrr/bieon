@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import { EmailApprovalTemplate } from './EmailApprovalTemplate';
+import { getDeletionRequestBadgeClass, getDeletionRequestStatusMeta } from './deletionRequestUi';
 import {
     Users,
     Search,
@@ -79,6 +80,7 @@ export function ManajemenAkunPage({ onNavigate }) {
     const [homeowners, setHomeowners] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState('');
     const [selectedHomeownerHubs, setSelectedHomeownerHubs] = useState([]);
     const [isLoadingHubs, setIsLoadingHubs] = useState(false);
 
@@ -329,7 +331,11 @@ export function ManajemenAkunPage({ onNavigate }) {
             const token = localStorage.getItem('token');
             const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners/${selectedHomeowner._id}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reason: deleteReason.trim() }),
             });
 
             const text = await res.text();
@@ -341,10 +347,16 @@ export function ManajemenAkunPage({ onNavigate }) {
             const json = JSON.parse(text);
 
             if (res.ok) {
-                alert('Homeowner berhasil dihapus!');
-                // Refresh list
-                setHomeowners(prev => prev.filter(h => h._id !== selectedHomeowner._id));
+                const deletionRequest = json.data?.deletionRequest || null;
+                setSuccessMessage(json.message || 'Permintaan penghapusan homeowner berhasil dibuat.');
+                setHomeowners(prev => prev.map(h => (
+                    h._id === selectedHomeowner._id
+                        ? { ...h, deletionRequest }
+                        : h
+                )));
+                setSelectedHomeowner(prev => prev ? { ...prev, deletionRequest } : prev);
                 setIsDeleteModalOpen(false);
+                setDeleteReason('');
             } else {
                 alert('Gagal menghapus: ' + json.message);
             }
@@ -357,6 +369,11 @@ export function ManajemenAkunPage({ onNavigate }) {
     return (
         <SuperAdminLayout activeMenu="Homeowner" onNavigate={onNavigate} title="Manajemen Akun Homeowner">
             <div className="space-y-8">
+                {successMessage && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                        {successMessage}
+                    </div>
+                )}
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="bg-[#3b82f6] rounded-[2rem] p-6 shadow-xl shadow-blue-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
@@ -499,12 +516,20 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-5">
-                                                <div className="space-y-0.5">
-                                                    <p className="text-sm font-semibold text-gray-700">{ho.email}</p>
-                                                    <p className="text-xs font-medium text-gray-500">{ho.phoneNumber || '-'}</p>
-                                                </div>
-                                            </td>
+                                              <td className="px-6 py-5">
+                                                  <div className="space-y-0.5">
+                                                      <p className="text-sm font-semibold text-gray-700">{ho.email}</p>
+                                                      <p className="text-xs font-medium text-gray-500">{ho.phoneNumber || '-'}</p>
+                                                      {ho.deletionRequest && (
+                                                          <div className={`mt-2 inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(ho.deletionRequest).tone)}`}>
+                                                              {getDeletionRequestStatusMeta(ho.deletionRequest).label}
+                                                          </div>
+                                                      )}
+                                                      {ho.deletionRequest && (
+                                                          <p className="text-[11px] font-medium text-amber-700">{getDeletionRequestStatusMeta(ho.deletionRequest).note}</p>
+                                                      )}
+                                                  </div>
+                                              </td>
                                             <td className="px-6 py-5">
                                                 <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">{ho.totalHubs || 0} Hub</span>
                                             </td>
@@ -549,19 +574,22 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 <p className="text-[11px] font-semibold text-[#009b7c]">@{ho.username || '-'}</p>
                                             </div>
                                         </div>
-                                        <span className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 bg-[#EAFDF5] text-[#10b981]">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                            Aktif
-                                        </span>
-                                    </div>
+                                          <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(ho.deletionRequest).tone)}`}>
+                                              <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                              {getDeletionRequestStatusMeta(ho.deletionRequest).label}
+                                          </span>
+                                      </div>
 
-                                    <div className="grid grid-cols-1 gap-2 text-xs">
-                                        <div className="flex flex-col">
-                                            <span className="text-gray-500 font-medium mb-0.5">Email & Kontak</span>
-                                            <span className="font-semibold text-gray-900 truncate">{ho.email}</span>
-                                            <span className="font-semibold text-gray-900 mt-0.5">{ho.phoneNumber || '-'}</span>
-                                        </div>
-                                    </div>
+                                      <div className="grid grid-cols-1 gap-2 text-xs">
+                                          <div className="flex flex-col">
+                                              <span className="text-gray-500 font-medium mb-0.5">Email & Kontak</span>
+                                              <span className="font-semibold text-gray-900 truncate">{ho.email}</span>
+                                              <span className="font-semibold text-gray-900 mt-0.5">{ho.phoneNumber || '-'}</span>
+                                              {ho.deletionRequest && (
+                                                  <span className="mt-1 text-[11px] font-medium text-amber-700">{getDeletionRequestStatusMeta(ho.deletionRequest).note}</span>
+                                              )}
+                                          </div>
+                                      </div>
 
                                     <div className="grid grid-cols-2 gap-4 text-xs border-y border-gray-50 py-3">
                                         <div>
@@ -688,11 +716,16 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center backdrop-blur-md shadow-inner shrink-0">
                                     <UserCog className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                                 </div>
-                                <div className="text-white pr-2">
-                                    <h2 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight">{selectedHomeowner.fullName}</h2>
-                                    <p className="text-white/80 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{selectedHomeowner.email}</p>
-                                </div>
-                            </div>
+                                  <div className="text-white pr-2">
+                                      <h2 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight">{selectedHomeowner.fullName}</h2>
+                                      <p className="text-white/80 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{selectedHomeowner.email}</p>
+                                      {selectedHomeowner.deletionRequest && (
+                                          <div className={`mt-3 inline-flex px-3 py-1.5 rounded-full text-[11px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).tone)}`}>
+                                              {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).label}
+                                          </div>
+                                      )}
+                                  </div>
+                              </div>
                             <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all group shrink-0">
                                 <X className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
                             </button>
@@ -736,11 +769,14 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <Mail className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
-                                                    <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">Email</p>
-                                                        <p className="font-bold text-gray-900">{selectedHomeowner.email}</p>
-                                                    </div>
-                                                </div>
+                                                      <div>
+                                                          <p className="text-gray-500 font-medium mb-0.5">Email</p>
+                                                          <p className="font-bold text-gray-900">{selectedHomeowner.email}</p>
+                                                          {selectedHomeowner.deletionRequest && (
+                                                              <p className="mt-1 text-xs font-medium text-amber-700">{getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).note}</p>
+                                                          )}
+                                                      </div>
+                                                  </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <Phone className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                                                     <div>
@@ -762,10 +798,12 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100/50">
                                             <h4 className="font-bold text-gray-900 mb-6 text-lg">Status & Aktivitas</h4>
                                             <div className="space-y-6">
-                                                <div className="flex items-center justify-between text-sm pb-4 border-b border-emerald-100/50">
-                                                    <p className="text-gray-500 font-medium">Status Sistem</p>
-                                                    <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase bg-[#009b7c] text-white">AKTIF</span>
-                                                </div>
+                                                  <div className="flex items-center justify-between text-sm pb-4 border-b border-emerald-100/50">
+                                                      <p className="text-gray-500 font-medium">Status Sistem</p>
+                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).tone)}`}>
+                                                        {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).label}
+                                                    </span>
+                                                  </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <TrendingUp className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                                                     <div>
@@ -931,11 +969,14 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </button>
                         </div>
                         <div className="p-8 space-y-6 flex-1 overflow-y-auto">
-                            <div className="bg-red-50/50 p-5 rounded-2xl">
-                                <p className="text-sm font-medium text-gray-600 mb-2">Anda akan menghapus pelanggan:</p>
-                                <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedHomeowner.fullName}</h3>
-                                <p className="text-sm text-gray-500">{selectedHomeowner.email}</p>
-                            </div>
+                              <div className="bg-red-50/50 p-5 rounded-2xl">
+                                  <p className="text-sm font-medium text-gray-600 mb-2">Anda akan menghapus pelanggan:</p>
+                                  <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedHomeowner.fullName}</h3>
+                                  <p className="text-sm text-gray-500">{selectedHomeowner.email}</p>
+                                  {selectedHomeowner.deletionRequest?.status === 'pending' && (
+                                      <p className="mt-2 text-xs font-semibold text-amber-700">Akun ini sudah memiliki request approval yang masih menunggu keputusan Project Owner.</p>
+                                  )}
+                              </div>
 
                             <div className="bg-red-50 border border-red-100 p-5 rounded-2xl">
                                 <h4 className="flex items-center gap-2 text-sm font-bold text-red-600 mb-3">

@@ -4,6 +4,7 @@ const Device = require('../models/Device');
 const dashboardService = require('../modules/admin/dashboardService');
 const technicianService = require('../modules/users/technicianService');
 const homeownerService = require('../modules/users/homeownerService');
+const accountDeletionService = require('../modules/admin/accountDeletionService');
 
 // ========================================================
 // GET /api/admin/homeowners
@@ -42,10 +43,12 @@ exports.getAllHomeowners = async (req, res) => {
             })
         );
 
+        const dataWithDeletionStatus = await accountDeletionService.attachLatestDeletionRequestSummary(homeownersWithStats);
+
         res.status(200).json({
             success: true,
-            total: homeownersWithStats.length,
-            data: homeownersWithStats,
+            total: dataWithDeletionStatus.length,
+            data: dataWithDeletionStatus,
         });
     } catch (error) {
         res.status(500).json({
@@ -90,9 +93,11 @@ exports.getHomeownerById = async (req, res) => {
     try {
         const data = await homeownerService.getHomeownerById(req.params.id);
 
+        const dataWithDeletionStatus = await accountDeletionService.attachLatestDeletionRequestSummary([data]);
+
         res.status(200).json({
             success: true,
-            data,
+            data: dataWithDeletionStatus[0],
         });
     } catch (error) {
         const statusCode = error.status || 500;
@@ -174,38 +179,34 @@ exports.getHomeownerStats = async (req, res) => {
 
 // ========================================================
 // DELETE /api/admin/homeowners/:id
-// Menghapus akun homeowner dan semua hub terkait
+// Membuat permintaan approval penghapusan akun homeowner
 // Hanya bisa diakses oleh SuperAdmin
 // ========================================================
 exports.deleteHomeowner = async (req, res) => {
     try {
-        const { id } = req.params;
-
-        // Cari user
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
-        }
-
-        if (user.role !== 'Homeowner') {
-            return res.status(400).json({ success: false, message: 'Hanya bisa menghapus user dengan role Homeowner' });
-        }
-
-        // Hapus semua hub terkait
-        await Hub.deleteMany({ owner: id });
-
-        // Hapus user
-        await User.findByIdAndDelete(id);
+        const result = await accountDeletionService.createDeletionRequest({
+            targetUserId: req.params.id,
+            targetRole: 'Homeowner',
+            reason: req.body.reason,
+            requestedByUserId: req.user.userId,
+        });
 
         res.status(200).json({
             success: true,
-            message: 'Akun homeowner dan perangkat terkait berhasil dihapus',
+            message: result.emailResult.sent
+                ? 'Permintaan penghapusan homeowner berhasil dikirim ke Project Owner.'
+                : 'Permintaan penghapusan homeowner berhasil dibuat. Email approval belum terkirim karena SMTP belum dikonfigurasi.',
+            data: {
+                deletionRequest: result.request,
+                emailResult: result.emailResult,
+            },
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(error.status || 500).json({
             success: false,
-            message: 'Gagal menghapus homeowner',
+            message: error.status ? error.message : 'Gagal membuat permintaan penghapusan homeowner.',
             error: error.message,
+            data: error.payload,
         });
     }
 };
@@ -321,6 +322,29 @@ exports.getTechnicianById = async (req, res) => {
 };
 
 // ========================================================
+// GET /api/admin/technicians/locations
+// Mengambil persebaran lokasi teknisi aktual
+// Hanya bisa diakses oleh SuperAdmin
+// ========================================================
+exports.getTechnicianLocations = async (req, res) => {
+    try {
+        const data = await technicianService.listTechnicianLocations();
+
+        res.status(200).json({
+            success: true,
+            total: data.length,
+            data,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Gagal mengambil lokasi teknisi.',
+            error: error.message,
+        });
+    }
+};
+
+// ========================================================
 // PUT /api/admin/technicians/:id
 // Mengupdate data teknisi berdasarkan id
 // Hanya bisa diakses oleh SuperAdmin
@@ -401,24 +425,35 @@ exports.assignClientsToTechnician = async (req, res) => {
 
 // ========================================================
 // DELETE /api/admin/technicians/:id
-// Menghapus akun teknisi
+// Membuat permintaan approval penghapusan akun teknisi
 // Hanya bisa diakses oleh SuperAdmin
 // ========================================================
 exports.deleteTechnician = async (req, res) => {
     try {
-        const deleted = await technicianService.deleteTechnician(req.params.id);
+        const result = await accountDeletionService.createDeletionRequest({
+            targetUserId: req.params.id,
+            targetRole: 'Technician',
+            reason: req.body.reason,
+            requestedByUserId: req.user.userId,
+        });
 
         res.status(200).json({
             success: true,
-            message: 'Akun teknisi berhasil dihapus.',
-            data: deleted,
+            message: result.emailResult.sent
+                ? 'Permintaan penghapusan teknisi berhasil dikirim ke Project Owner.'
+                : 'Permintaan penghapusan teknisi berhasil dibuat. Email approval belum terkirim karena SMTP belum dikonfigurasi.',
+            data: {
+                deletionRequest: result.request,
+                emailResult: result.emailResult,
+            },
         });
     } catch (error) {
         const statusCode = error.status || 500;
         res.status(statusCode).json({
             success: false,
-            message: statusCode >= 500 ? 'Gagal menghapus akun teknisi.' : error.message,
+            message: statusCode >= 500 ? 'Gagal membuat permintaan penghapusan akun teknisi.' : error.message,
             error: error.message,
+            data: error.payload,
         });
     }
 };

@@ -1,0 +1,14 @@
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+serial:
+  port: /dev/ttyACM0
+  adapter: ezsp
+  baudrate: 230400
+  rtscts: false
+log_level: info
+homeassistant:
+  enabled: false
+devices: {}
+groups: {}
+version: 5
