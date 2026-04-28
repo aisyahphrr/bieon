@@ -22,6 +22,7 @@ const ManajemenAkunPage = lazy(() => import('./features/admin/pelanggan').then(m
 const ManajemenTeknisiPage = lazy(() => import('./features/admin/teknisi').then(module => ({ default: module.ManajemenTeknisiPage })));
 const AdminTariff = lazy(() => import('./features/admin/AdminTariff'));
 const DeleteApprovalPage = lazy(() => import('./features/admin/DeleteApprovalPage'));
+const AdminDataLog = lazy(() => import('./features/admin/datalog').then(module => ({ default: module.DataLogSistemPage })));
 
 // Loading Screen - Premium Green
 function LoadingScreen() {
@@ -124,6 +125,7 @@ function AppContent() {
         <Route path="/admin-complaint" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminComplaint onNavigate={handleNavigate} /></ProtectedRoute>} />
         <Route path="/admin-teknisi" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><ManajemenTeknisiPage onNavigate={handleNavigate} /></ProtectedRoute>} />
         <Route path="/admin-tariff" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminTariff onNavigate={handleNavigate} /></ProtectedRoute>} />
+        <Route path="/admin-datalog" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminDataLog /></ProtectedRoute>} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

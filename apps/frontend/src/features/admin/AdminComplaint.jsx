@@ -1056,7 +1056,10 @@ export default function AdminComplaint({ onNavigate }) {
 
                         {selectedTicket?.logRequestStatus === 'granted' && (
                             <button
-                                onClick={() => alert('Membuka Viewer Data Log BIEON...')}
+                                onClick={() => {
+                                    setIsDetailModalOpen(false);
+                                    onNavigate?.('admin-datalog');
+                                }}
                                 className="w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 shadow-sm"
                             >
                                 <Activity className="w-3.5 h-3.5" /> Lihat Data Log
