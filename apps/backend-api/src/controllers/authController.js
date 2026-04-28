@@ -38,7 +38,7 @@ exports.register = async (req, res) => {
             fullName,
             username,
             dateOfBirth,
-            phoneNumber,
+            phoneNumber: phoneNumber ? normalizePhoneE164(phoneNumber) : undefined,
             address,
             systemName,
             plnTariff,
