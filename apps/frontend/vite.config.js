@@ -10,6 +10,11 @@ export default defineConfig({
     open: true,
     host: true,
     proxy: {
+      '/api-sensor': {
+        target: 'http://localhost:5005',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api-sensor/, '/api')
+      },
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true

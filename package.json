@@ -14,6 +14,11 @@
     "concurrently": "^9.2.1"
   },
   "dependencies": {
+    "aedes": "^0.47.0",
+    "axios": "^1.15.2",
+    "mongoose": "^9.5.0",
+    "mqtt": "^5.15.1",
+    "net": "^1.0.2",
     "puppeteer": "^24.42.0"
   }
 }

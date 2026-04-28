@@ -49,6 +49,17 @@ const kendaliPerangkatSchema = new mongoose.Schema({
         action: { type: String },
         days: [{ type: String }]
     }],
+    // Real-time Telemetry dari Sensor Fisik
+    currentValues: {
+        temperature: { type: Number },
+        humidity: { type: Number },
+        ph: { type: Number },
+        turbidity: { type: Number },
+        tds: { type: Number },
+        waterTemp: { type: Number }
+    },
+    battery: { type: Number },
+    lastSeen: { type: Date },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { 
     timestamps: true,
