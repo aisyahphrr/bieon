@@ -78,12 +78,12 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const response = await fetch('/api/history/alerts', {
+        const response = await fetch('/api/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
           const result = await response.json();
-          const unread = result.data?.some(n => !n.isRead);
+          const unread = result.data?.some(n => !n.isRead && !n.isSeen);
           setHasUnread(unread);
         }
       } catch (error) {

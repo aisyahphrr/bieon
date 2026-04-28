@@ -4,7 +4,7 @@ const alertSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     category: { 
         type: String, 
-        enum: ['Keamanan', 'Air Sanitasi', 'Energi', 'Sistem', 'Pengaduan'],
+        enum: ['Keamanan', 'Air Sanitasi', 'Energi', 'Sistem', 'Pengaduan', 'Kenyamanan'],
         default: 'Sistem'
     },
     room: { type: String }, // e.g., "R1 - Pintu Utama"
@@ -15,6 +15,7 @@ const alertSchema = new mongoose.Schema({
         default: 'Info' 
     },
     isRead: { type: Boolean, default: false },
+    isSeen: { type: Boolean, default: false },
     link: { type: String }, // e.g., "admin-complaint", "pengaduan"
     date: { type: Date, default: Date.now }
 }, { timestamps: true });
