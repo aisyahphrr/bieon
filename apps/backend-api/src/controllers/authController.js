@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const admin = require('../config/firebaseAdmin');
 const PasswordReset = require('../models/PasswordReset');
 const { generateNumericOtp, isValidOtp } = require('../shared/otp');
 const { isValidEmail, normalizeEmail, isValidIdPhone, normalizePhoneE164 } = require('../shared/identifier');
@@ -151,6 +150,12 @@ exports.firebaseLogin = async (req, res) => {
     try {
         const { token } = req.body;
         const admin = require('../config/firebaseAdmin');
+        if (!admin) {
+            return res.status(501).json({
+                success: false,
+                message: 'Login Google belum dikonfigurasi di backend (firebase-service-account.json belum tersedia).'
+            });
+        }
 
         // 1. Validasi token ke server Firebase (Otomatis mengecek keaslian)
         const decodedToken = await admin.auth().verifyIdToken(token);

@@ -5,10 +5,10 @@ const admin = require('firebase-admin');
 const serviceAccountPath = path.resolve(__dirname, '../../firebase-service-account.json');
 
 if (!fs.existsSync(serviceAccountPath)) {
-    throw new Error(
-        `Firebase service account tidak ditemukan di ${serviceAccountPath}. ` +
-        'Sediakan file tersebut untuk memakai login Google.'
-    );
+    // Firebase Admin bersifat opsional. Jika file tidak ada, backend tetap bisa jalan
+    // dan hanya fitur login Google yang dinonaktifkan.
+    module.exports = null;
+    return;
 }
 
 if (!admin.apps.length) {
