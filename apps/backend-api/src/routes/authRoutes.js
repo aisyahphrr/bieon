@@ -7,6 +7,11 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
+// Forgot password (OTP)
+router.post('/forgot-password/request', authController.requestForgotPasswordOtp);
+router.post('/forgot-password/verify', authController.verifyForgotPasswordOtp);
+router.post('/forgot-password/reset', authController.resetForgotPassword);
+
 // Ambil profil diri sendiri (Memerlukan Token)
 router.get('/me', authMiddleware, authController.getMe);
 router.put('/settings', authMiddleware, authController.updateSettings);

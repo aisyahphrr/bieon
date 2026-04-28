@@ -2,6 +2,17 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const admin = require('../config/firebaseAdmin');
+const PasswordReset = require('../models/PasswordReset');
+const { generateNumericOtp, isValidOtp } = require('../shared/otp');
+const { isValidEmail, normalizeEmail, isValidIdPhone, normalizePhoneE164 } = require('../shared/identifier');
+const { sendOtpEmail } = require('../shared/mailer');
+const { sendOtpWhatsApp } = require('../shared/whatsappCloud');
+
+const OTP_EXPIRES_MINUTES = 5;
+const OTP_COOLDOWN_MS = 60 * 1000;
+const OTP_MAX_PER_HOUR = 5;
+const OTP_MAX_ATTEMPTS = 5;
+const RESET_TOKEN_EXPIRES = '10m';
 
 // Fungsi Registrasi
 exports.register = async (req, res) => {
@@ -175,5 +186,193 @@ exports.firebaseLogin = async (req, res) => {
     } catch (error) {
         console.error("Firebase Login Error:", error);
         res.status(401).json({ success: false, message: 'Token tidak valid', detail: error.message });
+    }
+};
+
+const buildGenericOtpResponse = () => ({
+    message: 'Jika akun terdaftar, OTP telah dikirim.'
+});
+
+const resolveUserByIdentifier = async (identifierRaw) => {
+    const identifier = String(identifierRaw || '').trim();
+    if (!identifier) return { type: null, normalized: null, user: null };
+
+    if (isValidEmail(identifier)) {
+        const normalized = normalizeEmail(identifier);
+        const user = await User.findOne({ email: normalized });
+        return { type: 'email', normalized, user };
+    }
+
+    const normalizedPhone = normalizePhoneE164(identifier);
+    if (isValidIdPhone(normalizedPhone)) {
+        const user = await User.findOne({ phoneNumber: normalizedPhone });
+        return { type: 'phone', normalized: normalizedPhone, user };
+    }
+
+    return { type: null, normalized: null, user: null };
+};
+
+// 1) POST /api/auth/forgot-password/request
+exports.requestForgotPasswordOtp = async (req, res) => {
+    try {
+        const { identifier } = req.body;
+
+        const resolved = await resolveUserByIdentifier(identifier);
+        if (!resolved.type) {
+            return res.status(400).json({ message: 'Identifier tidak valid. Gunakan email atau nomor +62...' });
+        }
+
+        // Anti user-enumeration: kalau user tidak ada, selalu respons generik 200.
+        if (!resolved.user) {
+            return res.status(200).json(buildGenericOtpResponse());
+        }
+
+        const user = resolved.user;
+        const userId = user._id;
+
+        // Rate limit berbasis DB (per user)
+        const latest = await PasswordReset.findOne({ userId }).sort({ createdAt: -1 });
+        if (latest && Date.now() - new Date(latest.createdAt).getTime() < OTP_COOLDOWN_MS) {
+            return res.status(200).json(buildGenericOtpResponse());
+        }
+
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        const countLastHour = await PasswordReset.countDocuments({ userId, createdAt: { $gte: oneHourAgo } });
+        if (countLastHour >= OTP_MAX_PER_HOUR) {
+            return res.status(200).json(buildGenericOtpResponse());
+        }
+
+        const channel = resolved.type === 'email' ? 'email' : 'whatsapp';
+
+        if (channel === 'whatsapp' && !user.phoneNumber) {
+            // Tetap generik, tidak mengirim.
+            return res.status(200).json(buildGenericOtpResponse());
+        }
+
+        // Expire OTP pending lama agar hanya 1 yang aktif
+        await PasswordReset.updateMany({ userId, status: 'Pending' }, { status: 'Expired' });
+
+        const otp = generateNumericOtp();
+        const otpHash = await bcrypt.hash(otp, 10);
+        const expiresAt = new Date(Date.now() + OTP_EXPIRES_MINUTES * 60 * 1000);
+
+        const record = await PasswordReset.create({
+            userId,
+            channel,
+            otpHash,
+            expiresAt,
+            status: 'Pending',
+            attempts: 0
+        });
+
+        try {
+            if (channel === 'email') {
+                await sendOtpEmail({ to: user.email, otp, expiresMinutes: OTP_EXPIRES_MINUTES });
+            } else {
+                await sendOtpWhatsApp({ toPhoneE164: user.phoneNumber, otp, expiresMinutes: OTP_EXPIRES_MINUTES });
+            }
+        } catch (sendErr) {
+            // Jangan bocorkan apapun: tetap 200, tapi jangan biarkan OTP menggantung.
+            await PasswordReset.findByIdAndUpdate(record._id, { status: 'Expired' });
+            console.error('OTP Send Error:', sendErr.message || sendErr);
+        }
+
+        return res.status(200).json(buildGenericOtpResponse());
+    } catch (error) {
+        return res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
+    }
+};
+
+// 2) POST /api/auth/forgot-password/verify
+exports.verifyForgotPasswordOtp = async (req, res) => {
+    try {
+        const { identifier, otp } = req.body;
+
+        const resolved = await resolveUserByIdentifier(identifier);
+        if (!resolved.type || !isValidOtp(otp)) {
+            return res.status(400).json({ message: 'OTP tidak valid atau kedaluwarsa.' });
+        }
+
+        if (!resolved.user) {
+            return res.status(400).json({ message: 'OTP tidak valid atau kedaluwarsa.' });
+        }
+
+        const user = resolved.user;
+        const userId = user._id;
+
+        const record = await PasswordReset.findOne({ userId, status: 'Pending' }).sort({ createdAt: -1 });
+        if (!record) {
+            return res.status(400).json({ message: 'OTP tidak valid atau kedaluwarsa.' });
+        }
+
+        if (new Date() > record.expiresAt) {
+            record.status = 'Expired';
+            await record.save();
+            return res.status(400).json({ message: 'OTP tidak valid atau kedaluwarsa.' });
+        }
+
+        if (record.attempts >= OTP_MAX_ATTEMPTS) {
+            record.status = 'Expired';
+            await record.save();
+            return res.status(400).json({ message: 'OTP tidak valid atau kedaluwarsa.' });
+        }
+
+        const ok = await bcrypt.compare(String(otp).trim(), record.otpHash);
+        if (!ok) {
+            record.attempts += 1;
+            if (record.attempts >= OTP_MAX_ATTEMPTS) {
+                record.status = 'Expired';
+            }
+            await record.save();
+            return res.status(400).json({ message: 'OTP tidak valid atau kedaluwarsa.' });
+        }
+
+        record.status = 'Used';
+        await record.save();
+
+        const resetToken = jwt.sign(
+            { type: 'password_reset', userId: String(userId) },
+            process.env.JWT_SECRET || 'rahasia_cadangan',
+            { expiresIn: RESET_TOKEN_EXPIRES }
+        );
+
+        return res.status(200).json({ resetToken });
+    } catch (error) {
+        return res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
+    }
+};
+
+// 3) POST /api/auth/forgot-password/reset
+exports.resetForgotPassword = async (req, res) => {
+    try {
+        const { resetToken, newPassword } = req.body;
+        if (!resetToken || !newPassword) {
+            return res.status(400).json({ message: 'resetToken dan newPassword wajib diisi.' });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(resetToken, process.env.JWT_SECRET || 'rahasia_cadangan');
+        } catch (e) {
+            return res.status(400).json({ message: 'resetToken tidak valid atau kedaluwarsa.' });
+        }
+
+        if (!decoded || decoded.type !== 'password_reset' || !decoded.userId) {
+            return res.status(400).json({ message: 'resetToken tidak valid atau kedaluwarsa.' });
+        }
+
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+            return res.status(400).json({ message: 'resetToken tidak valid atau kedaluwarsa.' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        await PasswordReset.updateMany({ userId: user._id, status: 'Pending' }, { status: 'Expired' });
+
+        return res.status(200).json({ message: 'Password berhasil direset.' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
     }
 };

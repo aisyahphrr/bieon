@@ -47,6 +47,9 @@ const Login = () => {
         throw new Error(data.message || 'Login Google gagal');
       }
 
+      // Use the same key used across the app
+      localStorage.setItem('token', data.token);
+      // Backward-compat (if any code still reads this)
       localStorage.setItem('bieon_token', data.token);
 
       const userRole = data.user?.role;
