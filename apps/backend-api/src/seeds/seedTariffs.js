@@ -12,26 +12,31 @@ const { getPlnTariffCategories } = require('../constants/plnTariffCategories');
 dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
 
 const DEFAULT_TARIFF_MAP = {
-    'R1 - 450 VA (Subsidi)': 415,
-    'R1 - 900 VA (Subsidi)': 605,
-    'R1M - 900 VA (Non-Subsidi)': 1352,
-    'R1 - 1300 VA': 1444.7,
-    'R1 - 2200 VA': 1444.7,
-    'R2 - 3500 s.d 5500 VA': 1699.53,
-    'R3 - 6600 VA ke atas': 1699.53,
+    'R-1/TR - 450 VA (Subsidi)': 415,
+    'R-1/TR - 900 VA (Subsidi)': 605,
+    'R-1/TR - 900 VA (Non-Subsidi)': 1352,
+    'R-1/TR - 1.300 VA': 1444.7,
+    'R-1/TR - 2.200 VA': 1444.7,
+    'R-2/TR - 3.500-5.500 VA': 1699.53,
+    'R-3/TR, TM - > 6.600 VA': 1699.53,
 
-    'B-1/TR - 450–5.500 VA': 1444.7,
-    'B-2/TR - 6.600 VA–200 kVA': 1444.7,
-    'B-3/TM - >200 kVA': 1114.74,
+    'B-1/TR - 450-5.500 VA': 1444.7,
+    'B-2/TR - 6.600 VA-200 kVA': 1444.7,
+    'B-3/TM, TT - > 200 kVA': 1114.74,
+    'B-4/TT - > 30.000 kVA': 996.74,
 
-    'I-3/TM - >200 kVA': 1114.74,
-    'I-4/TT - ≥30.000 kVA': 996.74,
+    'I-1/TR - 450-5.500 VA': 1444.7,
+    'I-2/TM - 6.600 VA-200 kVA': 1114.74,
+    'I-3/TM - > 200 kVA': 1114.74,
+    'I-4/TT - > 30.000 kVA': 996.74,
 
-    'P-1/TR - 6.600 VA–200 kVA': 1699.53,
-    'P-2/TM - >200 kVA': 1522.88,
-    'P-3/TR - Penerangan Jalan Umum (PJU)': 1699.53,
+    'P-1/TR - 6.600 VA-200 kVA': 1699.53,
+    'P-2/TM - > 200 kVA': 1522.88,
+    'P-3/TR - Penerangan Jalan Umum': 1699.53,
 
-    'L - TR/TM/TT': 1644.52
+    'L/TR, TM, TT': 1644.52,
+
+    'S-2/TM - > 200 kVA': 1522.88
 };
 
 const EFFECTIVE_DATE = new Date('2026-01-01T00:00:00.000Z');

@@ -142,6 +142,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const [plnCategoriesLoading, setPlnCategoriesLoading] = useState(true);
   const [plnSummary, setPlnSummary] = useState(null);
   const [plnSummaryLoading, setPlnSummaryLoading] = useState(true);
+  const [plnCurrentTariffs, setPlnCurrentTariffs] = useState({});
   const [showPlnCategoriesModal, setShowPlnCategoriesModal] = useState(false);
   const [homeowners, setHomeowners] = useState([]);
   const [homeownersLoading, setHomeownersLoading] = useState(true);
@@ -257,12 +258,30 @@ export default function SuperAdminDashboard({ onNavigate }) {
     }
   };
 
+  const fetchPlnCurrentTariffs = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/admin/tariffs/current?scope=all', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        const map = {};
+        json.data.forEach((it) => { map[it.name] = it.currentTariff; });
+        setPlnCurrentTariffs(map);
+      }
+    } catch (err) {
+      console.error('Error fetching current PLN tariffs:', err);
+    }
+  };
+
   useEffect(() => {
     // Fetch immediately on mount.
     fetchDashboardMetrics();
     fetchHomeowners();
     fetchPlnCategories();
     fetchPlnSummary();
+    fetchPlnCurrentTariffs();
 
     // Poll metrics periodically to keep dashboard counters/charts updated.
     const pollingInterval = setInterval(() => {
@@ -483,6 +502,16 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   </div>
                 </div>
               </div>
+              {Object.keys(plnCurrentTariffs).length > 0 && (
+                <div className="mt-3 text-sm text-gray-100 space-y-1">
+                  {plnCategories.slice(0,3).map((c) => (
+                    <div key={c.key} className="flex items-center justify-between">
+                      <div className="truncate opacity-90">{c.label}</div>
+                      <div className="font-bold">Rp {plnCurrentTariffs[c.label] ? plnCurrentTariffs[c.label].toLocaleString('id-ID') : '-'}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
@@ -1043,7 +1072,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <p className="text-white/80 font-medium text-xs mt-1">
                     {plnCategoriesLoading
                       ? 'Memuat...'
-                      : `${plnCategories.length} kategori tersedia (shortcut: ${plnCategories.filter(c => c.isShortcut).length})`}
+                      : `${plnCategories.length} kategori tersedia`}
                   </p>
                 </div>
               </div>
@@ -1061,15 +1090,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
                         <div className="text-sm font-extrabold text-gray-800 leading-snug">
                           {cat.label}
                         </div>
-                        <div className="mt-2 flex items-center gap-2">
-                          {cat.isShortcut && (
-                            <span className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-wider">
-                              Shortcut
-                            </span>
-                          )}
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            {cat.segment || 'Lainnya'}
-                          </span>
+                        <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                          {cat.segment || 'Lainnya'}
                         </div>
                       </div>
                     ))}
@@ -1088,15 +1110,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
                         <div className="text-sm font-extrabold text-gray-800 leading-snug">
                           {cat.label}
                         </div>
-                        <div className="mt-2 flex items-center gap-2">
-                          {cat.isShortcut && (
-                            <span className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-wider">
-                              Shortcut
-                            </span>
-                          )}
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            {cat.segment || 'Lainnya'}
-                          </span>
+                        <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                          {cat.segment || 'Lainnya'}
                         </div>
                       </div>
                     ))}
