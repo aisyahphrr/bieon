@@ -166,7 +166,7 @@ const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket })
     );
 };
 
-export function PengaduanKlienPage({ onNavigate }) {
+export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketHandled }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
@@ -296,6 +296,20 @@ export function PengaduanKlienPage({ onNavigate }) {
             fetchData();
         }
     }, [token]);
+
+    useEffect(() => {
+        if (!returnTicketId || complaints.length === 0) return;
+
+        const normalizedTicketId = String(returnTicketId);
+        const matchedTicket = complaints.find((item) =>
+            String(item.originalId) === normalizedTicketId || String(item._id) === normalizedTicketId
+        );
+
+        if (matchedTicket) {
+            setSelectedTicket(matchedTicket);
+            onReturnTicketHandled?.();
+        }
+    }, [returnTicketId, complaints, onReturnTicketHandled]);
 
     const showToast = (message) => {
         setToast({ show: true, message });
