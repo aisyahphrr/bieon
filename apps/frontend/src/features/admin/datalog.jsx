@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { SuperAdminLayout } from './SuperAdminLayout';
+import TechnicianLayout from '../technician/TechnicianLayout';
 import {
   Database,
   Search,
@@ -227,6 +228,17 @@ const mockLogs = [
 
 export function DataLogSistemPage() {
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const role = (() => {
+    if (!token) return localStorage.getItem('role');
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return payload?.role || localStorage.getItem('role');
+    } catch {
+      return localStorage.getItem('role');
+    }
+  })();
+  const isTechnician = role === 'Technician';
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDevice, setFilterDevice] = useState('All');
   const [filterHub, setFilterHub] = useState('All');
@@ -248,6 +260,10 @@ export function DataLogSistemPage() {
       settings: '/admin',
     };
     navigate(routes[menuId] || '/admin');
+  };
+
+  const handleTechnicianMenuNavigate = () => {
+    navigate('/teknisi');
   };
 
   // Filter data
@@ -347,135 +363,133 @@ export function DataLogSistemPage() {
     };
   };
 
-  return (
-    <SuperAdminLayout activeMenu="datalog" onNavigate={handleNavigate}>
-      <div className="space-y-6">
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-8 shadow-2xl border border-gray-700 relative overflow-hidden">
-          {/* Animated Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-500 rounded-full blur-3xl"></div>
-          </div>
-          
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <Database className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-white">Data Log & Diagnostics</h1>
-                    <p className="text-gray-400 text-sm mt-1">Monitoring aktivitas sistem, deteksi anomali, dan analisis perangkat secara real-time</p>
-                  </div>
+  const pageContent = (
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-8 shadow-2xl border border-gray-700 relative overflow-hidden">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-500 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="relative z-10">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Database className="w-6 h-6 text-white" />
                 </div>
-                
-                {/* Badges */}
-                <div className="flex gap-3">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span className="text-emerald-400 text-sm font-semibold">Real-time Monitoring</span>
-                  </div>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-xl">
-                    <Brain className="w-4 h-4 text-purple-400" />
-                    <span className="text-purple-400 text-sm font-semibold">AI Insight Enabled</span>
-                  </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-white">Data Log & Diagnostics</h1>
+                  <p className="text-gray-400 text-sm mt-1">Monitoring aktivitas sistem, deteksi anomali, dan analisis perangkat secara real-time</p>
                 </div>
               </div>
               
+              {/* Badges */}
               <div className="flex gap-3">
-                <button className="flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all shadow-lg">
-                  <FileText className="w-5 h-5" />
-                  Export PDF
-                </button>
-                <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:shadow-xl text-white rounded-xl font-semibold transition-all shadow-lg">
-                  <Download className="w-5 h-5" />
-                  Export CSV
-                </button>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span className="text-emerald-400 text-sm font-semibold">Real-time Monitoring</span>
+                </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-xl">
+                  <Brain className="w-4 h-4 text-purple-400" />
+                  <span className="text-purple-400 text-sm font-semibold">AI Insight Enabled</span>
+                </div>
               </div>
             </div>
+            
+            <div className="flex gap-3">
+              <button className="flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all shadow-lg">
+                <FileText className="w-5 h-5" />
+                Export PDF
+              </button>
+              <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:shadow-xl text-white rounded-xl font-semibold transition-all shadow-lg">
+                <Download className="w-5 h-5" />
+                Export CSV
+              </button>
+            </div>
+          </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-3 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search logs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                />
-              </div>
-              <div className="col-span-2 relative">
-                <Package className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <select
-                  value={filterDevice}
-                  onChange={(e) => setFilterDevice(e.target.value)}
-                  className="w-full pl-12 pr-8 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
-                >
-                  {uniqueDevices.map(device => (
-                    <option key={device} value={device}>{device === 'All' ? 'All Devices' : device}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-span-2 relative">
-                <Network className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <select
-                  value={filterHub}
-                  onChange={(e) => setFilterHub(e.target.value)}
-                  className="w-full pl-12 pr-8 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
-                >
-                  {uniqueHubs.map(hub => (
-                    <option key={hub} value={hub}>{hub === 'All' ? 'All Hub Nodes' : hub}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-span-2 relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <select
-                  value={filterDateRange}
-                  onChange={(e) => setFilterDateRange(e.target.value)}
-                  className="w-full pl-12 pr-8 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="Today">Today</option>
-                  <option value="7 Days">Last 7 Days</option>
-                  <option value="30 Days">Last 30 Days</option>
-                  <option value="3 Months">Last 3 Months</option>
-                </select>
-              </div>
-              <div className="col-span-3 flex gap-2 bg-gray-800/50 border border-gray-700 rounded-xl p-1">
-                <button
-                  onClick={() => setFilterMode('all')}
-                  className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
-                    filterMode === 'all' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  All Data
-                </button>
-                <button
-                  onClick={() => setFilterMode('anomaly')}
-                  className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
-                    filterMode === 'anomaly' ? 'bg-yellow-600 text-white' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Anomaly
-                </button>
-                <button
-                  onClick={() => setFilterMode('critical')}
-                  className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
-                    filterMode === 'critical' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Critical
-                </button>
-              </div>
+          {/* Filters */}
+          <div className="grid grid-cols-12 gap-4">
+            <div className="col-span-3 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search logs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div className="col-span-2 relative">
+              <Package className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={filterDevice}
+                onChange={(e) => setFilterDevice(e.target.value)}
+                className="w-full pl-12 pr-8 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
+              >
+                {uniqueDevices.map(device => (
+                  <option key={device} value={device}>{device === 'All' ? 'All Devices' : device}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2 relative">
+              <Network className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={filterHub}
+                onChange={(e) => setFilterHub(e.target.value)}
+                className="w-full pl-12 pr-8 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
+              >
+                {uniqueHubs.map(hub => (
+                  <option key={hub} value={hub}>{hub === 'All' ? 'All Hub Nodes' : hub}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2 relative">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <select
+                value={filterDateRange}
+                onChange={(e) => setFilterDateRange(e.target.value)}
+                className="w-full pl-12 pr-8 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all appearance-none cursor-pointer"
+              >
+                <option value="Today">Today</option>
+                <option value="7 Days">Last 7 Days</option>
+                <option value="30 Days">Last 30 Days</option>
+                <option value="3 Months">Last 3 Months</option>
+              </select>
+            </div>
+            <div className="col-span-3 flex gap-2 bg-gray-800/50 border border-gray-700 rounded-xl p-1">
+              <button
+                onClick={() => setFilterMode('all')}
+                className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  filterMode === 'all' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                All Data
+              </button>
+              <button
+                onClick={() => setFilterMode('anomaly')}
+                className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  filterMode === 'anomaly' ? 'bg-yellow-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Anomaly
+              </button>
+              <button
+                onClick={() => setFilterMode('critical')}
+                className={`flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  filterMode === 'critical' ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Critical
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Summary Cards */}
+      </div>
+      {/* Summary Cards */}
         <div className="grid grid-cols-4 gap-6">
           <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl border border-blue-500/50 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
@@ -845,6 +859,25 @@ export function DataLogSistemPage() {
           </div>
         </div>
       </div>
+  );
+
+  if (isTechnician) {
+    return (
+      <TechnicianLayout
+        activeMenu="pengaduan"
+        setActiveMenu={handleTechnicianMenuNavigate}
+        onNavigate={handleTechnicianMenuNavigate}
+      >
+        <div className="p-4 sm:p-6 lg:p-8">
+          {pageContent}
+        </div>
+      </TechnicianLayout>
+    );
+  }
+
+  return (
+    <SuperAdminLayout activeMenu="datalog" onNavigate={handleNavigate}>
+      {pageContent}
     </SuperAdminLayout>
   );
 }

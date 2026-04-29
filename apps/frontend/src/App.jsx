@@ -125,7 +125,7 @@ function AppContent() {
         <Route path="/admin-complaint" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminComplaint onNavigate={handleNavigate} /></ProtectedRoute>} />
         <Route path="/admin-teknisi" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><ManajemenTeknisiPage onNavigate={handleNavigate} /></ProtectedRoute>} />
         <Route path="/admin-tariff" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminTariff onNavigate={handleNavigate} /></ProtectedRoute>} />
-        <Route path="/admin-datalog" element={<ProtectedRoute allowedRoles={['SuperAdmin']}><AdminDataLog /></ProtectedRoute>} />
+        <Route path="/admin-datalog" element={<ProtectedRoute allowedRoles={['SuperAdmin', 'Technician']}><AdminDataLog /></ProtectedRoute>} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

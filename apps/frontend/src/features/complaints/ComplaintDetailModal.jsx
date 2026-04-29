@@ -20,6 +20,7 @@ import {
     Users,
     XCircle
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { formatStatusDisplay, getPerformanceIndicator } from '../../utils/complaintHelpers';
 import { useSLA } from '../../hooks/useSLA';
 
@@ -36,6 +37,7 @@ export function ComplaintDetailModal({
     title = "Detail Pengaduan",
     onActionSuccess
 }) {
+    const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     const [localTicket, setLocalTicket] = React.useState(null);
@@ -705,7 +707,10 @@ export function ComplaintDetailModal({
 
                                                         {localTicket.logRequestStatus === 'granted' && (
                                                             <button
-                                                                onClick={() => alert("Membuka Halaman Data Log Perangkat...")}
+                                                                onClick={() => {
+                                                                    onClose?.();
+                                                                    navigate('/admin-datalog');
+                                                                }}
                                                                 className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"
                                                             >
                                                                 <FileText className="w-4 h-4" /> Lihat Data Log
