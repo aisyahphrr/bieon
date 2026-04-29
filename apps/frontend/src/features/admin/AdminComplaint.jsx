@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Users,
     Zap,
@@ -182,6 +183,8 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
 // Dummy data array has been moved directly to MongoDB via the Seed script!
 
 export default function AdminComplaint({ onNavigate }) {
+    const navigate = useNavigate();
+    const location = useLocation();
     // --- Filter & Pagination States ---
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
@@ -514,6 +517,17 @@ export default function AdminComplaint({ onNavigate }) {
             fetchData();
         }
     }, [token]);
+
+    useEffect(() => {
+        if (location.state?.openComplaintId && complaints.length > 0) {
+            const ticketToOpen = complaints.find(c => c.originalId === location.state.openComplaintId);
+            if (ticketToOpen) {
+                setSelectedTicket(ticketToOpen);
+                setIsDetailModalOpen(true);
+                navigate(location.pathname, { replace: true, state: {} });
+            }
+        }
+    }, [location.state, complaints, navigate, location.pathname]);
 
     const statsMetrics = useMemo(() => {
         const active = complaints.filter(c => !['selesai', 'ditolak'].includes(c.status?.toLowerCase())).length;
@@ -1058,7 +1072,12 @@ export default function AdminComplaint({ onNavigate }) {
                             <button
                                 onClick={() => {
                                     setIsDetailModalOpen(false);
-                                    onNavigate?.('admin-datalog');
+                                    navigate('/admin-datalog', {
+                                        state: {
+                                            returnTicketId: selectedTicket.originalId,
+                                            customerName: selectedTicket.customer
+                                        }
+                                    });
                                 }}
                                 className="w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 shadow-sm"
                             >

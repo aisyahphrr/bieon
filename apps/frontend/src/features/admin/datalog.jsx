@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { SuperAdminLayout } from './SuperAdminLayout';
-import TechnicianLayout from '../technician/TechnicianLayout';
 import {
   Database,
   Search,
@@ -21,6 +20,7 @@ import {
   FileText,
   Brain,
   Sparkles,
+  ArrowLeft,
   ArrowRight,
   Server,
   Radio,
@@ -28,7 +28,7 @@ import {
   Eye,
   BarChart3
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Mock historical data for mini chart
@@ -228,6 +228,9 @@ const mockLogs = [
 
 export function DataLogSistemPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTicketId = location.state?.returnTicketId || null;
+  const customerName = location.state?.customerName || null;
   const token = localStorage.getItem('token');
   const role = (() => {
     if (!token) return localStorage.getItem('role');
@@ -262,8 +265,12 @@ export function DataLogSistemPage() {
     navigate(routes[menuId] || '/admin');
   };
 
-  const handleTechnicianMenuNavigate = () => {
-    navigate('/teknisi');
+  const handleBackToComplaint = () => {
+    if (isTechnician) {
+      navigate('/teknisi', { state: { openComplaintId: returnTicketId } });
+    } else {
+      navigate('/admin-complaint', { state: { openComplaintId: returnTicketId } });
+    }
   };
 
   // Filter data
@@ -365,6 +372,25 @@ export function DataLogSistemPage() {
 
   const pageContent = (
     <div className="space-y-6">
+      {/* Dynamic Back Button Header */}
+      {returnTicketId && (
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleBackToComplaint}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all shadow-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Kembali
+          </button>
+          {customerName && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl font-semibold shadow-sm">
+              <span className="text-sm font-bold">Log Pelanggan:</span>
+              <span className="text-sm">{customerName}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-3xl p-8 shadow-2xl border border-gray-700 relative overflow-hidden">
         {/* Animated Background Pattern */}
@@ -863,15 +889,11 @@ export function DataLogSistemPage() {
 
   if (isTechnician) {
     return (
-      <TechnicianLayout
-        activeMenu="pengaduan"
-        setActiveMenu={handleTechnicianMenuNavigate}
-        onNavigate={handleTechnicianMenuNavigate}
-      >
-        <div className="p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-8">
           {pageContent}
         </div>
-      </TechnicianLayout>
+      </div>
     );
   }
 

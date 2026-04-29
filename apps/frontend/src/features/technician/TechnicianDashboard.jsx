@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Monitor,
@@ -115,7 +116,9 @@ function Toast({ message, type = 'success' }) {
 }
 
 export function TechnicianDashboard({ onNavigate }) {
+  const location = useLocation();
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [returnTicketId, setReturnTicketId] = useState(location.state?.openComplaintId || null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
   const [toast, setToast] = useState(null);
@@ -139,6 +142,13 @@ export function TechnicianDashboard({ onNavigate }) {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  useEffect(() => {
+    if (location.state?.openComplaintId) {
+      setReturnTicketId(location.state.openComplaintId);
+      setActiveMenu('pengaduan');
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -183,7 +193,12 @@ export function TechnicianDashboard({ onNavigate }) {
       case 'monitoring':
         return <MonitoringKlienPage clients={clients} />;
       case 'pengaduan':
-        return <PengaduanKlienPage />;
+        return (
+          <PengaduanKlienPage
+            returnTicketId={returnTicketId}
+            onReturnTicketHandled={() => setReturnTicketId(null)}
+          />
+        );
       case 'konfigurasi':
         return <KonfigurasiPerangkatPage clients={clients} onNavigate={onNavigate} triggerToast={triggerToast} />;
       case 'riwayat':

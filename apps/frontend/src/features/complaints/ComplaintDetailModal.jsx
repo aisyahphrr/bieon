@@ -708,8 +708,16 @@ export function ComplaintDetailModal({
                                                         {localTicket.logRequestStatus === 'granted' && (
                                                             <button
                                                                 onClick={() => {
+                                                                    const returnTicketId = localTicket?.originalId || localTicket?._id || null;
+                                                                    const customerName = localTicket?.clientInfo?.name || localTicket?.client || localTicket?.homeowner?.fullName || '';
                                                                     onClose?.();
-                                                                    navigate('/admin-datalog');
+                                                                    navigate('/admin-datalog', {
+                                                                        state: {
+                                                                            sourceRole: role,
+                                                                            returnTicketId,
+                                                                            customerName
+                                                                        }
+                                                                    });
                                                                 }}
                                                                 className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"
                                                             >
