@@ -57,7 +57,6 @@ export default function AdminTariff({ onNavigate }) {
         { label: 'B-1/TR - 450-5.500 VA', segment: 'Bisnis', isShortcut: false },
         { label: 'B-2/TR - 6.600 VA-200 kVA', segment: 'Bisnis', isShortcut: false },
         { label: 'B-3/TM, TT - > 200 kVA', segment: 'Bisnis', isShortcut: false },
-        { label: 'B-4/TT - > 30.000 kVA', segment: 'Bisnis', isShortcut: false },
 
         // Industri
         { label: 'I-1/TR - 450-5.500 VA', segment: 'Industri', isShortcut: false },

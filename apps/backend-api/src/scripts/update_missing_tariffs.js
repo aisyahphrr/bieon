@@ -10,12 +10,7 @@ const TARRIFS_TO_UPDATE = [
         effectiveDate: new Date('2026-01-01'),
         note: 'Update tarif sub-golongan B1 sesuai instruksi (Januari 2026)'
     },
-    {
-        category: 'B-4/TT - > 30.000 kVA',
-        tariff: 996.74,
-        effectiveDate: new Date('2026-01-01'),
-        note: 'Update tarif sub-golongan B4 (Tegangan Tinggi) (Januari 2026)'
-    },
+
     {
         category: 'I-1/TR - 450-5.500 VA',
         tariff: 1112.47,

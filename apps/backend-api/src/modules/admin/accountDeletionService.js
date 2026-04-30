@@ -118,6 +118,7 @@ const sendApprovalRequestEmail = async (request, token) => {
         subject: emailContent.subject,
         html: emailContent.html,
         text: emailContent.text,
+        transport: 'gmail',
     });
 };
 
@@ -128,6 +129,7 @@ const sendRequesterDecisionEmail = async (request) => {
         subject: emailContent.subject,
         html: emailContent.html,
         text: emailContent.text,
+        transport: 'gmail',
     });
 
     if (result.sent) {
@@ -145,6 +147,7 @@ const sendTargetDeletedEmail = async (request) => {
         subject: emailContent.subject,
         html: emailContent.html,
         text: emailContent.text,
+        transport: 'gmail',
     });
 
     if (result.sent) {
