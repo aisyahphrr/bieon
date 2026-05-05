@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Bell, AlertTriangle, Briefcase, 
   User, Award, Hourglass, Server, Activity, 
@@ -17,7 +18,8 @@ const typeStyles = {
   kenyamanan: { border: 'border-teal-500', bg: 'bg-teal-50', iconText: 'text-teal-600', iconBg: 'bg-teal-100', icon: Fan, accent: 'bg-teal-500' }
 };
 
-const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, onUnreadChange }) => {
+const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange }) => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const popupRef = useRef(null);
@@ -107,8 +109,30 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onNavigate, on
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
 
       // Jika ada link, arahkan ke halaman tersebut
-      if (notif.link && onNavigate) {
-        onNavigate(notif.link);
+      if (notif.link) {
+        if (notif.link === 'pengaduan') navigate('/pengaduan');
+        else if (notif.link === 'kendali') {
+          if (notif.metadata?.deviceId) {
+            sessionStorage.setItem('pendingHighlight', notif.metadata.deviceId);
+          }
+          navigate('/kendali');
+        }
+        else if (notif.link === 'dashboard' || notif.link === 'history-energi') {
+          const target = notif.metadata?.scrollTarget || 'section-energi';
+          sessionStorage.setItem('pendingScroll', target);
+          navigate('/dashboard');
+          
+          // Scroll instan jika kita sudah di dashboard
+          setTimeout(() => {
+            const element = document.getElementById(target);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              sessionStorage.removeItem('pendingScroll');
+            }
+          }, 100);
+        } else {
+          navigate(`/${notif.link}`);
+        }
         onClose(); // Tutup popup setelah navigasi
       }
 

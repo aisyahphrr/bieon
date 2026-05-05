@@ -56,7 +56,11 @@ const kendaliPerangkatSchema = new mongoose.Schema({
         ph: { type: Number },
         turbidity: { type: Number },
         tds: { type: Number },
-        waterTemp: { type: Number }
+        waterTemp: { type: Number },
+        // Power Meter Telemetry
+        currentLoad: { type: Number }, // Beban Saat Ini (Watt/kW)
+        energyToday: { type: Number }, // Konsumsi Hari Ini (kWh)
+        lastEnergyReading: { type: Number } // Pembacaan kWh sebelumnya untuk delta billing
     },
     battery: { type: Number },
     lastSeen: { type: Date },

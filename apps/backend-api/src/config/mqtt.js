@@ -3,6 +3,14 @@ const { SUPPORTED_MODELS } = require('./supportedDevices');
 const Device = require('../models/Device');
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const SensorData = require('../models/SensorData');
+const User = require('../models/User');
+const PlnTariff = require('../models/PlnTariff');
+const EnergyLog = require('../models/EnergyLog');
+const EnvironmentLog = require('../models/EnvironmentLog');
+const SecurityLog = require('../models/SecurityLog');
+const WaterQualityLog = require('../models/WaterQualityLog');
+const Activity = require('../models/Activity');
+const alertService = require('../services/alertService');
 
 let mqttClient = null;
 let ioInstance = null;
@@ -108,6 +116,118 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
     }
 
     // ==========================================
+    // 0. NOTIFIKASI STATUS PERANGKAT (ON/OFF)
+    // ==========================================
+    if (updates.status !== undefined && device.status !== updates.status) {
+        const Alert = require('../models/Alert');
+        const statusText = updates.status === '1' ? 'Menyala (ON)' : 'Mati (OFF)';
+        
+        // Tentukan Kategori Berdasarkan Aspect Perangkat
+        let category = 'Sistem';
+        if (device.environmentAspect === 'Keamanan') category = 'Keamanan';
+        else if (device.environmentAspect === 'Kenyamanan') category = 'Kenyamanan';
+        else if (device.environmentAspect === 'Kualitas Air') category = 'Air Sanitasi';
+
+        await Alert.create({
+            owner: device.owner,
+            category: category,
+            title: `Perangkat ${statusText}`,
+            message: `[Log] Perangkat ${device.name} di ${device.location} telah berubah status menjadi ${statusText}.`,
+            type: 'Info',
+            link: 'kendali',
+            metadata: { deviceId: device._id } // Sertakan ID untuk highlight
+        });
+    }
+
+    // ==========================================
+    // 1. DELTA BILLING: KONSUMSI ENERGI (TOKEN)
+    // ==========================================
+    if (updatedDevice && payload.energyToday !== undefined) {
+      const user = await User.findById(updatedDevice.owner);
+      if (user) {
+         const prevEnergy = updatedDevice.currentValues?.lastEnergyReading || 0;
+         const currentEnergy = payload.energyToday;
+         
+         let deltaKwh = currentEnergy - prevEnergy;
+         if (deltaKwh < 0) deltaKwh = currentEnergy; // Jika reset ke 0 (tengah malam)
+
+         if (deltaKwh > 0) {
+            // Dapatkan Tarif
+            const plnCategory = user.plnTariff || 'R-1/TR 1300 VA';
+            const tariffRecord = await PlnTariff.findOne({ category: new RegExp(plnCategory, 'i') }).sort({ createdAt: -1 });
+            const tariffPrice = tariffRecord ? tariffRecord.tariff : 1444; // Default Rp 1.444/kWh
+            
+            const cost = deltaKwh * tariffPrice;
+            
+            user.tokenBalance = Math.max(0, (user.tokenBalance || 0) - cost);
+            await user.save();
+
+            // Simpan pembacaan terakhir agar delta berikutnya akurat
+            await KendaliPerangkat.findByIdAndUpdate(updatedDevice._id, { 
+                'currentValues.lastEnergyReading': currentEnergy,
+                'currentValues.energyToday': currentEnergy,
+                'currentValues.currentLoad': payload.currentLoad || 0
+            });
+            
+            // Simpan ke EnergyLog untuk halaman Riwayat
+            await new EnergyLog({
+              device: updatedDevice._id,
+              date: new Date(),
+              totalKwh: deltaKwh,
+              power: payload.currentLoad || 0,
+              owner: user._id
+            }).save();
+            
+            // Trigger Alert jika Token Menipis
+            const threshold = user.tokenThreshold || 50000;
+            if (user.tokenBalance < threshold) {
+                // Gunakan Alert model langsung agar tidak usah ubah alertService
+                const Alert = require('../models/Alert');
+                await Alert.create({
+                    owner: user._id,
+                    category: 'Energi',
+                    message: `Peringatan: Saldo token rumah Anda menipis (Sisa: Rp ${Math.round(user.tokenBalance).toLocaleString('id-ID')}). Segera lakukan isi ulang.`,
+                    type: 'Warning',
+                    link: 'dashboard' // bisa link ke token page
+                });
+            }
+         }
+      }
+    }
+
+    // ==========================================
+    // 1.5. HISTORY LOGGING (ENVIRONMENT & SECURITY)
+    // ==========================================
+    if (updatedDevice && updatedDevice.category === 'Sensor') {
+        if (payload.temperature !== undefined || payload.humidity !== undefined) {
+            await new EnvironmentLog({
+                hub: updatedDevice.hubId,
+                date: new Date(),
+                avgTemperature: payload.temperature || updatedDevice.currentValues?.temperature || 0,
+                avgHumidity: (payload.humidity || updatedDevice.currentValues?.humidity || 0) + '%',
+                room: updatedDevice.location || 'Lainnya',
+                owner: updatedDevice.owner
+            }).save();
+        }
+        if (payload.doorOpen !== undefined || payload.motion !== undefined) {
+            await new SecurityLog({
+                device: updatedDevice._id,
+                date: new Date(),
+                action: payload.doorOpen ? 'Terbuka' : (payload.motion ? 'Gerakan Terdeteksi' : 'Aman'),
+                owner: updatedDevice.owner
+            }).save();
+        }
+    }
+
+    // ==========================================
+    // 1.8. AUTO-TRIGGER ALERT BAHAYA (LINGKUNGAN & KEAMANAN)
+    // ==========================================
+    if (updatedDevice && updatedDevice.category === 'Sensor') {
+        // Panggil alertService yang sudah memuat logika validasi threshold
+        await alertService.simulateSensorData(updatedDevice._id, payload);
+    }
+
+    // ==========================================
     // LOGIKA OTOMATISASI: KENDALI LINGKUNGAN
     // ==========================================
     if (updatedDevice && updatedDevice.category === 'Sensor' && updatedDevice.currentValues) {
@@ -175,18 +295,64 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
                             console.log(`[Automation] Triggering Actuator ${act.name} to ON (All sensors met threshold)`);
                             publishCommand(targetTopic, 'ON');
                             await KendaliPerangkat.findByIdAndUpdate(act._id, { status: '1' });
+                            
+                            // LOGGING KE AKTIVITAS TERBARU
+                            await new Activity({
+                                user: act.owner,
+                                room: act.location,
+                                actuator: act.name,
+                                status: 'ON',
+                                action: 'Menyalakan',
+                                trigger: `Otomasi (${aspect})`
+                            }).save();
+
                             if (ioInstance) {
                                 ioInstance.emit('device_telemetry', { _id: act._id, status: '1' });
                             }
+
+                            // [ADD] NOTIFIKASI OTOMASI
+                            const Alert = require('../models/Alert');
+                            await Alert.create({
+                                owner: act.owner,
+                                category: aspect === 'Kualitas Air' ? 'Air Sanitasi' : aspect,
+                                title: 'Otomasi Aktif',
+                                message: `Sistem otomatis menyalakan ${act.name} karena kondisi ${aspect} memerlukan tindakan.`,
+                                type: 'Success',
+                                link: 'kendali',
+                                metadata: { deviceId: act._id }
+                            });
                         }
                     } else {
                         if (String(act.status) !== '0') {
                             console.log(`[Automation] Triggering Actuator ${act.name} to OFF (Sensor condition not met)`);
                             publishCommand(targetTopic, 'OFF');
                             await KendaliPerangkat.findByIdAndUpdate(act._id, { status: '0' });
+
+                            // LOGGING KE AKTIVITAS TERBARU
+                            await new Activity({
+                                user: act.owner,
+                                room: act.location,
+                                actuator: act.name,
+                                status: 'OFF',
+                                action: 'Mematikan',
+                                trigger: `Otomasi (${aspect})`
+                            }).save();
+
                             if (ioInstance) {
                                 ioInstance.emit('device_telemetry', { _id: act._id, status: '0' });
                             }
+
+                            // [ADD] NOTIFIKASI OTOMASI (OFF)
+                            const Alert = require('../models/Alert');
+                            await Alert.create({
+                                owner: act.owner,
+                                category: aspect === 'Kualitas Air' ? 'Air Sanitasi' : aspect,
+                                title: 'Otomasi Selesai',
+                                message: `Sistem otomatis mematikan ${act.name} karena kondisi ${aspect} sudah kembali normal.`,
+                                type: 'Info',
+                                link: 'kendali',
+                                metadata: { deviceId: act._id }
+                            });
                         }
                     }
                 }

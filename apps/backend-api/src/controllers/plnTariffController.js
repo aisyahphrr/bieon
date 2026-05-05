@@ -1,5 +1,6 @@
 const PlnTariff = require('../models/PlnTariff');
 const User = require('../models/User');
+const Alert = require('../models/Alert');
 const { getPlnTariffCategories, isValidPlnTariffCategoryLabel } = require('../constants/plnTariffCategories');
 
 const MONTH_NAMES = [
@@ -277,5 +278,91 @@ exports.getPlnSummary = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Gagal mengambil ringkasan tarif.', error: error.message });
+    }
+};
+
+/**
+ * POST /api/admin/tariffs/topup
+ * Top up saldo token (khusus Homeowner)
+ */
+exports.topupToken = async (req, res) => {
+    try {
+        const { amount } = req.body;
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ success: false, message: 'Jumlah topup tidak valid.' });
+        }
+
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
+
+        user.tokenBalance = (user.tokenBalance || 0) + Number(amount);
+        await user.save();
+
+        // --- TAMBAHKAN NOTIFIKASI DISINI ---
+        await Alert.create({
+            owner: user._id,
+            category: 'Energi',
+            title: 'Top-up Berhasil',
+            message: `Saldo token berhasil ditambahkan sebesar Rp ${Number(amount).toLocaleString('id-ID')}. Saldo sekarang: Rp ${user.tokenBalance.toLocaleString('id-ID')}.`,
+            type: 'Success',
+            link: 'dashboard'
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            message: `Topup berhasil. Saldo saat ini: Rp ${user.tokenBalance}`,
+            tokenBalance: user.tokenBalance
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Gagal melakukan topup.', error: error.message });
+    }
+};
+
+/**
+ * PUT /api/admin/tariffs/threshold
+ * Update ambang batas peringatan token
+ */
+exports.updateTokenThreshold = async (req, res) => {
+    try {
+        const { threshold } = req.body;
+        if (threshold === undefined || threshold < 0) {
+            return res.status(400).json({ success: false, message: 'Threshold tidak valid.' });
+        }
+
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
+
+        user.tokenThreshold = Number(threshold);
+        await user.save();
+
+        // Notifikasi konfirmasi perubahan batas
+        await Alert.create({
+            owner: user._id,
+            category: 'Energi',
+            title: 'Batas Peringatan Diperbarui',
+            message: `Batas peringatan saldo token Anda telah diubah menjadi Rp ${Number(threshold).toLocaleString('id-ID')}.`,
+            type: 'Info',
+            link: 'dashboard'
+        });
+
+        // --- CEK INSTAN APAKAH SALDO LANGSUNG KRITIS ---
+        if (user.tokenBalance < Number(threshold)) {
+            await Alert.create({
+                owner: user._id,
+                category: 'Energi',
+                title: 'Saldo Token Kritis!',
+                message: `Peringatan: Berdasarkan batas baru, saldo Anda saat ini (Rp ${Math.round(user.tokenBalance).toLocaleString('id-ID')}) sudah masuk kategori KRITIS.`,
+                type: 'Warning',
+                link: 'dashboard'
+            });
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Batas peringatan diperbarui.',
+            tokenThreshold: user.tokenThreshold
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Gagal memperbarui threshold.', error: error.message });
     }
 };

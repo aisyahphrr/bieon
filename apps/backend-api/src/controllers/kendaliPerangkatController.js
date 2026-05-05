@@ -1,5 +1,6 @@
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const SensorData = require('../models/SensorData');
+const Activity = require('../models/Activity');
 const { publishCommand } = require('../config/mqtt');
 const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
 
@@ -164,8 +165,34 @@ exports.toggleDevice = async (req, res) => {
         // Contoh: command = 0
         publishCommand(topicCommand, newStatus);
 
-        // Logging ke SensorData dihapus dari sini agar murni bergantung pada balasan 
-        // status asli dari alat fisik via mqtt.js (2-way communication)
+        // LOGGING KE AKTIVITAS TERBARU
+        await new Activity({
+            user: device.owner,
+            room: device.location,
+            actuator: device.name,
+            status: newStatus === '1' ? 'ON' : 'OFF',
+            action: newStatus === '1' ? 'Menyalakan' : 'Mematikan',
+            trigger: 'Manual (Web)'
+        }).save();
+
+        // [ADD] NOTIFIKASI ALERT UNTUK KONTROL MANUAL
+        const Alert = require('../models/Alert');
+        const statusText = newStatus === '1' ? 'Menyala (ON)' : 'Mati (OFF)';
+        
+        let category = 'Sistem';
+        if (device.environmentAspect === 'Keamanan') category = 'Keamanan';
+        else if (device.environmentAspect === 'Kenyamanan') category = 'Kenyamanan';
+        else if (device.environmentAspect === 'Kualitas Air') category = 'Air Sanitasi';
+
+        await Alert.create({
+            owner: device.owner,
+            category: category,
+            title: `Kontrol Perangkat: ${statusText}`,
+            message: `[Manual] Anda telah ${newStatus === '1' ? 'menyalakan' : 'mematikan'} ${device.name} di ${device.location}.`,
+            type: 'Info',
+            link: 'kendali',
+            metadata: { deviceId: device._id }
+        });
 
         // SINKRONISASI REAL-TIME: Langsung kirim balasan ke frontend agar tidak stuck di 'Memproses...'
         broadcastDeviceTelemetry(device.hubId, {

@@ -91,7 +91,7 @@ export function HomeownerHistory({ onNavigate }) {
             return { ...base, room: item.room, actuator: item.actuator, status: item.status, trigger: item.trigger };
         }
         if (tabId === 'Notifikasi & Alert') {
-            return { ...base, category: item.category, room: item.room, status: item.status || item.type, message: item.message };
+            return { ...base, category: item.category, status: item.status || item.type, message: item.message };
         }
         return item;
     };
@@ -130,6 +130,7 @@ export function HomeownerHistory({ onNavigate }) {
         if (selectedRoomFilter) {
             filtered = filtered.filter(item => {
                 if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) return item.device === selectedRoomFilter;
+                if (activeTab === 'Notifikasi & Alert') return item.category === selectedRoomFilter;
                 return item.room === selectedRoomFilter;
             });
         }
@@ -158,7 +159,7 @@ export function HomeownerHistory({ onNavigate }) {
                     return timeStr.includes(q) || item.room.toLowerCase().includes(q) || statusStr.includes(q) ||
                         item.actuator.toLowerCase().includes(q) || item.trigger.toLowerCase().includes(q);
                 } else if (activeTab === 'Notifikasi & Alert') {
-                    return timeStr.includes(q) || item.category.toLowerCase().includes(q) || item.room.toLowerCase().includes(q) ||
+                    return timeStr.includes(q) || item.category.toLowerCase().includes(q) ||
                         statusStr.includes(q) || item.message.toLowerCase().includes(q);
                 }
                 return false;
@@ -203,6 +204,9 @@ export function HomeownerHistory({ onNavigate }) {
         if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) {
             return Array.from(new Set(historyData.map(d => d.device)));
         }
+        if (activeTab === 'Notifikasi & Alert') {
+            return Array.from(new Set(historyData.map(d => d.category)));
+        }
         return Array.from(new Set(historyData.map(d => d.room)));
     }, [activeTab, historyData]);
 
@@ -239,8 +243,8 @@ export function HomeownerHistory({ onNavigate }) {
             headers = [["Waktu", "Ruangan", "Perangkat", "Status", "Pemicu"]];
             body = data.map(e => [e.time, e.room, e.actuator, e.status, e.trigger]);
         } else if (tabId === 'Notifikasi & Alert') {
-            headers = [["Waktu", "Kategori", "Ruangan", "Level", "Pesan"]];
-            body = data.map(e => [e.time, e.category, e.room, e.status, e.message]);
+            headers = [["Waktu", "Kategori", "Level", "Pesan"]];
+            body = data.map(e => [e.time, e.category, e.status, e.message]);
         }
         return { headers, body };
     };
@@ -404,7 +408,13 @@ export function HomeownerHistory({ onNavigate }) {
                             >
                                 <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-teal-500' : 'text-gray-400'}`} />
                                 <span className={`hidden sm:inline ${selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}`}>
-                                    {selectedRoomFilter || (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Semua Perangkat' : 'Semua Ruangan')}
+                                    {selectedRoomFilter || (
+                                        ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
+                                            ? 'Semua Perangkat' 
+                                            : activeTab === 'Notifikasi & Alert' 
+                                                ? 'Semua Kategori' 
+                                                : 'Semua Ruangan'
+                                    )}
                                 </span>
                                 <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-teal-500' : ''}`} />
                             </button>
@@ -421,7 +431,11 @@ export function HomeownerHistory({ onNavigate }) {
                                             }}
                                             className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === '' ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                         >
-                                            {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Semua Perangkat' : 'Semua Ruangan'}
+                                            {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
+                                                ? 'Semua Perangkat' 
+                                                : activeTab === 'Notifikasi & Alert' 
+                                                    ? 'Semua Kategori' 
+                                                    : 'Semua Ruangan'}
                                         </button>
                                         {availableFilters.map(r => (
                                             <button
@@ -466,7 +480,7 @@ export function HomeownerHistory({ onNavigate }) {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative min-h-[400px]">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
                     {isLoading && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center">
                             <Loader2 className="w-10 h-10 text-teal-600 animate-spin mb-3" />
@@ -492,7 +506,7 @@ export function HomeownerHistory({ onNavigate }) {
                                         <th onClick={() => requestSort('device')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">Perangkat {getSortIcon('device')}</div>
                                         </th>
-                                    ) : (
+                                    ) : activeTab === 'Notifikasi & Alert' ? null : (
                                         <th onClick={() => requestSort('room')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">Ruangan {getSortIcon('room')}</div>
                                         </th>
@@ -605,7 +619,7 @@ export function HomeownerHistory({ onNavigate }) {
 
                                                 {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
                                                     <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.device}</td>
-                                                ) : (
+                                                ) : activeTab === 'Notifikasi & Alert' ? null : (
                                                     <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.room}</td>
                                                 )}
 
@@ -686,7 +700,7 @@ export function HomeownerHistory({ onNavigate }) {
                     </div>
 
                     {totalItems > 0 && (
-                        <div className="flex flex-row items-center justify-between px-3 sm:px-6 py-4 border-t border-gray-200 gap-2 sm:gap-4">
+                        <div className="flex flex-row items-center justify-between px-3 sm:px-6 py-3 border-t border-gray-200 gap-2 sm:gap-4">
                             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
                                 <span className="hidden sm:inline">Rows per page:</span>
                                 <div className="relative">
