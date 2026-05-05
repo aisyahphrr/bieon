@@ -4,7 +4,7 @@ const { Server } = require('socket.io');
 const app = require('./src/app');
 const connectDB = require('./src/config/database');
 const { connectMQTT } = require('./src/config/mqtt');
-const { initializeSocket } = require('./src/config/socket');
+const { startScheduler } = require('./src/services/scheduler');
 
 // Jalankan koneksi ke database
 connectDB();
@@ -14,17 +14,23 @@ const PORT = process.env.PORT || 5000;
 // Buat HTTP server untuk Express dan Socket.IO
 const server = http.createServer(app);
 
-// Inisialisasi Socket.IO
+// Inisialisasi SATU-SATUNYA instance Socket.IO
 const io = new Server(server, {
-    cors: { origin: "*" }
+    cors: { 
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
 });
-initializeSocket(server);
 
-// Jalankan MQTT
+// Jalankan MQTT dengan instance socket yang sama
 connectMQTT(io);
 
 io.on('connection', (socket) => {
-    console.log('User connected via Socket.io:', socket.id);
+    console.log(`\n🔗 Socket.IO client connected: ${socket.id}`);
+    
+    socket.on('disconnect', () => {
+        console.log(`❌ Socket.IO client disconnected: ${socket.id}`);
+    });
 });
 
 // Nyalakan server
@@ -33,5 +39,9 @@ server.listen(PORT, () => {
     console.log(`🟢 Server BIEON berjalan di port ${PORT}`);
     console.log(`🔗 Cek API: http://localhost:${PORT}/api`);
     console.log(`📡 Socket.io & MQTT Ready`);
+    
+    // Jalankan Scheduler Otomatis untuk mengecek Jadwal
+    startScheduler();
+
     console.log(`=========================================\n`);
 });

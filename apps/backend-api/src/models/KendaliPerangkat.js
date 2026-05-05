@@ -15,7 +15,7 @@ const kendaliPerangkatSchema = new mongoose.Schema({
     },
     status: { 
         type: String, 
-        enum: ['Discovered', 'Active'], 
+        enum: ['Discovered', 'Active', '1', '0'], 
         default: 'Discovered' 
     },
     // Thresholds for Sensors

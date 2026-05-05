@@ -69,7 +69,8 @@ function getSocket() {
  */
 function emitDeviceTelemetry(systemId, deviceData) {
   if (!io) return;
-  io.to(`system_${systemId}`).emit('device_telemetry', deviceData);
+  // Fallback to global emit to ensure delivery, just like mqtt.js does
+  io.emit('device_telemetry', deviceData);
 }
 
 /**

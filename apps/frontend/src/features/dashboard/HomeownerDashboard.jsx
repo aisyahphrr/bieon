@@ -662,25 +662,55 @@ export function HomeownerDashboard({ onNavigate }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [toast, setToast] = useState(null);
   const [liveTemp, setLiveTemp] = useState(26);
+  const [liveHumidity, setLiveHumidity] = useState(68);
+  const [livePh, setLivePh] = useState(7.2);
+  const [liveTurbidity, setLiveTurbidity] = useState(2.1);
+  const [liveTds, setLiveTds] = useState(78);
+  const [liveWaterTemp, setLiveWaterTemp] = useState(24);
 
   useEffect(() => {
-    const fetchTemp = async () => {
+    const fetchSensorData = async () => {
       try {
-        // Menggunakan endpoint dari microservices/api-services via proxy /api-sensor
-        const res = await fetch('/api-sensor/sensors/suhu');
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
-        if (data && data.length > 0) {
-          console.log("🌡️ Data suhu diterima dari database:", data[0].value);
-          setLiveTemp(data[0].value);
+        const resTemp = await fetch('/api/sensors/suhu');
+        if (resTemp.ok) {
+          const data = await resTemp.json();
+          if (data && data[0] && data[0].value !== null) {
+            setLiveTemp(data[0].value);
+          }
+        }
+
+        const resHum = await fetch('/api/sensors/kelembapan');
+        if (resHum.ok) {
+          const data = await resHum.json();
+          if (data && data[0] && data[0].value !== null) {
+            setLiveHumidity(data[0].value);
+          }
+        }
+
+        const resPh = await fetch('/api/sensors/ph');
+        if (resPh.ok) {
+          const data = await resPh.json();
+          if (data && data[0] && data[0].value !== null) setLivePh(data[0].value);
+        }
+
+        const resTurbidity = await fetch('/api/sensors/turbidity');
+        if (resTurbidity.ok) {
+          const data = await resTurbidity.json();
+          if (data && data[0] && data[0].value !== null) setLiveTurbidity(data[0].value);
+        }
+
+        const resTds = await fetch('/api/sensors/tds');
+        if (resTds.ok) {
+          const data = await resTds.json();
+          if (data && data[0] && data[0].value !== null) setLiveTds(data[0].value);
         }
       } catch (err) {
-        console.error("Gagal fetch suhu real-time:", err);
+        console.error("Gagal fetch data sensor real-time:", err);
       }
     };
 
-    fetchTemp();
-    const interval = setInterval(fetchTemp, 2000); // Polling setiap 2 detik sesuai permintaan
+    fetchSensorData();
+    const interval = setInterval(fetchSensorData, 2000); // Polling setiap 2 detik
     return () => clearInterval(interval);
   }, []);
 
@@ -748,13 +778,13 @@ export function HomeownerDashboard({ onNavigate }) {
                             <Droplets className="w-5 h-5 text-blue-500" />
                           </div>
                           <div className="mb-3">
-                            <div className="text-4xl font-bold text-gray-900">{currentSensors.comfort.humidity}%</div>
+                            <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {currentSensors.comfort.humidity < 50 ? 'Kering' : currentSensors.comfort.humidity <= 80 ? 'Nyaman' : 'Sangat Lembap'}
+                              {(selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) < 50 ? 'Kering' : (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80 ? 'Nyaman' : 'Sangat Lembap'}
                             </div>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                            <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-600" style={{ width: `${currentSensors.comfort.humidity}%` }}></div>
+                            <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-600" style={{ width: `${selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%` }}></div>
                           </div>
                         </div>
                       )}
@@ -787,8 +817,8 @@ export function HomeownerDashboard({ onNavigate }) {
                           </div>
                           <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1 py-4 sm:py-0">
                             <div className="text-2xl font-bold mb-3 flex items-center gap-2">
-                              {currentSensors.comfort.temp >= 20.5 && currentSensors.comfort.temp <= 27.1 &&
-                                currentSensors.comfort.humidity >= 50 && currentSensors.comfort.humidity <= 80 ?
+                              {((selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) >= 20.5 && (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 &&
+                                (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) >= 50 && (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80) ?
                                 '😊 Nyaman' : '😕 Tidak Nyaman'}
                             </div>
                           </div>
@@ -800,7 +830,7 @@ export function HomeownerDashboard({ onNavigate }) {
                             {currentSensors.comfort.humidity !== null && (
                               <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
                                 <div className="text-[10px] mb-1">Kelembapan</div>
-                                <div className="font-bold text-lg">{currentSensors.comfort.humidity}%</div>
+                                <div className="font-bold text-lg">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>
                               </div>
                             )}
                           </div>
@@ -890,13 +920,13 @@ export function HomeownerDashboard({ onNavigate }) {
                       <Beaker className="w-5 h-5 text-cyan-600" />
                     </div>
                     <div className="mb-3">
-                      <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.ph}</div>
+                      <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.waterQuality.ph < 6.5 ? 'Asam' : currentSensors.waterQuality.ph <= 8.5 ? 'Normal (Aman)' : 'Basa'}
+                        {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 ? 'Layak Pakai' : 'Tidak Layak Pakai'}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                      <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${(currentSensors.waterQuality.ph / 14) * 100}%` }}></div>
+                      <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600" style={{ width: `${((selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) / 14) * 100}%` }}></div>
                     </div>
                   </div>
 
@@ -907,13 +937,13 @@ export function HomeownerDashboard({ onNavigate }) {
                       <Droplets className="w-5 h-5 text-blue-600" />
                     </div>
                     <div className="mb-3">
-                      <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.turbidity}</div>
+                      <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.waterQuality.turbidity <= 25 ? 'Normal (NTU)' : 'Keruh'}
+                        {(selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 ? 'Layak Pakai' : 'Tidak Layak Pakai'}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                      <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500" style={{ width: `${Math.min((currentSensors.waterQuality.turbidity / 10) * 100, 100)}%` }}></div>
+                      <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500" style={{ width: `${Math.min(((selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) / 10) * 100, 100)}%` }}></div>
                     </div>
                   </div>
 
@@ -924,13 +954,13 @@ export function HomeownerDashboard({ onNavigate }) {
                       <Wind className="w-5 h-5 text-teal-600" />
                     </div>
                     <div className="mb-3">
-                      <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.tds}</div>
+                      <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.waterQuality.tds <= 1000 ? 'Normal (mg/L)' : 'TDS Tinggi'}
+                        {(selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? 'Layak Pakai' : 'Tidak Layak Pakai'}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                      <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-600" style={{ width: `${Math.min((currentSensors.waterQuality.tds / 500) * 100, 100)}%` }}></div>
+                      <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-600" style={{ width: `${Math.min(((selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) / 500) * 100, 100)}%` }}></div>
                     </div>
                   </div>
 
@@ -961,19 +991,19 @@ export function HomeownerDashboard({ onNavigate }) {
                           Status Air
                         </h3>
                         <p className="text-cyan-100 text-sm">Berdasarkan: pH, Turbidity, TDS, Suhu</p>
-                        <p className="text-emerald-100 text-xs mb-1">(Permenkes No. 2 Tahun 2023)</p>
+                        <p className="text-emerald-100 text-xs mb-1">(Permenkes No. 32 Tahun 2017)</p>
                       </div>
 
                       <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1">
                         <div className="text-2xl font-semibold mb-3 flex items-center gap-2 text-white">
-                          {currentSensors.waterQuality.ph >= 6.5 && currentSensors.waterQuality.ph <= 8.5 && currentSensors.waterQuality.turbidity <= 25 && currentSensors.waterQuality.tds <= 1000 ? '💧 Layak Pakai' : '⚠️ Tidak Layak'}
+                          {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 && (selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 && (selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? '💧 Layak Pakai' : '⚠️ Tidak Layak Pakai'}
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 mt-auto">
                         <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
                           <div className="text-[10px] mb-1">Tingkat Keasaman (pH)</div>
-                          <div className="font-bold text-lg">{currentSensors.waterQuality.ph}</div>
+                          <div className="font-bold text-lg">{selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph}</div>
                         </div>
                         <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
                           <div className="text-[10px] mb-1">Suhu</div>

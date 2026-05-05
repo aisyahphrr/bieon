@@ -11,6 +11,9 @@ router.post('/discover', kendaliPerangkatController.discoverDevice);
 // Route untuk konfigurasi perangkat (setelah diklik dan diisi form-nya)
 router.put('/configure/:id', kendaliPerangkatController.configureDevice);
 
+// Route untuk toggle ON/OFF perangkat
+router.put('/:id/toggle', kendaliPerangkatController.toggleDevice);
+
 // Ambil semua perangkat di satu Hub
 router.get('/hub/:hubId', kendaliPerangkatController.getDevicesByHub);
 

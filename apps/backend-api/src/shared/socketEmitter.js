@@ -17,7 +17,8 @@ const {
 function broadcastDeviceTelemetry(systemId, device) {
   try {
     emitDeviceTelemetry(systemId, {
-      deviceId: device._id,
+      _id: device._id || device.id,
+      deviceId: device._id || device.id,
       name: device.name,
       type: device.type,
       category: device.category,

@@ -1,4 +1,6 @@
 const KendaliPerangkat = require('../models/KendaliPerangkat');
+const SensorData = require('../models/SensorData');
+const { publishCommand } = require('../config/mqtt');
 const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
 
 // 1. Mencatat perangkat yang terdeteksi (tanda icon di UI)
@@ -74,7 +76,7 @@ exports.configureDevice = async (req, res) => {
                 status: 'Active',
                 lastActivity: new Date()
             },
-            { new: true, runValidators: true }
+            { new: true, returnDocument: 'after', runValidators: true }
         );
 
         if (!updatedDevice) {
@@ -130,5 +132,53 @@ exports.deleteDevice = async (req, res) => {
         res.status(200).json({ message: 'Perangkat berhasil dihapus' });
     } catch (error) {
         res.status(500).json({ message: 'Gagal menghapus perangkat', error: error.message });
+    }
+};
+
+// 8. Toggle Device ON/OFF dari Dashboard Web
+exports.toggleDevice = async (req, res) => {
+    console.log(`🔌 Toggling device with ID: ${req.params.id}`);
+    try {
+        const device = await KendaliPerangkat.findById(req.params.id);
+        if (!device) {
+            return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+        }
+
+        // Tentukan command yang akan dikirim
+        const newStatus = device.status === '1' ? '0' : '1';
+        
+        // UPDATE STATUS DI DATABASE SEKARANG JUGA (Sinkronisasi Mutlak)
+        device.status = newStatus;
+        device.lastActivity = new Date();
+        // Tambahkan penanda bahwa kita baru saja kirim perintah (untuk gembok status)
+        device.lastCommand = newStatus;
+        device.lastCommandTime = new Date();
+        await device.save();
+
+        // Topic format: bieon/<deviceName>/command
+        // Misalnya: bieon/plug_01/command (sesuai arahan: command untuk subscribe command)
+        const sanitizedName = device.name.toLowerCase().replace(/\s+/g, '_');
+        const topicCommand = `bieon/${sanitizedName}/command`;
+
+        // Publish ke MQTT dalam format angka TELANJANG (Raw) 
+        // Contoh: command = 0
+        publishCommand(topicCommand, newStatus);
+
+        // Logging ke SensorData dihapus dari sini agar murni bergantung pada balasan 
+        // status asli dari alat fisik via mqtt.js (2-way communication)
+
+        // SINKRONISASI REAL-TIME: Langsung kirim balasan ke frontend agar tidak stuck di 'Memproses...'
+        broadcastDeviceTelemetry(device.hubId, {
+            _id: device._id,
+            status: device.status
+        });
+
+        res.status(200).json({ 
+            message: `Perangkat ${device.name} berhasil diubah ke status ${newStatus}`,
+            device 
+        });
+    } catch (error) {
+        console.error("Error toggling device:", error);
+        res.status(500).json({ message: 'Gagal mengubah status perangkat', error: error.message });
     }
 };

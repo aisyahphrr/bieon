@@ -196,19 +196,22 @@ export function DeviceControlPage({ onNavigate }) {
     const socket = io('/'); // Koneksi ke backend
 
     socket.on('device_telemetry', (updatedDevice) => {
-      console.log('📡 Real-time Telemetry received:', updatedDevice);
+      console.log('📡 Real-time Telemetry received:', updatedDevice._id, updatedDevice.status);
       setBieonSystems(prevSystems => {
         return prevSystems.map(sys => ({
           ...sys,
           hubs: sys.hubs.map(hub => ({
             ...hub,
             devices: hub.devices.map(dev => {
-              if (dev._id === updatedDevice._id || dev.id === updatedDevice._id) {
+              const isMatch = String(dev._id) === String(updatedDevice._id) || String(dev.id) === String(updatedDevice._id);
+              if (isMatch) {
+                // SINKRONISASI REAL-TIME: Lepas gembok isToggling dan gunakan status terbaru dari backend
                 return {
                   ...dev,
                   currentValues: updatedDevice.currentValues,
                   battery: updatedDevice.battery,
-                  status: updatedDevice.status
+                  status: String(updatedDevice.status),
+                  isToggling: false // Bebaskan gembok agar warna langsung berubah!
                 };
               }
               return dev;
@@ -265,6 +268,16 @@ export function DeviceControlPage({ onNavigate }) {
       localStorage.removeItem('openBieonInput');
     }
   }, []);
+
+  // Sinkronisasi otomatis currentBieon ketika bieonSystems berubah (misal karena socket/real-time)
+  useEffect(() => {
+    if (currentBieon) {
+      const updatedCurrent = bieonSystems.find(sys => sys.id === currentBieon.id);
+      if (updatedCurrent) {
+        setCurrentBieon(updatedCurrent);
+      }
+    }
+  }, [bieonSystems]);
 
   const handleGenerateToken = async () => {
     try {
@@ -596,7 +609,7 @@ export function DeviceControlPage({ onNavigate }) {
       const newDevice = {
         ...data.device,
         id: data.device._id,
-        status: "OFF",
+        status: "0",
         installedDate: data.device.createdAt
       };
 
@@ -666,7 +679,7 @@ export function DeviceControlPage({ onNavigate }) {
       const savedDevice = {
         ...data.device,
         id: data.device._id,
-        status: "OFF",
+        status: "0",
         installedDate: data.device.createdAt,
         sensorParams: data.device.thresholds // MEMETAKAN PARAMETER!
       };
@@ -737,34 +750,88 @@ export function DeviceControlPage({ onNavigate }) {
     setActiveSensorAspect(null);
     setIsEditingDevice(null);
   };
-  const toggleDevicePower = (deviceId) => {
-    const updatedSystems = bieonSystems.map((system) => ({
-      ...system,
-      hubs: system.hubs.map((hub) => ({
-        ...hub,
-        devices: hub.devices.map((device) => {
-          if (device.id === deviceId) {
-            if (device.category === "sensor") {
-              return {
-                ...device,
-                status: device.status === "ON" ? "OFF" : "ON",
-                sensorData: device.status === "OFF" ? generateMockSensorData(device.deviceType) : device.sensorData,
-                lastActivity: (/* @__PURE__ */ new Date()).toISOString()
-              };
+  const toggleDevicePower = async (deviceId) => {
+    try {
+      // Tambahkan isToggling: true sementara API berjalan, TAPI jangan ubah status
+      const tempSystems = bieonSystems.map((system) => ({
+        ...system,
+        hubs: system.hubs.map((hub) => ({
+          ...hub,
+          devices: hub.devices.map((device) => {
+            if (device.id === deviceId) {
+              return { ...device, isToggling: true };
             }
-            return {
-              ...device,
-              status: device.status === "ON" ? "OFF" : "ON",
-              lastActivity: (/* @__PURE__ */ new Date()).toISOString()
-            };
-          }
-          return device;
-        })
-      }))
-    }));
-    setBieonSystems(updatedSystems);
-    if (currentBieon) {
-      setCurrentBieon(updatedSystems.find((s) => s.id === currentBieon.id) || null);
+            return device;
+          })
+        }))
+      }));
+      setBieonSystems(tempSystems);
+
+      // Cari data perangkat ini dari state sekarang
+      let currentDevice = null;
+      bieonSystems.forEach(sys => {
+        sys.hubs.forEach(hub => {
+          const found = hub.devices.find(d => d._id === deviceId || d.id === deviceId);
+          if (found) currentDevice = found;
+        });
+      });
+
+      if (!currentDevice) return;
+
+      // Optimistic Update: Langsung rubah status di web agar tidak terasa lag
+      // Gunakan String() agar perbandingan 1/"1" tetap akurat
+      const newStatus = String(currentDevice.status) === "1" ? "0" : "1";
+      setBieonSystems(prevSystems => prevSystems.map(system => ({
+        ...system,
+        hubs: system.hubs.map(hub => ({
+          ...hub,
+          devices: hub.devices.map(dev => 
+            (dev._id === deviceId || dev.id === deviceId) ? { ...dev, status: newStatus, isToggling: true } : dev
+          )
+        }))
+      })));
+
+      // Publish command via API
+      const response = await fetch(`/api/kendaliperangkat/${deviceId}/toggle`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Gagal mengubah status perangkat");
+      }
+
+      // Add a safety timeout: if no MQTT response in 10s, clear loading state
+      setTimeout(() => {
+        setBieonSystems(prevSystems => prevSystems.map(system => ({
+          ...system,
+          hubs: system.hubs.map(hub => ({
+            ...hub,
+            devices: hub.devices.map(dev => 
+              ((dev._id === deviceId || dev.id === deviceId) && dev.isToggling) ? { ...dev, isToggling: false } : dev
+            )
+          }))
+        })));
+      }, 10000);
+
+    } catch (error) {
+      alert("Gagal mengirim perintah: " + error.message);
+      // Revert isToggling jika gagal API
+      setBieonSystems((prev) =>
+        prev.map((sys) => ({
+          ...sys,
+          hubs: sys.hubs.map((hub) => ({
+            ...hub,
+            devices: hub.devices.map((device) =>
+              device.id === deviceId ? { ...device, isToggling: false } : device
+            )
+          }))
+        }))
+      );
     }
   };
   const updateDeviceControl = (deviceId, controlType, value) => {
@@ -791,6 +858,7 @@ export function DeviceControlPage({ onNavigate }) {
       const response = await fetch(`/api/kendaliperangkat/${deviceId}`, {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       });
@@ -1089,7 +1157,7 @@ export function DeviceControlPage({ onNavigate }) {
                           </div>
                           <div>
                             <p className="text-sm text-gray-600">Active Devices</p>
-                            <p className="text-2xl  text-gray-900">{getAllDevices().filter((d) => d.status === "ON").length}</p>
+                            <p className="text-2xl  text-gray-900">{getAllDevices().filter((d) => d.status === "1").length}</p>
                           </div>
                         </div>
                       </div>
@@ -1333,15 +1401,15 @@ export function DeviceControlPage({ onNavigate }) {
                           {/* Slim Header - Always visible */}
                           <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}>
                             <div className="flex items-start gap-3">
-                              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${device.status === "ON" ? "bg-emerald-600" : "bg-gray-200"}`}>
-                                <Power className={`w-5 h-5 sm:w-6 sm:h-6 ${device.status === "ON" ? "text-white" : "text-gray-500"}`} />
+                              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${String(device.status) === "1" ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-emerald-950"}`}>
+                                <Power className={`w-5 h-5 sm:w-6 sm:h-6 ${String(device.status) === "1" ? "text-white" : "text-emerald-700"}`} />
                               </div>
                               <div className="min-w-0">
                                 <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">{device.name}</h3>
                                 <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1">
                                   <span className="text-xs sm:text-sm font-semibold text-gray-600">{device.deviceType} • {device.location}</span>
-                                  <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${device.status === "ON" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
-                                    {device.status}
+                                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${String(device.status) === "1" ? "bg-emerald-100 text-emerald-700 shadow-sm border border-emerald-200" : "bg-gray-800 text-gray-300 border border-gray-700"}`}>
+                                    {String(device.status) === "1" ? "ON / ACTIVE" : "OFF / STANDBY"}
                                   </span>
                                 </div>
                                 <p className="text-xs text-gray-400 mt-1 hidden sm:block">ID: {device.id} • Installed: {new Date(device.installedDate).toLocaleDateString("id-ID")}</p>
@@ -1496,14 +1564,25 @@ export function DeviceControlPage({ onNavigate }) {
                                     {device.category !== "sensor" && (
                                       <button
                                         onClick={() => toggleDevicePower(device.id)}
-                                        className={`flex-1 min-w-[200px] py-2.5 rounded-lg  transition-all flex items-center justify-center gap-2 ${device.status === "ON" ? "bg-gray-200 text-gray-700 hover:bg-gray-300" : "bg-white border border-gray-200 text-gray-700 shadow-sm hover:shadow"}`}
+                                        className={`flex-1 min-w-[200px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 font-medium active:scale-95
+                                        ${device.isToggling ? "opacity-70 cursor-wait" : "cursor-pointer"}
+                                        ${String(device.status) === "1" ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border border-green-200 hover:bg-green-100"}`}
                                       >
-                                        <Power className="w-4 h-4 text-gray-500" /> Turn {device.status === "ON" ? "OFF" : "ON"}
+                                        {device.isToggling ? (
+                                          <div className="flex items-center gap-2">
+                                            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin"></div>
+                                            Memproses...
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <Power className="w-4 h-4" /> Turn {String(device.status) === "1" ? "OFF" : "ON"}
+                                          </>
+                                        )}
                                       </button>
                                     )}
 
                                     {/* Device-specific controls horizontally laid out */}
-                                    {device.deviceType === "AC" && device.status === "ON" && (
+                                    {device.deviceType === "AC" && device.status === "1" && (
                                       <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-blue-100 rounded-lg px-4 py-2">
                                         <Thermometer className="w-5 h-5 text-blue-500" />
                                         <span className="text-sm  text-gray-600">Suhu:</span>
@@ -1516,7 +1595,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         <span className="text-sm text-gray-500 ">°C</span>
                                       </div>
                                     )}
-                                    {device.deviceType === "TV" && device.status === "ON" && (
+                                    {device.deviceType === "TV" && device.status === "1" && (
                                       <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-purple-100 rounded-lg px-4 py-2">
                                         <Volume2 className="w-5 h-5 text-purple-500" />
                                         <span className="text-sm  text-gray-600">Volume:</span>
@@ -1531,7 +1610,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         <span className="text-sm  text-gray-700 w-10">{device.controls?.volume || 50}</span>
                                       </div>
                                     )}
-                                    {(device.deviceType === "Light" || device.deviceType === "Fan") && device.status === "ON" && (
+                                    {(device.deviceType === "Light" || device.deviceType === "Fan") && device.status === "1" && (
                                       <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-yellow-100 rounded-lg px-4 py-2">
                                         <Sun className="w-5 h-5 text-yellow-500" />
                                         <span className="text-sm  text-gray-600">Brightness:</span>
@@ -1549,7 +1628,7 @@ export function DeviceControlPage({ onNavigate }) {
                                     {device.category === "sensor" && !isTechnicianMode && (
                                       <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2">
                                         <button onClick={() => toggleDevicePower(device.id)} className="w-full text-sm  text-gray-700 flex items-center justify-center gap-2">
-                                          <Eye className="w-4 h-4" /> {device.status === "ON" ? "Stop Monitoring" : "Start Monitoring"}
+                                          <Eye className="w-4 h-4" /> {device.status === "1" ? "Stop Monitoring" : "Start Monitoring"}
                                         </button>
                                       </div>
                                     )}
@@ -1558,14 +1637,14 @@ export function DeviceControlPage({ onNavigate }) {
                               )}
 
                               {/* Sensor Only Data Block - Single Row Compact Version */}
-                              {device.category === "sensor" && device.status === "ON" && device.sensorData && (
+                              {device.category === "sensor" && device.status === "1" && device.currentValues && (
                                 <div className="mb-6 flex flex-wrap items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-gray-100">
                                   {/* Compact Eligibility Badge */}
                                   {(() => {
                                     const enabledParams = Object.entries(device.sensorParams || {}).filter(([_, cfg]) => cfg.enabled);
                                     let isAbnormal = false;
                                     enabledParams.forEach(([key, cfg]) => {
-                                      const currentVal = parseFloat(device.sensorData[key]);
+                                      const currentVal = parseFloat(device.currentValues[key]);
                                       const threshold = parseFloat(cfg.value);
                                       if (!isNaN(currentVal) && !isNaN(threshold)) {
                                         if (currentVal > threshold) isAbnormal = true;
@@ -1604,40 +1683,40 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="w-px h-8 bg-gray-200 hidden sm:block mx-1"></div>
 
                                   {/* Parameter Chips */}
-                                  {device.sensorData.temperature !== undefined && device.sensorParams?.temperature?.enabled && (
-                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.sensorData.temperature) > parseFloat(device.sensorParams.temperature.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                  {device.currentValues.temperature !== undefined && device.sensorParams?.temperature?.enabled && (
+                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.temperature) > parseFloat(device.sensorParams.temperature.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                       <Thermometer className="w-4 h-4" />
-                                      <span className="text-sm">Suhu: {device.sensorData.temperature}°C</span>
+                                      <span className="text-sm">Suhu: {device.currentValues.temperature}°C</span>
                                     </div>
                                   )}
-                                  {device.sensorData.humidity !== undefined && device.sensorParams?.humidity?.enabled && (
-                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.sensorData.humidity) > parseFloat(device.sensorParams.humidity.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                  {device.currentValues.humidity !== undefined && device.sensorParams?.humidity?.enabled && (
+                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.humidity) > parseFloat(device.sensorParams.humidity.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                       <Droplets className="w-4 h-4" />
-                                      <span className="text-sm">Lembap: {device.sensorData.humidity}%</span>
+                                      <span className="text-sm">Lembap: {device.currentValues.humidity}%</span>
                                     </div>
                                   )}
-                                  {device.sensorData.ph !== undefined && device.sensorParams?.ph?.enabled && (
-                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.sensorData.ph) > parseFloat(device.sensorParams.ph.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                  {device.currentValues.ph !== undefined && device.sensorParams?.ph?.enabled && (
+                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.ph) > parseFloat(device.sensorParams.ph.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                       <Beaker className="w-4 h-4" />
-                                      <span className="text-sm">pH: {device.sensorData.ph}</span>
+                                      <span className="text-sm">pH: {device.currentValues.ph}</span>
                                     </div>
                                   )}
-                                  {device.sensorData.turbidity !== undefined && device.sensorParams?.turbidity?.enabled && (
-                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.sensorData.turbidity) > parseFloat(device.sensorParams.turbidity.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                  {device.currentValues.turbidity !== undefined && device.sensorParams?.turbidity?.enabled && (
+                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.turbidity) > parseFloat(device.sensorParams.turbidity.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                       <Droplets className="w-4 h-4 text-yellow-600" />
-                                      <span className="text-sm">NTU: {device.sensorData.turbidity}</span>
+                                      <span className="text-sm">NTU: {device.currentValues.turbidity}</span>
                                     </div>
                                   )}
-                                  {device.sensorData.tds !== undefined && device.sensorParams?.tds?.enabled && (
-                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.sensorData.tds) > parseFloat(device.sensorParams.tds.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                  {device.currentValues.tds !== undefined && device.sensorParams?.tds?.enabled && (
+                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.tds) > parseFloat(device.sensorParams.tds.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                       <Wind className="w-4 h-4 text-teal-600" />
-                                      <span className="text-sm">TDS: {device.sensorData.tds} ppm</span>
+                                      <span className="text-sm">TDS: {device.currentValues.tds} ppm</span>
                                     </div>
                                   )}
-                                  {device.sensorData.waterTemp !== undefined && device.sensorParams?.waterTemp?.enabled && (
-                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.sensorData.waterTemp) > parseFloat(device.sensorParams.waterTemp.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                  {device.currentValues.waterTemp !== undefined && device.sensorParams?.waterTemp?.enabled && (
+                                    <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.waterTemp) > parseFloat(device.sensorParams.waterTemp.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                       <Thermometer className="w-4 h-4" />
-                                      <span className="text-sm">Suhu Air: {device.sensorData.waterTemp}°C</span>
+                                      <span className="text-sm">Suhu Air: {device.currentValues.waterTemp}°C</span>
                                     </div>
                                   )}
                                 </div>
