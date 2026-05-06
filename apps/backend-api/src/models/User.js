@@ -15,6 +15,8 @@ const userSchema = new mongoose.Schema({
     address: { type: String },
     systemName: { type: String }, // Nama Sistem / Rumah
     plnTariff: { type: String },  // Golongan Tarif PLN
+    tokenBalance: { type: Number, default: 0 }, // Saldo Token PLN saat ini (Rp)
+    tokenThreshold: { type: Number, default: 50000 }, // Ambang batas peringatan token menipis (Rp)
     bieonId: { type: String },    // ID BIEON Master
     assignedTechnician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Referensi ke Teknisi yang menangani
 

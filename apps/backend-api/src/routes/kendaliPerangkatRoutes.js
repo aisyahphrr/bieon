@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const kendaliPerangkatController = require('../controllers/kendaliPerangkatController');
+const authMiddleware = require('../middlewares/authMiddleware');
+
+// Apply authMiddleware to all routes
+router.use(authMiddleware);
 
 // Route untuk simpan perangkat baru (Direct dari Form UI)
 router.post('/', kendaliPerangkatController.createDevice);
@@ -17,8 +21,8 @@ router.put('/:id/toggle', kendaliPerangkatController.toggleDevice);
 // Ambil semua perangkat di satu Hub
 router.get('/hub/:hubId', kendaliPerangkatController.getDevicesByHub);
 
-// Ambil semua perangkat berdasarkan User
-router.get('/user/:userId', kendaliPerangkatController.getDevicesByUser);
+// Ambil semua perangkat berdasarkan User (ID diambil dari Token)
+router.get('/my-devices', kendaliPerangkatController.getDevicesByUser);
 
 // Ambil semua perangkat yang belum dikonfigurasi (discovered)
 router.get('/discovered', kendaliPerangkatController.getDiscoveredDevices);

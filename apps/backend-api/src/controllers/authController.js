@@ -79,7 +79,7 @@ exports.login = async (req, res) => {
 
         // Buat Kunci JWT (Berlaku 1 Hari)
         const token = jwt.sign(
-            { userId: user._id, role: user.role },
+            { userId: user._id, role: user.role, bieonId: user.bieonId },
             process.env.JWT_SECRET || 'rahasia_cadangan',
             { expiresIn: '1d' }
         );
@@ -123,6 +123,9 @@ exports.updateSettings = async (req, res) => {
         if (updates.dob !== undefined) allowedUpdates.dateOfBirth = updates.dob;
         if (updates.address !== undefined) allowedUpdates.address = updates.address;
         if (updates.email !== undefined) allowedUpdates.email = updates.email;
+        if (updates.systemName !== undefined) allowedUpdates.systemName = updates.systemName;
+        if (updates.plnTariff !== undefined) allowedUpdates.plnTariff = updates.plnTariff;
+        if (updates.bieonId !== undefined) allowedUpdates.bieonId = updates.bieonId;
 
         const updatedUser = await User.findByIdAndUpdate(userId, allowedUpdates, { new: true }).select('-password');
 
@@ -148,7 +151,7 @@ exports.logout = async (req, res) => {
 
 exports.firebaseLogin = async (req, res) => {
     try {
-        const { token } = req.body;
+        const { token, mode } = req.body;
         const admin = require('../config/firebaseAdmin');
         if (!admin) {
             return res.status(501).json({
@@ -159,13 +162,22 @@ exports.firebaseLogin = async (req, res) => {
 
         // 1. Validasi token ke server Firebase (Otomatis mengecek keaslian)
         const decodedToken = await admin.auth().verifyIdToken(token);
-        const { email, name, picture } = decodedToken;
+        const { email, name, picture, given_name, family_name } = decodedToken;
 
         // 2. Cari user di MongoDB berdasarkan email
         let user = await User.findOne({ email });
 
-        // 3. Jika user belum ada (Baru pertama kali login), buatkan akun otomatis!
+        // 3. Jika user belum ada
         if (!user) {
+            // Jika mode-nya adalah login, tapi user tidak ditemukan, lempar error
+            if (mode === 'login') {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Akun Google ini belum terdaftar di BIEON. Silakan klik "Sign Up" terlebih dahulu untuk mendaftar.' 
+                });
+            }
+
+            // Jika mode-nya adalah signup, buatkan akun baru!
             const crypto = require('crypto');
             // Bikin password acak yang sangat rumit karena user ini pakai Google
             const randomPassword = crypto.randomBytes(32).toString('hex');
@@ -181,13 +193,25 @@ exports.firebaseLogin = async (req, res) => {
 
         // 4. Jika sukses, buatkan JWT bieon_token seperti sistem login Anda saat ini
         const bieonToken = jwt.sign(
-            { userId: user._id, role: user.role },
+            { userId: user._id, role: user.role, bieonId: user.bieonId },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
         // 5. Kirim kembali ke frontend
-        res.status(200).json({ success: true, token: bieonToken, user });
+        res.status(200).json({ 
+            success: true, 
+            token: bieonToken, 
+            user: {
+                id: user._id,
+                email: user.email,
+                fullName: user.fullName,
+                role: user.role,
+                bieonId: user.bieonId || '',
+                firstName: given_name || name?.split(' ')[0] || '',
+                lastName: family_name || name?.split(' ').slice(1).join(' ') || ''
+            } 
+        });
 
     } catch (error) {
         console.error("Firebase Login Error:", error);

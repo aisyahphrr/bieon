@@ -4,6 +4,8 @@ const SecurityLog = require('../models/SecurityLog');
 const WaterQualityLog = require('../models/WaterQualityLog');
 const Activity = require('../models/Activity');
 const Alert = require('../models/Alert');
+const User = require('../models/User');
+const PlnTariff = require('../models/PlnTariff');
 
 /**
  * Helper to get homeownerId based on user role
@@ -151,6 +153,97 @@ exports.resetAllRead = async (req, res) => {
         const ownerId = getTargetHomeownerId(req);
         await Alert.updateMany({ owner: ownerId }, { isRead: false });
         res.status(200).json({ success: true, message: 'Status baca berhasil di-reset' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 10. GET /api/history/energy-summary
+exports.getEnergySummary = async (req, res) => {
+    try {
+        const ownerId = getTargetHomeownerId(req);
+        
+        // 1. Ambil data User untuk info token & tarif
+        const user = await User.findById(ownerId);
+        if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
+
+        // 2. Tentukan tarif per kWh
+        let tariffRate = 1444.00; // Default R1 standar
+        if (user.plnTariff) {
+            const latestTariff = await PlnTariff.findOne({ category: user.plnTariff }).sort({ createdAt: -1 });
+            if (latestTariff) tariffRate = latestTariff.tariff;
+        }
+        
+        // 3. Ambil data hari ini (Harian)
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const logsToday = await EnergyLog.find({
+            owner: ownerId,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        }).sort({ date: 1 });
+
+        // Aggregate hourly
+        const hourlyBuckets = Array(24).fill(0).map((_, i) => ({ time: `${String(i).padStart(2, '0')}:00`, kwh: 0, cost: 0 }));
+        let totalKwhToday = 0;
+        let totalCostToday = 0;
+
+        logsToday.forEach(log => {
+            const hour = new Date(log.date).getHours();
+            hourlyBuckets[hour].kwh += log.totalKwh;
+            hourlyBuckets[hour].cost += Math.round(log.totalKwh * tariffRate);
+            totalKwhToday += log.totalKwh;
+            totalCostToday += Math.round(log.totalKwh * tariffRate);
+        });
+
+        // 4. Ambil data Bulanan (12 bulan terakhir)
+        const startOfYear = new Date();
+        startOfYear.setMonth(0, 1);
+        startOfYear.setHours(0, 0, 0, 0);
+
+        const logsYear = await EnergyLog.find({
+            owner: ownerId,
+            date: { $gte: startOfYear }
+        });
+
+        const monthlyData = Array(12).fill(0).map((_, i) => ({ 
+            month: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'][i],
+            kwh: 0, 
+            cost: 0 
+        }));
+
+        logsYear.forEach(log => {
+            const month = new Date(log.date).getMonth();
+            monthlyData[month].kwh += log.totalKwh;
+            monthlyData[month].cost += Math.round(log.totalKwh * tariffRate);
+        });
+
+        // 5. Ambil Beban Realtime dari Perangkat Power Meter
+        const KendaliPerangkat = require('../models/KendaliPerangkat');
+        const powerMeter = await KendaliPerangkat.findOne({ 
+            owner: ownerId, 
+            $or: [
+                { category: 'Sensor Energi' },
+                { environmentAspect: 'Energi' }
+            ]
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            data: {
+                dailyData: hourlyBuckets.slice(0, new Date().getHours() + 1), // Hanya tampilkan sampai jam sekarang
+                monthlyData,
+                currentLoad: powerMeter?.currentValues?.currentLoad || 0,
+                runningConsumption: parseFloat(totalKwhToday.toFixed(2)),
+                avgHourly: totalKwhToday > 0 ? parseFloat((totalKwhToday / (new Date().getHours() + 1)).toFixed(3)) : 0,
+                totalCost: totalCostToday,
+                // Info Token untuk Dashboard
+                tokenBalance: user.tokenBalance || 0,
+                tokenThreshold: user.tokenThreshold || 50000
+            } 
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

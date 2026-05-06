@@ -51,7 +51,7 @@ const Login = () => {
       const response = await fetch('/api/auth/firebase-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: idToken })
+        body: JSON.stringify({ token: idToken, mode: 'login' })
       });
       
       const data = await parseJsonSafely(response);
@@ -62,8 +62,9 @@ const Login = () => {
 
       // Use the same key used across the app
       localStorage.setItem('token', data.token);
-      // Backward-compat (if any code still reads this)
-      localStorage.setItem('bieon_token', data.token);
+      localStorage.setItem('userId', data.user.id);
+      localStorage.setItem('role', data.user.role);
+      localStorage.setItem('fullName', data.user.fullName);
 
       const userRole = data.user?.role;
       if (userRole === 'SuperAdmin') {
@@ -71,7 +72,12 @@ const Login = () => {
       } else if (userRole === 'Technician') {
         navigate('/teknisi');
       } else {
-        navigate('/dashboard');
+        // Cek apakah user sudah setup hardware
+        if (data.user.bieonId && data.user.bieonId !== '') {
+          navigate('/dashboard');
+        } else {
+          navigate('/setup');
+        }
       }
     } catch (err) {
       console.error(err);

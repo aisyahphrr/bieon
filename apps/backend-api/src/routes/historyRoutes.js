@@ -9,6 +9,7 @@ router.use(authMiddleware);
 router.get('/environment', historyController.getEnvironmentHistory);
 router.get('/security', historyController.getSecurityHistory);
 router.get('/water', historyController.getWaterHistory);
+router.get('/energy-summary', historyController.getEnergySummary);
 router.get('/energy', historyController.getEnergyHistory);
 router.get('/activity', historyController.getActivityHistory);
 router.get('/alerts', historyController.getAlertHistory);

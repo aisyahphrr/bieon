@@ -27,4 +27,10 @@ router.get('/trend', authMiddleware, roleMiddleware('SuperAdmin'), plnTariffCont
 // POST /api/admin/tariffs
 router.post('/', authMiddleware, roleMiddleware('SuperAdmin'), plnTariffController.createTariff);
 
+// POST /api/admin/tariffs/topup (Khusus Homeowner)
+router.post('/topup', authMiddleware, roleMiddleware('Homeowner'), plnTariffController.topupToken);
+
+// PUT /api/admin/tariffs/threshold (Khusus Homeowner)
+router.put('/threshold', authMiddleware, roleMiddleware('Homeowner'), plnTariffController.updateTokenThreshold);
+
 module.exports = router;

@@ -1,5 +1,8 @@
 const Hub = require('../models/Hub');
 const BieonSystem = require('../models/BieonSystem');
+const KendaliPerangkat = require('../models/KendaliPerangkat');
+const Alert = require('../models/Alert');
+const Activity = require('../models/Activity');
 
 // Setup Hubs awal untuk sistem baru
 exports.setupHubs = async (req, res) => {
@@ -73,5 +76,75 @@ exports.getHubs = async (req, res) => {
         res.status(200).json(hubs);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data hub', error: error.message });
+    }
+};
+
+// Hapus sistem BIEON beserta Hub-hubnya
+exports.deleteSystem = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const system = await BieonSystem.findById(id);
+        if (!system) {
+            return res.status(404).json({ message: 'Sistem tidak ditemukan' });
+        }
+
+        // 1. Hapus semua Hub yang terkait dengan bieonId ini
+        await Hub.deleteMany({ bieonId: system.bieonId });
+
+        // 2. Hapus semua perangkat yang terkait dengan bieonId ini
+        await KendaliPerangkat.deleteMany({ bieonId: system.bieonId });
+
+        // 3. Hapus sistemnya
+        await BieonSystem.findByIdAndDelete(id);
+
+        res.status(200).json({ message: 'Sistem BIEON dan semua hub berhasil dihapus' });
+    } catch (error) {
+        console.error('Error deleteSystem:', error);
+        res.status(500).json({ message: 'Gagal menghapus sistem', error: error.message });
+    }
+};
+
+// Emergency cleanup for orphaned devices, alerts, and activities
+exports.cleanupOrphans = async (req, res) => {
+    try {
+        // 1. Dapatkan daftar Hub ID yang valid
+        const hubs = await Hub.find({}, '_id');
+        const validHubIds = hubs.map(h => h._id.toString());
+        
+        // 2. Cari perangkat yang hub-nya sudah tidak ada (orphaned)
+        const orphanedDevices = await KendaliPerangkat.find({ 
+            hubId: { $nin: validHubIds },
+            location: { $ne: 'Pending' } 
+        });
+        
+        const orphanedDeviceIds = orphanedDevices.map(d => d._id);
+        const orphanedRooms = [...new Set(orphanedDevices.map(d => d.location))];
+
+        // 3. Hapus Perangkat-nya
+        const deviceResult = await KendaliPerangkat.deleteMany({ 
+            _id: { $in: orphanedDeviceIds }
+        });
+
+        // 4. Hapus Notifikasi (Alert) yang merujuk ke perangkat ini (di metadata)
+        await Alert.deleteMany({ 
+            $or: [
+                { "metadata.deviceId": { $in: orphanedDeviceIds } },
+                { room: { $in: orphanedRooms } } 
+            ]
+        });
+
+        // 5. Hapus Aktivitas di ruangan yang sudah tidak ada
+        await Activity.deleteMany({ 
+            room: { $in: orphanedRooms }
+        });
+        
+        res.status(200).json({ 
+            message: `Pembersihan menyeluruh berhasil!`,
+            deletedDevices: deviceResult.deletedCount,
+            deletedRooms: orphanedRooms
+        });
+    } catch (error) {
+        console.error('Cleanup Error:', error);
+        res.status(500).json({ message: 'Gagal membersihkan data hantu', error: error.message });
     }
 };

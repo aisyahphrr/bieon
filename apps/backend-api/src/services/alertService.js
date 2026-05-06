@@ -14,17 +14,17 @@ exports.simulateSensorData = async (deviceId, sensorData) => {
         const alertsToCreate = [];
         
         // Cek pH Air
-        if (sensorData.ph && device.thresholds.ph) {
-            // Misal: Jika deviasi pH terlalu besar dari nilai ideal (misal batas toleransi +- 1.5)
-            // Di sini kita asumsikan thresholds.ph adalah nilai ideal.
-            if (Math.abs(sensorData.ph - device.thresholds.ph) > 1.5) {
+        if (sensorData.ph !== undefined) {
+            const phThreshold = device.thresholds.ph || 6.5; // Gunakan threshold dari alat atau default 6.5
+            if (sensorData.ph < phThreshold) {
                 alertsToCreate.push({
                     owner: device.owner,
                     category: 'Air Sanitasi',
                     title: 'Peringatan Kualitas Air',
-                    message: `pH Air pada ${device.name} terdeteksi abnormal (${sensorData.ph}). Cek filter air Anda.`,
+                    message: `KRITIS: pH Air pada ${device.name} terdeteksi di bawah standar (${sensorData.ph}). Segera cek kondisi filter air.`,
                     type: 'Bahaya',
-                    link: 'kendali'
+                    link: 'dashboard',
+                    metadata: { scrollTarget: 'section-kualitas-air' }
                 });
             }
         }
@@ -38,7 +38,8 @@ exports.simulateSensorData = async (deviceId, sensorData) => {
                     title: 'Suhu Terlalu Panas',
                     message: `Suhu ruangan di ${device.location} mencapai ${sensorData.temperature}°C.`,
                     type: 'Waspada',
-                    link: 'kendali'
+                    link: 'dashboard',
+                    metadata: { scrollTarget: 'section-kenyamanan' }
                 });
             }
         }
@@ -51,7 +52,8 @@ exports.simulateSensorData = async (deviceId, sensorData) => {
                 title: 'Aktivitas Pintu Terdeteksi',
                 message: `Pintu di ${device.location} terbuka melebihi batas waktu aman.`,
                 type: 'Bahaya',
-                link: 'kendali'
+                link: 'dashboard',
+                metadata: { scrollTarget: 'section-keamanan' }
             });
         }
 
