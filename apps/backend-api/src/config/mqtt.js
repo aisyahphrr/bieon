@@ -172,8 +172,8 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
           const tariffPrice = tariffRecord ? tariffRecord.tariff : 1444;
           const cost = deltaKwh * tariffPrice;
           
-          user.tokenBalance = Math.max(0, (user.tokenBalance || 0) - cost);
-          await user.save();
+          // user.tokenBalance = Math.max(0, (user.tokenBalance || 0) - cost); // STOP DEDUCTION (Switching to Budget System)
+          // await user.save();
 
           await KendaliPerangkat.findByIdAndUpdate(updatedDevice._id, { 
             'currentValues.lastEnergyReading': currentEnergy,

@@ -167,6 +167,26 @@ exports.getEnergySummary = async (req, res) => {
         const user = await User.findById(ownerId);
         if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
 
+        // --- CEK RESET BULANAN ---
+        const now = new Date();
+        const lastReset = user.lastBudgetReset ? new Date(user.lastBudgetReset) : new Date(0);
+        
+        if (now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
+            // Bulan berganti! Update lastBudgetReset
+            user.lastBudgetReset = now;
+            await user.save();
+            
+            // Kirim notifikasi penyambutan bulan baru
+            await Alert.create({
+                owner: user._id,
+                category: 'Energi',
+                title: 'Bulan Baru, Anggaran Baru!',
+                message: `Selamat datang di bulan ${MONTH_NAMES[now.getMonth()]}! Anggaran listrik Anda sebesar Rp ${user.tokenBalance.toLocaleString('id-ID')} telah diaktifkan kembali.`,
+                type: 'Success',
+                link: 'dashboard'
+            });
+        }
+
         // 2. Tentukan tarif per kWh
         let tariffRate = 1444.00; // Default R1 standar
         if (user.plnTariff) {

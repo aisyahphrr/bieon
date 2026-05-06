@@ -295,22 +295,22 @@ exports.topupToken = async (req, res) => {
         const user = await User.findById(req.user.userId);
         if (!user) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
 
-        user.tokenBalance = (user.tokenBalance || 0) + Number(amount);
+        user.tokenBalance = Number(amount);
         await user.save();
 
         // --- TAMBAHKAN NOTIFIKASI DISINI ---
         await Alert.create({
             owner: user._id,
             category: 'Energi',
-            title: 'Top-up Berhasil',
-            message: `Saldo token berhasil ditambahkan sebesar Rp ${Number(amount).toLocaleString('id-ID')}. Saldo sekarang: Rp ${user.tokenBalance.toLocaleString('id-ID')}.`,
+            title: 'Anggaran Diperbarui',
+            message: `Anggaran listrik bulanan Anda berhasil diatur menjadi Rp ${Number(amount).toLocaleString('id-ID')}.`,
             type: 'Success',
             link: 'dashboard'
         });
 
         res.status(200).json({ 
             success: true, 
-            message: `Topup berhasil. Saldo saat ini: Rp ${user.tokenBalance}`,
+            message: `Anggaran berhasil disimpan. Nominal: Rp ${user.tokenBalance}`,
             tokenBalance: user.tokenBalance
         });
     } catch (error) {
@@ -339,19 +339,22 @@ exports.updateTokenThreshold = async (req, res) => {
         await Alert.create({
             owner: user._id,
             category: 'Energi',
-            title: 'Batas Peringatan Diperbarui',
-            message: `Batas peringatan saldo token Anda telah diubah menjadi Rp ${Number(threshold).toLocaleString('id-ID')}.`,
+            title: 'Batas Peringatan Anggaran Diperbarui',
+            message: `Batas peringatan sisa anggaran Anda telah diubah menjadi Rp ${Number(threshold).toLocaleString('id-ID')}.`,
             type: 'Info',
             link: 'dashboard'
         });
 
-        // --- CEK INSTAN APAKAH SALDO LANGSUNG KRITIS ---
+        // --- CEK INSTAN APAKAH ANGGARAN LANGSUNG KRITIS ---
+        // (Sisa Anggaran = Budget - Spent)
+        // Kita butuh data spent bulan ini untuk cek akurat di sini, 
+        // tapi untuk sementara kita gunakan perbandingan dengan budget
         if (user.tokenBalance < Number(threshold)) {
             await Alert.create({
                 owner: user._id,
                 category: 'Energi',
-                title: 'Saldo Token Kritis!',
-                message: `Peringatan: Berdasarkan batas baru, saldo Anda saat ini (Rp ${Math.round(user.tokenBalance).toLocaleString('id-ID')}) sudah masuk kategori KRITIS.`,
+                title: 'Batas Anggaran Terlalu Rendah!',
+                message: `Peringatan: Batas peringatan yang Anda setel (Rp ${Number(threshold).toLocaleString('id-ID')}) lebih besar dari total anggaran Anda (Rp ${user.tokenBalance.toLocaleString('id-ID')}).`,
                 type: 'Warning',
                 link: 'dashboard'
             });
