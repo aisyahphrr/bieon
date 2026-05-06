@@ -12,6 +12,7 @@ const SecurityLog = require('../models/SecurityLog');
 const WaterQualityLog = require('../models/WaterQualityLog');
 const Activity = require('../models/Activity');
 const alertService = require('../services/alertService');
+const AuthEvent = require('../models/AuthEvent');
 
 let mqttClient = null;
 let ioInstance = null;
@@ -398,41 +399,83 @@ const handleAuthRequest = async (masterId, payload) => {
     const responses = [];
 
     for (const device of devicesToAuth) {
-      const { device_ieee, device_name } = device;
+      const { device_ieee, device_name, device_profile: reqProfile, model_id: reqModel } = device;
       if (!device_ieee) continue;
 
       const last4Mac = device_ieee ? device_ieee.replace(/:/g, '').slice(-4).toUpperCase() : '0000';
       const currentTs = Math.floor(Date.now() / 1000);
+      const hub_ieee = payload.hub_ieee || masterId;
 
-      // Cek di whitelist db
-      const whitelistEntry = await DeviceWhitelist.findOne({ device_ieee });
+      // Normalisasi IEEE untuk memastikan format cocok dengan database
+      let cleanIeee = device_ieee.replace(/:/g, '').toUpperCase();
+      let colonIeee = cleanIeee.match(/.{1,2}/g).join(':');
+
+      // Cek di whitelist db dengan berbagai kombinasi format
+      const whitelistEntry = await DeviceWhitelist.findOne({
+        $or: [
+          { device_ieee: device_ieee },
+          { device_ieee: cleanIeee },
+          { device_ieee: cleanIeee.toLowerCase() },
+          { device_ieee: colonIeee },
+          { device_ieee: colonIeee.toLowerCase() }
+        ]
+      });
+
+      let decision = 'block';
+      let responseObj = {
+        type: "auth_response",
+        master_ieee: masterId,
+        device_ieee: device_ieee,
+        ts: currentTs
+      };
 
       if (whitelistEntry && whitelistEntry.approved) {
+        decision = 'allow';
+        const profile = whitelistEntry.device_profile && whitelistEntry.device_profile !== 'UNKNOWN' ? whitelistEntry.device_profile : (reqProfile || whitelistEntry.model_id || 'UNKNOWN');
+        
         console.log(`[Auth Decision] Allow for ${device_ieee} (${whitelistEntry.device_name || 'Unknown'})`);
-        responses.push({
-          type: "auth_response",
+        responseObj = {
+          ...responseObj,
           decision: "allow",
-          master_ieee: masterId,
-          device_ieee: device_ieee,
           device_id: whitelistEntry.device_id || "unknown",
           device_name: whitelistEntry.device_name || "Unknown",
+          device_profile: profile,
           model_id: whitelistEntry.model_id || "UNKNOWN",
-          alias: `${whitelistEntry.model_id || 'UNKNOWN'}_${last4Mac}`,
-          ts: currentTs
-        });
+          alias: `${profile}_${last4Mac}`,
+        };
       } else {
+        decision = 'block';
+        const profile = reqProfile || 'UNKNOWN';
         console.log(`[Auth Decision] Block for ${device_ieee} (${device_name || 'Unknown'})`);
-        responses.push({
-          type: "auth_response",
+        responseObj = {
+          ...responseObj,
           decision: "block",
-          master_ieee: masterId,
-          device_ieee: device_ieee,
           device_id: "unknown",
-          model_id: "UNKNOWN",
-          alias: `UNKNOWN_${last4Mac}`,
-          ts: currentTs
-        });
+          device_profile: profile,
+          model_id: reqModel || "UNKNOWN",
+          alias: `${profile}_${last4Mac}`,
+        };
       }
+
+      responses.push(responseObj);
+
+      // Log AuthEvent
+      await AuthEvent.create({
+        type: 'auth_request',
+        status: decision === 'allow' ? 'allow' : (whitelistEntry ? 'rejected' : 'pending'),
+        decision: decision,
+        master_ieee: masterId,
+        hub_ieee: hub_ieee,
+        device_ieee: device_ieee,
+        device_id: responseObj.device_id,
+        device_name: responseObj.device_name || device_name,
+        device_profile: responseObj.device_profile,
+        model_id: responseObj.model_id,
+        alias: responseObj.alias,
+        cached: payload.cached || false,
+        source: 'mqtt',
+        ts: currentTs
+      });
     }
 
     // Publish ke response topic
