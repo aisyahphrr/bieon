@@ -1,5 +1,6 @@
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const SensorData = require('../models/SensorData');
+const RegisteredProduct = require('../models/RegisteredProduct');
 const Activity = require('../models/Activity');
 const { publishCommand } = require('../config/mqtt');
 const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
@@ -51,6 +52,15 @@ exports.createDevice = async (req, res) => {
         });
 
         await newDevice.save();
+
+        // Update RegisteredProduct status if productId provided
+        if (req.body.productId) {
+            await RegisteredProduct.findOneAndUpdate(
+                { productId: req.body.productId },
+                { isUsed: true }
+            );
+        }
+
         broadcastNewDevice(newDevice);
         res.status(201).json({ message: 'Perangkat berhasil disimpan ke database!', device: newDevice });
     } catch (error) {
@@ -93,6 +103,16 @@ exports.configureDevice = async (req, res) => {
             { new: true, returnDocument: 'after', runValidators: true }
         );
 
+        if (updatedDevice && req.body.productId) {
+            await RegisteredProduct.findOneAndUpdate(
+                { productId: req.body.productId },
+                { isUsed: true }
+            );
+        }
+
+        if (!updatedDevice) {
+            return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+        }
         // Emit device telemetry update to connected clients
         if (updatedDevice.hubId) {
             broadcastDeviceTelemetry(updatedDevice.hubId, updatedDevice);

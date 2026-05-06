@@ -18,9 +18,10 @@ import {
   Save,
   X,
   Check,
+  Search,
+  Activity,
   AlertCircle,
   Zap,
-  Activity,
   Wind,
   Lightbulb,
   Radio,
@@ -83,6 +84,8 @@ export function DeviceControlPage({ onNavigate }) {
   });
   const [scheduleConfig, setScheduleConfig] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilterCategory, setActiveFilterCategory] = useState("all");
   const [expandedDevice, setExpandedDevice] = useState(null);
   const [editingDevice, setEditingDevice] = useState(null);
   const [showEditPage, setShowEditPage] = useState(false);
@@ -449,7 +452,7 @@ export function DeviceControlPage({ onNavigate }) {
       console.error("Error fetching products:", err);
     }
   };
-  const handleRegisterProduct = async (e) => {
+  const handleRegisterProduct = async (e, targetStep = "select-category") => {
     e.preventDefault();
     try {
       const response = await fetch('/api/products/register', {
@@ -464,11 +467,40 @@ export function DeviceControlPage({ onNavigate }) {
       });
       const data = await response.json();
       if (response.ok) {
-        alert("Produk berhasil diregistrasi! Sekarang pilih kategori.");
+        alert("Produk berhasil diregistrasi!");
         await fetchRegisteredProducts(); // Refresh data!
-        setStep("select-category");
+        
+        if (targetStep === "add-device-form") {
+          // Set produk yang baru saja dibuat sebagai produk aktif untuk konfigurasi
+          setSelectedProduct(data.product);
+          // Set kategori dan tipe perangkat berdasarkan produk baru
+          setSelectedCategory(data.product.category);
+          setSelectedDeviceType(data.product.productName);
+          // Pre-populate nama perangkat di form setting
+          setDeviceForm(prev => ({ ...prev, name: data.product.productName }));
+          
+          // Auto-open relevant aspect for sensor
+          if (data.product.category === "sensor") {
+            const aspect = data.product.aspect;
+            if (aspect === "air") setActiveSensorAspect("kualitasAir");
+            else if (aspect === "kenyamanan") setActiveSensorAspect("kenyamanan");
+            else if (aspect === "keamanan") setActiveSensorAspect("keamanan");
+          }
+        }
+        
+        setStep(targetStep);
       } else {
-        alert(data.message);
+        if (data.message === "ID Produk sudah terdaftar di sistem.") {
+          const wantToSetup = window.confirm(
+            "ID Produk ini sudah terdaftar di sistem.\n\nApakah Anda ingin diarahkan ke daftar 'Perangkat Anda' untuk segera melakukan konfigurasi?"
+          );
+          if (wantToSetup) {
+            await fetchRegisteredProducts();
+            setStep("select-category");
+          }
+        } else {
+          alert(data.message);
+        }
       }
     } catch (err) {
       alert("Error registrasi: " + err.message);
@@ -512,31 +544,34 @@ export function DeviceControlPage({ onNavigate }) {
       return;
     }
 
-    // Khusus sensor, langsung arahkan ke aspek yang relevan dan AKTIFKAN parameternya
+    // Sinkronisasi Parameter otomatis berdasarkan tipe yang dipilih di dropdown
     if (selectedCategory === "sensor") {
       let aspect = null;
-      // Deep copy to avoid mutation
       let newConfig = JSON.parse(JSON.stringify(sensorConfig));
 
-      const currentAspect = selectedProduct?.aspect || (selectedDeviceType === "Sensor Kualitas Air" ? "air" : null);
+      // Normalisasi deteksi (mendukung "Sensor X" atau hanya "X" dari backend)
+      const isAir = selectedDeviceType.includes("Kualitas Air") || selectedProduct?.aspect === "air";
+      const isComfort = selectedDeviceType.includes("Kenyamanan") || selectedDeviceType.includes("Humidity") || selectedProduct?.aspect === "kenyamanan";
+      const isSecurity = selectedDeviceType.includes("Keamanan") || selectedDeviceType.includes("Motion") || selectedProduct?.aspect === "keamanan";
+      const isDoor = selectedDeviceType.includes("Door");
 
-      if (currentAspect === "air" || selectedDeviceType === "Sensor Kualitas Air") {
+      if (isAir) {
         aspect = "kualitasAir";
         newConfig.ph.enabled = true;
         newConfig.turbidity.enabled = true;
         newConfig.tds.enabled = true;
         newConfig.waterTemp.enabled = true;
       }
-      else if (currentAspect === "kenyamanan" || selectedDeviceType === "Sensor Kenyamanan" || selectedDeviceType === "Humidity Sensor") {
+      else if (isComfort) {
         aspect = "kenyamanan";
         newConfig.temperature.enabled = true;
         newConfig.humidity.enabled = true;
       }
-      else if (currentAspect === "keamanan" || selectedDeviceType === "Sensor Keamanan" || selectedDeviceType === "Motion Sensor") {
+      else if (isSecurity) {
         aspect = "keamanan";
         newConfig.motion.enabled = true;
       }
-      else if (selectedDeviceType === "Door Sensor") {
+      else if (isDoor) {
         aspect = "keamananPintu";
         newConfig.door.enabled = true;
       }
@@ -643,6 +678,7 @@ export function DeviceControlPage({ onNavigate }) {
         ownerId: targetOwnerId,
         controlMode: backendControl,
         environmentAspect: backendAspect,
+        productId: selectedProduct?.productId || null,
         sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
         sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null
       };
@@ -707,6 +743,7 @@ export function DeviceControlPage({ onNavigate }) {
         ownerId: targetOwnerId,
         controlMode: backendControl,
         environmentAspect: backendAspect,
+        productId: selectedProduct?.productId || null,
         sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
         scheduleSettings: configMode === "schedule" ? scheduleConfig : null,
         sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null
@@ -840,7 +877,7 @@ export function DeviceControlPage({ onNavigate }) {
         ...system,
         hubs: system.hubs.map(hub => ({
           ...hub,
-          devices: hub.devices.map(dev => 
+          devices: hub.devices.map(dev =>
             (dev._id === deviceId || dev.id === deviceId) ? { ...dev, status: newStatus, isToggling: true } : dev
           )
         }))
@@ -866,7 +903,7 @@ export function DeviceControlPage({ onNavigate }) {
           ...system,
           hubs: system.hubs.map(hub => ({
             ...hub,
-            devices: hub.devices.map(dev => 
+            devices: hub.devices.map(dev =>
               ((dev._id === deviceId || dev.id === deviceId) && dev.isToggling) ? { ...dev, isToggling: false } : dev
             )
           }))
@@ -1076,11 +1113,38 @@ export function DeviceControlPage({ onNavigate }) {
   const getFilteredDevices = () => {
     let devices = currentBieon ? currentBieon.hubs.flatMap((hub) => hub.devices) : getAllDevices();
 
-    // Urutkan berdasarkan tanggal instalasi terbaru di atas
-    devices = [...devices].sort((a, b) => new Date(b.installedDate) - new Date(a.installedDate));
+    // 1. Filter berdasarkan Ruangan
+    if (selectedRoom !== "all") {
+      devices = devices.filter((device) => device.location === selectedRoom);
+    }
 
-    if (selectedRoom === "all") return devices;
-    return devices.filter((device) => device.location === selectedRoom);
+    // 2. Filter berdasarkan Kategori (Sensor / Aktuator)
+    if (activeFilterCategory !== "all") {
+      devices = devices.filter((device) => {
+        const cat = (device.category || "").toLowerCase();
+        const type = (device.type || "").toLowerCase();
+        
+        if (activeFilterCategory === "sensor") {
+          return cat.includes("sensor") || type.includes("sensor");
+        }
+        if (activeFilterCategory === "control") {
+          return cat.includes("control") || cat.includes("actuator") || type.includes("plug") || type.includes("switch");
+        }
+        return true;
+      });
+    }
+
+    // 3. Filter berdasarkan Pencarian (Nama / ID)
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      devices = devices.filter((device) => 
+        device.name.toLowerCase().includes(q) || 
+        device.id.toLowerCase().includes(q)
+      );
+    }
+
+    // 4. Urutkan berdasarkan tanggal instalasi terbaru di atas
+    return [...devices].sort((a, b) => new Date(b.installedDate) - new Date(a.installedDate));
   };
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -1430,9 +1494,47 @@ export function DeviceControlPage({ onNavigate }) {
                 </div>
                 { /* Device List */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-                  <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900">Kendali Perangkat</h2>
-                    <p className="text-sm text-gray-500 mt-1 font-medium">CRUD, kontrol manual, status, dan detail perangkat</p>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">Kendali Perangkat</h2>
+                      <p className="text-sm text-gray-500 mt-1 font-medium">CRUD, kontrol manual, status, dan detail perangkat</p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      {/* Search Bar */}
+                      <div className="relative w-full sm:w-64 group">
+                        <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-500 transition-colors" />
+                        <input
+                          type="text"
+                          placeholder="Cari perangkat..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-sm"
+                        />
+                      </div>
+
+                      {/* Category Filter */}
+                      <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
+                        <button
+                          onClick={() => setActiveFilterCategory("all")}
+                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "all" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          Semua
+                        </button>
+                        <button
+                          onClick={() => setActiveFilterCategory("sensor")}
+                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "sensor" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          Sensor
+                        </button>
+                        <button
+                          onClick={() => setActiveFilterCategory("control")}
+                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "control" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          Aktuator
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   {/* --- WIDGET RINGKASAN DATA REAL-TIME --- */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -1880,8 +1982,8 @@ export function DeviceControlPage({ onNavigate }) {
                       }}
                       className="group p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-500 hover:shadow-xl transition-all text-left"
                     >
-                      <h4 className="font-normal text-gray-900 group-hover:text-blue-500">Tambahkan Perangkat (Pairing)</h4>
-                      <p className="text-xs text-gray-500">Lanjut ke pemilihan kategori dan scan QR Code.</p>
+                      <h4 className="font-normal text-gray-900 group-hover:text-blue-500">Perangkat Anda</h4>
+                      <p className="text-xs text-gray-500">Lanjutkan untuk melakukan setting perangkat</p>
                     </button>
                   </div>
                 </div>
@@ -1983,9 +2085,22 @@ export function DeviceControlPage({ onNavigate }) {
                         placeholder="Contoh: SNZB-02D"
                       />
                     </div>
-                    <button type="submit" className="w-full py-3.5 bg-[#009b7c] text-white rounded-xl font-bold text-base shadow-lg shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4">
-                      Registrasi & Lanjut
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                      <button 
+                        type="button" 
+                        onClick={(e) => handleRegisterProduct(e, "view-bieon")}
+                        className="flex-1 py-3.5 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-bold text-base transition-all hover:bg-gray-50 active:scale-[0.98]"
+                      >
+                        Simpan
+                      </button>
+                      <button 
+                        type="submit" 
+                        onClick={(e) => handleRegisterProduct(e, "add-device-form")}
+                        className="flex-1 py-3.5 bg-[#009b7c] text-white rounded-xl font-bold text-base shadow-lg shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        Registrasi & Lanjut
+                      </button>
+                    </div>
                   </form>
                 </div>
               </div>
@@ -2041,8 +2156,8 @@ export function DeviceControlPage({ onNavigate }) {
                       </div>
 
                       <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
-                        {registeredProducts.filter(p => p.category === 'sensor').length > 0 ? (
-                          registeredProducts.filter(p => p.category === 'sensor').map((product) => (
+                        {registeredProducts.filter(p => p.category === 'sensor' && !p.isUsed).length > 0 ? (
+                          registeredProducts.filter(p => p.category === 'sensor' && !p.isUsed).map((product) => (
                             <div key={product.productId} className="space-y-1.5">
                               {/* Label Aspek Spesifik */}
                               <span className={`text-[8px] font-bold uppercase tracking-tighter px-1.5 py-0.5 rounded-md border ${product.aspect === 'kenyamanan' ? 'text-emerald-600 border-emerald-200 bg-emerald-50' :
@@ -2114,8 +2229,8 @@ export function DeviceControlPage({ onNavigate }) {
                       </div>
 
                       <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
-                        {registeredProducts.filter(p => p.category === 'control').length > 0 ? (
-                          registeredProducts.filter(p => p.category === 'control').map((product) => (
+                        {registeredProducts.filter(p => p.category === 'control' && !p.isUsed).length > 0 ? (
+                          registeredProducts.filter(p => p.category === 'control' && !p.isUsed).map((product) => (
                             <button
                               key={product.productId}
                               onClick={() => {
@@ -2188,7 +2303,10 @@ export function DeviceControlPage({ onNavigate }) {
                       <p className="text-sm text-gray-500 mt-1">Lengkapi detail untuk: <span className="font-bold text-[#009b7c]">{selectedDeviceType}</span></p>
                     </div>
                     <button
-                      onClick={() => setStep("select-category")}
+                      onClick={() => {
+                        setStep("view-bieon");
+                        resetForm();
+                      }}
                       className="p-3 hover:bg-gray-100 rounded-2xl transition-all"
                     >
                       <X className="w-8 h-8 text-gray-400" />
