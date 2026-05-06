@@ -729,7 +729,7 @@ export function HomeownerDashboard() {
       // 1. Fetch Devices (for devices count per room)
       const userId = localStorage.getItem('userId');
       if (userId) {
-        const resDevices = await fetch(`/api/kendaliperangkat/user/${userId}`, { headers });
+        const resDevices = await fetch(`/api/kendaliperangkat/my-devices`, { headers });
         if (resDevices.ok) setRealDevices(await resDevices.json());
       }
       
@@ -856,9 +856,9 @@ export function HomeownerDashboard() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Derive current room data from real devices if available, else static constants
-  let rooms = ROOMS;
-  if (realDevices.length > 0) {
+  // Derive current room data from real devices
+  let rooms = [];
+  if (realDevices && realDevices.length > 0) {
     const roomMap = new Map();
     realDevices.forEach(d => {
       const loc = d.location || 'Lainnya';
@@ -869,31 +869,63 @@ export function HomeownerDashboard() {
       }
     });
     rooms = [{ id: 'all', name: 'Semua Ruangan', devices: realDevices.length }, ...Array.from(roomMap.values())];
+  } else {
+    // Jika benar-benar kosong (user baru), tampilkan state kosong yang rapi
+    rooms = [{ id: 'all', name: 'Semua Ruangan', devices: 0 }];
   }
   
-  let currentDevices = DEVICES_PER_ROOM[selectedRoom] || DEVICES_PER_ROOM.all;
-  if (realDevices.length > 0) {
+  let currentDevices = [];
+  if (realDevices && realDevices.length > 0) {
     if (selectedRoom === 'all') {
       currentDevices = realDevices;
     } else {
       currentDevices = realDevices.filter(d => (d.location || 'Lainnya').toLowerCase().replace(/\s+/g, '-') === selectedRoom);
     }
-  }
-  let currentSensors = {};
-  if (selectedRoom === 'all') {
-    currentSensors = ROOM_SENSORS.all;
   } else {
-    const hasComfort = currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));
-    const hasSecurity = currentDevices.some(d => d.environmentAspect === 'Keamanan' || (d.category === 'sensor' && ['Sensor Keamanan', 'Door Sensor', 'Motion Sensor', 'CCTV'].some(t => d.type?.includes(t))));
-    const hasWater = currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
-
-    if (hasComfort) currentSensors.comfort = ROOM_SENSORS.all.comfort;
-    if (hasSecurity) currentSensors.security = ROOM_SENSORS.all.security;
-    if (hasWater) currentSensors.waterQuality = ROOM_SENSORS.all.waterQuality;
+    // Kosongkan jika memang user tidak punya perangkat
+    currentDevices = [];
   }
+
+  // Menentukan kategori apa saja yang muncul berdasarkan perangkat yang dimiliki
+  const hasComfort = currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));
+  const hasSecurity = currentDevices.some(d => d.environmentAspect === 'Keamanan' || (d.category === 'sensor' && ['Sensor Keamanan', 'Door Sensor', 'Motion Sensor', 'CCTV'].some(t => d.type?.includes(t))));
+  const hasWater = currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
+
+  let currentSensors = {};
+  // Gunakan data mock untuk visual, tapi hanya jika kategorinya relevan dengan perangkat user
+  if (hasComfort) currentSensors.comfort = ROOM_SENSORS.all.comfort;
+  if (hasSecurity) {
+    // Ambil status asli dari perangkat security jika ada
+    const securityDevices = currentDevices.filter(d => d.environmentAspect === 'Keamanan');
+    if (securityDevices.length > 0) {
+      currentSensors.security = securityDevices.map(d => ({
+        type: d.name,
+        status: d.status === '1' ? 'Active' : d.status === '0' ? 'Inactive' : d.status,
+        room: d.location
+      }));
+    } else {
+      currentSensors.security = ROOM_SENSORS.all.security;
+    }
+  }
+  if (hasWater) currentSensors.waterQuality = ROOM_SENSORS.all.waterQuality;
   const dailyData = energySummary?.dailyData || DAILY_ENERGY_DATA;
   const monthlyData = energySummary?.monthlyData || MONTHLY_ENERGY_DATA;
-  const notifications = realNotifications.length > 0 ? realNotifications : NOTIFICATIONS;
+  const notifications = realNotifications;
+  
+  const mappedActivities = realActivities.map(act => {
+    const statusStr = String(act.status || '').toUpperCase();
+    const icon = (statusStr === 'ON' || statusStr === '1') ? Power : Zap;
+    const color = (statusStr === 'ON' || statusStr === '1') ? 'emerald' : 'gray';
+    
+    return {
+      device: act.deviceName || act.actuator || 'Perangkat',
+      action: act.action || ((statusStr === 'ON' || statusStr === '1') ? 'Menyalakan' : 'Mematikan'),
+      trigger: act.trigger || 'Manual',
+      time: act.timestamp ? new Date(act.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
+      icon,
+      color
+    };
+  });
 
 
 
@@ -1458,43 +1490,7 @@ export function HomeownerDashboard() {
                 Aktivitas Terbaru
               </h3>
               <div className="space-y-3">
-                {(realActivities.length > 0 ? realActivities.filter(act => {
-                  const name = (act.actuator || '').toLowerCase();
-                  // Filter out sensors
-                  return !name.includes('sensor') && !name.includes('suhu') && !name.includes('kelembapan');
-                }).slice(0, 4).map(act => {
-                  let icon = Activity;
-                  let color = 'emerald';
-                  const statusStr = String(act.status || '').toUpperCase();
-                  
-                  if (statusStr === 'OFF' || statusStr === '0' || (act.action && act.action.includes('Mati'))) { 
-                    icon = XCircle; 
-                    color = 'gray'; 
-                  } else if (statusStr === 'ON' || statusStr === '1' || (act.action && act.action.includes('Nyala'))) { 
-                    icon = CheckCircle2; 
-                    color = 'emerald'; 
-                  }
-                  
-                  // Khusus untuk Perangkat Kendali (Smart Plug, Switch, Remote)
-                  const deviceName = (act.actuator || '').toLowerCase();
-                  if (deviceName.includes('plug') || deviceName.includes('colokan')) icon = Zap;
-                  else if (deviceName.includes('switch') || deviceName.includes('saklar')) icon = ToggleRight;
-                  else if (deviceName.includes('remote') || deviceName.includes('tv') || deviceName.includes('ac')) icon = Power;
-                  
-                  return {
-                    device: act.actuator || 'Perangkat',
-                    action: act.action || (statusStr === 'ON' ? 'Menyalakan' : 'Mematikan'),
-                    trigger: act.trigger || 'Manual',
-                    time: new Date(act.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                    icon,
-                    color
-                  };
-                }) : [
-                  { device: 'Smart Plug Dapur', action: 'Mematikan', trigger: 'Manual', time: '12:45', icon: Zap, color: 'gray' },
-                  { device: 'Saklar Lampu Teras', action: 'Menyalakan', trigger: 'Otomasi (Jadwal)', time: '12:30', icon: ToggleRight, color: 'emerald' },
-                  { device: 'Remote AC Utama', action: 'Menyalakan', trigger: 'Otomasi (Suhu)', time: '12:15', icon: Power, color: 'emerald' },
-                  { device: 'Smart Switch Pompa', action: 'Mematikan', trigger: 'Manual', time: '12:00', icon: ToggleRight, color: 'gray' },
-                ]).map((activity, idx) => {
+                {mappedActivities.slice(0, 5).map((activity, idx) => {
                   const Icon = activity.icon;
                   return (
                     <div key={idx} className={`flex items-center gap-3 p-3 rounded-[22px] transition-all duration-300 border hover:bg-white hover:scale-[1.02] hover:shadow-md active:scale-95 cursor-pointer group

@@ -89,7 +89,7 @@ export function HomeownerComplaint({ onNavigate }) {
         try {
             console.log("🔍 FETCHING DEVICES FOR USER:", userId);
             const token = localStorage.getItem('token');
-            const res = await fetch(`/api/kendaliperangkat/user/${userId}`, {
+            const res = await fetch(`/api/kendaliperangkat/my-devices`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             console.log("📡 API RESPONSE STATUS:", res.status);

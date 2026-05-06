@@ -150,7 +150,7 @@ export function DeviceControlPage({ onNavigate }) {
         const systemsData = await sysRes.json();
 
         // 3. Get Devices (Disesuaikan untuk target ID)
-        const devRes = await fetch(`/api/kendaliperangkat/user/${targetId}`, {
+        const devRes = await fetch(`/api/kendaliperangkat/my-devices`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const devicesData = await devRes.json();
@@ -387,7 +387,7 @@ export function DeviceControlPage({ onNavigate }) {
         },
         body: JSON.stringify({
           bieonId: bieonIdInput,
-          totalHubs: 3, // Default atau ambil dari BIEON_DATABASE jika perlu
+          totalHubs: BIEON_DATABASE[bieonIdInput]?.totalHubs || 1, 
           userId: userProfile._id
         })
       });
@@ -418,6 +418,7 @@ export function DeviceControlPage({ onNavigate }) {
       alert("Gagal: " + error.message);
     }
   };
+
   const handleAddHub = () => {
     if (!currentBieon) return;
     const newHub = {
