@@ -704,6 +704,12 @@ export function HomeownerDashboard({ onNavigate }) {
           const data = await resTds.json();
           if (data && data[0] && data[0].value !== null) setLiveTds(data[0].value);
         }
+
+        const resWaterTemp = await fetch('/api/sensors/suhu-air');
+        if (resWaterTemp.ok) {
+          const data = await resWaterTemp.json();
+          if (data && data[0] && data[0].value !== null) setLiveWaterTemp(data[0].value);
+        }
       } catch (err) {
         console.error("Gagal fetch data sensor real-time:", err);
       }
@@ -971,13 +977,13 @@ export function HomeownerDashboard({ onNavigate }) {
                       <Thermometer className="w-5 h-5 text-orange-500" />
                     </div>
                     <div className="mb-3">
-                      <div className="text-4xl font-bold text-gray-900">{currentSensors.waterQuality.temp}°C</div>
+                      <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp}°C</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {currentSensors.waterQuality.temp < 10 ? 'Dingin' : currentSensors.waterQuality.temp < 30 ? 'Normal' : 'Hangat'}
+                        {(selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 10 ? 'Dingin' : (selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 30 ? 'Normal' : 'Hangat'}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
-                      <div className="h-full bg-gradient-to-r from-orange-400 to-red-500" style={{ width: `${(currentSensors.waterQuality.temp / 50) * 100}%` }}></div>
+                      <div className="h-full bg-gradient-to-r from-orange-400 to-red-500" style={{ width: `${((selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) / 50) * 100}%` }}></div>
                     </div>
                   </div>
 
@@ -1007,7 +1013,7 @@ export function HomeownerDashboard({ onNavigate }) {
                         </div>
                         <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
                           <div className="text-[10px] mb-1">Suhu</div>
-                          <div className="font-bold text-lg">{currentSensors.waterQuality.temp}°C</div>
+                          <div className="font-bold text-lg">{selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp}°C</div>
                         </div>
                       </div>
                     </div>

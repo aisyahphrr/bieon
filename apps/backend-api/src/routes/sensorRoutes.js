@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const SensorData = require('../models/SensorData');
 
-// GET /api/sensors/suhu
-// Mengambil data suhu terakhir dari database sensordatas
+// GET /api/sensors/suhu (Room Temperature)
 router.get('/suhu', async (req, res) => {
     try {
-        // Cari data terbaru yang topic-nya berakhiran dengan /suhu
-        const latestSuhu = await SensorData.findOne({ topic: { $regex: /\/suhu$/i } })
-            .sort({ timestamp: -1 });
+        const latestSuhu = await SensorData.findOne({ 
+            topic: { $regex: /\/suhu$/i },
+            $and: [ { topic: { $not: /sensor_air/i } } ]
+        }).sort({ timestamp: -1 });
             
         if (latestSuhu) {
             res.json([{ value: latestSuhu.value }]);
@@ -21,8 +21,17 @@ router.get('/suhu', async (req, res) => {
     }
 });
 
+// GET /api/sensors/suhu-air (Water Temperature)
+router.get('/suhu-air', async (req, res) => {
+    try {
+        const latestData = await SensorData.findOne({ topic: { $regex: /sensor_air_01\/suhu$/i } }).sort({ timestamp: -1 });
+        res.json([{ value: latestData ? latestData.value : null }]);
+    } catch (err) {
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
 // GET /api/sensors/kelembapan
-// Mengambil data kelembapan terakhir dari database sensordatas
 router.get('/kelembapan', async (req, res) => {
     try {
         const latestKelembapan = await SensorData.findOne({ topic: { $regex: /\/kelembapan$/i } })

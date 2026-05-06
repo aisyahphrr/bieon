@@ -55,8 +55,14 @@ const connectMQTT = (io) => {
 
           // Format data untuk database
           const formattedPayload = {};
-          if (param === 'suhu') formattedPayload.temperature = actualValue;
+          if (param === 'suhu') {
+            if (friendlyName.toLowerCase().includes('air')) formattedPayload.waterTemp = actualValue;
+            else formattedPayload.temperature = actualValue;
+          }
           else if (param === 'kelembapan') formattedPayload.humidity = actualValue;
+          else if (param === 'ph') formattedPayload.ph = actualValue;
+          else if (param === 'tds') formattedPayload.tds = actualValue;
+          else if (param === 'turbidity') formattedPayload.turbidity = actualValue;
           else if (param === 'status' || param === 'command') formattedPayload.status = String(actualValue);
 
           await handleDeviceTelemetry(friendlyName, formattedPayload);
@@ -73,14 +79,24 @@ const connectMQTT = (io) => {
 
 const handleDeviceTelemetry = async (friendlyName, payload) => {
   try {
-    const nameRegex = new RegExp('^' + friendlyName.replace(/[_\s]/g, '[_\\s]') + '$', 'i');
+    // Mapping khusus untuk sensor air agar sinkron antara MQTT dan Database
+    let searchName = friendlyName;
+    if (friendlyName.toLowerCase().includes('sensor_air')) {
+        searchName = "Sensor Kualitas Air";
+    }
+
+    const nameRegex = new RegExp('^' + searchName.replace(/[_\s]/g, '[_\\s]') + '$', 'i');
     let device = await KendaliPerangkat.findOne({ name: nameRegex });
 
     if (!device) return;
 
     const updates = { lastSeen: new Date() };
     if (payload.temperature !== undefined) updates['currentValues.temperature'] = payload.temperature;
+    if (payload.waterTemp !== undefined) updates['currentValues.waterTemp'] = payload.waterTemp;
     if (payload.humidity !== undefined) updates['currentValues.humidity'] = payload.humidity;
+    if (payload.ph !== undefined) updates['currentValues.ph'] = payload.ph;
+    if (payload.tds !== undefined) updates['currentValues.tds'] = payload.tds;
+    if (payload.turbidity !== undefined) updates['currentValues.turbidity'] = payload.turbidity;
     if (payload.battery !== undefined) updates.battery = payload.battery;
     
     // Auto-Berubah Warna (Status)
@@ -138,10 +154,15 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
                 if (!sensor.currentValues) continue;
 
                 // Cek Suhu (Temperature)
-                if (act.thresholds.temperature !== undefined && sensor.currentValues.temperature !== undefined) {
-                    hasCondition = true;
-                    if (sensor.currentValues.temperature <= act.thresholds.temperature) {
-                        isMet = false;
+                if (act.thresholds.temperature !== undefined) {
+                    // PRIORITAS: Gunakan nilai dari sensor yang baru saja mengirim data (sensor.currentValues)
+                    const sensorVal = sensor.currentValues.waterTemp !== undefined ? sensor.currentValues.waterTemp : sensor.currentValues.temperature;
+                    
+                    if (sensorVal !== undefined) {
+                        hasCondition = true;
+                        if (sensorVal <= act.thresholds.temperature) {
+                            isMet = false;
+                        }
                     }
                 }
                 
@@ -157,6 +178,12 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
                 if (act.thresholds.ph !== undefined && sensor.currentValues.ph !== undefined) {
                     hasCondition = true;
                     if (sensor.currentValues.ph <= act.thresholds.ph) {
+                        isMet = false;
+                    }
+                }
+                if (act.thresholds.tds !== undefined && sensor.currentValues.tds !== undefined) {
+                    hasCondition = true;
+                    if (sensor.currentValues.tds <= act.thresholds.tds) {
                         isMet = false;
                     }
                 }
