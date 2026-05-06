@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     User, Mail, Phone, MapPin, Calendar, Award, Briefcase, Clock, Star, TrendingUp,
     Shield, Edit3, Save, X, Camera, Lock, CheckCircle, Users, Wrench, Target,
-    Activity, BookOpen, MapPinned, LogOut
+    Activity, BookOpen, MapPinned, LogOut, ShieldCheck, ChevronRight
 } from 'lucide-react';
 
 export function TechnicianProfilePage({ onNavigate }) {
@@ -67,6 +67,24 @@ export function TechnicianProfilePage({ onNavigate }) {
         }
     };
 
+    const handleImageChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validasi ukuran (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran gambar maksimal 2MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64String = reader.result;
+            handleUpdateProfile({ profileImage: base64String });
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleUpdateProfile = async (dataToUpdate) => {
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/technician/profile/${userId}`, {
@@ -129,9 +147,42 @@ export function TechnicianProfilePage({ onNavigate }) {
         setIsEditingTrainings(false);
     };
 
-    const handleChangePassword = () => {
-        alert('Fitur ganti password akan segera hadir!');
-        setIsChangingPassword(false);
+    const handleChangePassword = async () => {
+        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+            alert('Semua field password wajib diisi');
+            return;
+        }
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            alert('Password baru dan konfirmasi tidak cocok');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/change-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    currentPassword: passwordData.currentPassword,
+                    newPassword: passwordData.newPassword
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Password berhasil diperbarui!');
+                setIsChangingPassword(false);
+                setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            } else {
+                alert('Gagal: ' + result.message);
+            }
+        } catch (err) {
+            console.error('Change password error:', err);
+            alert('Terjadi kesalahan saat mengganti password.');
+        }
     };
 
     if (isLoading) {
@@ -192,18 +243,28 @@ export function TechnicianProfilePage({ onNavigate }) {
                             {/* Photo */}
                             <div className="relative group -mt-10 md:mt-0">
                                 <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl flex items-center justify-center text-white shadow-2xl border-4 border-white overflow-hidden">
-                                    {profile.photoUrl ? (
-                                         <img src={profile.photoUrl} alt={profile.fullName} className="w-full h-full object-cover" />
-                                     ) : (
-                                         <span className="text-5xl sm:text-6xl font-bold">
-                                             {profile.fullName.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ').map(n => n[0]).join('').substring(0, 3).toUpperCase()}
-                                         </span>
-                                     )}
-                                 </div>
-                                 <button className="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                     <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                                 </button>
-                             </div>
+                                    {profile.profileImage ? (
+                                        <img src={profile.profileImage} alt={profile.fullName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-5xl sm:text-6xl font-bold">
+                                            {profile.fullName.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ').map(n => n[0]).join('').substring(0, 3).toUpperCase()}
+                                        </span>
+                                    )}
+                                </div>
+                                <button 
+                                    onClick={() => document.getElementById('avatar-input').click()}
+                                    className="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </button>
+                                <input 
+                                    id="avatar-input"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageChange}
+                                />
+                            </div>
 
                              {/* Basic Info */}
                              <div className="flex-1 w-full">
@@ -238,34 +299,36 @@ export function TechnicianProfilePage({ onNavigate }) {
                                  </div>
 
                                  {/* Quick Stats */}
-                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                     <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4">
+                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                     <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-100/50">
                                          <div className="flex items-center gap-2 mb-1">
                                              <Star className="w-4 h-4 text-amber-500" />
                                              <span className="text-2xl font-bold text-gray-900">{stats.avgRating}</span>
                                          </div>
-                                         <p className="text-xs text-gray-600">Rating</p>
+                                         <p className="text-xs text-gray-600 font-medium tracking-tight">Rating</p>
                                      </div>
-                                     <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4">
+                                     <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 border border-blue-100/50">
                                          <div className="flex items-center gap-2 mb-1">
                                              <Wrench className="w-4 h-4 text-blue-500" />
                                              <span className="text-2xl font-bold text-gray-900">{stats.totalRepairs}</span>
                                          </div>
-                                         <p className="text-xs text-gray-600">Perbaikan</p>
+                                         <p className="text-xs text-gray-600 font-medium tracking-tight">Perbaikan</p>
                                      </div>
-                                     <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4">
-                                         <div className="flex items-center gap-2 mb-1">
-                                             <Users className="w-4 h-4 text-purple-500" />
-                                             <span className="text-2xl font-bold text-gray-900">{stats.totalPekerjaan}</span>
+                                     <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-100/50">
+                                         <div className="flex items-center justify-between mb-1">
+                                             <div className="flex items-center gap-2">
+                                                 <TrendingUp className="w-4 h-4 text-orange-500" />
+                                                 <span className="text-2xl font-bold text-gray-900">{stats.complianceRate}%</span>
+                                             </div>
+                                             <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
+                                                 stats.complianceRate >= 80 
+                                                 ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' 
+                                                 : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
+                                             }`}>
+                                                 {stats.complianceRate >= 80 ? 'Aman' : 'Warning'}
+                                             </div>
                                          </div>
-                                         <p className="text-xs text-gray-600">Pekerjaan</p>
-                                     </div>
-                                     <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4">
-                                         <div className="flex items-center gap-2 mb-1">
-                                             <TrendingUp className="w-4 h-4 text-orange-500" />
-                                             <span className="text-2xl font-bold text-gray-900">{stats.complianceRate}%</span>
-                                         </div>
-                                         <p className="text-xs text-gray-600">Kepatuhan</p>
+                                         <p className="text-xs text-gray-600 font-medium tracking-tight">Kepatuhan</p>
                                      </div>
                                  </div>
                              </div>
@@ -514,10 +577,10 @@ export function TechnicianProfilePage({ onNavigate }) {
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 <div className="bg-[#EBFFF9] rounded-2xl p-5">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Wrench className="w-5 h-5 text-emerald-600" />
-                                        <span className="text-sm font-semibold text-gray-700">Total Instalasi</span>
+                                        <Lock className="w-5 h-5 text-emerald-600" />
+                                        <span className="text-sm font-semibold text-gray-700">Akses Kendali Perangkat</span>
                                     </div>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.totalInstalasi}</p>
+                                    <p className="text-3xl font-bold text-gray-900">{stats.totalAccessCodes || 0}</p>
                                 </div>
 
                                 <div className="bg-[#F0F7FF] rounded-2xl p-5">
@@ -553,12 +616,21 @@ export function TechnicianProfilePage({ onNavigate }) {
                                     <p className="text-3xl font-bold text-gray-900">{stats.avgCompletionHours} jam</p>
                                 </div>
 
-                                <div className="bg-[#FFF5F5] rounded-2xl p-5">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <CheckCircle className="w-5 h-5 text-rose-500" />
-                                        <span className="text-sm font-semibold text-gray-700">Total Pekerjaan</span>
+                                <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <ShieldCheck className={`w-5 h-5 ${stats.complianceRate >= 80 ? 'text-emerald-600' : 'text-rose-500'}`} />
+                                        <span className="text-sm font-semibold text-gray-700">Status SLA</span>
                                     </div>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.totalPekerjaan}</p>
+                                    <div className="flex flex-col gap-2">
+                                        <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider w-fit ${
+                                            stats.complianceRate >= 80 
+                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                                            : 'bg-rose-50 text-rose-600 border border-rose-100 animate-pulse'
+                                        }`}>
+                                            {stats.complianceRate >= 80 ? 'Aman' : 'Butuh Perhatian'}
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 font-medium italic">Berdasarkan kepatuhan waktu</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

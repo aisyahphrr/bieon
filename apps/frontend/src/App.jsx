@@ -108,7 +108,7 @@ function AppContent() {
         {/* Homeowner Routes */}
         <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerDashboard /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerHistory /></ProtectedRoute>} />
-        <Route path="/kendali" element={<ProtectedRoute allowedRoles={['Homeowner']}><DeviceControlPage /></ProtectedRoute>} />
+        <Route path="/kendali" element={<ProtectedRoute allowedRoles={['Homeowner', 'Technician']}><DeviceControlPage /></ProtectedRoute>} />
         <Route path="/pengaduan" element={<ProtectedRoute allowedRoles={['Homeowner']}><HomeownerComplaint /></ProtectedRoute>} />
         <Route path="/forgot" element={<ForgotRequest />} />
         <Route path="/forgot/verify" element={<ForgotVerify />} />

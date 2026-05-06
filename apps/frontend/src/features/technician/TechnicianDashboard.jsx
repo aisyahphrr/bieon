@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -22,9 +22,12 @@ import {
   Activity,
   CheckCircle2,
   FileDown,
+  FileText,
   Radio,
   ShieldCheck
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   BarChart,
   Bar,
@@ -42,6 +45,186 @@ import { KonfigurasiPerangkatPage } from './KonfigurasiPerangkatPage';
 import { RiwayatPerbaikanPage } from './RiwayatPerbaikanPage';
 import { TechnicianProfilePage } from './profileteknisi';
 import TechnicianLayout from './TechnicianLayout';
+
+// Helper to load Leaflet assets dynamically
+const loadLeafletAssets = async () => {
+  if (window.L) return window.L;
+
+  if (!document.querySelector('link[data-leaflet-css="true"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.dataset.leafletCss = 'true';
+    document.head.appendChild(link);
+  }
+
+  await new Promise((resolve, reject) => {
+    const existingScript = document.querySelector('script[data-leaflet-js="true"]');
+    if (existingScript && window.L) {
+      resolve();
+      return;
+    }
+    if (existingScript) {
+      existingScript.addEventListener('load', resolve, { once: true });
+      existingScript.addEventListener('error', reject, { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.async = true;
+    script.dataset.leafletJs = 'true';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+
+  return window.L;
+};
+
+// Internal Map Component for Clients
+function ClientLiveMap({ clients, isLoading }) {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const layerGroupRef = useRef(null);
+
+  useEffect(() => {
+    let disposed = false;
+    const initMap = async () => {
+      if (!containerRef.current) return;
+      const L = await loadLeafletAssets();
+      if (disposed || !containerRef.current) return;
+
+      if (!mapRef.current) {
+        mapRef.current = L.map(containerRef.current, {
+          zoomControl: true,
+          scrollWheelZoom: true,
+        }).setView([-6.2, 106.816666], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19,
+        }).addTo(mapRef.current);
+
+        layerGroupRef.current = L.layerGroup().addTo(mapRef.current);
+      }
+
+      const map = mapRef.current;
+      const group = layerGroupRef.current;
+      group.clearLayers();
+
+      const validClients = (clients || []).filter(c => c.lat && c.lng);
+
+      if (!validClients.length) {
+        map.setView([-6.2, 106.816666], 10);
+        setTimeout(() => map.invalidateSize(), 0);
+        return;
+      }
+
+      const bounds = [];
+      validClients.forEach((client) => {
+        const { lat, lng } = client;
+        bounds.push([lat, lng]);
+
+        const statusColor = client.status === 'online' ? '#0F9E78' : client.status === 'warning' ? '#f59e0b' : '#ef4444';
+        
+        const markerHtml = `
+          <div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px);">
+            <div style="
+              background:white;
+              color:#1f2937;
+              font-weight:700;
+              font-size:11px;
+              padding:4px 10px;
+              border-radius:999px;
+              margin-bottom:6px;
+              box-shadow:0 8px 20px rgba(15,23,42,0.18);
+              white-space:nowrap;
+              border:2px solid ${statusColor};
+            ">
+              ${client.nama}
+            </div>
+            <div style="
+              width:18px;
+              height:18px;
+              border-radius:999px;
+              background:${statusColor};
+              border:3px solid white;
+              box-shadow:0 8px 20px rgba(15,23,42,0.18);
+            "></div>
+          </div>
+        `;
+
+        const marker = L.marker([lat, lng], {
+          icon: L.divIcon({
+            html: markerHtml,
+            className: 'bieon-client-marker',
+            iconSize: [120, 48],
+            iconAnchor: [60, 44],
+          }),
+        });
+
+        marker.bindPopup(`
+          <div style="font-family: sans-serif; padding: 5px; min-width: 150px;">
+            <strong style="color: #0F9E78; font-size: 14px; display: block; margin-bottom: 4px;">${client.nama}</strong>
+            <span style="font-size: 12px; color: #6b7280; display: block; line-height: 1.4;">${client.alamatLengkap}</span>
+            <div style="margin-top: 12px; display: flex; justify-content: space-between; border-top: 1px solid #f3f4f6; pt-2;">
+              <div style="text-align: center;">
+                <div style="font-weight: bold; color: #1f2937; font-size: 14px;">${client.jumlahBieon}</div>
+                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">Hub</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; color: #1f2937; font-size: 14px;">${client.jumlahDevice}</div>
+                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">Node</div>
+              </div>
+              <div style="text-align: center;">
+                <div style="font-weight: bold; color: ${statusColor}; font-size: 11px;">${client.statusSistem}</div>
+                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">Status</div>
+              </div>
+            </div>
+          </div>
+        `);
+        
+        marker.addTo(group);
+      });
+
+      if (bounds.length === 1) {
+        map.setView(bounds[0], 13);
+      } else if (bounds.length > 1) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+
+      setTimeout(() => map.invalidateSize(), 0);
+    };
+
+    initMap().catch(console.error);
+
+    return () => { disposed = true; };
+  }, [clients]);
+
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div className="relative w-full h-full min-h-[300px] rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-inner">
+      <div ref={containerRef} className="absolute inset-0" />
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-[1000]">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-4 border-[#0F9E78] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-700 tracking-tight">Menyiapkan Data Peta...</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 // Refined Custom 3D Bar Component to match user's image exactly
 const ThreeDBar = (props) => {
@@ -120,13 +303,15 @@ export function TechnicianDashboard({ onNavigate }) {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [returnTicketId, setReturnTicketId] = useState(location.state?.openComplaintId || null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [toast, setToast] = useState(null);
   const [inputToken, setInputToken] = useState("");
   const [tokenError, setTokenError] = useState("");
   const [metrics, setMetrics] = useState({
     totalClients: 0,
-    totalHubs: 0,
+    totalAccessCodes: 0,
     totalDevices: 0,
     activeComplaints: 0
   });
@@ -137,6 +322,8 @@ export function TechnicianDashboard({ onNavigate }) {
   });
   const [clients, setClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const token = localStorage.getItem('token');
+  const userId = localStorage.getItem('userId');
 
   const triggerToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -153,7 +340,6 @@ export function TechnicianDashboard({ onNavigate }) {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      const token = localStorage.getItem('token');
       const headers = {
         'Authorization': `Bearer ${token}`
       };
@@ -181,12 +367,104 @@ export function TechnicianDashboard({ onNavigate }) {
     };
 
     fetchData();
-  }, []);
 
-  const filteredClients = (clients || []).filter(client =>
-    (client.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (client.lokasi || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    // Auto Online: Pastikan status teknisi menjadi 'aktif' saat membuka dashboard
+    const setAutoOnline = async () => {
+      if (!token || !userId) return;
+      try {
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/technician/profile/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status: 'aktif' })
+        });
+      } catch (err) {
+        console.error('Gagal mengaktifkan status online otomatis:', err);
+      }
+    };
+    setAutoOnline();
+  }, [userId]);
+
+  const filteredClients = (clients || []).filter(client => {
+    const matchesSearch = (client.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (client.lokasi || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const today = new Date().toLocaleDateString('id-ID', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(15, 158, 120); // BIEON Teal
+    doc.text('BIEON', 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text('Smart Green Living Monitoring System', 14, 28);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+    doc.text('Laporan Monitoring Status Pelanggan', 14, 40);
+
+    doc.setFontSize(10);
+    doc.text(`Tanggal Cetak: ${today}`, 14, 48);
+    doc.text(`Total Pelanggan: ${filteredClients.length}`, 14, 54);
+
+    try {
+      // Summary Box
+    doc.setDrawColor(200);
+    doc.rect(14, 60, 182, 25);
+    doc.setFontSize(9);
+    doc.text('RINGKASAN METRIK (FILTER SAAT INI)', 18, 66);
+    doc.setFontSize(11);
+    doc.text(`Total Klien: ${filteredClients.length}`, 18, 75);
+    doc.text(`Total BIEON Hub: ${filteredClients.reduce((acc, c) => acc + c.jumlahBieon, 0)}`, 80, 75);
+    doc.text(`Total Perangkat: ${filteredClients.reduce((acc, c) => acc + c.jumlahDevice, 0)}`, 140, 75);
+
+    // Table
+    const tableData = filteredClients.map(c => [
+      c.nama,
+      c.lokasi,
+      c.status.toUpperCase(),
+      c.jumlahBieon,
+      c.jumlahDevice,
+      c.statusSistem
+    ]);
+
+    autoTable(doc, {
+      startY: 95,
+      head: [['Nama Pelanggan', 'Lokasi', 'Status', 'Hub', 'Node', 'Keterangan Sistem']],
+      body: tableData,
+      headStyles: { fillColor: [15, 158, 120] },
+      styles: { fontSize: 9 },
+      alternateRowStyles: { fillColor: [245, 245, 245] }
+    });
+
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`Halaman ${i} dari ${pageCount} - BIEON Technician Dashboard`, 14, doc.internal.pageSize.height - 10);
+    }
+
+    doc.save(`Laporan_Monitoring_BIEON_${new Date().getTime()}.pdf`);
+    triggerToast('Laporan PDF berhasil diunduh');
+  } catch (error) {
+    console.error('PDF Export Error:', error);
+    triggerToast('Gagal mengekspor PDF. Silakan coba lagi.', 'error');
+  }
+};
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -223,12 +501,12 @@ export function TechnicianDashboard({ onNavigate }) {
                 <p className="text-white/90 text-sm font-medium pt-2">Total Pelanggan Ditangani</p>
               </div>
 
-              <div className="relative overflow-hidden bg-gradient-to-br from-[#00C698] to-[#00E5B1] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
+              <div className="relative overflow-hidden bg-gradient-to-br from-[#0F9E78] to-[#235C50] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
-                  <Cpu className="w-6 h-6 text-white" />
+                  <ShieldCheck className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalHubs}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">Instalasi BIEON [2025]</p>
+                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalAccessCodes || 0}</h3>
+                <p className="text-white/90 text-sm font-medium pt-2">Akses Kendali Perangkat</p>
               </div>
 
               <div className="relative overflow-hidden bg-gradient-to-br from-[#5C6AFF] to-[#8F98FF] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
@@ -260,23 +538,57 @@ export function TechnicianDashboard({ onNavigate }) {
                     <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      placeholder="Cari pelanggan..."
+                      placeholder="Cari No. Tiket, Nama Pelanggan, atau Topik..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 bg-white rounded-xl focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 text-sm transition-all"
+                      className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
                     />
                   </div>
                   <div className="grid grid-cols-2 sm:flex gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                    <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors w-full sm:w-auto shadow-sm">
-                      <Filter className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm font-semibold text-gray-700">Filter</span>
-                    </button>
+                    <div className="relative w-full sm:w-auto">
+                      <button 
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all w-full sm:w-auto shadow-sm"
+                      >
+                        <Filter className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-semibold text-gray-700">
+                          {statusFilter === 'all' ? 'Semua Status Sistem' : 
+                           statusFilter === 'online' ? 'Online' : 
+                           statusFilter === 'offline' ? 'Offline' : 'Warning'}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {isFilterOpen && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
+                          <div className="py-1">
+                            {[
+                              { id: 'all', label: 'Semua Status Sistem' },
+                              { id: 'online', label: 'Online' },
+                              { id: 'offline', label: 'Offline' },
+                              { id: 'warning', label: 'Warning' }
+                            ].map((opt) => (
+                              <button
+                                key={opt.id}
+                                onClick={() => {
+                                  setStatusFilter(opt.id);
+                                  setIsFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-teal-50 ${statusFilter === opt.id ? 'text-teal-600 bg-teal-50/50' : 'text-gray-600'}`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <button
-                      onClick={() => triggerToast('Laporan monitoring sedang diproses...')}
+                      onClick={handleExportPDF}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F9E78] text-white hover:bg-[#0B8563] rounded-xl transition-colors shadow-sm shadow-[#0F9E78]/20 w-full sm:w-auto"
                     >
-                      <FileDown className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Download</span>
+                      <FileText className="w-4 h-4" />
+                      <span className="text-sm font-semibold">Export</span>
                     </button>
                   </div>
                 </div>
@@ -426,8 +738,8 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="bg-gradient-to-br from-white to-emerald-50/30 rounded-3xl shadow-xl border border-emerald-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">Instalasi BIEON (2025)</h3>
-                    <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
+                    <h3 className="text-xl font-bold text-gray-800">Akses Kode Kendali Perangkat</h3>
+                    <p className="text-sm text-gray-600 mt-1">Frekuensi akses token per bulan</p>
                   </div>
                   <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
                     <Cpu className="w-6 h-6 text-white" />
@@ -460,7 +772,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       fill="url(#colorBieon)"
                       shape={<ThreeDBar />}
                       barSize={30}
-                      name="Instalasi BIEON"
+                      name="Akses Token"
                     />
                     <defs>
                       <linearGradient id="colorBieon" x1="0" y1="0" x2="0" y2="1">
@@ -580,16 +892,8 @@ export function TechnicianDashboard({ onNavigate }) {
                     <MapPin className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <div className="flex-1 w-full bg-gray-100 rounded-2xl overflow-hidden mt-2 relative min-h-[250px]">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15865.116672332824!2d106.8239247!3d-6.2268712!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f3e9a7e08927%3A0xe54e38e68dbb6db1!2sKuningan%2C%20Setia%20Budi%2C%20South%20Jakarta%20City%2C%20Jakarta!5e0!3m2!1sen!2sid!4v1714455823126!5m2!1sen!2sid"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0, position: 'absolute', top: 0, left: 0 }}
-                    allowFullScreen=""
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  ></iframe>
+                <div className="flex-1 w-full rounded-2xl overflow-hidden mt-2 relative min-h-[300px]">
+                  <ClientLiveMap clients={clients} isLoading={isLoading} />
                 </div>
               </div>
             </div>

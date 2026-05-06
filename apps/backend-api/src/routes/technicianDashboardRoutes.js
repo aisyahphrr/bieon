@@ -5,6 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
 // Semua route di sini memerlukan autentikasi dan role Technician
+// Semua rute di sini memerlukan autentikasi dan role Technician
 router.use(authMiddleware);
 router.use(roleMiddleware('Technician'));
 

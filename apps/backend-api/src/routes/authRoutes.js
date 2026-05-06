@@ -15,6 +15,7 @@ router.post('/forgot-password/reset', authController.resetForgotPassword);
 // Ambil profil diri sendiri (Memerlukan Token)
 router.get('/me', authMiddleware, authController.getMe);
 router.put('/settings', authMiddleware, authController.updateSettings);
+router.post('/change-password', authMiddleware, authController.changePassword);
 router.post('/logout', authMiddleware, authController.logout);
 router.post('/firebase-login', authController.firebaseLogin);
 

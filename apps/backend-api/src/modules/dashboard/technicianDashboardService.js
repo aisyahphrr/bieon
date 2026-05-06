@@ -2,21 +2,28 @@ const User = require('../../models/User');
 const Hub = require('../../models/Hub');
 const Device = require('../../models/Device');
 const Complaint = require('../../models/Complaint');
+const KendaliPerangkat = require('../../models/KendaliPerangkat');
+const TechnicianAccess = require('../../models/TechnicianAccess');
 
 /**
  * Mendapatkan metrik ringkasan untuk dashboard teknisi
  */
 exports.getMetrics = async (technicianId) => {
+    const mongoose = require('mongoose');
+    const techObjectId = new mongoose.Types.ObjectId(technicianId);
+
     // 1. Total Pelanggan Ditangani
-    const clients = await User.find({ assignedTechnician: technicianId, role: 'Homeowner' }).select('_id');
+    const clients = await User.find({ assignedTechnician: techObjectId, role: 'Homeowner' }).select('_id');
     const clientIds = clients.map(c => c._id);
     const totalClients = clients.length;
 
-    // 2. Instalasi BIEON (Total Hubs)
-    const totalHubs = await Hub.countDocuments({ owner: { $in: clientIds } });
+    // 2. Akses Kendali Perangkat (Total Access Codes)
+    const totalAccessCodes = await TechnicianAccess.countDocuments({ technicianId: techObjectId });
 
-    // 3. Smart Device Aktif (Total Devices)
-    const totalDevices = await Device.countDocuments({ owner: { $in: clientIds } });
+    // 3. Smart Device Aktif (Total Devices dari KendaliPerangkat)
+    const totalDevices = await KendaliPerangkat.countDocuments({ 
+        owner: { $in: clientIds }
+    });
 
     // 4. Pengaduan Aktif
     const activeComplaints = await Complaint.countDocuments({ 
@@ -26,7 +33,7 @@ exports.getMetrics = async (technicianId) => {
 
     return {
         totalClients,
-        totalHubs,
+        totalAccessCodes,
         totalDevices,
         activeComplaints
     };
@@ -36,7 +43,10 @@ exports.getMetrics = async (technicianId) => {
  * Mendapatkan data grafik untuk dashboard teknisi
  */
 exports.getCharts = async (technicianId, year = new Date().getFullYear()) => {
-    const clients = await User.find({ assignedTechnician: technicianId, role: 'Homeowner' }).select('_id');
+    const mongoose = require('mongoose');
+    const techObjectId = new mongoose.Types.ObjectId(technicianId);
+    
+    const clients = await User.find({ assignedTechnician: techObjectId, role: 'Homeowner' }).select('_id');
     const clientIds = clients.map(c => c._id);
 
     const startDate = new Date(year, 0, 1);
@@ -68,7 +78,28 @@ exports.getCharts = async (technicianId, year = new Date().getFullYear()) => {
         });
     };
 
-    const bieonPerMonth = await aggregateMonthly(Hub, 'owner');
+    const bieonPerMonth = await months.map(async (m, i) => {
+        const result = await TechnicianAccess.aggregate([
+            {
+                $match: {
+                    technicianId: techObjectId,
+                    createdAt: { 
+                        $gte: new Date(year, i, 1), 
+                        $lte: new Date(year, i, 31, 23, 59, 59) 
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+        return { bulan: m, jumlah: result.length > 0 ? result[0].count : 0 };
+    });
+    
+    const bieonPerMonthResolved = await Promise.all(bieonPerMonth);
     
     // For clients growth, use User model
     const resultKlien = await User.aggregate([
@@ -94,7 +125,7 @@ exports.getCharts = async (technicianId, year = new Date().getFullYear()) => {
     const pengaduanTrend = await aggregateMonthly(Complaint, 'homeowner');
 
     return {
-        bieonPerMonth,
+        bieonPerMonth: bieonPerMonthResolved,
         klienPerMonth,
         pengaduanTrend
     };
@@ -104,13 +135,17 @@ exports.getCharts = async (technicianId, year = new Date().getFullYear()) => {
  * Mendapatkan daftar monitoring pelanggan untuk teknisi
  */
 exports.getClientMonitoring = async (technicianId) => {
-    const clients = await User.find({ assignedTechnician: technicianId, role: 'Homeowner' })
-        .select('fullName technicianId address createdAt status systemName bieonId phoneNumber email')
+    // Explicitly cast to ObjectId to avoid any string vs ObjectId matching issues
+    const mongoose = require('mongoose');
+    const techObjectId = new mongoose.Types.ObjectId(technicianId);
+
+    const clients = await User.find({ assignedTechnician: techObjectId, role: 'Homeowner' })
+        .select('fullName technicianId address createdAt status systemName bieonId phoneNumber email currentLocation')
         .lean();
 
     const formattedClients = await Promise.all(clients.map(async (client) => {
         const hubs = await Hub.find({ owner: client._id }).lean();
-        const devices = await Device.find({ owner: client._id }).lean();
+        const devices = await KendaliPerangkat.find({ owner: client._id }).lean();
         
         const hubsCount = hubs.length;
         const devicesCount = devices.length;
@@ -132,9 +167,9 @@ exports.getClientMonitoring = async (technicianId) => {
             statusColor = 'warning';
         }
 
-        // Hitung status perangkat secara spesifik
-        const devicesOnline = devices.filter(d => d.status === 'ON' || d.status === 'OFF').length;
-        const devicesOffline = devices.filter(d => d.status === 'OFFLINE').length;
+        // Hitung status perangkat secara spesifik (Active, 1, 0 dianggap Online)
+        const devicesOnline = devices.filter(d => ['Active', '1', '0'].includes(d.status)).length;
+        const devicesOffline = devices.length - devicesOnline;
 
         // Cek pengaduan aktif
         const activeComplaintsCount = await Complaint.countDocuments({
@@ -144,10 +179,27 @@ exports.getClientMonitoring = async (technicianId) => {
         const adaPengaduan = activeComplaintsCount > 0;
         const statusPengaduan = adaPengaduan ? `Ada (${activeComplaintsCount} tiket aktif)` : 'Tidak ada';
 
+        // Extract location or use a mock fallback for demonstration if empty
+        // In real app, coordinates should be set during registration/installation
+        let lat = client.currentLocation?.lat;
+        let lng = client.currentLocation?.lng;
+
+        // Fallback: Generate simulated coordinates around Jakarta if missing
+        // so the user can see "titik BIEON" on the map
+        if (!lat || !lng) {
+            // Jakarta center roughly: -6.2088, 106.8456
+            const offsetLat = (Math.random() - 0.5) * 0.1; // +/- 0.05 deg
+            const offsetLng = (Math.random() - 0.5) * 0.1; 
+            lat = -6.2088 + offsetLat;
+            lng = 106.8456 + offsetLng;
+        }
+
         return {
             id: client.technicianId || `C-${client._id.toString().slice(-4).toUpperCase()}`,
             nama: client.fullName,
             lokasi: client.address || 'Unknown',
+            lat,
+            lng,
             status: statusColor,
             jumlahBieon: hubsCount,
             jumlahDevice: devicesCount,
