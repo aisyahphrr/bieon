@@ -502,16 +502,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   </div>
                 </div>
               </div>
-              {Object.keys(plnCurrentTariffs).length > 0 && (
-                <div className="mt-3 text-sm text-gray-100 space-y-1">
-                  {plnCategories.slice(0,3).map((c) => (
-                    <div key={c.key} className="flex items-center justify-between">
-                      <div className="truncate opacity-90">{c.label}</div>
-                      <div className="font-bold">Rp {plnCurrentTariffs[c.label] ? plnCurrentTariffs[c.label].toLocaleString('id-ID') : '-'}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
