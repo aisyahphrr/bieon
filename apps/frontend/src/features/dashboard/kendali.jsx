@@ -153,7 +153,7 @@ export function DeviceControlPage({ onNavigate }) {
         const systemsData = await sysRes.json();
 
         // 3. Get Devices (Disesuaikan untuk target ID)
-        const devRes = await fetch(`/api/kendaliperangkat/user/${targetId}`, {
+        const devRes = await fetch(`/api/kendaliperangkat/my-devices`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const devicesData = await devRes.json();
@@ -163,7 +163,7 @@ export function DeviceControlPage({ onNavigate }) {
           id: sys._id,
           bieonId: sys.bieonId,
           name: sys.bieonId, // Fallback name
-          totalHubs: sys.totalHubsCount,
+          totalHubs: sys.hubCount || sys.hubs?.length || 0,
           hubs: sys.hubs.map(hub => ({
             ...hub,
             devices: devicesData
@@ -181,7 +181,6 @@ export function DeviceControlPage({ onNavigate }) {
 
         setBieonSystems(joinedSystems);
         if (joinedSystems.length > 0) {
-          setCurrentBieon(joinedSystems[0]);
           setStep("view-bieon");
         } else {
           setStep("idle");
@@ -272,15 +271,70 @@ export function DeviceControlPage({ onNavigate }) {
     }
   }, []);
 
-  // Sinkronisasi otomatis currentBieon ketika bieonSystems berubah (misal karena socket/real-time)
+  // [FIX] Sinkronisasi otomatis currentBieon ketika bieonSystems berubah
   useEffect(() => {
-    if (currentBieon) {
-      const updatedCurrent = bieonSystems.find(sys => sys.id === currentBieon.id);
-      if (updatedCurrent) {
-        setCurrentBieon(updatedCurrent);
+    const handleSelection = () => {
+      const selectedId = localStorage.getItem('selectedBieonId');
+      const shouldOpenInput = localStorage.getItem('openBieonInput') === 'true';
+
+      if (selectedId && bieonSystems.length > 0) {
+        const target = bieonSystems.find(s => 
+          String(s.id) === String(selectedId) || 
+          String(s.bieonId) === String(selectedId)
+        );
+        if (target) {
+          setCurrentBieon(target);
+          localStorage.removeItem('selectedBieonId');
+          return true; // Selection handled
+        }
+      }
+
+      if (shouldOpenInput) {
+        setStep('input-id');
+        localStorage.removeItem('openBieonInput');
+      }
+      return false;
+    };
+
+    if (bieonSystems.length > 0) {
+      const selectionHandled = handleSelection();
+      
+      // Fallback logic
+      if (!selectionHandled) {
+        if (!currentBieon) {
+          setCurrentBieon(bieonSystems[0]);
+        } else {
+          // Update data currentBieon jika ada perubahan di bieonSystems
+          const updated = bieonSystems.find(s => s.id === currentBieon.id);
+          if (updated) setCurrentBieon(updated);
+        }
       }
     }
+
+    const eventListener = () => handleSelection();
+    window.addEventListener('bieonSelectionChanged', eventListener);
+    return () => window.removeEventListener('bieonSelectionChanged', eventListener);
   }, [bieonSystems]);
+
+  // [ADD] AUTO-HIGHLIGHT LOGIC FOR DEEP-LINKING
+  useEffect(() => {
+    const highlightId = sessionStorage.getItem('pendingHighlight');
+    if (highlightId && step === "view-bieon") {
+      // 1. Expand the device card
+      setExpandedDevice(highlightId);
+      
+      // 2. Scroll to it after a short delay to allow rendering
+      setTimeout(() => {
+        const element = document.getElementById(`device-${highlightId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          
+          // 3. Cleanup
+          sessionStorage.removeItem('pendingHighlight');
+        }
+      }, 600);
+    }
+  }, [step, bieonSystems]);
 
   const handleGenerateToken = async () => {
     try {
@@ -336,7 +390,7 @@ export function DeviceControlPage({ onNavigate }) {
         },
         body: JSON.stringify({
           bieonId: bieonIdInput,
-          totalHubs: 3, // Default atau ambil dari BIEON_DATABASE jika perlu
+          totalHubs: BIEON_DATABASE[bieonIdInput]?.totalHubs || 1, 
           userId: userProfile._id
         })
       });
@@ -367,6 +421,7 @@ export function DeviceControlPage({ onNavigate }) {
       alert("Gagal: " + error.message);
     }
   };
+
   const handleAddHub = () => {
     if (!currentBieon) return;
     const newHub = {
@@ -1044,6 +1099,16 @@ export function DeviceControlPage({ onNavigate }) {
   );
 
   const getAllDevices = () => allDevices;
+  
+  // [ADD] Dynamic Rooms based on current BIEON devices
+  const dynamicRooms = useMemo(() => {
+    if (!currentBieon) return [];
+    const devices = currentBieon.hubs.flatMap(h => h.devices);
+    const roomsFound = devices
+      .map(d => d.location)
+      .filter(loc => loc && loc !== 'Pending');
+    return [...new Set(roomsFound)].sort();
+  }, [currentBieon]);
 
   const getFilteredDevices = () => {
     let devices = currentBieon ? currentBieon.hubs.flatMap((hub) => hub.devices) : getAllDevices();
@@ -1199,7 +1264,7 @@ export function DeviceControlPage({ onNavigate }) {
                           </div>
                           <div>
                             <p className="text-sm text-gray-600">Total Hubs</p>
-                            <p className="text-2xl  text-gray-900">{bieonSystems.reduce((sum, b) => sum + b.totalHubs, 0)}</p>
+                            <p className="text-2xl  text-gray-900">{bieonSystems.reduce((sum, b) => sum + (Number(b.totalHubs) || 0), 0)}</p>
                           </div>
                         </div>
                       </div>
@@ -1247,6 +1312,7 @@ export function DeviceControlPage({ onNavigate }) {
                             className="border-2 border-gray-200 rounded-xl p-6 hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer"
                             onClick={() => {
                               setCurrentBieon(bieon);
+                              setSelectedRoom("all");
                               setStep("view-bieon");
                             }}
                           >
@@ -1409,15 +1475,16 @@ export function DeviceControlPage({ onNavigate }) {
                       onClick={() => setSelectedRoom("all")}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all ${selectedRoom === "all" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                     >
-                      Semua Ruangan
+                      Semua Ruangan ({currentBieon?.hubs.flatMap(h => h.devices).length || 0})
                     </button>
-                    {rooms.map((room) => {
-                      const deviceCount = getFilteredDevices().filter((d) => d.location === room).length;
+                    {dynamicRooms.map((room) => {
+                      const allBieonDevices = currentBieon ? currentBieon.hubs.flatMap(h => h.devices) : [];
+                      const deviceCount = allBieonDevices.filter((d) => d.location === room).length;
                       return (
                         <button
                           key={room}
                           onClick={() => setSelectedRoom(room)}
-                          className={`px-4 py-2 rounded-lg  transition-all ${selectedRoom === room ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                          className={`px-4 py-2 rounded-lg transition-all font-semibold ${selectedRoom === room ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                         >
                           {room} ({deviceCount})
                         </button>
@@ -1498,7 +1565,8 @@ export function DeviceControlPage({ onNavigate }) {
                       {getFilteredDevices().map((device) => (
                         <div
                           key={device.id}
-                          className={`border border-gray-200 rounded-xl p-4 sm:p-5 transition-all ${expandedDevice === device.id ? "shadow-md bg-white" : "hover:shadow-md bg-white"}`}
+                          id={`device-${device.id}`}
+                          className={`border border-gray-200 rounded-xl p-4 sm:p-5 transition-all ${expandedDevice === device.id ? "shadow-md bg-white ring-2 ring-emerald-500" : "hover:shadow-md bg-white"}`}
                         >
                           {/* Slim Header - Always visible */}
                           <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}>

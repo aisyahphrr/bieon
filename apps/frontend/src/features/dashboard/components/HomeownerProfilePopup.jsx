@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Edit2, Plus, Settings, LogOut, ChevronDown, Check, User, Camera, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { X, Edit2, Plus, Settings, LogOut, ChevronDown, Check, User, Camera, Zap, Cpu, Loader2 } from 'lucide-react';
+import AddBieonPopup from './AddBieonPopup';
 
 export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, userProfile }) {
+  const navigate = useNavigate();
   const [view, setView] = useState('main'); // 'main', 'edit', 'settings'
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80');
   const fileInputRef = useRef(null);
@@ -30,11 +33,43 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
     }
   }, [userProfile]);
 
-  // Settings State
   const [settingsData, setSettingsData] = useState({
     theme: 'Light',
     language: 'Eng'
   });
+
+  const [bieonSystems, setBieonSystems] = useState([]);
+  const [showAddBieonPopup, setShowAddBieonPopup] = useState(false);
+  const [isLoadingBieon, setIsLoadingBieon] = useState(false);
+
+  // Custom Dropdown States
+  const [openDropdown, setOpenDropdown] = useState(null); // 'theme' or 'language'
+
+  // Fetch Bieon Systems
+  const fetchBieonSystems = async () => {
+    if (!userProfile?._id) return;
+    setIsLoadingBieon(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/hubs/systems/${userProfile._id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBieonSystems(data);
+      }
+    } catch (err) {
+      console.error("Gagal ambil sistem BIEON:", err);
+    } finally {
+      setIsLoadingBieon(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && userProfile?._id) {
+      fetchBieonSystems();
+    }
+  }, [isOpen, userProfile]);
 
   if (!isOpen) return null;
 
@@ -153,31 +188,47 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                 <div className="flex items-center justify-between mb-5 px-2">
                   <h4 className="text-lg font-extrabold text-slate-800 tracking-tight">Your Device</h4>
                   <button 
-                    onClick={() => {
-                        onClose();
-                        localStorage.setItem('openBieonInput', 'true');
-                        if (onNavigate) onNavigate('kendali');
-                    }}
-                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-[#009b7c] hover:text-white transition-all"
+                    onClick={() => setShowAddBieonPopup(true)}
+                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-[#009b7c] hover:text-white transition-all shadow-sm"
+                    title="Tambah BIEON ID"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
                 
-                <div className="px-2 mb-6">
-                  {userProfile?.bieonId ? (
-                    <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors group">
-                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-emerald-100 group-hover:border-emerald-300 transition-colors flex items-center justify-center bg-white">
-                        <Zap className="w-6 h-6 text-emerald-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[14px] font-bold text-slate-800 tracking-tight">ID BIEON Master</div>
-                        <div className="text-[12px] font-bold text-emerald-600 font-mono mt-0.5">{userProfile.bieonId}</div>
-                      </div>
-                      <button className="px-4 py-1.5 bg-emerald-50 text-[#009b7c] text-[11px] font-bold rounded-full hover:bg-[#009b7c] hover:text-white transition-all opacity-80 group-hover:opacity-100">
-                        Tersambung
-                      </button>
+                <div className="px-2 mb-6 space-y-3">
+                  {isLoadingBieon ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
                     </div>
+                  ) : bieonSystems.length > 0 ? (
+                    bieonSystems.map((sys) => (
+                      <div 
+                        key={sys._id} 
+                        onClick={() => {
+                          localStorage.setItem('selectedBieonId', sys._id);
+                          window.dispatchEvent(new Event('bieonSelectionChanged'));
+                          onClose();
+                          if (onNavigate) onNavigate('kendali');
+                          else navigate('/kendali');
+                        }}
+                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-emerald-500 hover:shadow-md transition-all group cursor-pointer"
+                      >
+                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-emerald-100 group-hover:bg-emerald-50 transition-colors flex items-center justify-center bg-white">
+                          <Cpu className="w-6 h-6 text-emerald-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[14px] font-bold text-slate-800 tracking-tight group-hover:text-emerald-700 transition-colors">{sys.bieonId === userProfile.bieonId ? 'Master BIEON System' : 'BIEON System'}</div>
+                          <div className="text-[12px] font-bold text-emerald-600 font-mono mt-0.5">{sys.bieonId}</div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sys.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                            {sys.status}
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-bold uppercase">{sys.hubCount || 0} Hubs</span>
+                        </div>
+                      </div>
+                    ))
                   ) : (
                     <div className="text-center py-8 text-slate-400 text-sm font-medium border border-dashed border-slate-200 rounded-xl">
                       Belum ada perangkat BIEON terdaftar.
@@ -217,7 +268,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                       localStorage.removeItem('bieon_tech_access_expiry');
                       
                       if (onNavigate) onNavigate('landing');
-                      else window.location.href = '/login';
+                      else navigate('/login');
                       onClose();
                     }}
                     className="w-full flex items-center gap-4 group transition-all p-3 -mx-3 rounded-xl hover:bg-red-50/50"
@@ -303,20 +354,99 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
 
           {/* SETTINGS VIEW */}
           {view === 'settings' && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300 pt-2 px-1">
-              <div className="flex justify-between items-center group cursor-pointer p-4 bg-slate-50/70 border border-slate-100 rounded-2xl hover:bg-white hover:border-emerald-200 transition-all shadow-sm">
-                <span className="text-[15px] font-bold text-slate-800">Theme</span>
-                <div className="flex items-center gap-2 text-slate-500 font-bold text-[13px] group-hover:text-[#009b7c]">
-                  {settingsData.theme}
-                  <ChevronDown className="w-4 h-4" />
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 pt-2 px-1 pb-6">
+              {/* Theme Dropdown */}
+              <div className="space-y-2.5">
+                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">Tampilan Tema</label>
+                <div className="relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'theme' ? null : 'theme')}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+                      openDropdown === 'theme' 
+                      ? 'bg-white border-emerald-500 shadow-lg shadow-emerald-500/10 ring-4 ring-emerald-500/5' 
+                      : 'bg-slate-50/50 border-slate-200 hover:border-emerald-300 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${settingsData.theme === 'Dark' ? 'bg-slate-800 text-white' : 'bg-amber-100 text-amber-600'}`}>
+                        {settingsData.theme === 'Dark' ? <Zap className="w-4 h-4" /> : <Zap className="w-4 h-4 fill-amber-500" />}
+                      </div>
+                      <span className="text-[15px] font-bold text-slate-700">{settingsData.theme === 'Dark' ? 'Gelap (Dark)' : 'Terang (Light)'}</span>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'theme' ? 'rotate-180 text-emerald-500' : ''}`} />
+                  </button>
+
+                  {openDropdown === 'theme' && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                      <div 
+                        onClick={() => { setSettingsData({...settingsData, theme: 'Light'}); setOpenDropdown(null); }}
+                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors"
+                      >
+                        <span className={`text-sm font-bold ${settingsData.theme === 'Light' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Terang (Light)</span>
+                        {settingsData.theme === 'Light' && <Check className="w-4 h-4 text-emerald-500" />}
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsData({...settingsData, theme: 'Dark'}); setOpenDropdown(null); }}
+                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors border-t border-slate-50"
+                      >
+                        <span className={`text-sm font-bold ${settingsData.theme === 'Dark' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Gelap (Dark)</span>
+                        {settingsData.theme === 'Dark' && <Check className="w-4 h-4 text-emerald-500" />}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div className="flex justify-between items-center group cursor-pointer p-4 bg-slate-50/70 border border-slate-100 rounded-2xl hover:bg-white hover:border-emerald-200 transition-all shadow-sm">
-                <span className="text-[15px] font-bold text-slate-800">Language</span>
-                <div className="flex items-center gap-2 text-slate-500 font-bold text-[13px] group-hover:text-[#009b7c]">
-                  {settingsData.language}
-                  <ChevronDown className="w-4 h-4" />
+              {/* Language Dropdown */}
+              <div className="space-y-2.5">
+                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">Pilihan Bahasa</label>
+                <div className="relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'language' ? null : 'language')}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+                      openDropdown === 'language' 
+                      ? 'bg-white border-emerald-500 shadow-lg shadow-emerald-500/10 ring-4 ring-emerald-500/5' 
+                      : 'bg-slate-50/50 border-slate-200 hover:border-emerald-300 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-[10px]">
+                        {settingsData.language === 'Indo' ? 'ID' : 'EN'}
+                      </div>
+                      <span className="text-[15px] font-bold text-slate-700">{settingsData.language === 'Indo' ? 'Indonesia (Indonesian)' : 'Inggris (English)'}</span>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'language' ? 'rotate-180 text-emerald-500' : ''}`} />
+                  </button>
+
+                  {openDropdown === 'language' && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
+                      <div 
+                        onClick={() => { setSettingsData({...settingsData, language: 'Eng'}); setOpenDropdown(null); }}
+                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors"
+                      >
+                        <span className={`text-sm font-bold ${settingsData.language === 'Eng' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Inggris (English)</span>
+                        {settingsData.language === 'Eng' && <Check className="w-4 h-4 text-emerald-500" />}
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsData({...settingsData, language: 'Indo'}); setOpenDropdown(null); }}
+                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors border-t border-slate-50"
+                      >
+                        <span className={`text-sm font-bold ${settingsData.language === 'Indo' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Indonesia (Indonesian)</span>
+                        {settingsData.language === 'Indo' && <Check className="w-4 h-4 text-emerald-500" />}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3 shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                    <Settings className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <p className="text-[12px] text-emerald-800 font-bold leading-relaxed">
+                    Perubahan akan diterapkan secara otomatis. Kami akan menyimpan preferensi Anda ke cloud segera.
+                  </p>
                 </div>
               </div>
             </div>
@@ -324,6 +454,16 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
 
         </div>
       </div>
+
+      {/* Add Bieon Popup */}
+      <AddBieonPopup 
+        isOpen={showAddBieonPopup} 
+        onClose={() => setShowAddBieonPopup(false)} 
+        userId={userProfile?._id}
+        onSuccess={() => {
+          fetchBieonSystems();
+        }}
+      />
     </div>
   );
 }

@@ -17,18 +17,75 @@ const Logo = () => (
 );
 
 import { useNavigate } from 'react-router-dom';
+import { auth, googleProvider } from '../../config/firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 const Signup = ({ setTempData }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleNext = (e) => {
     e.preventDefault();
     if (setTempData) {
-      setTempData({ email, password });
+      setTempData({ email, password, isGoogle: false });
     }
     navigate('/setup');
+  };
+
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      
+      const response = await fetch('/api/auth/firebase-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: idToken, mode: 'signup' })
+      });
+      
+      const data = await response.json();
+      console.log("DEBUG: Google Login Response Data:", data);
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login Google gagal');
+      }
+
+      // Simpan token untuk session saat ini agar bisa hit API yang butuh auth
+      localStorage.setItem('token', data.token);
+
+      if (setTempData) {
+        setTempData({ 
+          email: data.user.email, 
+          fullName: data.user.fullName,
+          firstName: data.user.firstName,
+          lastName: data.user.lastName,
+          isGoogle: true 
+        });
+      }
+
+      // Jika user sudah punya bieonId, berarti dia sudah pernah setup sebelumnya
+      if (data.user.bieonId && data.user.bieonId !== '') {
+        console.log("DEBUG: User has bieonId, navigating to Dashboard");
+        localStorage.setItem('userId', data.user.id);
+        localStorage.setItem('role', data.user.role);
+        localStorage.setItem('fullName', data.user.fullName);
+        navigate('/dashboard');
+      } else {
+        console.log("DEBUG: User has NO bieonId or empty, navigating to Setup");
+        // Jika belum, lanjut ke setup
+        navigate('/setup');
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Gagal mendaftar menggunakan Google');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,14 +147,21 @@ const Signup = ({ setTempData }) => {
               </div>
             </div>
 
+            {error && (
+              <div className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-100 mb-4">
+                {error}
+              </div>
+            )}
+
             {/* Create Account Button */}
             <div className="pt-4">
                <button 
                  type="submit"
-                 className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2"
+                 disabled={loading}
+                 className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2 disabled:opacity-70"
                >
-                 <span className="relative z-10">Create Account</span>
-                 <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />
+                 <span className="relative z-10">{loading ? 'Memproses...' : 'Create Account'}</span>
+                 {!loading && <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />}
                  <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
                </button>
             </div>
@@ -113,12 +177,16 @@ const Signup = ({ setTempData }) => {
           {/* Google Button */}
           <button 
             type="button" 
-            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 rounded-xl py-3.5 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow group"
+            onClick={handleGoogleSignup}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 rounded-xl py-3.5 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow group disabled:opacity-70"
           >
             <div className="group-hover:scale-110 transition-transform">
               <GoogleIcon />
             </div>
-            <span className="text-[14px] font-bold text-slate-700">Google</span>
+            <span className="text-[14px] font-bold text-slate-700">
+              {loading ? 'Silakan Tunggu...' : 'Google'}
+            </span>
           </button>
 
           {/* Footer Links */}

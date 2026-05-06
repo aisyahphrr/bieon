@@ -1,4 +1,5 @@
 const KendaliPerangkat = require('../models/KendaliPerangkat');
+const Activity = require('../models/Activity');
 const { publishCommand } = require('../config/mqtt');
 const { broadcastDeviceTelemetry } = require('../shared/socketEmitter');
 
@@ -113,6 +114,16 @@ const startScheduler = () => {
                         
                         await KendaliPerangkat.findByIdAndUpdate(device._id, { status: '1', lastActivity: new Date() });
                         
+                        // LOGGING KE AKTIVITAS TERBARU
+                        await new Activity({
+                            user: device.owner,
+                            room: device.location,
+                            actuator: device.name,
+                            status: 'ON',
+                            action: 'Menyalakan',
+                            trigger: 'Otomasi (Jadwal)'
+                        }).save();
+
                         broadcastDeviceTelemetry(device.hubId, {
                             _id: device._id,
                             status: '1'
@@ -128,12 +139,32 @@ const startScheduler = () => {
                         
                         await KendaliPerangkat.findByIdAndUpdate(device._id, { status: '0', lastActivity: new Date() });
                         
+                        // LOGGING KE AKTIVITAS TERBARU
+                        await new Activity({
+                            user: device.owner,
+                            room: device.location,
+                            actuator: device.name,
+                            status: 'OFF',
+                            action: 'Mematikan',
+                            trigger: 'Otomasi (Jadwal)'
+                        }).save();
+
                         broadcastDeviceTelemetry(device.hubId, {
                             _id: device._id,
                             status: '0'
                         });
                     }
                 }
+            }
+
+            // 2. CEK SLA PENGADUAN (Auto-overdue)
+            try {
+                const { checkAndUpdateSLAStatuses } = require('../controllers/complaintController');
+                if (typeof checkAndUpdateSLAStatuses === 'function') {
+                    await checkAndUpdateSLAStatuses();
+                }
+            } catch (err) {
+                console.error('[Scheduler] Gagal mengecek SLA Pengaduan:', err.message);
             }
 
         } catch (error) {

@@ -3,6 +3,15 @@ const { SUPPORTED_MODELS } = require('./supportedDevices');
 const Device = require('../models/Device');
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const SensorData = require('../models/SensorData');
+const DeviceWhitelist = require('../models/DeviceWhitelist');
+const User = require('../models/User');
+const PlnTariff = require('../models/PlnTariff');
+const EnergyLog = require('../models/EnergyLog');
+const EnvironmentLog = require('../models/EnvironmentLog');
+const SecurityLog = require('../models/SecurityLog');
+const WaterQualityLog = require('../models/WaterQualityLog');
+const Activity = require('../models/Activity');
+const alertService = require('../services/alertService');
 
 let mqttClient = null;
 let ioInstance = null;
@@ -43,14 +52,22 @@ const connectMQTT = (io) => {
         }
       } else if (topic.startsWith('bieon/')) {
         const parts = topic.split('/');
+
+        // Handle Auth Request: bieon/<master_id>/auth/request
+        if (parts.length >= 4 && parts[2] === 'auth' && parts[3] === 'request') {
+          const masterId = parts[1];
+          await handleAuthRequest(masterId, payload);
+          return;
+        }
+
         if (parts.length >= 3) {
           const friendlyName = parts[1];
           const param = parts[2]; // suhu, kelembapan, status, command
 
           let actualValue = payload;
           if (typeof payload === 'object' && payload !== null) {
-            actualValue = payload.status !== undefined ? payload.status : 
-                          (payload.value !== undefined ? payload.value : payload);
+            actualValue = payload.status !== undefined ? payload.status :
+              (payload.value !== undefined ? payload.value : payload);
           }
 
           // Format data untuk database
@@ -79,10 +96,9 @@ const connectMQTT = (io) => {
 
 const handleDeviceTelemetry = async (friendlyName, payload) => {
   try {
-    // Mapping khusus untuk sensor air agar sinkron antara MQTT dan Database
     let searchName = friendlyName;
     if (friendlyName.toLowerCase().includes('sensor_air')) {
-        searchName = "Sensor Kualitas Air";
+      searchName = "Sensor Kualitas Air";
     }
 
     const nameRegex = new RegExp('^' + searchName.replace(/[_\s]/g, '[_\\s]') + '$', 'i');
@@ -98,13 +114,12 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
     if (payload.tds !== undefined) updates['currentValues.tds'] = payload.tds;
     if (payload.turbidity !== undefined) updates['currentValues.turbidity'] = payload.turbidity;
     if (payload.battery !== undefined) updates.battery = payload.battery;
-    
-    // Auto-Berubah Warna (Status)
+
     if (payload.status !== undefined) {
-        let normStatus = String(payload.status).toUpperCase();
-        if (normStatus === 'ON' || normStatus === '1') normStatus = '1';
-        else if (normStatus === 'OFF' || normStatus === '0') normStatus = '0';
-        updates.status = normStatus;
+      let normStatus = String(payload.status).toUpperCase();
+      if (normStatus === 'ON' || normStatus === '1') normStatus = '1';
+      else if (normStatus === 'OFF' || normStatus === '0') normStatus = '0';
+      updates.status = normStatus;
     }
 
     const updatedDevice = await KendaliPerangkat.findOneAndUpdate(
@@ -113,7 +128,6 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
       { new: true }
     );
 
-    // Kirim teriakan ke Frontend agar warna berubah otomatis
     if (updatedDevice && ioInstance) {
       ioInstance.emit('device_telemetry', {
         _id: updatedDevice._id,
@@ -123,107 +137,244 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
       });
     }
 
-    // ==========================================
-    // LOGIKA OTOMATISASI: KENDALI LINGKUNGAN
-    // ==========================================
-    if (updatedDevice && updatedDevice.category === 'Sensor' && updatedDevice.currentValues) {
-      let aspect = updatedDevice.type; // misal: 'Kenyamanan', 'Kualitas Air'
-      
-      // Mapping untuk sensor fisik Zigbee atau sensor custom
-      if (aspect === 'SNZB-02DR2' || aspect === 'Sensor Kenyamanan' || aspect === 'sensor aisyah') {
-          aspect = 'Kenyamanan';
-      }
-      
-      if (['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect)) {
-        // Cari semua aktuator milik user ini yang bergantung pada aspek lingkungan ini
-        const actuators = await KendaliPerangkat.find({
-            owner: updatedDevice.owner,
-            category: 'Control Actuator System',
-            controlMethod: 'Lingkungan',
-            environmentAspect: aspect
-        });
+    // 1. Notifikasi Perubahan Status
+    if (updates.status !== undefined && device.status !== updates.status) {
+      const Alert = require('../models/Alert');
+      const statusText = updates.status === '1' ? 'Menyala (ON)' : 'Mati (OFF)';
+      let category = device.environmentAspect === 'Keamanan' ? 'Keamanan' : 
+                     (device.environmentAspect === 'Kenyamanan' ? 'Kenyamanan' : 
+                     (device.environmentAspect === 'Kualitas Air' ? 'Air Sanitasi' : 'Sistem'));
 
-        if (actuators.length > 0) {
-            for (const act of actuators) {
-                if (!act.thresholds) continue;
+      await Alert.create({
+        owner: device.owner,
+        category,
+        title: `Perangkat ${statusText}`,
+        message: `[Log] Perangkat ${device.name} di ${device.location} telah berubah status menjadi ${statusText}.`,
+        type: 'Info',
+        link: 'kendali',
+        metadata: { deviceId: device._id }
+      });
+    }
 
-                let isMet = true;
-                let hasCondition = false;
-                const sensor = updatedDevice; // HANYA cek sensor yang baru saja mengirim data
+    // 2. Delta Billing & Energy Logging
+    if (updatedDevice && payload.energyToday !== undefined) {
+      const user = await User.findById(updatedDevice.owner);
+      if (user) {
+        const prevEnergy = updatedDevice.currentValues?.lastEnergyReading || 0;
+        const currentEnergy = payload.energyToday;
+        let deltaKwh = Math.max(0, currentEnergy - prevEnergy);
+        if (currentEnergy < prevEnergy) deltaKwh = currentEnergy; 
 
-                if (!sensor.currentValues) continue;
+        if (deltaKwh > 0) {
+          const plnCategory = user.plnTariff || 'R-1/TR 1300 VA';
+          const tariffRecord = await PlnTariff.findOne({ category: new RegExp(plnCategory, 'i') }).sort({ createdAt: -1 });
+          const tariffPrice = tariffRecord ? tariffRecord.tariff : 1444;
+          const cost = deltaKwh * tariffPrice;
+          
+          user.tokenBalance = Math.max(0, (user.tokenBalance || 0) - cost);
+          await user.save();
 
-                // Cek Suhu (Temperature)
-                if (act.thresholds.temperature !== undefined) {
-                    // PRIORITAS: Gunakan nilai dari sensor yang baru saja mengirim data (sensor.currentValues)
-                    const sensorVal = sensor.currentValues.waterTemp !== undefined ? sensor.currentValues.waterTemp : sensor.currentValues.temperature;
-                    
-                    if (sensorVal !== undefined) {
-                        hasCondition = true;
-                        if (sensorVal <= act.thresholds.temperature) {
-                            isMet = false;
-                        }
-                    }
-                }
-                
-                // Cek Kelembapan (Humidity)
-                if (act.thresholds.humidity !== undefined && sensor.currentValues.humidity !== undefined) {
-                    hasCondition = true;
-                    if (sensor.currentValues.humidity <= act.thresholds.humidity) {
-                        isMet = false;
-                    }
-                }
+          await KendaliPerangkat.findByIdAndUpdate(updatedDevice._id, { 
+            'currentValues.lastEnergyReading': currentEnergy,
+            'currentValues.energyToday': currentEnergy,
+            'currentValues.currentLoad': payload.currentLoad || 0
+          });
 
-                // Cek Kualitas Air (opsional jika dibutuhkan nanti)
-                if (act.thresholds.ph !== undefined && sensor.currentValues.ph !== undefined) {
-                    hasCondition = true;
-                    if (sensor.currentValues.ph <= act.thresholds.ph) {
-                        isMet = false;
-                    }
-                }
-                if (act.thresholds.tds !== undefined && sensor.currentValues.tds !== undefined) {
-                    hasCondition = true;
-                    if (sensor.currentValues.tds <= act.thresholds.tds) {
-                        isMet = false;
-                    }
-                }
-                if (act.thresholds.turbidity !== undefined && sensor.currentValues.turbidity !== undefined) {
-                    hasCondition = true;
-                    if (sensor.currentValues.turbidity <= act.thresholds.turbidity) {
-                        isMet = false;
-                    }
-                }
-
-                if (hasCondition) {
-                    const targetTopic = `bieon/${act.name.replace(/\s+/g, '_')}/command`;
-                    
-                    if (isMet) {
-                        if (String(act.status) !== '1') {
-                            console.log(`[Automation] Triggering Actuator ${act.name} to ON (All sensors met threshold)`);
-                            publishCommand(targetTopic, 'ON');
-                            await KendaliPerangkat.findByIdAndUpdate(act._id, { status: '1' });
-                            if (ioInstance) {
-                                ioInstance.emit('device_telemetry', { _id: act._id, status: '1' });
-                            }
-                        }
-                    } else {
-                        if (String(act.status) !== '0') {
-                            console.log(`[Automation] Triggering Actuator ${act.name} to OFF (Sensor condition not met)`);
-                            publishCommand(targetTopic, 'OFF');
-                            await KendaliPerangkat.findByIdAndUpdate(act._id, { status: '0' });
-                            if (ioInstance) {
-                                ioInstance.emit('device_telemetry', { _id: act._id, status: '0' });
-                            }
-                        }
-                    }
-                }
-            }
+          await new EnergyLog({
+            device: updatedDevice._id,
+            date: new Date(),
+            totalKwh: deltaKwh,
+            power: payload.currentLoad || 0,
+            owner: user._id
+          }).save();
         }
       }
     }
 
+    // 3. History Logging & Danger Alerts
+    if (updatedDevice && updatedDevice.category === 'Sensor') {
+      if (payload.temperature !== undefined || payload.humidity !== undefined) {
+        await new EnvironmentLog({
+          hub: updatedDevice.hubId,
+          date: new Date(),
+          avgTemperature: payload.temperature || updatedDevice.currentValues?.temperature || 0,
+          avgHumidity: (payload.humidity || updatedDevice.currentValues?.humidity || 0) + '%',
+          room: updatedDevice.location || 'Lainnya',
+          owner: updatedDevice.owner
+        }).save();
+      }
+      if (payload.doorOpen !== undefined || payload.motion !== undefined) {
+        await new SecurityLog({
+          device: updatedDevice._id,
+          date: new Date(),
+          action: payload.doorOpen ? 'Terbuka' : (payload.motion ? 'Gerakan Terdeteksi' : 'Aman'),
+          owner: updatedDevice.owner
+        }).save();
+      }
+      await alertService.simulateSensorData(updatedDevice._id, payload);
+    }
+
+    // 4. Logika Otomatisasi
+    if (updatedDevice && updatedDevice.category === 'Sensor' && updatedDevice.currentValues) {
+      let aspect = updatedDevice.type;
+      if (aspect === 'SNZB-02DR2' || aspect === 'Sensor Kenyamanan' || aspect === 'Kenyamanan') aspect = 'Kenyamanan';
+      else if (aspect === 'Sensor Kualitas Air' || aspect === 'Kualitas Air') aspect = 'Kualitas Air';
+      else if (aspect === 'Sensor Keamanan' || aspect === 'Keamanan') aspect = 'Keamanan';
+
+      if (['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect)) {
+        const actuators = await KendaliPerangkat.find({
+          owner: updatedDevice.owner,
+          category: 'Control Actuator System',
+          controlMethod: 'Lingkungan',
+          environmentAspect: aspect
+        });
+
+        for (const act of actuators) {
+          if (!act.thresholds) continue;
+          let isMet = true;
+          let hasCondition = false;
+          const sensor = updatedDevice;
+
+          // Check Temperature
+          if (act.thresholds.temperature !== undefined) {
+            const sensorVal = sensor.currentValues.waterTemp !== undefined ? sensor.currentValues.waterTemp : sensor.currentValues.temperature;
+            if (sensorVal !== undefined) {
+              hasCondition = true;
+              if (sensorVal <= act.thresholds.temperature) isMet = false;
+            }
+          }
+          // Check Humidity
+          if (act.thresholds.humidity !== undefined && sensor.currentValues.humidity !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.humidity <= act.thresholds.humidity) isMet = false;
+          }
+          // Check Water Quality
+          if (act.thresholds.ph !== undefined && sensor.currentValues.ph !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.ph <= act.thresholds.ph) isMet = false;
+          }
+          if (act.thresholds.tds !== undefined && sensor.currentValues.tds !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.tds <= act.thresholds.tds) isMet = false;
+          }
+          if (act.thresholds.turbidity !== undefined && sensor.currentValues.turbidity !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.turbidity <= act.thresholds.turbidity) isMet = false;
+          }
+
+          if (hasCondition) {
+            const targetTopic = `bieon/${act.name.replace(/\s+/g, '_')}/command`;
+            const newStatus = isMet ? '1' : '0';
+            
+            if (String(act.status) !== newStatus) {
+              console.log(`[Automation] ${act.name} -> ${newStatus === '1' ? 'ON' : 'OFF'}`);
+              publishCommand(targetTopic, newStatus === '1' ? 'ON' : 'OFF');
+              await KendaliPerangkat.findByIdAndUpdate(act._id, { status: newStatus });
+
+              await new Activity({
+                user: act.owner,
+                room: act.location,
+                actuator: act.name,
+                status: newStatus === '1' ? 'ON' : 'OFF',
+                action: newStatus === '1' ? 'Menyalakan' : 'Mematikan',
+                trigger: `Otomasi (${aspect})`
+              }).save();
+
+              if (ioInstance) ioInstance.emit('device_telemetry', { _id: act._id, status: newStatus });
+
+              const Alert = require('../models/Alert');
+              await Alert.create({
+                owner: act.owner,
+                category: aspect === 'Kualitas Air' ? 'Air Sanitasi' : aspect,
+                title: isMet ? 'Otomasi Aktif' : 'Otomasi Selesai',
+                message: `Sistem otomatis ${isMet ? 'menyalakan' : 'mematikan'} ${act.name} karena kondisi ${aspect} ${isMet ? 'memerlukan tindakan' : 'kembali normal'}.`,
+                type: isMet ? 'Success' : 'Info',
+                link: 'kendali',
+                metadata: { deviceId: act._id }
+              });
+            }
+          }
+        }
+      }
+    }
   } catch (err) {
     console.error('❌ Telemetry Error:', err.message);
+  }
+};
+
+const handleAuthRequest = async (masterId, payload) => {
+  try {
+    // Mendukung dua format payload:
+    // Format 1: Langsung object device ({"device_ieee": "...", ...})
+    // Format 2: Sesuai struktur db ({"devices": {"IEEE_MAC": {...}}})
+
+    let devicesToAuth = [];
+
+    if (payload && payload.devices) {
+      // Format 2
+      for (const [ieee, data] of Object.entries(payload.devices)) {
+        devicesToAuth.push({ device_ieee: ieee, ...data });
+      }
+    } else if (payload && payload.device_ieee) {
+      // Format 1 (Single device)
+      devicesToAuth.push(payload);
+    } else if (Array.isArray(payload)) {
+      devicesToAuth = payload;
+    }
+
+    const responses = [];
+
+    for (const device of devicesToAuth) {
+      const { device_ieee, device_name } = device;
+      if (!device_ieee) continue;
+
+      const last4Mac = device_ieee ? device_ieee.replace(/:/g, '').slice(-4).toUpperCase() : '0000';
+      const currentTs = Math.floor(Date.now() / 1000);
+
+      // Cek di whitelist db
+      const whitelistEntry = await DeviceWhitelist.findOne({ device_ieee });
+
+      if (whitelistEntry && whitelistEntry.approved) {
+        console.log(`[Auth Decision] Allow for ${device_ieee} (${whitelistEntry.device_name || 'Unknown'})`);
+        responses.push({
+          type: "auth_response",
+          decision: "allow",
+          master_ieee: masterId,
+          device_ieee: device_ieee,
+          device_id: whitelistEntry.device_id || "unknown",
+          device_name: whitelistEntry.device_name || "Unknown",
+          model_id: whitelistEntry.model_id || "UNKNOWN",
+          alias: `${whitelistEntry.model_id || 'UNKNOWN'}_${last4Mac}`,
+          ts: currentTs
+        });
+      } else {
+        console.log(`[Auth Decision] Block for ${device_ieee} (${device_name || 'Unknown'})`);
+        responses.push({
+          type: "auth_response",
+          decision: "block",
+          master_ieee: masterId,
+          device_ieee: device_ieee,
+          device_id: "unknown",
+          model_id: "UNKNOWN",
+          alias: `UNKNOWN_${last4Mac}`,
+          ts: currentTs
+        });
+      }
+    }
+
+    // Publish ke response topic
+    if (responses.length > 0) {
+      const responseTopic = `bieon/${masterId}/auth/response`;
+      // Jika hanya 1 balasan, kirim object langsung. Jika lebih, kirim array
+      if (responses.length === 1) {
+        publishCommand(responseTopic, responses[0]);
+      } else {
+        publishCommand(responseTopic, responses);
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ Error handling auth request:', error.message);
   }
 };
 

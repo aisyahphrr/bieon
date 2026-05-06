@@ -1,13 +1,15 @@
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const SensorData = require('../models/SensorData');
 const RegisteredProduct = require('../models/RegisteredProduct');
+const Activity = require('../models/Activity');
 const { publishCommand } = require('../config/mqtt');
 const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
 
 // 1. Mencatat perangkat yang terdeteksi (tanda icon di UI)
 exports.discoverDevice = async (req, res) => {
     try {
-        const { hubId, category, type, ownerId } = req.body;
+        const { hubId, category, type } = req.body;
+        const ownerId = req.user.userId;
         
         const newDevice = new KendaliPerangkat({
             name: `New ${type}`, // Nama default sementara
@@ -30,7 +32,8 @@ exports.discoverDevice = async (req, res) => {
 // 2. Simpan perangkat baru (Direct dari Form UI)
 exports.createDevice = async (req, res) => {
     try {
-        const { name, deviceType, category, location, notes, hubId, ownerId, sensorParams, scheduleSettings, controlMode, sensorData } = req.body;
+        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData } = req.body;
+        const ownerId = req.user.userId;
         
         const newDevice = new KendaliPerangkat({
             name,
@@ -73,6 +76,17 @@ exports.configureDevice = async (req, res) => {
         const { id } = req.params;
         const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes } = req.body;
 
+        // Cari dulu untuk cek kepemilikan
+        const device = await KendaliPerangkat.findById(id);
+        if (!device) {
+            return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+        }
+
+        // Cek kepemilikan (Kecuali SuperAdmin)
+        if (req.user.role !== 'SuperAdmin' && String(device.owner) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk mengonfigurasi perangkat ini.' });
+        }
+
         const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(
             id,
             { 
@@ -99,7 +113,6 @@ exports.configureDevice = async (req, res) => {
         if (!updatedDevice) {
             return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
         }
-
         // Emit device telemetry update to connected clients
         if (updatedDevice.hubId) {
             broadcastDeviceTelemetry(updatedDevice.hubId, updatedDevice);
@@ -111,10 +124,10 @@ exports.configureDevice = async (req, res) => {
     }
 };
 
-// 4. Ambil perangkat berdasarkan User
+// 4. Ambil perangkat berdasarkan User (Self)
 exports.getDevicesByUser = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const userId = req.user.userId;
         const devices = await KendaliPerangkat.find({ owner: userId });
         res.status(200).json(devices);
     } catch (error) {
@@ -132,10 +145,11 @@ exports.getDevicesByHub = async (req, res) => {
     }
 };
 
-// 6. Ambil semua perangkat yang baru terdeteksi (status Discovered)
+// 6. Ambil semua perangkat yang baru terdeteksi (discovered) - Khusus milik user
 exports.getDiscoveredDevices = async (req, res) => {
     try {
-        const devices = await KendaliPerangkat.find({ status: 'Discovered' });
+        const userId = req.user.userId;
+        const devices = await KendaliPerangkat.find({ owner: userId, status: 'Discovered' });
         res.status(200).json(devices);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data perangkat baru', error: error.message });
@@ -145,6 +159,13 @@ exports.getDiscoveredDevices = async (req, res) => {
 // 7. Hapus perangkat
 exports.deleteDevice = async (req, res) => {
     try {
+        const device = await KendaliPerangkat.findById(req.params.id);
+        if (!device) return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+
+        if (req.user.role !== 'SuperAdmin' && String(device.owner) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki hak akses.' });
+        }
+
         await KendaliPerangkat.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Perangkat berhasil dihapus' });
     } catch (error) {
@@ -163,6 +184,11 @@ exports.toggleDevice = async (req, res) => {
 
         // Tentukan command yang akan dikirim
         const newStatus = device.status === '1' ? '0' : '1';
+
+        // Cek kepemilikan (PENTING!)
+        if (req.user.role !== 'SuperAdmin' && String(device.owner) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak diizinkan mengontrol perangkat ini.' });
+        }
         
         // UPDATE STATUS DI DATABASE SEKARANG JUGA (Sinkronisasi Mutlak)
         device.status = newStatus;
@@ -172,17 +198,43 @@ exports.toggleDevice = async (req, res) => {
         device.lastCommandTime = new Date();
         await device.save();
 
-        // Topic format: bieon/<deviceName>/command
-        // Misalnya: bieon/plug_01/command (sesuai arahan: command untuk subscribe command)
+        // Topic format: bieon/<bieonId>/<deviceName>/command
+        // Isolasi berdasarkan bieonId agar tidak tabrakan antar user
+        const bieonId = req.user.bieonId;
         const sanitizedName = device.name.toLowerCase().replace(/\s+/g, '_');
-        const topicCommand = `bieon/${sanitizedName}/command`;
+        const topicCommand = `bieon/${bieonId}/${sanitizedName}/command`;
 
         // Publish ke MQTT dalam format angka TELANJANG (Raw) 
-        // Contoh: command = 0
         publishCommand(topicCommand, newStatus);
 
-        // Logging ke SensorData dihapus dari sini agar murni bergantung pada balasan 
-        // status asli dari alat fisik via mqtt.js (2-way communication)
+        // LOGGING KE AKTIVITAS TERBARU
+        await new Activity({
+            user: device.owner,
+            room: device.location,
+            actuator: device.name,
+            status: newStatus === '1' ? 'ON' : 'OFF',
+            action: newStatus === '1' ? 'Menyalakan' : 'Mematikan',
+            trigger: 'Manual (Web)'
+        }).save();
+
+        // [ADD] NOTIFIKASI ALERT UNTUK KONTROL MANUAL
+        const Alert = require('../models/Alert');
+        const statusText = newStatus === '1' ? 'Menyala (ON)' : 'Mati (OFF)';
+        
+        let category = 'Sistem';
+        if (device.environmentAspect === 'Keamanan') category = 'Keamanan';
+        else if (device.environmentAspect === 'Kenyamanan') category = 'Kenyamanan';
+        else if (device.environmentAspect === 'Kualitas Air') category = 'Air Sanitasi';
+
+        await Alert.create({
+            owner: device.owner,
+            category: category,
+            title: `Kontrol Perangkat: ${statusText}`,
+            message: `[Manual] Anda telah ${newStatus === '1' ? 'menyalakan' : 'mematikan'} ${device.name} di ${device.location}.`,
+            type: 'Info',
+            link: 'kendali',
+            metadata: { deviceId: device._id }
+        });
 
         // SINKRONISASI REAL-TIME: Langsung kirim balasan ke frontend agar tidak stuck di 'Memproses...'
         broadcastDeviceTelemetry(device.hubId, {

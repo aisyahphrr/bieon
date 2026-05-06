@@ -7,6 +7,7 @@ const alertSchema = new mongoose.Schema({
         enum: ['Keamanan', 'Air Sanitasi', 'Energi', 'Sistem', 'Pengaduan', 'Kenyamanan'],
         default: 'Sistem'
     },
+    title: { type: String },
     room: { type: String }, // e.g., "R1 - Pintu Utama"
     message: { type: String, required: true },
     type: { 
@@ -17,6 +18,7 @@ const alertSchema = new mongoose.Schema({
     isRead: { type: Boolean, default: false },
     isSeen: { type: Boolean, default: false },
     link: { type: String }, // e.g., "admin-complaint", "pengaduan"
+    metadata: { type: mongoose.Schema.Types.Mixed }, // Untuk data tambahan (deviceId, scrollTarget)
     date: { type: Date, default: Date.now }
 }, { timestamps: true });
 

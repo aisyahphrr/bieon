@@ -89,7 +89,7 @@ export function HomeownerComplaint({ onNavigate }) {
         try {
             console.log("🔍 FETCHING DEVICES FOR USER:", userId);
             const token = localStorage.getItem('token');
-            const res = await fetch(`/api/kendaliperangkat/user/${userId}`, {
+            const res = await fetch(`/api/kendaliperangkat/my-devices`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             console.log("📡 API RESPONSE STATUS:", res.status);
@@ -590,7 +590,7 @@ export function HomeownerComplaint({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="hidden md:block w-full overflow-x-auto pb-4 custom-scrollbar-x">
+                    <div className="hidden md:block w-full overflow-x-auto pb-1 custom-scrollbar-x">
                         <table className="w-full text-left text-sm text-gray-600 whitespace-nowrap min-w-max">
                             <thead className="text-gray-500 border-b border-gray-100">
                                 <tr>
@@ -718,7 +718,7 @@ export function HomeownerComplaint({ onNavigate }) {
                         )}
                     </div>
 
-                    <div className="flex flex-row items-center justify-between mt-6 text-sm text-gray-500 pt-4 border-t border-gray-100 gap-2 sm:gap-4">
+                    <div className="flex flex-row items-center justify-between mt-1 text-sm text-gray-500 pt-3 border-t border-gray-100 gap-2 sm:gap-4">
                         <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 font-medium">
                             <span className="hidden sm:inline">Rows per page:</span>
                             <div className="relative">
@@ -832,19 +832,28 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 <>
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowCategoryDropdown(false)}></div>
                                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
-                                                        {(userDevices.length > 0 ? [...new Set(userDevices.map(d => d.category))] : ['Energi & Kelistrikan', 'Kualitas Air', 'Keamanan', 'Kenyamanan & Udara', 'Perangkat Aktuator', 'Lainnya']).map((cat) => (
-                                                            <button
-                                                                key={cat}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setFormData({ ...formData, category: cat, device: '' });
-                                                                    setShowCategoryDropdown(false);
-                                                                }}
-                                                                className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                            >
-                                                                {cat}
-                                                            </button>
-                                                        ))}
+                                                        {(() => {
+                                                            const dbCategories = userDevices.length > 0 
+                                                                ? [...new Set(userDevices.map(d => d.category))].filter(Boolean)
+                                                                : [];
+                                                            const finalCategories = dbCategories.length > 0 
+                                                                ? [...dbCategories, 'Lainnya']
+                                                                : ['Energi', 'Keamanan', 'Kualitas Air', 'Lingkungan', 'Sistem', 'Lainnya'];
+                                                            
+                                                            return finalCategories.map((cat) => (
+                                                                <button
+                                                                    key={cat}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setFormData({ ...formData, category: cat, device: '' });
+                                                                        setShowCategoryDropdown(false);
+                                                                    }}
+                                                                    className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                >
+                                                                    {cat}
+                                                                </button>
+                                                            ));
+                                                        })()}
                                                     </div>
                                                 </>
                                             )}
@@ -870,39 +879,43 @@ export function HomeownerComplaint({ onNavigate }) {
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowDeviceDropdown(false)}></div>
                                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
                                                         {userDevices.length > 0 ? (
-                                                            userDevices
-                                                                .filter((dev) => !formData.category || dev.category === formData.category)
-                                                                .map((dev) => {
-                                                                const label = `${dev.location || 'Tanpa Lokasi'} - ${dev.name}`;
-                                                                return (
-                                                                    <button
-                                                                        key={dev._id}
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            setFormData({ ...formData, device: label });
-                                                                            setShowDeviceDropdown(false);
-                                                                        }}
-                                                                        className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === label ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                                    >
-                                                                        {label}
-                                                                    </button>
-                                                                );
-                                                            })
+                                                            (() => {
+                                                                const filtered = userDevices.filter((dev) => !formData.category || dev.category === formData.category);
+                                                                
+                                                                if (filtered.length === 0) {
+                                                                    return <div className="px-5 py-3 text-sm text-gray-400 italic">Tidak ada perangkat di kategori ini</div>;
+                                                                }
+
+                                                                return filtered.map((dev) => {
+                                                                    const label = `${dev.location || 'Tanpa Lokasi'} - ${dev.name}`;
+                                                                    return (
+                                                                        <button
+                                                                            key={dev._id}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setFormData({ ...formData, device: label });
+                                                                                setShowDeviceDropdown(false);
+                                                                            }}
+                                                                            className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === label ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                        >
+                                                                            {label}
+                                                                        </button>
+                                                                    );
+                                                                });
+                                                            })()
                                                         ) : (
-                                                            ['R3 Kitchen - Smart Plug', 'R3 Kitchen - Gas Detector', 'R1 Living - Door Sensor', 'Master Node - Power Meter', 'R2 Bedroom - Node Udara'].map((dev) => (
-                                                                <button
-                                                                    key={dev}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setFormData({ ...formData, device: dev });
-                                                                        setShowDeviceDropdown(false);
-                                                                    }}
-                                                                    className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === dev ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                                >
-                                                                    {dev}
-                                                                </button>
-                                                            ))
+                                                            <div className="px-5 py-3 text-sm text-gray-400 italic">Gagal memuat data perangkat</div>
                                                         )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({ ...formData, device: 'Perangkat Lainnya' });
+                                                                setShowDeviceDropdown(false);
+                                                            }}
+                                                            className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === 'Perangkat Lainnya' ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-100 border-t border-gray-50'}`}
+                                                        >
+                                                            + Perangkat Lainnya
+                                                        </button>
                                                     </div>
                                                 </>
                                             )}

@@ -66,7 +66,7 @@ exports.createComplaint = async (req, res) => {
 // [Homeowner] GET COMPLAINTS BY OWNER
 exports.getComplaintsByOwner = async (req, res) => {
     try {
-        await checkAndUpdateSLAStatuses(); // Pastikan status SLA terbaru (overdue, dll) sebelum fetch
+        await exports.checkAndUpdateSLAStatuses(); // Pastikan status SLA terbaru (overdue, dll) sebelum fetch
         const complaints = await Complaint.find({ homeowner: req.params.userId })
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber')
@@ -90,7 +90,7 @@ exports.getComplaintsByOwner = async (req, res) => {
 // [SuperAdmin] GET ALL COMPLAINTS
 exports.getAllComplaints = async (req, res) => {
     try {
-        await checkAndUpdateSLAStatuses(); // Auto-update overdue statuses before fetch
+        await exports.checkAndUpdateSLAStatuses(); // Auto-update overdue statuses before fetch
         const complaints = await Complaint.find()
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber')
@@ -113,7 +113,7 @@ exports.getAllComplaints = async (req, res) => {
 // [Public/Authenticated] GET COMPLAINT BY ID
 exports.getComplaintById = async (req, res) => {
     try {
-        await checkAndUpdateSLAStatuses();
+        await exports.checkAndUpdateSLAStatuses();
         const complaint = await Complaint.findById(req.params.id)
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber');
@@ -136,7 +136,7 @@ exports.getComplaintById = async (req, res) => {
 exports.getComplaintsByTechnician = async (req, res) => {
     try {
         try {
-            await checkAndUpdateSLAStatuses();
+            await exports.checkAndUpdateSLAStatuses();
         } catch (slaError) {
             console.error("SLA Auto-update failed:", slaError);
         }
@@ -608,7 +608,7 @@ exports.pingComplaint = async (req, res) => {
 };
 
 // --- SLA AUTO-CHECK HELPER ---
-async function checkAndUpdateSLAStatuses() {
+exports.checkAndUpdateSLAStatuses = async function() {
     const now = new Date();
     const nowStr = now.toISOString();
     

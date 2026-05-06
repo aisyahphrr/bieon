@@ -44,13 +44,11 @@ const NAV_ITEMS = [
 export default function HomeownerLayout({ children, currentPage, onNavigate, hideBottomNav }) {
   const navigate = useNavigate();
   const [showNotif, setShowNotif] = useState(false);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [isTechnicianMode, setIsTechnicianMode] = useState(false);
   const [showTechReportModal, setShowTechReportModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const [hasUnread, setHasUnread] = useState(false);
-  const roleDropdownRef = useRef(null);
 
   useEffect(() => {
     // Fetch user profile
@@ -191,16 +189,6 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
     ? NAV_ITEMS.filter(item => item.id === 'kendali')
     : NAV_ITEMS;
 
-  // Close profile dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (roleDropdownRef.current && !roleDropdownRef.current.contains(e.target)) {
-        setShowRoleDropdown(false);
-      }
-    };
-    if (showRoleDropdown) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showRoleDropdown]);
 
   const handleNotificationNavigate = (menuId) => {
     if (menuId === 'pengaduan') {
@@ -275,10 +263,10 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                 </div>
               )}
 
-              {/* Profile Dropdown */}
-              <div className="relative" ref={roleDropdownRef}>
+              {/* Profile Button (Direct to Popup) */}
+              <div className="relative">
                 <button
-                  onClick={() => !isTechnicianMode && setShowRoleDropdown(!showRoleDropdown)}
+                  onClick={() => !isTechnicianMode && setShowProfilePopup(true)}
                   className={`flex items-center gap-2 p-1 md:p-1.5 rounded-lg transition-all ${isTechnicianMode ? 'cursor-not-allowed opacity-80' : 'hover:bg-gray-50'}`}
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold font-accent shadow-inner">
@@ -296,35 +284,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                       {isTechnicianMode ? 'Homeowner' : (userProfile?.role || 'Homeowner')}
                     </div>
                   </div>
-                  {!isTechnicianMode && <ChevronDown className="w-4 h-4 text-gray-400 ml-1 hidden lg:block" />}
                 </button>
-
-                {showRoleDropdown && !isTechnicianMode && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
-                    <button
-                      disabled={isTechnicianMode}
-                      onClick={() => { setShowProfilePopup(true); setShowRoleDropdown(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm font-bold transition-colors border-b border-gray-100 pb-3 mb-1 ${isTechnicianMode ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                      Profil Saya
-                    </button>
-                    {!isTechnicianMode && (
-                      <>
-                        <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ganti Role (Demo)</div>
-                        <button onClick={() => navigate('/dashboard')} className="w-full text-left px-4 py-2 text-sm text-emerald-600 bg-emerald-50 font-medium transition-colors">Homeowner</button>
-                        <button onClick={() => navigate('/teknisi')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Teknisi</button>
-                        <button onClick={() => navigate('/admin')} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors">Super Admin</button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => { if (isTechnicianMode) handleExitTechnicianMode(); else navigate('/login'); }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-bold transition-colors"
-                    >
-                      {isTechnicianMode ? 'Keluar Sesi Teknisi' : 'Logout'}
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -384,7 +344,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       )}
 
       {/* Popups & Modals */}
-      <HomeownerProfilePopup isOpen={showProfilePopup} onClose={() => setShowProfilePopup(false)} userProfile={userProfile} />
+      <HomeownerProfilePopup isOpen={showProfilePopup} onClose={() => setShowProfilePopup(false)} userProfile={userProfile} onNavigate={onNavigate} />
       <TechReportModal
         isOpen={showTechReportModal}
         onClose={() => setShowTechReportModal(false)}
