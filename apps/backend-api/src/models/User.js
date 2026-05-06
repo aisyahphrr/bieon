@@ -50,6 +50,7 @@ const userSchema = new mongoose.Schema({
         instructor: { type: String },
         endDate: { type: Date }
     }],
+    profileImage: { type: String }, // Base64 or URL
     status: { type: String, enum: ['aktif', 'nonaktif'], default: 'aktif' }
 }, { timestamps: true });
 

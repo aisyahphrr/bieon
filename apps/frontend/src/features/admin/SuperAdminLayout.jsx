@@ -29,7 +29,6 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   const location = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
 
@@ -194,7 +193,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
               <div className="relative z-50">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5 hidden sm:block"
+                  className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5"
                 >
                   <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
                   {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-[#009b7c] rounded-full animate-pulse"></span>}
@@ -210,10 +209,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
               </div>
 
               <div className="relative z-50">
-                <button
-                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                  className="flex items-center gap-2 sm:gap-3 bg-white/10 hover:bg-white/20 p-1.5 pr-3 sm:pr-4 rounded-2xl transition-all border border-white/5"
-                >
+                <div className="flex items-center gap-2 sm:gap-3 bg-white/10 p-1.5 pr-3 sm:pr-4 rounded-2xl border border-white/5">
                   <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner shrink-0">
                     <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
@@ -221,23 +217,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                     <div className="text-sm font-bold text-white leading-none mb-1">Hi, Admin!</div>
                     <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest leading-none">Super Admin</div>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-white/50 transition-transform shrink-0 ${showRoleDropdown ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showRoleDropdown && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-2xl border border-gray-100 py-2 z-50 text-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="px-5 py-2 text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Ganti Role (Demo)</div>
-                    <button onClick={() => handleNavigate("dashboard")} className="w-full text-left px-5 py-3.5 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-                      <span>Homeowner</span>
-                      <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                    </button>
-                    <button onClick={() => handleNavigate("teknisi")} className="w-full text-left px-5 py-3.5 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-                      <span>Teknisi</span>
-                      <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                    </button>
-                    <button className="w-full text-left px-5 py-3.5 text-sm text-teal-600 bg-teal-50 font-black border-l-4 border-teal-600">Super Admin</button>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

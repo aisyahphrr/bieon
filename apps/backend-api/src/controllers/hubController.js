@@ -104,44 +104,85 @@ exports.deleteSystem = async (req, res) => {
     }
 };
 
-// Emergency cleanup for orphaned devices, alerts, and activities
+// Emergency cleanup for orphaned devices, alerts, and activities (Ultra Clean)
 exports.cleanupOrphans = async (req, res) => {
     try {
-        // 1. Dapatkan daftar Hub ID yang valid
         const hubs = await Hub.find({}, '_id');
         const validHubIds = hubs.map(h => h._id.toString());
         
-        // 2. Cari perangkat yang hub-nya sudah tidak ada (orphaned)
-        const orphanedDevices = await KendaliPerangkat.find({ 
+        const deviceResult = await KendaliPerangkat.deleteMany({ 
             hubId: { $nin: validHubIds },
             location: { $ne: 'Pending' } 
         });
-        
-        const orphanedDeviceIds = orphanedDevices.map(d => d._id);
-        const orphanedRooms = [...new Set(orphanedDevices.map(d => d.location))];
 
-        // 3. Hapus Perangkat-nya
-        const deviceResult = await KendaliPerangkat.deleteMany({ 
-            _id: { $in: orphanedDeviceIds }
+        const activeDevices = await KendaliPerangkat.find({}, 'owner location name');
+        const userValidRooms = {};
+        const userHasDevices = {};
+
+        activeDevices.forEach(d => {
+            const userId = d.owner.toString();
+            userHasDevices[userId] = true;
+            if (!userValidRooms[userId]) userValidRooms[userId] = new Set();
+            userValidRooms[userId].add(d.location);
         });
 
-        // 4. Hapus Notifikasi (Alert) yang merujuk ke perangkat ini (di metadata)
-        await Alert.deleteMany({ 
-            $or: [
-                { "metadata.deviceId": { $in: orphanedDeviceIds } },
-                { room: { $in: orphanedRooms } } 
-            ]
-        });
+        // 1. Hapus ALERT (Notifikasi)
+        const allAlerts = await Alert.find({});
+        let deletedAlertsCount = 0;
+        for (const alert of allAlerts) {
+            const userId = alert.owner.toString();
+            const validRooms = userValidRooms[userId] || new Set();
+            const hasDevices = userHasDevices[userId] || false;
 
-        // 5. Hapus Aktivitas di ruangan yang sudah tidak ada
-        await Activity.deleteMany({ 
-            room: { $in: orphanedRooms }
-        });
+            let shouldDelete = false;
+
+            // Jika user tidak punya perangkat sama sekali, hapus notif sistem/IoT (kecuali pengaduan)
+            if (!hasDevices && ['Sistem', 'Kenyamanan', 'Keamanan', 'Air Sanitasi', 'Energi'].includes(alert.category)) {
+                shouldDelete = true;
+            } 
+            // Jika ada field room dan room-nya sudah tidak valid
+            else if (alert.room && !validRooms.has(alert.room)) {
+                shouldDelete = true;
+            }
+            // Jika room kosong tapi pesan menyebutkan ruangan yang tidak valid (heuristic check)
+            else if (!alert.room && alert.message) {
+                // Cari apakah ada nama ruangan "hantu" di dalam pesan
+                // Kita asumsikan jika pesan mengandung "di [Nama Ruangan]" dan ruangan itu tidak valid
+                const match = alert.message.match(/di\s+([^.]+)/i);
+                if (match && match[1]) {
+                    const suspectedRoom = match[1].trim();
+                    // Jika pesan mengandung nama ruangan yang tidak ada di daftar validRooms
+                    if (suspectedRoom === 'Kamar Asri' || (validRooms.size > 0 && !Array.from(validRooms).some(r => alert.message.includes(r)))) {
+                        shouldDelete = true;
+                    }
+                }
+            }
+
+            if (shouldDelete) {
+                await Alert.findByIdAndDelete(alert._id);
+                deletedAlertsCount++;
+            }
+        }
+
+        // 2. Hapus AKTIVITAS
+        const allActivities = await Activity.find({});
+        let deletedActivitiesCount = 0;
+        for (const act of allActivities) {
+            const userId = act.user.toString();
+            const validRooms = userValidRooms[userId] || new Set();
+            const hasDevices = userHasDevices[userId] || false;
+
+            if (!hasDevices || (act.room && !validRooms.has(act.room))) {
+                await Activity.findByIdAndDelete(act._id);
+                deletedActivitiesCount++;
+            }
+        }
         
         res.status(200).json({ 
-            message: `Pembersihan menyeluruh berhasil!`,
+            message: `Pembersihan super teliti berhasil!`,
             deletedDevices: deviceResult.deletedCount,
-            deletedRooms: orphanedRooms
+            deletedAlerts: deletedAlertsCount,
+            deletedActivities: deletedActivitiesCount
         });
     } catch (error) {
         console.error('Cleanup Error:', error);

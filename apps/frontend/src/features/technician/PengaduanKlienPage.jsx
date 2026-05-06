@@ -496,7 +496,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                     <input
                                         type="text"
-                                        placeholder="Cari Pelanggan..."
+                                        placeholder="Cari No. Tiket, Nama Pelanggan, atau Topik..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"

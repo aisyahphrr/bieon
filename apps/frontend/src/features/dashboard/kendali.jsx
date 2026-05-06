@@ -150,7 +150,7 @@ export function DeviceControlPage({ onNavigate }) {
         const systemsData = await sysRes.json();
 
         // 3. Get Devices (Disesuaikan untuk target ID)
-        const devRes = await fetch(`/api/kendaliperangkat/my-devices`, {
+        const devRes = await fetch(`/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const devicesData = await devRes.json();
@@ -164,7 +164,7 @@ export function DeviceControlPage({ onNavigate }) {
           hubs: sys.hubs.map(hub => ({
             ...hub,
             devices: devicesData
-              .filter(d => d.hubId === hub.id)
+              .filter(d => String(d.hubId) === String(hub.id))
               .map(d => ({
                 ...d,
                 id: d._id,

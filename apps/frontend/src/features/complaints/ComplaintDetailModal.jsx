@@ -672,58 +672,60 @@ export function ComplaintDetailModal({
                                                             </>
                                                         )}
 
-                                                        {/* DATA LOG ACCESS SYSTEM (Visibility Logic) */}
-                                                        {localTicket.status.toLowerCase() !== 'selesai' && (
-                                                            <>
-                                                                {(!localTicket.logRequestStatus || localTicket.logRequestStatus === 'none') && (
-                                                                    <button
-                                                                        onClick={() => setIsLogReasonModalOpen(true)}
-                                                                        className="w-full py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-red-200"
-                                                                    >
-                                                                        <FileText className="w-4 h-4" /> Minta Akses Log
-                                                                    </button>
-                                                                )}
+                                                        {/* DATA LOG ACCESS SYSTEM (Refined Visibility Logic) */}
+                                                        <div className="space-y-3 pt-1">
+                                                            {/* Initial Request Button: Only show if status is 'diproses' and no request made yet */}
+                                                            {(!localTicket.logRequestStatus || localTicket.logRequestStatus === 'none') && 
+                                                             localTicket.status.toLowerCase() === 'diproses' && (
+                                                                <button
+                                                                    onClick={() => setIsLogReasonModalOpen(true)}
+                                                                    className="w-full py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-red-200"
+                                                                >
+                                                                    <FileText className="w-4 h-4" /> Minta Akses Log
+                                                                </button>
+                                                            )}
 
-                                                                {/* DATA LOG ACCESS SYSTEM (Visibility Logic) */}
-                                                                {(localTicket.logRequestStatus === 'pending' || localTicket.logRequestStatus === 'requested') && (
-                                                                    <button
-                                                                        disabled
-                                                                        className="w-full py-3 bg-red-50 text-red-400 border border-red-100 rounded-xl font-bold flex items-center justify-center gap-2 text-xs cursor-not-allowed"
-                                                                    >
-                                                                        <Clock className="w-4 h-4" /> Menunggu Konfirmasi SA
-                                                                    </button>
-                                                                )}
-                                                            </>
-                                                        )}
+                                                            {/* Pending/Requested State: Show ALWAYS once initiated */}
+                                                            {(localTicket.logRequestStatus === 'pending' || localTicket.logRequestStatus === 'requested') && (
+                                                                <button
+                                                                    disabled
+                                                                    className="w-full py-3 bg-red-50 text-red-400 border border-red-100 rounded-xl font-bold flex items-center justify-center gap-2 text-xs cursor-not-allowed"
+                                                                >
+                                                                    <Clock className="w-4 h-4" /> Menunggu Konfirmasi SA
+                                                                </button>
+                                                            )}
 
-                                                        {localTicket.logRequestStatus === 'rejected' && (
-                                                            <button
-                                                                disabled
-                                                                className="w-full py-3 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-2 text-xs opacity-80"
-                                                            >
-                                                                <AlertCircle className="w-4 h-4" /> Akses Log Ditolak
-                                                            </button>
-                                                        )}
+                                                            {/* Rejected State: Show ALWAYS once rejected */}
+                                                            {localTicket.logRequestStatus === 'rejected' && (
+                                                                <button
+                                                                    disabled
+                                                                    className="w-full py-3 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-2 text-xs opacity-80"
+                                                                >
+                                                                    <AlertCircle className="w-4 h-4" /> Akses Log Ditolak
+                                                                </button>
+                                                            )}
 
-                                                        {localTicket.logRequestStatus === 'granted' && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    const returnTicketId = localTicket?.originalId || localTicket?._id || null;
-                                                                    const customerName = localTicket?.clientInfo?.name || localTicket?.client || localTicket?.homeowner?.fullName || '';
-                                                                    onClose?.();
-                                                                    navigate('/admin-datalog', {
-                                                                        state: {
-                                                                            sourceRole: role,
-                                                                            returnTicketId,
-                                                                            customerName
-                                                                        }
-                                                                    });
-                                                                }}
-                                                                className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"
-                                                            >
-                                                                <FileText className="w-4 h-4" /> Lihat Data Log
-                                                            </button>
-                                                        )}
+                                                            {/* Granted State: Show ALWAYS once granted */}
+                                                            {localTicket.logRequestStatus === 'granted' && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const returnTicketId = localTicket?.originalId || localTicket?._id || null;
+                                                                        const customerName = localTicket?.clientInfo?.name || localTicket?.client || localTicket?.homeowner?.fullName || '';
+                                                                        onClose?.();
+                                                                        navigate('/admin-datalog', {
+                                                                            state: {
+                                                                                sourceRole: role,
+                                                                                returnTicketId,
+                                                                                customerName
+                                                                            }
+                                                                        });
+                                                                    }}
+                                                                    className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"
+                                                                >
+                                                                    <FileText className="w-4 h-4" /> Lihat Data Log
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

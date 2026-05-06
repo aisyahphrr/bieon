@@ -447,10 +447,10 @@ export function RiwayatPerbaikanPage() {
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
               >
-                <Filter className="w-4 h-4 text-gray-500 sm:hidden" />
-                <span className={`hidden sm:inline-block ${selectedCategory !== 'Semua Kategori' ? 'text-gray-900' : 'text-gray-500'}`}>
+                <Filter className={`w-4 h-4 transition-colors ${selectedCategory !== 'Semua Kategori' ? 'text-teal-500' : 'text-gray-400'}`} />
+                <span className={`hidden min-[400px]:inline-block ${selectedCategory !== 'Semua Kategori' ? 'text-gray-900' : 'text-gray-500'}`}>
                   {selectedCategory === 'Semua Kategori' ? 'Kategori' : selectedCategory}
                 </span>
                 <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showCategoryDropdown ? 'rotate-180' : ''}`} />
@@ -459,7 +459,7 @@ export function RiwayatPerbaikanPage() {
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowCategoryDropdown(false)}></div>
                   <div className="absolute top-full mt-2 right-0 sm:left-0 w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
-                    {['Semua Kategori', 'Energi & Kelistrikan', 'Kualitas Air', 'Keamanan', 'Kenyamanan & Udara', 'Perangkat Aktuator', 'Lainnya'].map(cat => (
+                    {['Semua Kategori', 'Sensor', 'Control Actuator System', 'Lainnya'].map(cat => (
                       <button
                         key={cat}
                         onClick={() => { setSelectedCategory(cat); setShowCategoryDropdown(false); setCurrentPage(1); }}
@@ -477,10 +477,10 @@ export function RiwayatPerbaikanPage() {
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowDateDropdown(!showDateDropdown)}
-                className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm ${showDateDropdown || dateRange.start || dateRange.end ? 'border-teal-500 ring-4 ring-teal-500/10 text-[#235C50]' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm ${showDateDropdown || dateRange.start || dateRange.end ? 'border-teal-500 ring-4 ring-teal-500/10 text-[#235C50]' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
               >
-                <Calendar className={`w-4 h-4 ${showDateDropdown || dateRange.start || dateRange.end ? 'text-teal-500' : 'text-gray-600 sm:hidden'}`} />
-                <span className="hidden sm:inline-block">{dateRange.start || dateRange.end ? 'Rentang Aktif' : 'Rentang Waktu'}</span>
+                <Calendar className={`w-4 h-4 ${showDateDropdown || dateRange.start || dateRange.end ? 'text-teal-500' : 'text-gray-400'}`} />
+                <span className="hidden min-[400px]:inline-block">{dateRange.start || dateRange.end ? 'Rentang Aktif' : 'Rentang Waktu'}</span>
               </button>
 
               {showDateDropdown && (
@@ -783,7 +783,7 @@ export function RiwayatPerbaikanPage() {
             </div>
 
             <div className="text-xs sm:text-sm font-medium text-gray-600">
-              {totalItems === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
+              {totalItems === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2">
