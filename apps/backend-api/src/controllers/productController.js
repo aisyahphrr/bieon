@@ -55,3 +55,24 @@ exports.validateProductId = async (req, res) => {
         res.status(500).json({ message: 'Error validasi', error: error.message });
     }
 };
+
+// 3. Hapus Produk Terdaftar (Hanya jika belum digunakan/isUsed: false)
+exports.deleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const product = await RegisteredProduct.findOne({ productId: id });
+
+        if (!product) {
+            return res.status(404).json({ message: 'Produk tidak ditemukan.' });
+        }
+
+        if (product.isUsed) {
+            return res.status(400).json({ message: 'Produk sudah digunakan dan tidak bisa dihapus.' });
+        }
+
+        await RegisteredProduct.deleteOne({ productId: id });
+        res.status(200).json({ message: 'Produk berhasil dihapus.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal menghapus produk', error: error.message });
+    }
+};

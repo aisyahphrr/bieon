@@ -64,6 +64,8 @@ const kendaliPerangkatSchema = new mongoose.Schema({
     },
     battery: { type: Number },
     lastSeen: { type: Date },
+    controlledDevice: { type: String, default: null }, // For Remotes: TV, AC, Kipas, etc.
+    isPinned: { type: Boolean, default: false },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { 
     timestamps: true,

@@ -18,6 +18,9 @@ router.put('/configure/:id', kendaliPerangkatController.configureDevice);
 // Route untuk toggle ON/OFF perangkat
 router.put('/:id/toggle', kendaliPerangkatController.toggleDevice);
 
+// Route untuk semat/pin perangkat
+router.put('/:id/pin', kendaliPerangkatController.togglePinDevice);
+
 // Ambil semua perangkat di satu Hub
 router.get('/hub/:hubId', kendaliPerangkatController.getDevicesByHub);
 

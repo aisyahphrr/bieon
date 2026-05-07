@@ -32,7 +32,7 @@ exports.discoverDevice = async (req, res) => {
 // 2. Simpan perangkat baru (Direct dari Form UI)
 exports.createDevice = async (req, res) => {
     try {
-        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData } = req.body;
+        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice } = req.body;
         const ownerId = req.user.userId;
         
         const newDevice = new KendaliPerangkat({
@@ -48,6 +48,7 @@ exports.createDevice = async (req, res) => {
             controlMethod: controlMode || 'manual',
             scheduleSettings,
             sensorData, // Data simulasi awal
+            controlledDevice,
             lastActivity: new Date()
         });
 
@@ -74,7 +75,7 @@ exports.createDevice = async (req, res) => {
 exports.configureDevice = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes } = req.body;
+        const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes, controlledDevice } = req.body;
 
         // Cari dulu untuk cek kepemilikan
         const device = await KendaliPerangkat.findById(id);
@@ -97,6 +98,7 @@ exports.configureDevice = async (req, res) => {
                 controlMethod: controlMode || controlMethod, 
                 environmentAspect,
                 scheduleSettings,
+                controlledDevice,
                 status: 'Active',
                 lastActivity: new Date()
             },
@@ -249,5 +251,42 @@ exports.toggleDevice = async (req, res) => {
     } catch (error) {
         console.error("Error toggling device:", error);
         res.status(500).json({ message: 'Gagal mengubah status perangkat', error: error.message });
+    }
+};
+
+// 9. Semat/Pin Perangkat (Max 2)
+exports.togglePinDevice = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.userId;
+
+        const device = await KendaliPerangkat.findById(id);
+        if (!device) {
+            return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+        }
+
+        // Cek kepemilikan
+        if (String(device.owner) !== String(userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke perangkat ini.' });
+        }
+
+        // Jika ingin menyematkan (pin), cek apakah sudah mencapai limit 2
+        if (!device.isPinned) {
+            const pinnedCount = await KendaliPerangkat.countDocuments({ owner: userId, isPinned: true });
+            if (pinnedCount >= 2) {
+                return res.status(400).json({ message: 'Maksimal 2 perangkat yang dapat disematkan.' });
+            }
+        }
+
+        // Toggle status pin
+        device.isPinned = !device.isPinned;
+        await device.save();
+
+        res.status(200).json({ 
+            message: device.isPinned ? 'Perangkat berhasil disematkan!' : 'Sematkan dilepas!', 
+            device 
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal menyematkan perangkat', error: error.message });
     }
 };
