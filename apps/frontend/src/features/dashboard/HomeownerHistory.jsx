@@ -44,8 +44,7 @@ export function HomeownerHistory({ onNavigate }) {
         { id: 'Kualitas Air', full: 'Kualitas Air', short: 'Kualitas Air', endpoint: '/api/history/water' },
         { id: 'Konsumsi Energi', full: 'Konsumsi Energi', short: 'Energi', endpoint: '/api/history/energy' },
         { id: 'Log Perangkat', full: 'Log Perangkat', short: 'Log Perangkat', endpoint: '/api/history/activity' },
-        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi', endpoint: '/api/history/alerts' },
-        { id: 'Pengaduan', full: 'Pengaduan', short: 'Tiket', endpoint: '/api/complaints/owner' }
+        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi', endpoint: '/api/history/alerts' }
     ];
 
     const formatDateTime = (dateStr) => {
@@ -94,16 +93,6 @@ export function HomeownerHistory({ onNavigate }) {
         if (tabId === 'Notifikasi & Alert') {
             return { ...base, category: item.category, status: item.status || item.type, message: item.message };
         }
-        if (tabId === 'Pengaduan') {
-            return {
-                ...base,
-                id: item._id ? `TCK-${item._id.substring(item._id.length - 6).toUpperCase()}` : base.id,
-                topic: item.topic,
-                device: item.device || 'General',
-                technician: item.technician?.fullName || 'Belum Ditugaskan',
-                status: item.status
-            };
-        }
         return item;
     };
 
@@ -114,11 +103,6 @@ export function HomeownerHistory({ onNavigate }) {
             const token = localStorage.getItem('token');
             const currentTabConfig = tabs.find(t => t.id === activeTab);
             let url = currentTabConfig.endpoint;
-
-            if (activeTab === 'Pengaduan') {
-                const userData = JSON.parse(atob(token.split('.')[1]));
-                url = `${url}/${userData.userId}?isHistory=true`;
-            }
 
             const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -178,10 +162,6 @@ export function HomeownerHistory({ onNavigate }) {
                 } else if (activeTab === 'Notifikasi & Alert') {
                     return timeStr.includes(q) || item.category.toLowerCase().includes(q) ||
                         statusStr.includes(q) || item.message.toLowerCase().includes(q);
-                } else if (activeTab === 'Pengaduan') {
-                    return timeStr.includes(q) || item.id.toLowerCase().includes(q) || 
-                        item.topic.toLowerCase().includes(q) || statusStr.includes(q) || 
-                        item.technician.toLowerCase().includes(q);
                 }
                 return false;
             });
@@ -231,7 +211,7 @@ export function HomeownerHistory({ onNavigate }) {
         return Array.from(new Set(historyData.map(d => d.room)));
     }, [activeTab, historyData]);
 
-    const activeTabsConfigured = ['Kenyamanan', 'Keamanan', 'Kualitas Air', 'Konsumsi Energi', 'Log Perangkat', 'Notifikasi & Alert', 'Pengaduan'];
+    const activeTabsConfigured = ['Kenyamanan', 'Keamanan', 'Kualitas Air', 'Konsumsi Energi', 'Log Perangkat', 'Notifikasi & Alert'];
 
     const totalItems = processedData.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
@@ -266,9 +246,6 @@ export function HomeownerHistory({ onNavigate }) {
         } else if (tabId === 'Notifikasi & Alert') {
             headers = [["Waktu", "Kategori", "Level", "Pesan"]];
             body = data.map(e => [e.time, e.category, e.status, e.message]);
-        } else if (tabId === 'Pengaduan') {
-            headers = [["Waktu", "ID Tiket", "Topik", "Teknisi", "Status"]];
-            body = data.map(e => [e.time, e.id, e.topic, e.technician, e.status.toUpperCase()]);
         }
         return { headers, body };
     };
@@ -628,20 +605,6 @@ export function HomeownerHistory({ onNavigate }) {
                                             </th>
                                         </>
                                     )}
- 
-                                    {activeTab === 'Pengaduan' && (
-                                        <>
-                                            <th onClick={() => requestSort('id')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">ID Tiket {getSortIcon('id')}</div>
-                                            </th>
-                                            <th onClick={() => requestSort('topic')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Topik {getSortIcon('topic')}</div>
-                                            </th>
-                                            <th onClick={() => requestSort('technician')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Teknisi {getSortIcon('technician')}</div>
-                                            </th>
-                                        </>
-                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -721,14 +684,6 @@ export function HomeownerHistory({ onNavigate }) {
                                                         <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 min-w-[280px]">
                                                             {item.message}
                                                         </td>
-                                                    </>
-                                                )}
- 
-                                                {activeTab === 'Pengaduan' && (
-                                                    <>
-                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-bold text-teal-600 whitespace-nowrap">{item.id}</td>
-                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 truncate max-w-xs">{item.topic}</td>
-                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap font-medium">{item.technician}</td>
                                                     </>
                                                 )}
                                             </tr>
