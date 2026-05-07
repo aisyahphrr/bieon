@@ -2,11 +2,12 @@ const mongoose = require('mongoose');
 
 const waterQualityLogSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    device: { type: String, required: true }, // e.g., "Toren Air"
+    device: { type: mongoose.Schema.Types.ObjectId, ref: 'KendaliPerangkat' },
+    hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     ph: { type: Number, required: true },
-    turbidity: { type: String, required: true }, // e.g., "2 NTU"
-    temperature: { type: String, required: true }, // e.g., "24.0°C"
-    tds: { type: String, required: true }, // e.g., "150 ppm"
+    turbidity: { type: Number, required: true },
+    temperature: { type: Number, required: true },
+    tds: { type: Number, required: true },
     status: { 
         type: String, 
         enum: ['Layak Pakai', 'Tidak Layak', 'Out of Range'], 

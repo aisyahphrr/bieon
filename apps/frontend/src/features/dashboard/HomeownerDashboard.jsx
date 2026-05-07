@@ -425,7 +425,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
   );
 }
 
-function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDeposit, onRefresh }) {
+function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDeposit, onRefresh, energySummary }) {
   const [inputLimit, setInputLimit] = useState(limit.toString());
   const [inputDeposit, setInputDeposit] = useState(deposit.toString());
   const [submitted, setSubmitted] = useState(false);
@@ -437,8 +437,10 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 
   if (!isOpen) return null;
 
-  const totalTerpakai = window.totalCostToday || 0;
-  const isKritis = deposit <= limit;
+  const totalTerpakai = energySummary?.monthlyData?.[new Date().getMonth()]?.cost || 0;
+  const sisaAnggaran = deposit - totalTerpakai;
+  const isOverBudget = sisaAnggaran <= 0;
+  const isWaspada = sisaAnggaran <= limit && sisaAnggaran > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -495,8 +497,8 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               <Zap className="w-7 h-7 text-white fill-white/20" />
             </div>
             <div className="pr-8">
-              <h2 className="text-xl font-bold leading-tight">Pengaturan Token Listrik</h2>
-              <p className="text-amber-100 text-xs mt-1 font-medium opacity-90">Monitoring saldo & batas peringatan kritis</p>
+              <h2 className="text-xl font-bold leading-tight">Manajemen Anggaran Listrik</h2>
+              <p className="text-amber-100 text-xs mt-1 font-medium opacity-90">Monitoring anggaran & batas peringatan kritis</p>
             </div>
           </div>
           <button
@@ -509,31 +511,43 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 
         <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
           {/* Status Section */}
-          <div className={`border rounded-2xl p-5 flex flex-col gap-3 mb-8 transition-colors ${isKritis ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100'}`}>
+          <div className={`border rounded-2xl p-5 flex flex-col gap-3 mb-8 transition-colors ${
+            isOverBudget ? 'bg-red-50 border-red-100' : 
+            isWaspada ? 'bg-amber-50 border-amber-100' : 
+            'bg-emerald-50 border-emerald-100'
+          }`}>
             <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
-              <span>Saldo Saat Ini:</span>
+              <span>Anggaran Bulan Ini:</span>
               <span className="font-semibold text-gray-900">Rp {deposit.toLocaleString('id-ID')}</span>
             </div>
             <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
-              <span>Konsumsi Hari Ini:</span>
+              <span>Terpakai Bulan Ini:</span>
               <span className="font-semibold text-gray-900">Rp {totalTerpakai.toLocaleString('id-ID')}</span>
             </div>
-            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${isKritis ? 'border-red-200' : 'border-emerald-200'}`}>
-              <span className={isKritis ? 'text-red-800' : 'text-emerald-800'}>Estimasi Sisa Saldo:</span>
-              <span className={`text-xl font-bold ${isKritis ? 'text-red-600' : 'text-emerald-600'}`}>Rp {Math.max(0, deposit).toLocaleString('id-ID')}</span>
+            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${
+              isOverBudget ? 'border-red-200' : 
+              isWaspada ? 'border-amber-200' : 
+              'border-emerald-200'
+            }`}>
+              <span className={isOverBudget ? 'text-red-800' : isWaspada ? 'text-amber-800' : 'text-emerald-800'}>Sisa Anggaran:</span>
+              <span className={`text-xl font-bold ${isOverBudget ? 'text-red-600' : isWaspada ? 'text-amber-600' : 'text-emerald-600'}`}>Rp {Math.max(0, sisaAnggaran).toLocaleString('id-ID')}</span>
             </div>
-            <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold uppercase tracking-wider ${isKritis ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+            <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold tracking-wide ${
+              isOverBudget ? 'bg-red-100 text-red-700' : 
+              isWaspada ? 'bg-amber-100 text-amber-700' : 
+              'bg-emerald-100 text-emerald-700'
+            }`}>
               <span>Status:</span>
               <span className="flex items-center gap-1">
-                {isKritis ? <AlertTriangle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                {isKritis ? 'Kritis' : 'Aman'}
+                {isOverBudget ? <AlertTriangle className="w-3.5 h-3.5" /> : isWaspada ? <Zap className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                {isOverBudget ? 'Over Budget' : isWaspada ? 'Waspada' : 'Aman'}
               </span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Batas Peringatan (Rp)</label>
+              <label className="text-xs font-bold text-gray-500 ml-1">Batas Peringatan (Rp)</label>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[10000, 20000, 30000, 50000].map(val => (
                   <button
@@ -563,14 +577,14 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tambah Saldo Token (Top-up)</label>
+              <label className="text-xs font-bold text-gray-500 ml-1">Atur Anggaran Bulanan (Rp)</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 group-focus-within:text-emerald-500 transition-colors">Rp</div>
                 <input
                   type="number"
                   value={inputDeposit}
                   onChange={(e) => setInputDeposit(e.target.value)}
-                  placeholder="Masukkan nominal (Contoh: 50000)"
+                  placeholder="Masukkan nominal (Contoh: 1000000)"
                   required={!inputLimit}
                   className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
                 />
@@ -589,7 +603,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               {submitted ? (
                 <>
                   <CheckCircle2 className="w-5 h-5" />
-                  <span>Saldo Berhasil Ditambah</span>
+                  <span>Anggaran Berhasil Disimpan</span>
                 </>
               ) : (
                 'Simpan Pengaturan'
@@ -1144,8 +1158,8 @@ export function HomeownerDashboard() {
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-amber-500 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-amber-600 transition-all shadow-md group"
                   >
                     <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="hidden sm:inline">Atur Peringatan</span>
-                    <span className="sm:hidden">Peringatan</span>
+                    <span className="hidden sm:inline">Manajemen Anggaran</span>
+                    <span className="sm:hidden">Anggaran</span>
                   </button>
                   <button
                     onClick={() => setShowDataModal(true)}
@@ -1162,7 +1176,7 @@ export function HomeownerDashboard() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 p-4 sm:p-6 bg-[#ebfbf5] rounded-[2rem] border border-[#bbf7d0] items-start">
                 {/* Item 1 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
                     {chartType === 'daily' ? 'Konsumsi Beban Saat Ini' : 'Konsumsi Beban Bulan Ini'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
@@ -1172,7 +1186,7 @@ export function HomeownerDashboard() {
 
                 {/* Item 2 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
                     {chartType === 'daily' ? 'Konsumsi Beban Berjalan' : 'Total Konsumsi Beban Tahun Ini'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
@@ -1182,7 +1196,7 @@ export function HomeownerDashboard() {
 
                 {/* Item 3 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
                     {chartType === 'daily' ? 'Rata-rata beban /jam' : 'Rata-rata beban/bulan'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
@@ -1197,8 +1211,8 @@ export function HomeownerDashboard() {
 
                 {/* Item 4 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
-                    Total Biaya Pemakaian Beban Berjalan (Rp)
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
+                    Estimasi Biaya Pemakaian Beban Berjalan (Rp)
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     <span className="text-sm sm:text-base font-semibold opacity-60">Rp</span> {
@@ -1430,7 +1444,7 @@ export function HomeownerDashboard() {
           role="homeowner" 
         />
         <DataModal isOpen={showDataModal} onClose={() => setShowDataModal(false)} chartType={chartType} energySummary={energySummary} />
-        <WarningLimitModal isOpen={showWarningModal} onClose={() => setShowWarningModal(false)} limit={warningLimit} setLimit={setWarningLimit} deposit={depositBalance} setDeposit={setDepositBalance} onRefresh={fetchDashboardData} />
+        <WarningLimitModal isOpen={showWarningModal} onClose={() => setShowWarningModal(false)} limit={warningLimit} setLimit={setWarningLimit} deposit={depositBalance} setDeposit={setDepositBalance} onRefresh={fetchDashboardData} energySummary={energySummary} />
         <ComplaintModal
           isOpen={showComplaintModal}
           onClose={() => setShowComplaintModal(false)}

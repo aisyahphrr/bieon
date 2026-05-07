@@ -1,18 +1,21 @@
 const Complaint = require('../models/Complaint');
 const User = require('../models/User');
 const Alert = require('../models/Alert');
+const Hub = require('../models/Hub');
+const KendaliPerangkat = require('../models/KendaliPerangkat');
+const mongoose = require('mongoose');
 
 // [Homeowner] CREATE COMPLAINT
 exports.createComplaint = async (req, res) => {
     try {
-        const { topic, category, device, desc, files } = req.body;
+        const { topic, category, device, desc, files, hubId } = req.body;
         const userId = req.user.userId;
-
+ 
         // Get user info for notification details
         const sender = await User.findById(userId);
-
+ 
         const now = new Date().toISOString();
-
+ 
         const newComplaint = new Complaint({
             topic,
             category,
@@ -20,6 +23,7 @@ exports.createComplaint = async (req, res) => {
             desc,
             status: 'unassigned',
             homeowner: userId,
+            hub: hubId,
             files: files || [],
             timeline: [{
                 time: now,
@@ -48,7 +52,7 @@ exports.createComplaint = async (req, res) => {
             owner: admin._id,
             category: 'Pengaduan',
             title: 'Tiket Pengaduan Baru',
-            message: `Ada pengaduan baru dari ${sender?.fullName || 'User'} (${sender?.bieonId || 'BIEON ID'}). Topik: ${topic}`,
+            message: `Ada pengaduan baru dari ${sender?.fullName || 'User'}. Hub: ${req.body.bieonId || 'BIEON ID'}. Topik: ${topic}`,
             type: 'Warning',
             link: 'admin-complaint'
         }));
@@ -67,9 +71,20 @@ exports.createComplaint = async (req, res) => {
 exports.getComplaintsByOwner = async (req, res) => {
     try {
         await exports.checkAndUpdateSLAStatuses(); // Pastikan status SLA terbaru (overdue, dll) sebelum fetch
-        const complaints = await Complaint.find({ homeowner: req.params.userId })
+        
+        let query = { homeowner: req.params.userId };
+        const { isHistory } = req.query;
+
+        if (isHistory === 'true' || isHistory === true) {
+            query.status = { $in: [/selesai/i, /ditolak/i, /batal/i, /cancelled/i] };
+        } else if (isHistory === 'false' || isHistory === false) {
+            query.status = { $nin: ['selesai', 'ditolak', 'batal', 'cancelled'] };
+        }
+
+        const complaints = await Complaint.find(query)
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber')
+            .populate('hub', 'name bieonId')
             .sort({ createdAt: -1 });
 
         // Filter timeline for homeowners
@@ -81,9 +96,13 @@ exports.getComplaintsByOwner = async (req, res) => {
             return complaintObj;
         });
 
-        res.status(200).json(formattedComplaints);
+        res.status(200).json({
+            success: true,
+            total: formattedComplaints.length,
+            data: formattedComplaints
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Gagal mengambil data pengaduan', error: error.message });
+        res.status(500).json({ success: false, message: 'Gagal mengambil data aduan owner', error: error.message });
     }
 };
 
@@ -91,10 +110,58 @@ exports.getComplaintsByOwner = async (req, res) => {
 exports.getAllComplaints = async (req, res) => {
     try {
         await exports.checkAndUpdateSLAStatuses(); // Auto-update overdue statuses before fetch
-        const complaints = await Complaint.find()
+        
+        let query = {};
+        const { bieonId, homeownerId, isHistory } = req.query;
+
+        // 1. Build Base Query (Homeowner & Status)
+        if (homeownerId) {
+            try {
+                const hId = new mongoose.Types.ObjectId(homeownerId);
+                query.homeowner = { $in: [hId, homeownerId.toString()] };
+            } catch (e) {
+                query.homeowner = homeownerId;
+            }
+        }
+        
+        if (isHistory === 'true' || isHistory === true) {
+            // Di tab Riwayat, tampilkan yang sudah SELESAI, DITOLAK, atau BATAL (case-insensitive)
+            query.status = { $in: [/selesai/i, /ditolak/i, /batal/i, /cancelled/i] };
+        }
+
+        // 2. Add BIEON Filter if requested
+        if (bieonId && bieonId !== '') {
+            const hubs = await Hub.find({ bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') } }).select('_id');
+            const hubIds = hubs.map(h => h._id);
+            
+            // Cari nama-nama perangkat yang mungkin terkait dengan Hub ini (untuk data lama)
+            const devices = await KendaliPerangkat.find({ hubId: { $in: hubIds } }).select('name');
+            const deviceNames = devices.map(d => d.name);
+
+            // Gunakan $and agar filter homeowner/status sebelumnya tetap berlaku
+            const currentQuery = { ...query };
+            query = {
+                $and: [
+                    currentQuery,
+                    {
+                        $or: [
+                            { hub: { $in: hubIds } },
+                            { device: { $in: deviceNames.map(name => new RegExp(name, 'i')) } },
+                            // Jika pengaduan tidak punya hub/device (umum), tapi kita filter BIEON, 
+                            // mungkin kita tetap ingin menampilkannya jika homeowner hanya punya 1 BIEON? 
+                            // Tapi untuk sekarang kita tetap ketat agar tidak campur aduk.
+                        ]
+                    }
+                ]
+            };
+        }
+
+        const complaints = await Complaint.find(query)
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber')
+            .populate('hub', 'name bieonId')
             .sort({ createdAt: -1 });
+
         // Filter timeline for homeowners
         const formattedComplaints = complaints.map(c => {
             const complaintObj = c.toObject();
@@ -104,9 +171,13 @@ exports.getAllComplaints = async (req, res) => {
             return complaintObj;
         });
 
-        res.status(200).json(formattedComplaints);
+        res.status(200).json({
+            success: true,
+            total: formattedComplaints.length,
+            data: formattedComplaints
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Gagal mengambil semua data pengaduan', error: error.message });
+        res.status(500).json({ success: false, message: 'Gagal mengambil data pengaduan', error: error.message });
     }
 };
 
@@ -140,14 +211,29 @@ exports.getComplaintsByTechnician = async (req, res) => {
         } catch (slaError) {
             console.error("SLA Auto-update failed:", slaError);
         }
-        const techId = req.user.userId;
-        const complaints = await Complaint.find({ technician: techId })
+        
+        let query = { technician: req.user.userId };
+        const { isHistory } = req.query;
+
+        if (isHistory === 'true' || isHistory === true) {
+            query.status = { $in: [/selesai/i, /ditolak/i, /batal/i, /cancelled/i] };
+        } else if (isHistory === 'false' || isHistory === false) {
+            query.status = { $nin: ['selesai', 'ditolak', 'batal', 'cancelled'] };
+        }
+
+        const complaints = await Complaint.find(query)
             .populate('homeowner', 'fullName email phoneNumber address bieonId')
             .populate('technician', 'fullName phoneNumber')
+            .populate('hub', 'name bieonId')
             .sort({ createdAt: -1 });
-        res.status(200).json(complaints);
+
+        res.status(200).json({
+            success: true,
+            total: complaints.length,
+            data: complaints
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Gagal mengambil pengaduan teknisi', error: error.message });
+        res.status(500).json({ success: false, message: 'Gagal mengambil data aduan teknisi', error: error.message });
     }
 };
 

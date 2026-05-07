@@ -62,6 +62,8 @@ export function HomeownerComplaint({ onNavigate }) {
         device: '',
         topic: '',
         description: '',
+        hubId: '',
+        bieonId: '',
         files: []
     });
 
@@ -72,6 +74,7 @@ export function HomeownerComplaint({ onNavigate }) {
     const [complaints, setComplaints] = useState([]);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [userDevices, setUserDevices] = useState([]);
+    const [userHubs, setUserHubs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
@@ -85,24 +88,38 @@ export function HomeownerComplaint({ onNavigate }) {
         }
     };
 
+    const fetchUserSystems = async (userId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/hubs/owner/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setUserHubs(Array.isArray(data) ? data : []);
+                
+                // If only one hub, pre-select it
+                if (data.length === 1) {
+                    setFormData(prev => ({ ...prev, hubId: data[0]._id, bieonId: data[0].bieonId }));
+                }
+            }
+        } catch (err) {
+            console.error("Gagal mengambil data sistem BIEON:", err);
+        }
+    };
+
     const fetchUserDevices = async (userId) => {
         try {
-            console.log("🔍 FETCHING DEVICES FOR USER:", userId);
             const token = localStorage.getItem('token');
             const res = await fetch(`/api/kendaliperangkat/my-devices`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            console.log("📡 API RESPONSE STATUS:", res.status);
             if (res.ok) {
                 const data = await res.json();
-                console.log("📦 DEVICE DATA RECEIVED:", data);
                 setUserDevices(Array.isArray(data) ? data : []);
-            } else {
-                const errText = await res.text();
-                console.error("❌ API ERROR RESPONSE:", errText);
             }
         } catch (err) {
-            console.error("💥 FETCH ERROR:", err);
+            console.error("Gagal mengambil data perangkat:", err);
         }
     };
 
@@ -120,7 +137,8 @@ export function HomeownerComplaint({ onNavigate }) {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error('Gagal memuat data');
-            const data = await res.json();
+            const rawData = await res.json();
+            const data = Array.isArray(rawData) ? rawData : (rawData.data || []);
             
             const mappedData = data.map(item => {
                 const safeId = item._id ? item._id.toString() : '';
@@ -179,6 +197,7 @@ export function HomeownerComplaint({ onNavigate }) {
                     setCurrentUserId(userId);
                     fetchComplaints(userId);
                     fetchUserDevices(userId);
+                    fetchUserSystems(userId);
                 }
             }
         }
@@ -351,6 +370,8 @@ export function HomeownerComplaint({ onNavigate }) {
                     category: formData.category,
                     device: formData.device,
                     desc: formData.description,
+                    hubId: formData.hubId,
+                    bieonId: formData.bieonId,
                     files: uploadedFiles
                 })
             });
@@ -359,7 +380,7 @@ export function HomeownerComplaint({ onNavigate }) {
             if (!response.ok) throw new Error(result.message || 'Gagal mengajukan pengaduan');
 
             setSubmitSuccess('Pengaduan berhasil diajukan! Teknisi akan segera memproses laporan Anda.');
-            setFormData({ category: '', device: '', topic: '', description: '', files: [] });
+            setFormData({ category: '', device: '', topic: '', description: '', hubId: '', bieonId: '', files: [] });
             setFormFiles([]);
             
             // Re-fetch data untuk mendapatkan baris tabel terbaru
@@ -813,6 +834,25 @@ export function HomeownerComplaint({ onNavigate }) {
                                 </div>
                             )}
                             <form id="complaintForm" onSubmit={handleSubmitComplaint} className="space-y-8">
+                                {/* BIEON System Selection (Only if multiple) */}
+                                {userHubs.length > 1 && (
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 italic">Pilih Sistem BIEON <span className="text-red-500">*</span></label>
+                                        <div className="flex flex-wrap gap-3">
+                                            {userHubs.map(hub => (
+                                                <button
+                                                    key={hub._id}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, hubId: hub._id, bieonId: hub.bieonId, device: '', category: '' })}
+                                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${formData.hubId === hub._id ? 'bg-teal-50 border-teal-500 text-teal-700' : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'}`}
+                                                >
+                                                    {hub.name} ({hub.bieonId})
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Kategori <span className="text-red-500">*</span></label>
@@ -833,8 +873,9 @@ export function HomeownerComplaint({ onNavigate }) {
                                                     <div className="fixed inset-0 z-[60]" onClick={() => setShowCategoryDropdown(false)}></div>
                                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
                                                         {(() => {
-                                                            const dbCategories = userDevices.length > 0 
-                                                                ? [...new Set(userDevices.map(d => d.category))].filter(Boolean)
+                                                            const filteredDevices = userDevices.filter(d => !formData.hubId || d.hubId === formData.hubId);
+                                                            const dbCategories = filteredDevices.length > 0 
+                                                                ? [...new Set(filteredDevices.map(d => d.category))].filter(Boolean)
                                                                 : [];
                                                             const finalCategories = dbCategories.length > 0 
                                                                 ? [...dbCategories, 'Lainnya']
@@ -880,10 +921,14 @@ export function HomeownerComplaint({ onNavigate }) {
                                                     <div className="absolute top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-[210] animate-in fade-in zoom-in-95 duration-200 max-h-[250px] overflow-y-auto custom-scrollbar">
                                                         {userDevices.length > 0 ? (
                                                             (() => {
-                                                                const filtered = userDevices.filter((dev) => !formData.category || dev.category === formData.category);
+                                                                const filtered = userDevices.filter((dev) => {
+                                                                    const matchCategory = !formData.category || dev.category === formData.category;
+                                                                    const matchHub = !formData.hubId || dev.hubId === formData.hubId;
+                                                                    return matchCategory && matchHub;
+                                                                });
                                                                 
                                                                 if (filtered.length === 0) {
-                                                                    return <div className="px-5 py-3 text-sm text-gray-400 italic">Tidak ada perangkat di kategori ini</div>;
+                                                                    return <div className="px-5 py-3 text-sm text-gray-400 italic">Tidak ada perangkat yang sesuai</div>;
                                                                 }
 
                                                                 return filtered.map((dev) => {
@@ -893,7 +938,12 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                             key={dev._id}
                                                                             type="button"
                                                                             onClick={() => {
-                                                                                setFormData({ ...formData, device: label });
+                                                                                setFormData({ 
+                                                                                    ...formData, 
+                                                                                    device: label,
+                                                                                    hubId: dev.hubId,
+                                                                                    bieonId: userHubs.find(h => h._id === dev.hubId)?.bieonId || formData.bieonId
+                                                                                });
                                                                                 setShowDeviceDropdown(false);
                                                                             }}
                                                                             className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === label ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}

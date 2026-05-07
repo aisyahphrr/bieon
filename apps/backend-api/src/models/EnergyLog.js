@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const energyLogSchema = new mongoose.Schema({
     device: { type: mongoose.Schema.Types.ObjectId, ref: 'KendaliPerangkat', required: true },
+    hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     date: { type: Date, required: true },
     totalKwh: { type: Number, required: true },
     voltage: { type: Number },

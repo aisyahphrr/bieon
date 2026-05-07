@@ -237,7 +237,8 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
             });
 
             if (response.ok) {
-                const data = await response.json();
+                const rawData = await response.json();
+                const data = Array.isArray(rawData) ? rawData : (rawData.data || []);
                 const formattedComplaints = data.map(item => {
                     const safeId = item._id ? item._id.toString() : '';
                     return {

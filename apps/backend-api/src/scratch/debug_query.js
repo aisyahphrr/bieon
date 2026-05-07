@@ -1,49 +1,38 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
+const Complaint = require('../models/Complaint');
+const User = require('../models/User');
 
-const User = mongoose.model('User', new mongoose.Schema({
-    fullName: String,
-    role: String,
-    assignedTechnician: mongoose.Schema.Types.ObjectId,
-    currentLocation: { lat: Number, lng: Number }
-}));
-
-const Hub = mongoose.model('Hub', new mongoose.Schema({
-    owner: mongoose.Schema.Types.ObjectId,
-    status: String
-}));
-
-const KendaliPerangkat = mongoose.model('KendaliPerangkat', new mongoose.Schema({
-    owner: mongoose.Schema.Types.ObjectId,
-    status: String
-}, { collection: 'kendaliperangkat' }));
-
-async function testQuery() {
+async function debug() {
     try {
         const uri = 'mongodb+srv://dafmaula123_db_user:Bieon1234@cluster0.sqclpaj.mongodb.net/bieon_db?appName=Cluster0';
+        console.log('Connecting to MongoDB...');
         await mongoose.connect(uri);
-        
-        const alanId = new mongoose.Types.ObjectId('69e5e7d83c29953fe5079069');
-        const clients = await User.find({ assignedTechnician: alanId, role: 'Homeowner' }).lean();
-        
-        console.log('Clients found:', clients.length);
-        
-        for (const client of clients) {
-            const hubs = await Hub.find({ owner: client._id }).lean();
-            const devices = await KendaliPerangkat.find({ owner: client._id }).lean();
-            
-            const devicesOnline = devices.filter(d => ['Active', '1', '0'].includes(d.status)).length;
-            
-            console.log(`Client: ${client.fullName}`);
-            console.log(`- Hubs: ${hubs.length}`);
-            console.log(`- Devices: ${devices.length} (Online: ${devicesOnline})`);
+        console.log('Connected to MongoDB');
+
+        const total = await Complaint.countDocuments();
+        console.log('Total Complaints:', total);
+
+        const allStatuses = await Complaint.distinct('status');
+        console.log('All unique statuses in DB:', allStatuses);
+
+        const finished = await Complaint.find({ status: { $in: ['selesai', 'ditolak', 'Selesai', 'Ditolak'] } }).limit(5);
+        console.log('Sample Finished/Rejected Complaints:', JSON.stringify(finished.map(c => ({ id: c._id, status: c.status, homeowner: c.homeowner, device: c.device })), null, 2));
+
+        // Check for specific homeowner from screenshot
+        const user = await User.findOne({ fullName: /testingakun/i });
+        if (user) {
+            console.log('Found user:', user.fullName, user._id);
+            const userComplaints = await Complaint.find({ homeowner: user._id });
+            console.log(`Complaints for this user (${userComplaints.length}):`, userComplaints.map(c => ({ id: c._id, status: c.status })));
+        } else {
+            console.log('User "testingakun" not found');
         }
-        
+
         process.exit(0);
     } catch (err) {
-        console.error(err);
+        console.error('Debug failed:', err);
         process.exit(1);
     }
 }
 
-testQuery();
+debug();

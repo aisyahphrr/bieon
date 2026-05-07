@@ -36,8 +36,8 @@ const ensureValidation = (payload, { isCreate = false } = {}) => {
         }
     }
 
-    if (payload.status && !['aktif', 'nonaktif'].includes(payload.status)) {
-        const error = new Error('Status homeowner tidak valid. Gunakan aktif atau nonaktif.');
+    if (payload.status && !['aktif', 'nonaktif', 'warning'].includes(payload.status)) {
+        const error = new Error('Status homeowner tidak valid. Gunakan aktif, nonaktif, atau warning.');
         error.status = 400;
         throw error;
     }

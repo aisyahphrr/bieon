@@ -280,6 +280,7 @@ exports.toggleDevice = async (req, res) => {
         // LOGGING KE AKTIVITAS TERBARU
         await new Activity({
             user: device.owner,
+            hub: device.hubId,
             room: device.location,
             actuator: device.name,
             status: newStatus === '1' ? 'ON' : 'OFF',
@@ -298,6 +299,7 @@ exports.toggleDevice = async (req, res) => {
 
         await Alert.create({
             owner: device.owner,
+            hub: device.hubId,
             category: category,
             title: `Kontrol Perangkat: ${statusText}`,
             message: `[Manual] Anda telah ${newStatus === '1' ? 'menyalakan' : 'mematikan'} ${device.name} di ${device.location}.`,
