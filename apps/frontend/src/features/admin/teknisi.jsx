@@ -306,6 +306,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const [selectedTechnician, setSelectedTechnician] = useState(null);
     const [mapFilterTech, setMapFilterTech] = useState('all');
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [isWorkAreaDropdownOpen, setIsWorkAreaDropdownOpen] = useState(false);
+    const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+    const [isMapTechDropdownOpen, setIsMapTechDropdownOpen] = useState(false);
     const [isLoadingTechnicians, setIsLoadingTechnicians] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState('');
@@ -1222,31 +1225,86 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
-                                        <select
-                                            name="workArea"
-                                            value={formData.workArea}
-                                            onChange={handleCityChange}
-                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
-                                        >
-                                            <option value="">Pilih Kota</option>
-                                            {Object.keys(CITY_AREAS).map(city => (
-                                                <option key={city} value={city}>{city}</option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsWorkAreaDropdownOpen(!isWorkAreaDropdownOpen)}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                            >
+                                                <span className={formData.workArea ? 'text-gray-800 font-semibold' : 'text-gray-400'}>
+                                                    {formData.workArea || 'Pilih Kota'}
+                                                </span>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                            </button>
+                                            
+                                            {isWorkAreaDropdownOpen && (
+                                                <>
+                                                    <div className="fixed inset-0 z-[700]" onClick={() => setIsWorkAreaDropdownOpen(false)}></div>
+                                                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
+                                                        {Object.keys(CITY_AREAS).map(city => (
+                                                            <button
+                                                                key={city}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    handleCityChange({ target: { value: city } });
+                                                                    setIsWorkAreaDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                            >
+                                                                {city}
+                                                                {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
-                                        <select
-                                            name="status"
-                                            value={formData.status}
-                                            onChange={handleInputChange}
-                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
-                                        >
-                                            <option value="aktif">Aktif</option>
-                                            <option value="nonaktif">Nonaktif</option>
-                                        </select>
-                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isStatusDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                                                    <span className="text-gray-800 font-semibold uppercase tracking-wider">
+                                                        {formData.status}
+                                                    </span>
+                                                </div>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                            </button>
+
+                                            {isStatusDropdownOpen && (
+                                                <>
+                                                    <div className="fixed inset-0 z-[700]" onClick={() => setIsStatusDropdownOpen(false)}></div>
+                                                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
+                                                        {[
+                                                            { id: 'aktif', label: 'Aktif', color: 'bg-emerald-500' },
+                                                            { id: 'nonaktif', label: 'Nonaktif', color: 'bg-red-500' }
+                                                        ].map(item => (
+                                                            <button
+                                                                key={item.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    handleInputChange({ target: { name: 'status', value: item.id } });
+                                                                    setIsStatusDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === item.id ? 'bg-gray-50 text-gray-900' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
+                                                                    {item.label}
+                                                                </div>
+                                                                {formData.status === item.id && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
                                         <label className="text-xs font-bold text-gray-500 uppercase">
@@ -1593,22 +1651,58 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             `}</style>
 
                             {/* Toolbar Map */}
-                            <div className="flex items-center gap-6 mb-4 overflow-x-auto pb-4 snap-x snap-mandatory always-scroll w-full">
-                                <div className="flex items-center gap-3 shrink-0 snap-start">
-                                    <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Filter Teknisi:</span>
-                                    <select
-                                        className="py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                        value={mapFilterTech}
-                                        onChange={(e) => {
-                                            setMapFilterTech(e.target.value);
-                                            setSelectedMapTechnicianId(e.target.value === 'all' ? null : e.target.value);
-                                        }}
+                            <div className="flex items-center gap-6 mb-4 overflow-x-auto md:overflow-visible pb-4 snap-x snap-mandatory always-scroll w-full relative z-[2000]">
+                                <div className="relative shrink-0 flex items-center justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMapTechDropdownOpen(!isMapTechDropdownOpen)}
+                                        className="min-w-[200px] px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center justify-between transition-all focus:outline-none focus:ring-4 focus:ring-blue-50"
                                     >
-                                        <option value="all">Semua Teknisi</option>
-                                        {mapTechnicians.map(t => (
-                                            <option key={t.id} value={t.id}>{t.name}</option>
-                                        ))}
-                                    </select>
+                                        <div className="flex items-center gap-2">
+                                            <UserCog className="w-4 h-4 text-blue-500" />
+                                            <span>
+                                                {mapFilterTech === 'all' ? 'Semua Teknisi' : (mapTechnicians.find(t => t.id === mapFilterTech)?.name || 'Pilih Teknisi')}
+                                            </span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isMapTechDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {isMapTechDropdownOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-[1999]" onClick={() => setIsMapTechDropdownOpen(false)}></div>
+                                            <div className="absolute left-0 top-full mt-2 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl z-[2000] py-2 max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
+                                                <button
+                                                    onClick={() => {
+                                                        setMapFilterTech('all');
+                                                        setSelectedMapTechnicianId(null);
+                                                        setIsMapTechDropdownOpen(false);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${mapFilterTech === 'all' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                                                >
+                                                    <span>Semua Teknisi</span>
+                                                    {mapFilterTech === 'all' && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                                                </button>
+                                                <div className="h-px bg-gray-50 my-1"></div>
+                                                {mapTechnicians.map((tech) => (
+                                                    <button
+                                                        key={tech.id}
+                                                        onClick={() => {
+                                                            setMapFilterTech(tech.id);
+                                                            setSelectedMapTechnicianId(tech.id);
+                                                            setIsMapTechDropdownOpen(false);
+                                                        }}
+                                                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${mapFilterTech === tech.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tech.color }}></div>
+                                                            <span className="truncate">{tech.name}</span>
+                                                        </div>
+                                                        {mapFilterTech === tech.id && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="w-px h-6 bg-gray-200 shrink-0 hidden md:block"></div>
@@ -1920,31 +2014,86 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
-                                        <select
-                                            name="workArea"
-                                            value={formData.workArea}
-                                            onChange={handleCityChange}
-                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
-                                        >
-                                            <option value="">Pilih Kota</option>
-                                            {Object.keys(CITY_AREAS).map(city => (
-                                                <option key={city} value={city}>{city}</option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                        <div className="relative group">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsWorkAreaDropdownOpen(!isWorkAreaDropdownOpen)}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                            >
+                                                <span className={formData.workArea ? 'text-gray-800 font-semibold' : 'text-gray-400'}>
+                                                    {formData.workArea || 'Pilih Kota'}
+                                                </span>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                            </button>
+                                            
+                                            {isWorkAreaDropdownOpen && (
+                                                <>
+                                                    <div className="fixed inset-0 z-[700]" onClick={() => setIsWorkAreaDropdownOpen(false)}></div>
+                                                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
+                                                        {Object.keys(CITY_AREAS).map(city => (
+                                                            <button
+                                                                key={city}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    handleCityChange({ target: { value: city } });
+                                                                    setIsWorkAreaDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                            >
+                                                                {city}
+                                                                {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="space-y-2 relative">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
-                                        <select
-                                            name="status"
-                                            value={formData.status}
-                                            onChange={handleInputChange}
-                                            className="appearance-none w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:border-[#009b7c] transition-all cursor-pointer"
-                                        >
-                                            <option value="aktif">Aktif</option>
-                                            <option value="nonaktif">Nonaktif</option>
-                                        </select>
-                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-9 pointer-events-none" />
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isStatusDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                                                    <span className="text-gray-800 font-semibold uppercase tracking-wider">
+                                                        {formData.status}
+                                                    </span>
+                                                </div>
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                            </button>
+
+                                            {isStatusDropdownOpen && (
+                                                <>
+                                                    <div className="fixed inset-0 z-[700]" onClick={() => setIsStatusDropdownOpen(false)}></div>
+                                                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
+                                                        {[
+                                                            { id: 'aktif', label: 'Aktif', color: 'bg-emerald-500' },
+                                                            { id: 'nonaktif', label: 'Nonaktif', color: 'bg-red-500' }
+                                                        ].map(item => (
+                                                            <button
+                                                                key={item.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    handleInputChange({ target: { name: 'status', value: item.id } });
+                                                                    setIsStatusDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === item.id ? 'bg-gray-50 text-gray-900' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
+                                                                    {item.label}
+                                                                </div>
+                                                                {formData.status === item.id && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
                                         <label className="text-xs font-bold text-gray-500 uppercase">

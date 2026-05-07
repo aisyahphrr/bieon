@@ -52,7 +52,7 @@ const userSchema = new mongoose.Schema({
         endDate: { type: Date }
     }],
     profileImage: { type: String }, // Base64 or URL
-    status: { type: String, enum: ['aktif', 'nonaktif'], default: 'aktif' }
+    status: { type: String, enum: ['aktif', 'nonaktif', 'warning'], default: 'aktif' }
 }, { timestamps: true });
 
 // Unik untuk ID teknisi jika digunakan; sparse agar role lain tidak terdampak

@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const Hub = require('../models/Hub');
 const Device = require('../models/Device');
+const KendaliPerangkat = require('../models/KendaliPerangkat');
+const Complaint = require('../models/Complaint');
 const dashboardService = require('../modules/admin/dashboardService');
 const technicianService = require('../modules/users/technicianService');
 const homeownerService = require('../modules/users/homeownerService');
@@ -13,16 +15,30 @@ const accountDeletionService = require('../modules/admin/accountDeletionService'
 // ========================================================
 exports.getAllHomeowners = async (req, res) => {
     try {
-        // Ambil semua user yang rolenya 'Homeowner', tanpa field password
-        const homeowners = await User.find({ role: 'Homeowner' }).select('-password').lean();
+        // Ambil semua user yang rolenya 'Homeowner', tanpa field password, dan populate teknisinya
+        const homeowners = await User.find({ role: 'Homeowner' })
+            .select('-password')
+            .populate('assignedTechnician', 'fullName')
+            .lean();
 
-        // Untuk setiap homeowner, ambil jumlah hub yang mereka punya
+        // Untuk setiap homeowner, ambil stats tambahan (hub, device, team teknisi)
         const homeownersWithStats = await Promise.all(
             homeowners.map(async (user) => {
-                const [hubCount, deviceCount] = await Promise.all([
+                const [hubCount, deviceCount, activeComplaints] = await Promise.all([
                     Hub.countDocuments({ owner: user._id }),
-                    Device.countDocuments({ owner: user._id }),
+                    KendaliPerangkat.countDocuments({ owner: user._id }),
+                    Complaint.find({ 
+                        owner: user._id, 
+                        status: { $in: ['proses', 'perbaikan'] } 
+                    }).populate('technician', 'fullName').lean()
                 ]);
+
+                // Ambil daftar teknisi unik dari pengaduan (selain PIC utama)
+                const fieldTechs = activeComplaints
+                    .map(c => c.technician?.fullName)
+                    .filter(name => name && name !== (user.assignedTechnician?.fullName));
+                
+                const uniqueFieldTechs = [...new Set(fieldTechs)];
 
                 return {
                     _id: user._id,
@@ -39,6 +55,8 @@ exports.getAllHomeowners = async (req, res) => {
                     registrationDate: user.createdAt,
                     totalHubs: hubCount,
                     totalDevices: deviceCount,
+                    technicianName: user.assignedTechnician?.fullName || '-',
+                    fieldTeam: uniqueFieldTechs
                 };
             })
         );

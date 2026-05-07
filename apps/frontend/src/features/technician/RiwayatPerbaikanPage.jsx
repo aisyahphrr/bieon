@@ -129,15 +129,17 @@ export function RiwayatPerbaikanPage() {
       try {
         setIsLoading(true);
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/complaints/technician', {
+        const response = await fetch('/api/complaints/technician?isHistory=true', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (response.ok) {
-          const data = await response.json();
-          // Filter ONLY 'selesai' status and MAP data
+          const result = await response.json();
+          const data = result.data || [];
+          
+          // Filter 'selesai' and 'ditolak' statuses
           const historyData = data
-            .filter(item => item.status?.toLowerCase() === 'selesai')
+            .filter(item => ['selesai', 'ditolak'].includes(item.status?.toLowerCase()))
             .map(item => {
               const safeId = item._id ? item._id.toString() : '';
               return {
@@ -154,8 +156,8 @@ export function RiwayatPerbaikanPage() {
                     review: item.rating?.note || "Tidak ada ulasan." 
                 },
                 category: item.category || 'Umum',
-                device: item.device_parameters?.[0]?.param_name || 'Perangkat Bieon'
-              };
+                device: item.device || 'Perangkat Bieon'
+            };
             });
           setComplaints(historyData);
         }

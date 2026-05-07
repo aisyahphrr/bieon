@@ -74,6 +74,8 @@ export function ManajemenAkunPage({ onNavigate }) {
     const [isEmailPreviewOpen, setIsEmailPreviewOpen] = useState(false);
     const [selectedHomeowner, setSelectedHomeowner] = useState(null);
     const [activeDetailTab, setActiveDetailTab] = useState('info');
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     const [deleteReason, setDeleteReason] = useState('');
 
     // State untuk data dari API
@@ -82,6 +84,7 @@ export function ManajemenAkunPage({ onNavigate }) {
     const [fetchError, setFetchError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
     const [selectedHomeownerHubs, setSelectedHomeownerHubs] = useState([]);
+    const [selectedHomeownerDevices, setSelectedHomeownerDevices] = useState([]);
     const [isLoadingHubs, setIsLoadingHubs] = useState(false);
 
     // Fetch data homeowner dari backend
@@ -155,6 +158,19 @@ export function ManajemenAkunPage({ onNavigate }) {
                         const hubsJson = await hubsRes.json();
                         setSelectedHomeownerHubs(hubsJson);
                     }
+
+                    // Fetch real devices from KendaliPerangkat (Dashboard Data)
+                    // URL must be /api/kendaliperangkat (no hyphen) to match existing routes
+                    const devicesRes = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/kendaliperangkat/my-devices?ownerId=${selectedHomeowner._id}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    
+                    if (devicesRes.ok && devicesRes.headers.get("content-type")?.includes("application/json")) {
+                        const devicesJson = await devicesRes.json();
+                        setSelectedHomeownerDevices(Array.isArray(devicesJson) ? devicesJson : []);
+                    } else {
+                        setSelectedHomeownerDevices([]);
+                    }
                     
                     // Kita tambahkan update stats ke selectedHomeowner local jika diperlukan
                     if(json.success && json.data) {
@@ -172,7 +188,7 @@ export function ManajemenAkunPage({ onNavigate }) {
             };
             fetchHubs();
         }
-    }, [selectedHomeowner, activeDetailTab]);
+    }, [selectedHomeowner?._id, activeDetailTab]);
 
     // Event listener dari halaman lain (misal: SuperAdminDashboard)
     useEffect(() => {
@@ -446,17 +462,38 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 </div>
 
                                 <div className="relative col-span-1">
-                                    <select
-                                        value={filterStatus}
-                                        onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="appearance-none flex items-center justify-between gap-8 px-4 py-2.5 w-full md:min-w-[150px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                                        className="flex items-center justify-between gap-4 px-4 py-2.5 w-full md:min-w-[160px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all text-sm font-semibold text-gray-600 focus:outline-none focus:ring-4 focus:ring-emerald-50"
                                     >
-                                        <option value="all">Semua Status</option>
-                                        <option value="aktif">Aktif</option>
-                                        <option value="warning">Warning</option>
-                                        <option value="nonaktif">Nonaktif</option>
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        <div className="flex items-center gap-2">
+                                            <Filter className="w-4 h-4 text-emerald-500" />
+                                            <span className="capitalize">{filterStatus === 'all' ? 'Semua Status' : filterStatus}</span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {isFilterDropdownOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setIsFilterDropdownOpen(false)}></div>
+                                            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl z-20 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
+                                                {['all', 'aktif', 'warning', 'nonaktif'].map((status) => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => {
+                                                            setFilterStatus(status);
+                                                            setIsFilterDropdownOpen(false);
+                                                        }}
+                                                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${filterStatus === status ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50 hover:pl-6'}`}
+                                                    >
+                                                        <span className="capitalize">{status === 'all' ? 'Semua Status' : status}</span>
+                                                        {filterStatus === status && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 <button
@@ -466,9 +503,27 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         filteredHomeowners.map(h => [h._id, h.fullName, h.username || '-', h.email, h.phoneNumber || '-', h.totalHubs || 0]),
                                         "Homeowner_Report"
                                     )}
-                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group col-span-1"
+                                    className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm flex items-center justify-center gap-2 group col-span-1"
                                 >
                                     <Download className="w-4 h-4" /> Download
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setFormData({
+                                            username: '',
+                                            fullName: '',
+                                            email: '',
+                                            phone: '',
+                                            address: '',
+                                            password: '',
+                                            status: 'aktif'
+                                        });
+                                        setIsAddModalOpen(true);
+                                    }}
+                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group col-span-1"
+                                >
+                                    <Plus className="w-4 h-4" /> Tambah Klien
                                 </button>
 
                             </div>
@@ -541,12 +596,33 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     <button
                                                         onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
                                                         className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-[#009b7c] hover:border-[#009b7c] hover:bg-emerald-50 rounded-xl transition-all shadow-sm"
+                                                        title="Lihat Detail"
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                     </button>
                                                     <button
+                                                        onClick={() => {
+                                                            setSelectedHomeowner(ho);
+                                                            setFormData({
+                                                                fullName: ho.fullName,
+                                                                email: ho.email,
+                                                                username: ho.username || '',
+                                                                phone: ho.phoneNumber || '',
+                                                                address: ho.address || '',
+                                                                status: ho.status || 'aktif',
+                                                                password: ''
+                                                            });
+                                                            setIsEditModalOpen(true);
+                                                        }}
+                                                        className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-blue-500 hover:border-blue-500 hover:bg-blue-50 rounded-xl transition-all shadow-sm"
+                                                        title="Edit Data"
+                                                    >
+                                                        <Edit3 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleDeleteHomeowner(ho)}
                                                         className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm"
+                                                        title="Hapus Klien"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -602,18 +678,36 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 pt-1">
+                                    <div className="grid grid-cols-3 gap-2 pt-1">
                                         <button
                                             onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
-                                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-[#009b7c] hover:border-[#009b7c] hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                                            className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-[#009b7c] hover:border-[#009b7c] hover:text-white rounded-xl text-[10px] font-bold transition-all shadow-sm"
                                         >
-                                            <Eye className="w-4 h-4" /> Lihat Detail
+                                            <Eye className="w-3.5 h-3.5" /> Detail
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedHomeowner(ho);
+                                                setFormData({
+                                                    fullName: ho.fullName,
+                                                    email: ho.email,
+                                                    username: ho.username || '',
+                                                    phone: ho.phoneNumber || '',
+                                                    address: ho.address || '',
+                                                    status: ho.status || 'aktif',
+                                                    password: ''
+                                                });
+                                                setIsEditModalOpen(true);
+                                            }}
+                                            className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-blue-600 hover:border-blue-600 hover:text-white rounded-xl text-[10px] font-bold transition-all shadow-sm"
+                                        >
+                                            <Edit3 className="w-3.5 h-3.5" /> Edit
                                         </button>
                                         <button
                                             onClick={() => handleDeleteHomeowner(ho)}
-                                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-xl text-xs font-bold transition-all shadow-sm"
+                                            className="flex items-center justify-center gap-2 px-3 py-2.5 bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-xl text-[10px] font-bold transition-all shadow-sm"
                                         >
-                                            <Trash2 className="w-4 h-4" /> Hapus
+                                            <Trash2 className="w-3.5 h-3.5" /> Hapus
                                         </button>
                                     </div>
                                 </div>
@@ -649,18 +743,112 @@ export function ManajemenAkunPage({ onNavigate }) {
                         <div className="p-8 overflow-y-auto space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Nama Lengkap</label>
-                                    <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" />
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Username</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.username}
+                                        onChange={(e) => setFormData({...formData, username: e.target.value})}
+                                        placeholder="contoh: budi_bieon"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                    />
                                 </div>
                                 <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Nama Lengkap</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.fullName}
+                                        onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                                        placeholder="Masukkan nama lengkap"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
                                     <label className="text-sm font-semibold text-gray-700 ml-1">Email Klien</label>
-                                    <input type="email" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" />
+                                    <input 
+                                        type="email" 
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        placeholder="email@contoh.com"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">No. Telepon</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                        placeholder="0812xxxx"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Password</label>
+                                    <input 
+                                        type="password" 
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                        placeholder="********"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Status Akun</label>
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                                            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                <span className="capitalize">{formData.status}</span>
+                                            </div>
+                                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+                                        {isStatusDropdownOpen && (
+                                            <>
+                                                <div className="fixed inset-0 z-10" onClick={() => setIsStatusDropdownOpen(false)}></div>
+                                                <div className="absolute left-0 bottom-full mb-2 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-20 py-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 backdrop-blur-xl bg-white/95">
+                                                    {['aktif', 'warning', 'nonaktif'].map((st) => (
+                                                        <button
+                                                            key={st}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({...formData, status: st});
+                                                                setIsStatusDropdownOpen(false);
+                                                            }}
+                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === st ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-emerald-500' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                                <span className="capitalize">{st}</span>
+                                                            </div>
+                                                            {formData.status === st && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-gray-700 ml-1">Alamat Domisili</label>
-                                <textarea rows="3" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm"></textarea>
+                                <textarea 
+                                    rows="3" 
+                                    value={formData.address}
+                                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                    placeholder="Masukkan alamat lengkap pelanggan"
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm"
+                                ></textarea>
                             </div>
 
                             <div className="flex items-center gap-4 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
@@ -726,9 +914,30 @@ export function ManajemenAkunPage({ onNavigate }) {
                                       )}
                                   </div>
                               </div>
-                            <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all group shrink-0">
-                                <X className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => {
+                                        setFormData({
+                                            fullName: selectedHomeowner.fullName,
+                                            email: selectedHomeowner.email,
+                                            username: selectedHomeowner.username || '',
+                                            phone: selectedHomeowner.phoneNumber || '',
+                                            address: selectedHomeowner.address || '',
+                                            status: selectedHomeowner.status || 'aktif',
+                                            password: ''
+                                        });
+                                        setIsDetailModalOpen(false);
+                                        setTimeout(() => setIsEditModalOpen(true), 100);
+                                    }}
+                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center gap-2 text-sm font-bold transition-all backdrop-blur-sm border border-white/10"
+                                >
+                                    <Edit3 className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Edit Data</span>
+                                </button>
+                                <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                    <X className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Tabs Navigation */}
@@ -918,40 +1127,220 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <div className="space-y-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                            <Cpu className="w-6 h-6 text-[#009b7c]" /> Daftar Hub ({selectedHomeownerHubs.length})
+                                            <Monitor className="w-6 h-6 text-[#009b7c]" /> Ekosistem Perangkat ({selectedHomeownerHubs.length} Hub, {selectedHomeownerDevices.length} Perangkat)
                                         </h3>
                                     </div>
 
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         {isLoadingHubs ? (
-                                            <div className="py-12 text-center text-gray-500 text-sm font-medium">Memuat data perangkat...</div>
+                                            <div className="py-12 flex flex-col items-center justify-center gap-3">
+                                                <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <p className="text-sm font-medium text-gray-500 text-center">Sinkronisasi data perangkat...</p>
+                                            </div>
                                         ) : selectedHomeownerHubs.length > 0 ? (
-                                            selectedHomeownerHubs.map((hub, idx) => (
-                                                <div key={hub._id || idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 text-emerald-600">
-                                                            <Box className="w-5 h-5" />
+                                            selectedHomeownerHubs.map((hub, idx) => {
+                                                const hubIdStr = String(hub._id || hub.id);
+                                                const hubDevices = selectedHomeownerDevices.filter(d => 
+                                                    String(d.hubId?._id || d.hubId) === hubIdStr
+                                                );
+                                                return (
+                                                    <div key={hubIdStr || idx} className="bg-gray-50 rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
+                                                        <div className="px-6 py-5 bg-white border-b border-gray-100 flex items-center justify-between">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${hub.status === 'Online' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                                    <Cpu className="w-6 h-6" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-gray-900">{hub.name || 'BIEON Hub'}</p>
+                                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                                        <span className="text-xs text-gray-500 font-medium">BIEON ID: {hub.bieonId || '-'}</span>
+                                                                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                                                        <span className="text-xs text-gray-500 font-medium">{hubDevices.length} Perangkat Terhubung</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col items-end">
+                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${hub.status === 'Online' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                                    <div className={`w-1.5 h-1.5 rounded-full ${hub.status === 'Online' ? 'bg-emerald-500' : 'bg-gray-400'}`}></div>
+                                                                    {hub.status || 'Offline'}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <p className="font-bold text-gray-900 text-sm">{hub.name || 'Hub Node'}</p>
-                                                            <p className="text-xs text-gray-500">ID BIEON: {hub.bieonId || '-'}</p>
-                                                        </div>
+                                                        
+                                                        {hubDevices.length > 0 ? (
+                                                            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                {hubDevices.map((device) => (
+                                                                    <div key={device._id} className="flex items-center gap-4 p-3.5 bg-white rounded-2xl border border-gray-100/50 shadow-sm hover:border-emerald-200 transition-all group">
+                                                                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all">
+                                                                            <Box className="w-5 h-5" />
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-sm font-bold text-gray-900 truncate">{device.name}</p>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">{device.type}</span>
+                                                                                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                                                                <span className={`text-[10px] font-bold ${device.status === 'ONLINE' ? 'text-emerald-600' : 'text-red-400'}`}>{device.status}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="p-8 text-center bg-white/50">
+                                                                <p className="text-xs font-medium text-gray-400 italic">Belum ada perangkat yang terpasang pada hub ini.</p>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className="text-right">
-                                                        <div className="flex items-center gap-1.5 justify-end mb-0.5">
-                                                            <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
-                                                            <span className="text-[10px] font-bold uppercase text-[#10b981]">Online</span>
-                                                        </div>
-                                                        <p className="text-[10px] text-gray-400">Aktif</p>
-                                                    </div>
-                                                </div>
-                                            ))
+                                                );
+                                            })
                                         ) : (
-                                            <div className="py-12 text-center text-gray-500 text-sm font-medium">Tidak ada perangkat yang terhubung.</div>
+                                            <div className="py-20 flex flex-col items-center justify-center text-center bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+                                                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
+                                                    <Cpu className="w-8 h-8 text-gray-300" />
+                                                </div>
+                                                <h4 className="text-lg font-bold text-gray-900">Belum Ada Perangkat</h4>
+                                                <p className="text-sm text-gray-500 max-w-xs mt-2">Klien ini belum memiliki Hub atau Perangkat BIEON yang terdaftar di sistem.</p>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isEditModalOpen && selectedHomeowner && (
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
+                        <div className="px-8 py-6 bg-blue-600 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner">
+                                    <Edit3 className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight">Edit Data Homeowner</h2>
+                                    <p className="text-white/80 text-xs font-medium mt-0.5">Perbarui informasi akun dan akses klien</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsEditModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all">
+                                <X className="w-5 h-5 text-white" />
+                            </button>
+                        </div>
+
+                        <div className="p-8 overflow-y-auto space-y-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Username</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.username}
+                                        onChange={(e) => setFormData({...formData, username: e.target.value})}
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Nama Lengkap</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.fullName}
+                                        onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Email Klien</label>
+                                    <input 
+                                        type="email" 
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">No. Telepon</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Ganti Password (Opsional)</label>
+                                    <input 
+                                        type="password" 
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                        placeholder="Kosongkan jika tidak diganti"
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">Status Akun</label>
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                                            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                <span className="capitalize">{formData.status}</span>
+                                            </div>
+                                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+                                        {isStatusDropdownOpen && (
+                                            <>
+                                                <div className="fixed inset-0 z-10" onClick={() => setIsStatusDropdownOpen(false)}></div>
+                                                <div className="absolute left-0 bottom-full mb-2 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-20 py-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 backdrop-blur-xl bg-white/95 text-gray-800">
+                                                    {['aktif', 'warning', 'nonaktif'].map((st) => (
+                                                        <button
+                                                            key={st}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({...formData, status: st});
+                                                                setIsStatusDropdownOpen(false);
+                                                            }}
+                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === st ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-emerald-500' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                                <span className="capitalize">{st}</span>
+                                                            </div>
+                                                            {formData.status === st && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-gray-700 ml-1">Alamat Domisili</label>
+                                <textarea 
+                                    rows="3" 
+                                    value={formData.address}
+                                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
+                                ></textarea>
+                            </div>
+                        </div>
+
+                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-end gap-3">
+                            <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">Batal</button>
+                            <button onClick={handleEditHomeowner} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-100 flex items-center gap-2 group">
+                                Simpan Perubahan
+                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                            </button>
                         </div>
                     </div>
                 </div>

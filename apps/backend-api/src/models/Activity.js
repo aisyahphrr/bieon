@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     room: { type: String }, // e.g., "R1 - Ruang Keluarga"
     actuator: { type: String, required: true }, // e.g., "Smart TV"
     status: { type: String, required: true }, // e.g., "ON", "OFF"

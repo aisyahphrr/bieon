@@ -72,7 +72,7 @@ exports.getUserSystems = async (req, res) => {
 
 exports.getHubs = async (req, res) => {
     try {
-        const hubs = await Hub.find({ bieonId: req.params.userId }); 
+        const hubs = await Hub.find({ owner: req.params.userId }); 
         res.status(200).json(hubs);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data hub', error: error.message });

@@ -347,6 +347,8 @@ export default function AdminTariff({ onNavigate }) {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'desc' });
     const [currentPage, setCurrentPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [showRowsDropdown, setShowRowsDropdown] = useState(false);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -369,23 +371,9 @@ export default function AdminTariff({ onNavigate }) {
 
         if (sortConfig.key !== null) {
             sortableItems.sort((a, b) => {
-                if (sortConfig.key === 'timestamp' || sortConfig.key === 'date') {
-                    const parseIDDate = (str) => {
-                        if (!str) return 0;
-                        const monthMap = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'Mei': '05', 'Jun': '06', 'Jul': '07', 'Ags': '08', 'Sep': '09', 'Okt': '10', 'Nov': '11', 'Des': '12', 'Januari': '01', 'Februari': '02', 'Maret': '03', 'April': '04', 'Juni': '06', 'Juli': '07', 'Agustus': '08', 'September': '09', 'Oktober': '10', 'November': '11', 'Desember': '12' };
-                        const parts = str.replace(',', '').split(' ');
-                        if (parts.length >= 3) {
-                            const d = parts[0].padStart(2, '0');
-                            const mItem = Object.keys(monthMap).find(k => parts[1].includes(k));
-                            const m = mItem ? monthMap[mItem] : '01';
-                            const y = parts[2];
-                            const t = parts[3] ? parts[3] : '00:00';
-                            return new Date(`${y}-${m}-${d}T${t}`).getTime();
-                        }
-                        return 0;
-                    };
-                    const timeA = parseIDDate(a[sortConfig.key]);
-                    const timeB = parseIDDate(b[sortConfig.key]);
+                if (sortConfig.key === 'date' || sortConfig.key === 'timestamp') {
+                    const timeA = new Date(a.rawDate || a.createdAt || 0).getTime();
+                    const timeB = new Date(b.rawDate || b.createdAt || 0).getTime();
                     return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
                 }
 
@@ -401,12 +389,14 @@ export default function AdminTariff({ onNavigate }) {
         return sortableItems;
     }, [historyData, sortConfig, searchQuery, filterGolongan]);
 
-    const itemsPerPage = 10;
-    const totalPages = Math.max(1, Math.ceil(sortedHistory.length / itemsPerPage));
+    const totalPages = Math.max(1, Math.ceil(sortedHistory.length / rowsPerPage));
     const paginatedHistory = useMemo(() => {
-        const start = (currentPage - 1) * itemsPerPage;
-        return sortedHistory.slice(start, start + itemsPerPage);
-    }, [sortedHistory, currentPage]);
+        const start = (currentPage - 1) * rowsPerPage;
+        return sortedHistory.slice(start, start + rowsPerPage);
+    }, [sortedHistory, currentPage, rowsPerPage]);
+
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const totalItems = sortedHistory.length;
 
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />;
@@ -1115,31 +1105,64 @@ export default function AdminTariff({ onNavigate }) {
                             </table>
                         </div>
 
-                        {/* Pagination UI */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem]">
-                                <span className="text-xs text-gray-500 font-medium">
-                                    Menampilkan {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, sortedHistory.length)} dari {sortedHistory.length} data
-                                </span>
-                                <div className="flex items-center gap-2">
+                        {/* Standardized Pagination UI */}
+                        <div className="flex flex-col md:flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem] gap-6">
+                            {/* Rows Per Page - Left */}
+                            <div className="flex items-center gap-3 order-2 md:order-1">
+                                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows:</span>
+                                <div className="relative">
                                     <button 
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        disabled={currentPage === 1}
-                                        className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        onClick={() => setShowRowsDropdown(!showRowsDropdown)} 
+                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-[#009b7c]/30 transition-all"
                                     >
-                                        <ChevronLeft className="w-4 h-4" />
+                                        {rowsPerPage} <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                     </button>
-                                    <span className="text-xs font-bold text-gray-700 mx-2">Halaman {currentPage} dari {totalPages}</span>
-                                    <button 
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={currentPage === totalPages}
-                                        className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                    >
-                                        <ChevronRight className="w-4 h-4" />
-                                    </button>
+                                    {showRowsDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-30" onClick={() => setShowRowsDropdown(false)}></div>
+                                            <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                                                {[5, 10, 30, 50].map(val => (
+                                                    <button 
+                                                        key={val} 
+                                                        onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} 
+                                                        className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                    >
+                                                        {val}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
-                        )}
+
+                            {/* Page Info - Center */}
+                            <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
+                                <span className="md:hidden">rows </span>{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                            </div>
+
+                            {/* Pagination Controls - Right */}
+                            <div className="flex items-center gap-2 md:gap-3 order-3">
+                                <button
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                >
+                                    <ChevronLeft className="w-4 h-4 md:hidden" />
+                                    <span className="hidden md:inline lg:hidden">Prev</span>
+                                    <span className="hidden lg:inline">Previous</span>
+                                </button>
+                                <button
+                                    disabled={currentPage >= totalPages}
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                >
+                                    <span className="hidden lg:inline">Next</span>
+                                    <span className="hidden md:inline lg:hidden">Next</span>
+                                    <ChevronRight className="w-4 h-4 md:hidden" />
+                                </button>
+                            </div>
+                        </div>
 
                     </div>
 

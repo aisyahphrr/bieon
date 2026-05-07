@@ -148,6 +148,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
 
       await Alert.create({
         owner: device.owner,
+        hub: device.hubId,
         category,
         title: `Perangkat ${statusText}`,
         message: `[Log] Perangkat ${device.name} di ${device.location} telah berubah status menjadi ${statusText}.`,
@@ -183,6 +184,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
 
           await new EnergyLog({
             device: updatedDevice._id,
+            hub: updatedDevice.hubId,
             date: new Date(),
             totalKwh: deltaKwh,
             power: payload.currentLoad || 0,
@@ -207,9 +209,26 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
       if (payload.doorOpen !== undefined || payload.motion !== undefined) {
         await new SecurityLog({
           device: updatedDevice._id,
+          hub: updatedDevice.hubId,
           date: new Date(),
-          action: payload.doorOpen ? 'Terbuka' : (payload.motion ? 'Gerakan Terdeteksi' : 'Aman'),
+          room: updatedDevice.location || 'Lainnya',
+          door: payload.doorOpen ? 'Terbuka' : 'Tertutup',
+          motion: payload.motion ? 'Terdeteksi Gerak' : 'Tidak Ada Gerak',
+          status: (payload.doorOpen || payload.motion) ? 'Waspada' : 'Aman',
           owner: updatedDevice.owner
+        }).save();
+      }
+      if (payload.ph !== undefined || payload.turbidity !== undefined || payload.tds !== undefined) {
+        await new WaterQualityLog({
+          owner: updatedDevice.owner,
+          device: updatedDevice._id,
+          hub: updatedDevice.hubId,
+          ph: payload.ph || updatedDevice.currentValues?.ph || 0,
+          turbidity: payload.turbidity || updatedDevice.currentValues?.turbidity || 0,
+          temperature: payload.waterTemp || updatedDevice.currentValues?.waterTemp || 0,
+          tds: payload.tds || updatedDevice.currentValues?.tds || 0,
+          status: 'Layak Pakai',
+          date: new Date()
         }).save();
       }
       await alertService.simulateSensorData(updatedDevice._id, payload);
@@ -274,6 +293,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
 
               await new Activity({
                 user: act.owner,
+                hub: act.hubId,
                 room: act.location,
                 actuator: act.name,
                 status: newStatus === '1' ? 'ON' : 'OFF',
@@ -286,6 +306,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
               const Alert = require('../models/Alert');
               await Alert.create({
                 owner: act.owner,
+                hub: act.hubId,
                 category: aspect === 'Kualitas Air' ? 'Air Sanitasi' : aspect,
                 title: isMet ? 'Otomasi Aktif' : 'Otomasi Selesai',
                 message: `Sistem otomatis ${isMet ? 'menyalakan' : 'mematikan'} ${act.name} karena kondisi ${aspect} ${isMet ? 'memerlukan tindakan' : 'kembali normal'}.`,

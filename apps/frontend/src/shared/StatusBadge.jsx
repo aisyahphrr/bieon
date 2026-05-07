@@ -38,7 +38,13 @@ export function StatusBadge({ status, isRead = false }) {
     sistem: { bg: 'bg-[#EFF6FF]', text: 'text-[#2563EB]', dot: 'bg-[#3B82F6]' },
 
     // ARCHIVED / READ (GRAY)
-    read: { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' }
+    read: { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' },
+
+    // COMPLAINT SPECIFIC
+    selesai: { bg: 'bg-[#EAFDF3]', text: 'text-[#169456]', dot: 'bg-[#189F5A]' },
+    ditolak: { bg: 'bg-red-50', text: 'text-red-600', dot: 'bg-red-500' },
+    batal: { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' },
+    cancelled: { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' }
   };
 
   const style = isRead ? config.read : (config[s] || { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-300' });

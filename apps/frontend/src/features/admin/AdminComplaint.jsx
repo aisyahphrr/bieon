@@ -228,10 +228,11 @@ export default function AdminComplaint({ onNavigate }) {
             ]);
 
             if (complaintsRes.ok) {
-                const data = await complaintsRes.json();
+                const result = await complaintsRes.json();
+                const complaintList = result.data || [];
 
                 // Mapped structure for frontend compatibility
-                const formattedComplaints = data.map(item => ({
+                const formattedComplaints = complaintList.map(item => ({
                     ...item,
                     originalId: item._id, // Save DB ID to hit PUT endpoints
                     id: `TCK-${item._id ? item._id.substring(item._id.length - 6).toUpperCase() : '000000'}`,
@@ -551,7 +552,23 @@ export default function AdminComplaint({ onNavigate }) {
     ];
 
     const processedData = useMemo(() => {
-        let filtered = [...complaints];
+        // Secara default, sembunyikan yang sudah 'selesai' atau 'ditolak' dari tabel dashboard utama
+        // agar "pindah" ke Riwayat. Namun, jika user sedang mencari (searchQuery) 
+        // atau memfilter status secara eksplisit, maka tampilkan.
+        let filtered = complaints.filter(c => {
+            const s = c.status?.toLowerCase();
+            const isFinished = ['selesai', 'ditolak', 'batal', 'cancelled'].includes(s);
+            
+            // Jika ada filter status aktif, biarkan filter status yang bekerja
+            if (selectedStatusFilter) return true;
+            
+            // Jika ada pencarian, biarkan pencarian yang bekerja (mungkin user cari tiket lama)
+            if (searchQuery) return true;
+
+            // Default: sembunyikan yang sudah selesai dari dashboard utama
+            return !isFinished;
+        });
+        
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(item =>
@@ -993,7 +1010,7 @@ export default function AdminComplaint({ onNavigate }) {
                                 </button>
                                 {showRowsDropdown && (
                                     <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
-                                        {[5, 10, 20].map(val => (
+                                    {[5, 10, 30, 50].map(val => (
                                             <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
                                         ))}
                                     </div>
@@ -1003,7 +1020,7 @@ export default function AdminComplaint({ onNavigate }) {
 
                         {/* Page Info - Center: selalu tampil "X-Y of Z", "items" disembunyikan di HP */}
                         <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap">
-                            {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                            <span className="md:hidden">rows </span>{startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
                         </div>
 
                         {/* Pagination Controls - Right: ikon di HP, teks di desktop */}
@@ -1011,17 +1028,19 @@ export default function AdminComplaint({ onNavigate }) {
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage(currentPage - 1)}
-                                className="p-2 md:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                             >
                                 <ChevronLeft className="w-4 h-4 md:hidden" />
-                                <span className="hidden md:inline">Prev</span>
+                                <span className="hidden md:inline lg:hidden">Prev</span>
+                                <span className="hidden lg:inline">Previous</span>
                             </button>
                             <button
                                 disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)}
                                 onClick={() => setCurrentPage(currentPage + 1)}
-                                className="p-2 md:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                             >
-                                <span className="hidden md:inline">Next</span>
+                                <span className="hidden lg:inline">Next</span>
+                                <span className="hidden md:inline lg:hidden">Next</span>
                                 <ChevronRight className="w-4 h-4 md:hidden" />
                             </button>
                         </div>

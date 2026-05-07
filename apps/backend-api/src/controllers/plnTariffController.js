@@ -177,6 +177,7 @@ exports.getHistory = async (req, res) => {
                 tariff: item.tariff,
                 category: item.category,
                 date: formatIndonesianDate(item.effectiveDate),
+                rawDate: item.effectiveDate, // ISO string for accurate sorting
                 author: item.updatedBy ? item.updatedBy.fullName : 'Super Admin',
                 timestamp: formatTimestamp(item.createdAt),
                 note: item.note || '-',

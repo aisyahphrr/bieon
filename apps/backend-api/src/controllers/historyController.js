@@ -35,12 +35,50 @@ const buildHistoryQuery = async (req, ownerField = 'owner') => {
         if (endDate) query[dateField].$lte = new Date(endDate);
     }
 
-    // Bieon ID Filter (via Hub)
-    if (bieonId && !req.path.includes('activity')) {
+    // Bieon ID Filter (via Hub) - WITH DEVICE FALLBACK FOR LEGACY DATA
+    if (bieonId) {
         const Hub = require('../models/Hub');
-        const hubs = await Hub.find({ bieonId }).select('_id');
+        const KendaliPerangkat = require('../models/KendaliPerangkat');
+        
+        // 1. Cari Hub ID berdasarkan BIEON ID
+        const hubs = await Hub.find({ bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') } }).select('_id');
         const hubIds = hubs.map(h => h._id);
-        query.hub = { $in: hubIds };
+        
+        if (hubIds.length > 0) {
+            // 2. Cari semua perangkat yang terdaftar di Hub ini untuk fallback data lama
+            const devices = await KendaliPerangkat.find({ hubId: { $in: hubIds } }).select('_id name location');
+            const deviceIds = devices.map(d => d._id);
+            const rooms = Array.from(new Set(devices.map(d => d.location).filter(Boolean)));
+            const actuatorNames = devices.map(d => d.name);
+
+            // 3. Filter berdasarkan Hub (Data Baru) ATAU Metadata (Data Lama)
+            const mongoose = require('mongoose');
+            let ownerCriteria;
+            try {
+                ownerCriteria = [
+                    { [ownerField]: new mongoose.Types.ObjectId(ownerId) },
+                    { [ownerField]: ownerId.toString() }
+                ];
+            } catch (e) {
+                ownerCriteria = [{ [ownerField]: ownerId }];
+            }
+            
+            query.$and = [
+                { $or: ownerCriteria },
+                {
+                    $or: [
+                        { hub: { $in: hubIds } }, // New Data
+                        { device: { $in: deviceIds } }, // Legacy Device
+                        { room: { $in: rooms } }, // Legacy Room (Env)
+                        { actuator: { $in: actuatorNames } }, // Legacy Actuator (Activity)
+                        { "metadata.deviceId": { $in: deviceIds } }, // Legacy Alerts (ObjectId)
+                        { "metadata.deviceId": { $in: deviceIds.map(id => id.toString()) } } // Legacy Alerts (String)
+                    ]
+                }
+            ];
+            
+            delete query[ownerField];
+        }
     }
 
     return query;
@@ -162,6 +200,14 @@ exports.resetAllRead = async (req, res) => {
 exports.getEnergySummary = async (req, res) => {
     try {
         const ownerId = getTargetHomeownerId(req);
+        const { bieonId } = req.query;
+
+        let hubIds = [];
+        if (bieonId) {
+            const Hub = require('../models/Hub');
+            const hubs = await Hub.find({ bieonId }).select('_id');
+            hubIds = hubs.map(h => h._id);
+        }
         
         // 1. Ambil data User untuk info token & tarif
         const user = await User.findById(ownerId);
@@ -200,10 +246,13 @@ exports.getEnergySummary = async (req, res) => {
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
 
-        const logsToday = await EnergyLog.find({
+        const queryDaily = {
             owner: ownerId,
             date: { $gte: startOfDay, $lte: endOfDay }
-        }).sort({ date: 1 });
+        };
+        if (hubIds.length > 0) queryDaily.hub = { $in: hubIds };
+
+        const logsToday = await EnergyLog.find(queryDaily).sort({ date: 1 });
 
         // Aggregate hourly
         const hourlyBuckets = Array(24).fill(0).map((_, i) => ({ time: `${String(i).padStart(2, '0')}:00`, kwh: 0, cost: 0 }));
@@ -223,10 +272,13 @@ exports.getEnergySummary = async (req, res) => {
         startOfYear.setMonth(0, 1);
         startOfYear.setHours(0, 0, 0, 0);
 
-        const logsYear = await EnergyLog.find({
+        const queryYearly = {
             owner: ownerId,
             date: { $gte: startOfYear }
-        });
+        };
+        if (hubIds.length > 0) queryYearly.hub = { $in: hubIds };
+
+        const logsYear = await EnergyLog.find(queryYearly);
 
         const monthlyData = Array(12).fill(0).map((_, i) => ({ 
             month: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'][i],
@@ -242,13 +294,16 @@ exports.getEnergySummary = async (req, res) => {
 
         // 5. Ambil Beban Realtime dari Perangkat Power Meter
         const KendaliPerangkat = require('../models/KendaliPerangkat');
-        const powerMeter = await KendaliPerangkat.findOne({ 
+        const pmQuery = { 
             owner: ownerId, 
             $or: [
                 { category: 'Sensor Energi' },
                 { environmentAspect: 'Energi' }
             ]
-        });
+        };
+        if (hubIds.length > 0) pmQuery.hubId = { $in: hubIds };
+
+        const powerMeter = await KendaliPerangkat.findOne(pmQuery);
 
         res.status(200).json({ 
             success: true, 

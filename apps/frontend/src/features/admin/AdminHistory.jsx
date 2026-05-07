@@ -46,7 +46,7 @@ export default function AdminHistory({ onNavigate }) {
     const [selectedRoomFilter, setSelectedRoomFilter] = useState('');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     
     // --- Dropdown States ---
@@ -166,7 +166,8 @@ export default function AdminHistory({ onNavigate }) {
         { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Air', endpoint: '/api/history/water' },
         { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Energi', endpoint: '/api/history/energy' },
         { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log', endpoint: '/api/history/activity' },
-        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Alert', endpoint: '/api/history/alerts' }
+        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Alert', endpoint: '/api/history/alerts' },
+        { id: 'Pengaduan',        full: 'Pengaduan',        short: 'Tiket', endpoint: '/api/complaints' }
     ];
 
     const formatDateTime = (dateStr) => {
@@ -202,6 +203,14 @@ export default function AdminHistory({ onNavigate }) {
         if (tabId === 'Konsumsi Energi') return { ...base, device: item.device?.name || item.device || 'Power Meter', kwh: cleanValue(item.totalKwh), voltage: cleanValue(item.voltage), current: cleanValue(item.current), power: cleanValue(item.power), pf: item.pf + ' PF' };
         if (tabId === 'Log Perangkat') return { ...base, room: item.room, actuator: item.actuator, trigger: item.trigger };
         if (tabId === 'Notifikasi & Alert') return { ...base, status: item.type || item.status || 'Normal', category: item.category, room: item.room, message: item.message, isRead: item.isRead };
+        if (tabId === 'Pengaduan') return { 
+            ...base, 
+            id: item._id ? `TCK-${item._id.substring(item._id.length - 6).toUpperCase()}` : base.id, 
+            topic: item.topic, 
+            device: item.device || item.hub?.name || 'General', 
+            technician: item.technician?.fullName || 'Belum Ditugaskan', 
+            status: item.status 
+        };
         return item;
     };
 
@@ -214,9 +223,6 @@ export default function AdminHistory({ onNavigate }) {
             const result = await response.json();
             if (result.success && result.data) {
                 setAllHomeowners(result.data);
-                const defaultCustomer = result.data.find(h => (h.fullName || h.name || '').toLowerCase().includes('testingakun'));
-                if (defaultCustomer) setSelectedHomeowner(defaultCustomer);
-                else if (result.data.length > 0) setSelectedHomeowner(result.data[0]);
             } else { setApiError(result.message); }
         } catch (err) { setApiError("Koneksi gagal."); }
         finally { setIsLoadingHomeowners(false); }
@@ -253,6 +259,8 @@ export default function AdminHistory({ onNavigate }) {
             if (selectedBieon) query += `&bieonId=${selectedBieon}`;
             if (dateRange.start) query += `&startDate=${dateRange.start}`;
             if (dateRange.end) query += `&endDate=${dateRange.end}`;
+            if (activeTab === 'Pengaduan') query += `&isHistory=true`;
+            
             const response = await fetch(`${currentTabConfig.endpoint}?${query}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const result = await response.json();
             if (result.success && result.data) setHistoryData(result.data.map((item, index) => mapItemData(activeTab, item, index)));
@@ -374,7 +382,10 @@ export default function AdminHistory({ onNavigate }) {
             if (dateRange.end) queryParams += `&endDate=${dateRange.end}`;
 
             for (let tab of tabs) {
-                const res = await fetch(`${tab.endpoint}?${queryParams}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                let tabUrl = `${tab.endpoint}?${queryParams}`;
+                if (tab.id === 'Pengaduan') tabUrl += '&isHistory=true';
+                
+                const res = await fetch(tabUrl, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 
                 if (result.success && result.data && result.data.length > 0) {
@@ -414,6 +425,7 @@ export default function AdminHistory({ onNavigate }) {
         else if (tabId === 'Konsumsi Energi') { headers = [["Waktu", "Perangkat", "Energy", "Voltase", "Arus", "Beban", "PF"]]; body = data.map(e => [e.time, e.device, `${e.kwh} kWh`, `${e.voltage} V`, `${e.current} A`, `${e.power} W`, e.pf]); }
         else if (tabId === 'Log Perangkat') { headers = [["Waktu", "Ruangan", "Perangkat", "Status", "Pemicu"]]; body = data.map(e => [e.time, e.room, e.actuator, e.status, e.trigger]); }
         else if (tabId === 'Notifikasi & Alert') { headers = [["Waktu", "Kategori", "Ruangan", "Level", "Pesan"]]; body = data.map(e => [e.time, e.category, e.room, e.status, e.message]); }
+        else if (tabId === 'Pengaduan') { headers = [["Waktu", "ID Tiket", "Topik", "Perangkat", "Teknisi", "Status"]]; body = data.map(e => [e.time, e.id, e.topic, e.device, e.technician, e.status.toUpperCase()]); }
         return { headers, body };
     };
 
@@ -584,7 +596,7 @@ export default function AdminHistory({ onNavigate }) {
                                     <tr>
                                         <th onClick={() => requestSort('time')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Waktu {getSortIcon('time')}</div></th>
                                         {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Kategori {getSortIcon('category')}</div></th>}
-                                        <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Perangkat' : 'Ruangan'} {getSortIcon(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')}</div></th>
+                                        <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi', 'Pengaduan'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{['Kualitas Air', 'Konsumsi Energi', 'Pengaduan'].includes(activeTab) ? 'Perangkat' : 'Ruangan'} {getSortIcon(['Kualitas Air', 'Konsumsi Energi', 'Pengaduan'].includes(activeTab) ? 'device' : 'room')}</div></th>
                                         {activeTab === 'Kenyamanan' && (
                                             <>
                                                 <th onClick={() => requestSort('temp')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Suhu {getSortIcon('temp')}</div></th>
@@ -615,34 +627,112 @@ export default function AdminHistory({ onNavigate }) {
                                             </>
                                         )}
                                         {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('actuator')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Perangkat (Aktuator) {getSortIcon('actuator')}</div></th>}
+                                        {activeTab === 'Pengaduan' && (
+                                            <>
+                                                <th onClick={() => requestSort('id')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">ID Tiket {getSortIcon('id')}</div></th>
+                                                <th onClick={() => requestSort('topic')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Topik {getSortIcon('topic')}</div></th>
+                                                <th onClick={() => requestSort('technician')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Teknisi {getSortIcon('technician')}</div></th>
+                                            </>
+                                        )}
                                         {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{activeTab === 'Notifikasi & Alert' ? 'Tingkat Bahaya' : 'Status'} {getSortIcon('status')}</div></th>}
                                         {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('trigger')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pemicu (Trigger) {getSortIcon('trigger')}</div></th>}
                                         {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('message')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pesan Detail Alert {getSortIcon('message')}</div></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {paginatedData.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 text-[13px] font-bold text-gray-900">{item.time}</td>
-                                            {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-[13px] text-gray-600 font-bold">{item.category}</td>}
-                                            <td className="px-6 py-4 text-[13px] text-gray-600 font-bold">{item.room || item.device}</td>
-                                            {activeTab === 'Kenyamanan' && (<><td className="px-6 py-4 text-center">{Number(item.temp).toFixed(1)}°C</td><td className="px-6 py-4 text-center">{item.humidity}%</td></>)}
-                                            {activeTab === 'Keamanan' && (<><td className="px-6 py-4 text-center">{item.door}</td><td className="px-6 py-4 text-center">{item.motion}</td></>)}
-                                            {activeTab === 'Kualitas Air' && (<><td className="px-6 py-4 text-center">{item.ph}</td><td className="px-6 py-4 text-center">{item.turbidity} NTU</td><td className="px-6 py-4 text-center">{item.temp}°C</td><td className="px-6 py-4 text-center">{item.tds} ppm</td></>)}
-                                            {activeTab === 'Konsumsi Energi' && (<><td className="px-6 py-4 text-center">{Number(item.kwh).toFixed(2)} kWh</td><td className="px-6 py-4 text-center">{item.voltage} V</td><td className="px-6 py-4 text-center">{item.current} A</td><td className="px-6 py-4 text-center">{item.power} W</td><td className="px-6 py-4 text-center">{item.pf}</td></>)}
-                                            {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.actuator}</td>}
-                                            {activeTab !== 'Konsumsi Energi' && <td className="px-6 py-4 text-center"><div className="flex justify-center"><StatusBadge status={item.status} isRead={item.isRead} /></div></td>}
-                                            {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.trigger}</td>}
-                                            {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-xs text-gray-500 max-w-md">{item.message}</td>}
+                                    {paginatedData.length > 0 ? (
+                                        paginatedData.map((item) => (
+                                            <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                                <td className="px-6 py-4 text-[13px] font-bold text-gray-900">{item.time}</td>
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-[13px] text-gray-600 font-bold">{item.category}</td>}
+                                                <td className="px-6 py-4 text-[13px] text-gray-600 font-bold">{item.room || item.device}</td>
+                                                {activeTab === 'Kenyamanan' && (<><td className="px-6 py-4 text-center">{Number(item.temp).toFixed(1)}°C</td><td className="px-6 py-4 text-center">{item.humidity}%</td></>)}
+                                                {activeTab === 'Keamanan' && (<><td className="px-6 py-4 text-center">{item.door}</td><td className="px-6 py-4 text-center">{item.motion}</td></>)}
+                                                {activeTab === 'Kualitas Air' && (<><td className="px-6 py-4 text-center">{item.ph}</td><td className="px-6 py-4 text-center">{item.turbidity} NTU</td><td className="px-6 py-4 text-center">{item.temp}°C</td><td className="px-6 py-4 text-center">{item.tds} ppm</td></>)}
+                                                {activeTab === 'Konsumsi Energi' && (<><td className="px-6 py-4 text-center">{Number(item.kwh).toFixed(2)} kWh</td><td className="px-6 py-4 text-center">{item.voltage} V</td><td className="px-6 py-4 text-center">{item.current} A</td><td className="px-6 py-4 text-center">{item.power} W</td><td className="px-6 py-4 text-center">{item.pf}</td></>)}
+                                                {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.actuator}</td>}
+                                                {activeTab === 'Pengaduan' && (
+                                                    <>
+                                                        <td className="px-6 py-4 font-bold text-[#009b7c]">{item.id}</td>
+                                                        <td className="px-6 py-4 truncate max-w-xs">{item.topic}</td>
+                                                        <td className="px-6 py-4 font-medium">{item.technician}</td>
+                                                    </>
+                                                )}
+                                                {activeTab !== 'Konsumsi Energi' && <td className="px-6 py-4 text-center"><div className="flex justify-center"><StatusBadge status={item.status} isRead={item.isRead} /></div></td>}
+                                                {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.trigger}</td>}
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-xs text-gray-500 max-w-md">{item.message}</td>}
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="10" className="px-6 py-20 text-center">
+                                                <div className="flex flex-col items-center justify-center opacity-40">
+                                                    <AlertCircle className="w-12 h-12 mb-4 text-gray-300" />
+                                                    <p className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Tidak ada data riwayat</p>
+                                                    <p className="text-[11px] font-bold text-gray-400 mt-2">Data untuk filter ini belum tersedia atau belum sinkron.</p>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
-                        <div className="flex flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/30">
-                            <div className="flex items-center gap-3"><span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Rows:</span><div className="relative"><button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm">{rowsPerPage} <ChevronDown className="w-3 h-3 text-gray-400" /></button>{showRowsDropdown && (<><div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div><div className="absolute bottom-full left-0 mb-2 w-16 bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 z-20">{[5, 10, 20, 50].map(val => (<button key={val} onClick={() => { setRowsPerPage(val); setCurrentPage(1); setShowRowsDropdown(false); }} className={`w-full text-left px-4 py-1.5 text-xs ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{val}</button>))}</div></>)}</div></div>
-                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">{totalItems > 0 ? `${startIndex + 1}-${Math.min(startIndex + rowsPerPage, totalItems)} OF ${totalItems}` : '0 OF 0'}</div>
-                            <div className="flex items-center gap-2"><button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-40"><ChevronLeft className="w-5 h-5 text-gray-600" /></button><button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-40"><ChevronRight className="w-5 h-5 text-gray-600" /></button></div>
+                        <div className="flex flex-col md:flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem] gap-6">
+                            {/* Rows Per Page - Left */}
+                            <div className="flex items-center gap-3 order-2 md:order-1">
+                                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows:</span>
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => setShowRowsDropdown(!showRowsDropdown)} 
+                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-[#009b7c]/30 transition-all"
+                                    >
+                                        {rowsPerPage} <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {showRowsDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-30" onClick={() => setShowRowsDropdown(false)}></div>
+                                            <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                                                {[5, 10, 30, 50].map(val => (
+                                                    <button 
+                                                        key={val} 
+                                                        onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} 
+                                                        className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                    >
+                                                        {val}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Page Info - Center */}
+                            <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
+                                <span className="md:hidden">rows </span>{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                            </div>
+
+                            {/* Pagination Controls - Right */}
+                            <div className="flex items-center gap-2 md:gap-3 order-3">
+                                <button
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                >
+                                    <ChevronLeft className="w-4 h-4 md:hidden" />
+                                    <span className="hidden md:inline lg:hidden">Prev</span>
+                                    <span className="hidden lg:inline">Previous</span>
+                                </button>
+                                <button
+                                    disabled={currentPage >= totalPages}
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                >
+                                    <span className="hidden lg:inline">Next</span>
+                                    <span className="hidden md:inline lg:hidden">Next</span>
+                                    <ChevronRight className="w-4 h-4 md:hidden" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

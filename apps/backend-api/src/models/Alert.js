@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const alertSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     category: { 
         type: String, 
         enum: ['Keamanan', 'Air Sanitasi', 'Energi', 'Sistem', 'Pengaduan', 'Kenyamanan'],
