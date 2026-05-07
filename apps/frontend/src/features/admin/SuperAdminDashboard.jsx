@@ -14,6 +14,7 @@ import {
   Download,
   Bell,
   ChevronDown,
+  ChevronLeft,
   Menu,
   ShieldCheck,
   MessageSquare,
@@ -23,6 +24,7 @@ import {
   Save,
   ChevronRight,
   TrendingUp,
+  TrendingDown,
   User,
   AlertTriangle,
   AlertCircle,
@@ -55,8 +57,9 @@ const createMonthlyChartData = (values = []) => MONTH_LABELS.map((name, index) =
 }));
 
 const createCustomerStatusLabel = (status) => {
-  if (!status) return 'Aktif';
-  if (status.toLowerCase() === 'nonaktif') return 'Nonaktif';
+  const s = status?.toLowerCase() || 'aktif';
+  if (s === 'nonaktif') return 'Nonaktif';
+  if (s === 'warning') return 'Perhatian';
   return 'Aktif';
 };
 
@@ -116,12 +119,17 @@ import { SuperAdminLayout } from './SuperAdminLayout';
 export default function SuperAdminDashboard({ onNavigate }) {
   // Dashboard metrics states
   const [metrics, setMetrics] = useState({
-    totalUsers: 0,
     totalHubs: 0,
+    hubTrend: 0,
     totalDevices: 0,
+    deviceTrend: 0,
     totalComplaints: 0,
+    pendingComplaints: 0,
     totalTechnicians: 0,
     activeTechnicians: 0,
+    activeHomeowners: 0,
+    inactiveHomeowners: 0,
+    warningHomeowners: 0,
     monthlyInstalasi: Array(12).fill(0),
     monthlyHubs: Array(12).fill(0),
     monthlyPelanggan: Array(12).fill(0),
@@ -135,6 +143,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   // Other states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPlnModal, setShowPlnModal] = useState(false);
   const [plnTariff, setPlnTariff] = useState(1445);
   const [newTariff, setNewTariff] = useState(plnTariff);
@@ -147,6 +156,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const [homeowners, setHomeowners] = useState([]);
   const [homeownersLoading, setHomeownersLoading] = useState(true);
   const [homeownersError, setHomeownersError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [showRowsDropdown, setShowRowsDropdown] = useState(false);
 
   // Fetch dashboard metrics from API
   const fetchDashboardMetrics = async () => {
@@ -212,9 +224,11 @@ export default function SuperAdminDashboard({ onNavigate }) {
           username: homeowner.username || '-',
           email: homeowner.email,
           status: createCustomerStatusLabel(homeowner.status),
-          bieon: homeowner.totalHubs || 0,
+          bieonId: homeowner.bieonId || '-',
+          totalHubs: homeowner.totalHubs || 0,
           devices: homeowner.totalDevices || 0,
-          technician: '-',
+          technician: homeowner.technicianName || '-',
+          fieldTeam: homeowner.fieldTeam || [], // New data from backend
         })));
         setHomeownersLoading(false);
       }
@@ -293,12 +307,28 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
   const handleDownloadPDF = (title, columns, data, filename) => {
     const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(40);
     doc.text(title, 14, 15);
+
+    // Calculate total if the data is numeric monthly series
+    let total = 0;
+    const isNumericData = data.length > 0 && typeof data[0][1] === 'number';
+
+    if (isNumericData) {
+      total = data.reduce((acc, row) => acc + (row[1] || 0), 0);
+    }
 
     autoTable(doc, {
       head: [columns],
       body: data,
-      startY: 20,
+      foot: isNumericData ? [['TOTAL KESELURUHAN', total]] : null,
+      startY: 25,
+      styles: { fontSize: 9 },
+      headStyles: { fillStyle: 'f', fillColor: [0, 155, 124], textColor: 255 },
+      footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' }
     });
 
     doc.save(`${filename}.pdf`);
@@ -341,12 +371,23 @@ export default function SuperAdminDashboard({ onNavigate }) {
     return matchesSearch && matchesStatus;
   });
 
+  const totalItems = filteredCustomers.length;
+  const totalPages = Math.ceil(totalItems / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + rowsPerPage);
+
   const instalasiChartData = createMonthlyChartData(metrics.monthlyInstalasi);
   const hubNodeChartData = createMonthlyChartData(metrics.monthlyHubs);
   const smartDeviceChartData = createMonthlyChartData(metrics.monthlyDevices);
   const pelangganChartData = createMonthlyChartData(metrics.monthlyPelanggan);
   const teknisiChartData = createMonthlyChartData(metrics.monthlyTechnicians);
   const pengaduanChartData = createMonthlyChartData(metrics.monthlyComplaints);
+
+  // Derive counts from homeowners list to ensure consistency
+  const activeHomeownersCount = homeowners.filter(h => h.status === 'Aktif').length;
+  const warningHomeownersCount = homeowners.filter(h => h.status === 'Perhatian').length;
+  const inactiveHomeownersCount = homeowners.filter(h => h.status === 'Nonaktif').length;
+  const totalHomeownersCount = homeowners.length;
 
   return (
     <SuperAdminLayout activeMenu="Dashboard" onNavigate={onNavigate} title="Super Admin Dashboard">
@@ -361,16 +402,25 @@ export default function SuperAdminDashboard({ onNavigate }) {
               </div>
               <div className="text-right">
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
-                  {metricsLoading ? '-' : metrics.totalUsers}
+                  {homeownersLoading ? '-' : totalHomeownersCount}
                 </h3>
                 <p className="text-white/90 text-sm font-medium">Total Pelanggan</p>
               </div>
             </div>
             <div className="mt-4">
-              <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl inline-flex items-center gap-3 text-xs font-medium">
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-white rounded-full"></span> 4 Aktif</span>
-                <span className="opacity-60">|</span>
-                <span className="flex items-center gap-1.5 opacity-80"><span className="w-2 h-2 bg-white/40 rounded-full"></span> 1 Nonaktif</span>
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 grid grid-cols-3 gap-2">
+                <div className="text-center border-r border-white/10 last:border-0">
+                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">Aktif</p>
+                  <p className="text-sm font-black text-white">{homeownersLoading ? '-' : activeHomeownersCount}</p>
+                </div>
+                <div className="text-center border-r border-white/10 last:border-0">
+                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">Perhatian</p>
+                  <p className="text-sm font-black text-yellow-300">{homeownersLoading ? '-' : warningHomeownersCount}</p>
+                </div>
+                <div className="text-center last:border-0">
+                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">Nonaktif</p>
+                  <p className="text-sm font-black text-red-300">{homeownersLoading ? '-' : inactiveHomeownersCount}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -389,7 +439,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="mt-4">
               <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl inline-flex items-center gap-2 text-xs font-medium">
-                <TrendingUp className="w-4 h-4" /> +12% dari bulan lalu
+                {metrics.hubTrend >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                {metrics.hubTrend >= 0 ? '+' : ''}{metrics.hubTrend}% dari bulan lalu
               </div>
             </div>
           </div>
@@ -408,7 +459,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="mt-4">
               <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl inline-flex items-center gap-2 text-xs font-medium">
-                <TrendingUp className="w-4 h-4" /> +18% dari bulan lalu
+                {metrics.deviceTrend >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                {metrics.deviceTrend >= 0 ? '+' : ''}{metrics.deviceTrend}% dari bulan lalu
               </div>
             </div>
           </div>
@@ -427,7 +479,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
             <div className="mt-4">
               <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl inline-flex items-center gap-2 text-xs font-medium text-white">
-                <AlertCircle className="w-4 h-4" /> 1 sistem butuh perhatian
+                <AlertCircle className="w-4 h-4" /> {metricsLoading ? '-' : metrics.pendingComplaints} sistem butuh perhatian
               </div>
             </div>
           </div>
@@ -502,16 +554,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   </div>
                 </div>
               </div>
-              {Object.keys(plnCurrentTariffs).length > 0 && (
-                <div className="mt-3 text-sm text-gray-100 space-y-1">
-                  {plnCategories.slice(0,3).map((c) => (
-                    <div key={c.key} className="flex items-center justify-between">
-                      <div className="truncate opacity-90">{c.label}</div>
-                      <div className="font-bold">Rp {plnCurrentTariffs[c.label] ? plnCurrentTariffs[c.label].toLocaleString('id-ID') : '-'}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
@@ -543,7 +586,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
               >
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-2">
-                    <Settings className="w-5 h-5" /> 
+                    <Settings className="w-5 h-5" />
                     <span>Kelola Tarif & Golongan</span>
                   </div>
                   {plnSummary?.latestUpdate && (
@@ -561,9 +604,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Chart 1: Bar */}
           <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-[2.5rem] p-10 shadow-sm border border-emerald-100 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+            <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100 shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#00C698] to-[#00E5B1] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100 shrink-0">
                   <Box className="w-6 h-6" />
                 </div>
                 <div>
@@ -571,6 +614,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
                 </div>
               </div>
+              <button
+                type="button"
+                title="Export PDF"
+                onClick={() => handleDownloadPDF("Laporan Instalasi BIEON", ["Bulan", "Jumlah"], metrics.monthlyInstalasi.map((v, i) => [MONTH_LABELS[i], v]), "Instalasi_BIEON")}
+                className="p-3 bg-white border border-emerald-100 text-[#009b7c] hover:bg-emerald-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
+              >
+                <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
@@ -593,7 +644,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 2: Bar */}
           <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-[2.5rem] p-10 shadow-sm border border-emerald-100 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+            <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-emerald-100 shrink-0">
                   <Activity className="w-6 h-6" />
@@ -603,6 +654,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
                 </div>
               </div>
+              <button
+                type="button"
+                title="Export PDF"
+                onClick={() => handleDownloadPDF("Laporan Hub Node BIEON", ["Bulan", "Jumlah"], metrics.monthlyHubs.map((v, i) => [MONTH_LABELS[i], v]), "Hub_Node_BIEON")}
+                className="p-3 bg-white border border-teal-100 text-teal-600 hover:bg-teal-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
+              >
+                <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
@@ -625,7 +684,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 3: Area */}
           <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-[2.5rem] p-10 shadow-sm border border-blue-100 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+            <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-100 shrink-0">
                   <Monitor className="w-6 h-6" />
@@ -636,15 +695,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </div>
               </div>
               <button
-                onClick={() => handleDownloadPDF(
-                  "Laporan Jumlah Smart Device",
-                  ["Bulan", "Jumlah Device"],
-                  smartDeviceChartData.map(d => [d.name, d.value]),
-                  "SmartDevice_Report"
-                )}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
+                type="button"
+                title="Export PDF"
+                onClick={() => handleDownloadPDF("Laporan Smart Device BIEON", ["Bulan", "Jumlah"], metrics.monthlyDevices.map((v, i) => [MONTH_LABELS[i], v]), "Smart_Device_BIEON")}
+                className="p-3 bg-white border border-blue-100 text-blue-600 hover:bg-blue-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
-                <Download className="w-4 h-4" /> Export
+                <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
             </div>
             <div className="h-72 relative z-10">
@@ -672,7 +728,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 4: Line */}
           <div className="bg-gradient-to-br from-white to-purple-50/50 rounded-[2.5rem] p-10 shadow-sm border border-purple-100 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+            <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-purple-100 shrink-0">
                   <Users className="w-6 h-6" />
@@ -683,15 +739,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </div>
               </div>
               <button
-                onClick={() => handleDownloadPDF(
-                  "Laporan Jumlah Pelanggan",
-                  ["Bulan", "Jumlah Pelanggan"],
-                  pelangganChartData.map(d => [d.name, d.value]),
-                  "Pelanggan_Report"
-                )}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
+                type="button"
+                title="Export PDF"
+                onClick={() => handleDownloadPDF("Laporan Pertumbuhan Pelanggan", ["Bulan", "Jumlah"], metrics.monthlyPelanggan.map((v, i) => [MONTH_LABELS[i], v]), "Data_Pelanggan")}
+                className="p-3 bg-white border border-purple-100 text-purple-600 hover:bg-purple-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
-                <Download className="w-4 h-4" /> Export
+                <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
             </div>
             <div className="h-72 relative z-10">
@@ -715,7 +768,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 5: Line */}
           <div className="bg-gradient-to-br from-white to-orange-50/50 rounded-[2.5rem] p-10 shadow-sm border border-orange-100 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+            <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-100 shrink-0">
                   <User className="w-6 h-6" />
@@ -725,6 +778,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
                 </div>
               </div>
+              <button
+                type="button"
+                title="Export PDF"
+                onClick={() => handleDownloadPDF("Laporan Penambahan Teknisi", ["Bulan", "Jumlah"], metrics.monthlyTechnicians.map((v, i) => [MONTH_LABELS[i], v]), "Data_Teknisi")}
+                className="p-3 bg-white border border-orange-100 text-orange-600 hover:bg-orange-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
+              >
+                <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </button>
             </div>
             <div className="h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
@@ -747,10 +808,10 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Chart 6: Line */}
           <div className="bg-gradient-to-br from-white to-amber-50/50 rounded-[2.5rem] p-10 shadow-sm border border-amber-100 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 relative z-10">
+            <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-orange-100 shrink-0">
-                  <MessageSquare className="w-6 h-6" />
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-red-100 shrink-0">
+                  <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-800">Jumlah Pengaduan Pelanggan</h3>
@@ -758,15 +819,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </div>
               </div>
               <button
-                onClick={() => handleDownloadPDF(
-                  "Laporan Pengaduan Pelanggan",
-                  ["Bulan", "Jumlah Pengaduan"],
-                  pengaduanChartData.map(d => [d.name, d.value]),
-                  "Pengaduan_Report"
-                )}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all self-end sm:self-auto"
+                type="button"
+                title="Export PDF"
+                onClick={() => handleDownloadPDF("Laporan Pengaduan Pelanggan", ["Bulan", "Jumlah"], metrics.monthlyComplaints.map((v, i) => [MONTH_LABELS[i], v]), "Data_Pengaduan")}
+                className="p-3 bg-white border border-red-100 text-red-600 hover:bg-red-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
-                <Download className="w-4 h-4" /> Export
+                <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
             </div>
             <div className="h-72 relative z-10">
@@ -789,10 +847,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
         </div>
 
-        {/* Customer Table Section */}
         <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 md:p-10 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-xl font-bold text-gray-800">Daftar Pelanggan Terdaftar</h2>
+            <h2 className="text-xl font-bold text-gray-800 tracking-tight">Daftar Pelanggan Terdaftar</h2>
             <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative group col-span-2 md:w-64">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#009b7c] transition-colors" />
@@ -805,77 +862,133 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 />
               </div>
               <div className="relative col-span-1">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="appearance-none w-full md:w-auto px-4 py-3 min-w-[140px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-colors text-sm font-semibold text-gray-600 focus:outline-none cursor-pointer"
+                <button
+                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                  className="flex items-center justify-between w-full md:w-auto min-w-[160px] px-5 py-3 bg-white border border-gray-100 rounded-2xl text-xs font-black text-gray-600 hover:border-[#009b7c] hover:bg-emerald-50/30 transition-all shadow-sm group"
                 >
-                  <option value="Semua Status">Semua Status</option>
-                  <option value="Aktif">Aktif</option>
-                  <option value="Warning">Warning</option>
-                  <option value="Nonaktif">Nonaktif</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#009b7c]" />
+                    <span>{statusFilter}</span>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-300 ${showStatusDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showStatusDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowStatusDropdown(false)}></div>
+                    <div className="absolute top-full left-0 mt-2 w-full min-w-[180px] bg-white rounded-2xl shadow-2xl border border-gray-50 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {['Semua Status', 'Aktif', 'Warning', 'Nonaktif'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => {
+                            setStatusFilter(status);
+                            setShowStatusDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${statusFilter === status
+                            ? 'bg-[#009b7c] text-white shadow-lg shadow-emerald-100'
+                            : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                        >
+                          {status}
+                          {statusFilter === status && <CheckCircle className="w-3.5 h-3.5" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
               <button
                 onClick={() => handleDownloadPDF(
                   "Daftar Pelanggan Terdaftar BIEON",
                   ["User ID", "Nama", "Username", "Email", "Status", "BIEON", "Devices", "Teknisi"],
-                  filteredCustomers.map(c => [c.id, c.name, c.username, c.email, c.status, c.bieon, c.devices, c.technician]),
+                  filteredCustomers.map(c => [c.id, c.name, c.username, c.email, c.status, c.bieonId, c.devices, c.technician]),
                   "Daftar_Pelanggan"
                 )}
-                className="flex items-center justify-center col-span-1 gap-2 px-4 py-3 md:py-2 bg-[#009b7c] text-white rounded-xl text-sm font-semibold shadow-sm hover:bg-[#008268] transition-all shrink-0"
+                className="flex items-center justify-center col-span-1 gap-2 px-6 py-3 bg-gradient-to-r from-[#009b7c] to-[#00c698] text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-100 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 uppercase tracking-widest"
               >
-                <Download className="w-4 h-4" /> Download
+                <Download className="w-4 h-4" /> Export
               </button>
             </div>
           </div>
 
           <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-left min-w-[900px]">
-              <thead className="bg-[#009b7c] text-white">
+              <thead className="bg-gray-50/80 text-gray-500">
                 <tr>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-left">User ID</th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-left">Nama Lengkap</th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-left">Email</th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">BIEON</th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">Devices</th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-left">Teknisi</th>
-                  <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">Aksi</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-left w-[25%]">Pelanggan</th>
+                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[15%]">ID BIEON</th>
+                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[15%]">Status Sistem</th>
+                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[15%]">Nodes / Devices</th>
+                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-left w-[20%]">Teknisi PJ</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[10%]">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((cust) => (
-                    <tr key={cust.id} className="hover:bg-[#F2F8F5]/30 transition-colors group">
-                      <td className="px-6 py-4 text-xs font-semibold text-[#009b7c]">{cust.id}</td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-sm font-semibold text-gray-900 mb-1">{cust.name}</div>
-                          <div className="text-xs text-gray-500">{cust.username}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{cust.email}</td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex justify-center">
-                          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
-                            cust.status === 'Warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
-                              'bg-[#FEF2F2] text-[#ef4444]'
-                            }`}>
-                            <span className="w-2 h-2 rounded-full mr-2 bg-current"></span>
-                            {cust.status}
+                {paginatedCustomers.length > 0 ? (
+                  paginatedCustomers.map((cust) => (
+                    <tr key={cust.id} className="hover:bg-gray-50/50 transition-colors group border-b border-gray-50 last:border-0">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-[#009b7c] flex items-center justify-center font-black text-xs shadow-inner shrink-0">
+                            {cust.name.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-bold text-gray-900 group-hover:text-[#009b7c] transition-colors truncate">{cust.name}</div>
+                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter truncate">{cust.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm font-semibold text-gray-900">{cust.bieon}</span>
+                      <td className="px-4 py-5 text-center">
+                        <span className="text-[11px] font-black text-slate-600 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm whitespace-nowrap">
+                          {cust.bieonId}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-sm font-semibold text-gray-900">{cust.devices}</span>
+                      <td className="px-4 py-5">
+                        <div className="flex justify-center">
+                          <div className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black tracking-tight ${cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981] border border-[#10b981]/20' :
+                            cust.status === 'Perhatian' ? 'bg-[#FFF9E6] text-[#f59e0b] border border-[#f59e0b]/20' :
+                              'bg-[#FEF2F2] text-[#ef4444] border border-[#ef4444]/20'
+                            }`}>
+                            <span className="w-1.5 h-1.5 rounded-full mr-2 bg-current animate-pulse"></span>
+                            {cust.status === 'Perhatian' ? 'PERHATIAN' : cust.status.toUpperCase()}
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{cust.technician}</td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-5 text-center">
+                        <span className="text-xs font-black text-gray-900">{cust.totalHubs} Hub / {cust.devices} Dev</span>
+                      </td>
+                      <td className="px-4 py-5">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                              <User className="w-3.5 h-3.5 text-emerald-600" />
+                            </div>
+                            <span className="text-[11px] font-bold text-gray-700 truncate max-w-[120px]">{cust.technician}</span>
+                          </div>
+                          {cust.fieldTeam && cust.fieldTeam.length > 0 && (
+                            <div className="relative group/team inline-block w-fit">
+                              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[9px] font-black tracking-tighter border border-blue-100 cursor-help transition-all hover:bg-blue-100">
+                                <Users className="w-2.5 h-2.5" />
+                                <span>+ {cust.fieldTeam.length} TIM LAPANGAN</span>
+                              </div>
+                              {/* Tooltip on Hover */}
+                              <div className="absolute bottom-full left-0 mb-2 w-max max-w-[200px] bg-gray-900 text-white text-[9px] p-2 rounded-lg opacity-0 invisible group-hover/team:opacity-100 group-hover/team:visible transition-all z-50 shadow-xl pointer-events-none">
+                                <p className="font-black border-b border-white/10 pb-1 mb-1 text-blue-400 uppercase tracking-widest">Tim Penanganan Aktif:</p>
+                                <div className="space-y-1">
+                                  {cust.fieldTeam.map((name, i) => (
+                                    <div key={i} className="flex items-center gap-1.5">
+                                      <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                                      {name}
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="absolute top-full left-4 -translate-y-1/2 border-8 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-center">
                         <button
                           onClick={() => {
                             if (onNavigate) {
@@ -885,9 +998,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
                               }, 100);
                             }
                           }}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
+                          className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#009b7c] hover:bg-emerald-50 rounded-xl transition-all mx-auto"
                         >
-                          <Eye className="w-4 h-4" /> Detail
+                          <ChevronRight className="w-5 h-5" />
                         </button>
                       </td>
                     </tr>
@@ -905,8 +1018,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Mobile View - Cards */}
           <div className="md:hidden divide-y divide-gray-100">
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((cust) => (
+            {paginatedCustomers.length > 0 ? (
+              paginatedCustomers.map((cust) => (
                 <div key={cust.id} className="p-5 space-y-4">
                   <div className="flex items-start justify-between">
                     <div>
@@ -928,15 +1041,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
                       <p className="font-semibold text-gray-900">{cust.id}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 mb-0.5">Email</p>
-                      <p className="font-semibold text-gray-900 truncate">{cust.email}</p>
+                      <p className="text-gray-500 mb-0.5">ID BIEON / Email</p>
+                      <p className="font-semibold text-gray-900 truncate">{cust.bieonId} • {cust.email}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 mb-0.5">BIEON / Devices</p>
-                      <p className="font-semibold text-gray-900">{cust.bieon} / {cust.devices}</p>
+                      <p className="text-gray-500 mb-0.5">Nodes / Devices</p>
+                      <p className="font-semibold text-gray-900">{cust.totalHubs} Hub / {cust.devices} Dev</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 mb-0.5">Teknisi</p>
+                      <p className="text-gray-500 mb-0.5">Teknisi PJ</p>
                       <p className="font-semibold text-gray-900 truncate">{cust.technician}</p>
                     </div>
                   </div>
@@ -963,15 +1076,61 @@ export default function SuperAdminDashboard({ onNavigate }) {
             )}
           </div>
 
-          <div className="p-6 md:p-10 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center md:text-left">
-              Menampilkan {filteredCustomers.length} dari {homeowners.length} Pelanggan
-            </span>
-            <div className="flex flex-wrap justify-center items-center gap-2 md:gap-3">
-              <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Prev</button>
-              <button className="w-12 h-12 bg-[#009b7c] text-white rounded-2xl text-[10px] font-black shadow-lg shadow-emerald-100 flex items-center justify-center">1</button>
-              <button className="w-12 h-12 bg-white border border-gray-100 text-gray-400 rounded-2xl text-[10px] font-black hover:bg-gray-50 flex items-center justify-center">2</button>
-              <button className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black text-gray-400 hover:bg-gray-100 transition-all uppercase tracking-widest shadow-sm">Next</button>
+          <div className="p-6 md:p-8 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-100">
+            {/* Rows Per Page - Left */}
+            <div className="flex items-center gap-3 order-2 md:order-1">
+              <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows:</span>
+              <div className="relative">
+                <button
+                  onClick={() => setShowRowsDropdown(!showRowsDropdown)}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-[#009b7c]/30 transition-all"
+                >
+                  {rowsPerPage} <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                {showRowsDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowRowsDropdown(false)}></div>
+                    <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                      {[5, 10, 30, 50].map(val => (
+                        <button
+                          key={val}
+                          onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }}
+                          className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Page Info - Center */}
+            <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
+              <span className="md:hidden">rows </span>{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+            </div>
+
+            {/* Pagination Controls - Right */}
+            <div className="flex items-center gap-2 md:gap-3 order-3">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(currentPage - 1)}
+                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+              >
+                <ChevronLeft className="w-4 h-4 md:hidden" />
+                <span className="hidden md:inline lg:hidden">Prev</span>
+                <span className="hidden lg:inline">Previous</span>
+              </button>
+              <button
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+              >
+                <span className="hidden lg:inline">Next</span>
+                <span className="hidden md:inline lg:hidden">Next</span>
+                <ChevronRight className="w-4 h-4 md:hidden" />
+              </button>
             </div>
           </div>
         </div>

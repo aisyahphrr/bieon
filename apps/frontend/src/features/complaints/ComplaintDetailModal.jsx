@@ -18,8 +18,11 @@ import {
     ShieldCheck,
     Activity,
     Users,
-    XCircle
+    XCircle,
+    Download
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
 import { formatStatusDisplay, getPerformanceIndicator } from '../../utils/complaintHelpers';
 import { useSLA } from '../../hooks/useSLA';
@@ -250,6 +253,127 @@ export function ComplaintDetailModal({
         return '00:00:00';
     };
 
+    // --- PDF EXPORT HANDLER ---
+    const handleExportDetail = () => {
+        const doc = new jsPDF();
+        const primaryGreen = [0, 155, 124]; // BIEON Green
+        const secondaryGreen = [225, 242, 235]; // BIEON Light Green
+        
+        // 1. FULL WIDTH GREEN HEADER
+        doc.setFillColor(...primaryGreen);
+        doc.rect(0, 0, 210, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`ID TIKET: ${localTicket.id}`, 105, 13, { align: 'center' });
+
+        // 2. SECTION: INFORMASI PENGADUAN
+        doc.setTextColor(40, 40, 40);
+        doc.setFontSize(16);
+        doc.text('INFORMASI PENGADUAN', 14, 45);
+        doc.setDrawColor(...primaryGreen);
+        doc.setLineWidth(1);
+        doc.line(14, 48, 65, 48);
+
+        // Data Rows for Info
+        const infoData = [
+            ['Teknisi', `: ${localTicket.technicianInfo?.name || localTicket.technician?.fullName || '-'}` + (localTicket.technicianInfo?.phone ? ` (${localTicket.technicianInfo.phone})` : '')],
+            ['Rating Teknisi', `: ${localTicket.rating?.stars || localTicket.rating || '-'} / 5`],
+            ['Nama Pelanggan', `: ${localTicket.clientInfo?.name || localTicket.client || localTicket.homeowner?.fullName || '-'}`],
+            ['Alamat', `: ${localTicket.clientInfo?.address || localTicket.homeowner?.address || '-'}`],
+            ['Topik Kendala', `: ${localTicket.topic || '-'}`],
+            ['Kategori', `: ${localTicket.category || '-'}`],
+            ['Deskripsi Masalah', `: ${localTicket.description || localTicket.desc || '-'}`],
+            ['Lampiran Foto', `: ${localTicket.files && localTicket.files.length > 0 ? `${localTicket.files.length} Foto` : 'Tidak ada foto'}`],
+            ['Waktu Dibuat', `: ${formatDisplayTime(localTicket.createdAt)}`],
+            ['Waktu Selesai', `: ${localTicket.status?.toLowerCase() === 'selesai' ? formatDisplayTime(localTicket.updatedAt) : '-'}`],
+            ['Durasi Pengerjaan', `: ${getDurationFromTimeline('repair')}`]
+        ];
+
+        let currentY = 65;
+        doc.setFontSize(10);
+        infoData.forEach(row => {
+            doc.setFont('helvetica', 'bold');
+            doc.text(row[0], 18, currentY);
+            doc.setFont('helvetica', 'normal');
+            doc.text(row[1], 80, currentY);
+            currentY += 10;
+        });
+
+        // 3. SECTION: SLA PERFORMANCE & POINTS
+        currentY += 10;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SLA PERFORMANCE & POINTS', 14, currentY);
+        doc.setLineWidth(1);
+        doc.line(14, currentY + 3, 85, currentY + 3);
+        currentY += 10;
+
+        const slaBody = [
+            ['Respon Teknisi', '15 Menit', getDurationFromTimeline('response'), 
+             localTicket.responsePoints >= 100 ? 'SESUAI SLA' : 'TERLAMBAT', `${localTicket.responsePoints || 0} Pts`],
+            ['Perbaikan Unit', '48 Jam', getDurationFromTimeline('repair'), 
+             localTicket.repairPoints >= 100 ? 'SESUAI SLA' : 'TERLAMBAT', `${localTicket.repairPoints || 0} Pts`]
+        ];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [['Aspek SLA', 'Target', 'Capaian', 'Status', 'Poin']],
+            body: slaBody,
+            theme: 'grid',
+            headStyles: { fillColor: [240, 240, 240], textColor: [40, 40, 40], fontStyle: 'bold' },
+            styles: { fontSize: 9, cellPadding: 5 },
+            didDrawCell: (data) => {
+                if (data.section === 'body' && data.column.index === 3) {
+                    const statusText = data.cell.raw;
+                    if (statusText === 'SESUAI SLA') doc.setTextColor(0, 155, 124);
+                    else doc.setTextColor(239, 68, 68);
+                    doc.setFont('helvetica', 'bold');
+                }
+                if (data.section === 'body' && data.column.index === 4) {
+                    doc.setFont('helvetica', 'bold');
+                }
+            }
+        });
+
+        // Overall Performance Box
+        const finalY_SLA = doc.lastAutoTable.finalY + 10;
+        const totalPoints = (localTicket.responsePoints || 0) + (localTicket.repairPoints || 0);
+        const perfStatus = totalPoints >= 200 ? 'EXCELLENT' : totalPoints >= 150 ? 'GOOD' : 'NEEDS IMPROVEMENT';
+        
+        doc.setFillColor(...secondaryGreen);
+        doc.rect(14, finalY_SLA, 182, 10, 'F');
+        doc.setTextColor(...primaryGreen);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`OVERALL PERFORMANCE: ${totalPoints} POINTS - ${perfStatus}`, 105, finalY_SLA + 6.5, { align: 'center' });
+
+        // 4. SECTION: RIWAYAT PROGRES PENGADUAN
+        currentY = finalY_SLA + 30;
+        doc.setTextColor(40, 40, 40);
+        doc.setFontSize(16);
+        doc.text('RIWAYAT PROGRES PENGADUAN', 14, currentY);
+        doc.setLineWidth(1);
+        doc.line(14, currentY + 3, 90, currentY + 3);
+        currentY += 10;
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [['Tanggal & Waktu', 'Aktivitas', 'Catatan/Keterangan']],
+            body: localTicket.timeline?.map(t => [
+                formatDisplayTime(t.time),
+                t.status?.toUpperCase() || 'UPDATE',
+                t.desc?.replace(/\s*\(Respons:.*?, Poin:.*?\)/gi, '').replace(/\s*\(Durasi:.*?, Poin:.*?\)/gi, '')
+            ]) || [],
+            theme: 'striped',
+            headStyles: { fillColor: primaryGreen, textColor: 255 },
+            styles: { fontSize: 9 }
+        });
+
+        // Save
+        doc.save(`BIEON_DETAIL_${localTicket.id}.pdf`);
+    };
+
     // Helper: Badge Status Standard
     const StatusBadge = ({ ticket: badgeTicket }) => {
         const baseClasses = "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all";
@@ -353,6 +477,15 @@ export function ComplaintDetailModal({
                                                     Konfirmasi & Nilai
                                                 </button>
                                             )}
+                                            
+                                            {/* Shared: Export PDF Button (Mobile) */}
+                                            <button
+                                                onClick={handleExportDetail}
+                                                className="w-full py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
+                                            >
+                                                <Download className="w-4 h-4 text-gray-400" /> Ekspor Detail (PDF)
+                                            </button>
+
                                             {role !== 'homeowner' && (
                                                 <p className="text-[10px] text-gray-400 italic text-center">Aksi tersedia dapat dilihat di panel bawah pada desktop atau scroll ke bawah.</p>
                                             )}
@@ -672,60 +805,72 @@ export function ComplaintDetailModal({
                                                             </>
                                                         )}
 
-                                                        {/* DATA LOG ACCESS SYSTEM (Visibility Logic) */}
-                                                        {localTicket.status.toLowerCase() !== 'selesai' && (
-                                                            <>
-                                                                {(!localTicket.logRequestStatus || localTicket.logRequestStatus === 'none') && (
-                                                                    <button
-                                                                        onClick={() => setIsLogReasonModalOpen(true)}
-                                                                        className="w-full py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-red-200"
-                                                                    >
-                                                                        <FileText className="w-4 h-4" /> Minta Akses Log
-                                                                    </button>
-                                                                )}
+                                                        {/* DATA LOG ACCESS SYSTEM (Refined Visibility Logic) */}
+                                                        <div className="space-y-3 pt-1">
+                                                            {/* Initial Request Button: Only show if status is 'diproses' and no request made yet */}
+                                                            {(!localTicket.logRequestStatus || localTicket.logRequestStatus === 'none') && 
+                                                             localTicket.status.toLowerCase() === 'diproses' && (
+                                                                <button
+                                                                    onClick={() => setIsLogReasonModalOpen(true)}
+                                                                    className="w-full py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-red-200"
+                                                                >
+                                                                    <FileText className="w-4 h-4" /> Minta Akses Log
+                                                                </button>
+                                                            )}
 
-                                                                {/* DATA LOG ACCESS SYSTEM (Visibility Logic) */}
-                                                                {(localTicket.logRequestStatus === 'pending' || localTicket.logRequestStatus === 'requested') && (
-                                                                    <button
-                                                                        disabled
-                                                                        className="w-full py-3 bg-red-50 text-red-400 border border-red-100 rounded-xl font-bold flex items-center justify-center gap-2 text-xs cursor-not-allowed"
-                                                                    >
-                                                                        <Clock className="w-4 h-4" /> Menunggu Konfirmasi SA
-                                                                    </button>
-                                                                )}
-                                                            </>
-                                                        )}
+                                                            {/* Pending/Requested State: Show ALWAYS once initiated */}
+                                                            {(localTicket.logRequestStatus === 'pending' || localTicket.logRequestStatus === 'requested') && (
+                                                                <button
+                                                                    disabled
+                                                                    className="w-full py-3 bg-red-50 text-red-400 border border-red-100 rounded-xl font-bold flex items-center justify-center gap-2 text-xs cursor-not-allowed"
+                                                                >
+                                                                    <Clock className="w-4 h-4" /> Menunggu Konfirmasi SA
+                                                                </button>
+                                                            )}
 
-                                                        {localTicket.logRequestStatus === 'rejected' && (
-                                                            <button
-                                                                disabled
-                                                                className="w-full py-3 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-2 text-xs opacity-80"
-                                                            >
-                                                                <AlertCircle className="w-4 h-4" /> Akses Log Ditolak
-                                                            </button>
-                                                        )}
+                                                            {/* Rejected State: Show ALWAYS once rejected */}
+                                                            {localTicket.logRequestStatus === 'rejected' && (
+                                                                <button
+                                                                    disabled
+                                                                    className="w-full py-3 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-2 text-xs opacity-80"
+                                                                >
+                                                                    <AlertCircle className="w-4 h-4" /> Akses Log Ditolak
+                                                                </button>
+                                                            )}
 
-                                                        {localTicket.logRequestStatus === 'granted' && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    const returnTicketId = localTicket?.originalId || localTicket?._id || null;
-                                                                    const customerName = localTicket?.clientInfo?.name || localTicket?.client || localTicket?.homeowner?.fullName || '';
-                                                                    onClose?.();
-                                                                    navigate('/admin-datalog', {
-                                                                        state: {
-                                                                            sourceRole: role,
-                                                                            returnTicketId,
-                                                                            customerName
-                                                                        }
-                                                                    });
-                                                                }}
-                                                                className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"
-                                                            >
-                                                                <FileText className="w-4 h-4" /> Lihat Data Log
-                                                            </button>
-                                                        )}
+                                                            {/* Granted State: Show ALWAYS once granted */}
+                                                            {localTicket.logRequestStatus === 'granted' && (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const returnTicketId = localTicket?.originalId || localTicket?._id || null;
+                                                                        const customerName = localTicket?.clientInfo?.name || localTicket?.client || localTicket?.homeowner?.fullName || '';
+                                                                        onClose?.();
+                                                                        navigate('/admin-datalog', {
+                                                                            state: {
+                                                                                sourceRole: role,
+                                                                                returnTicketId,
+                                                                                customerName
+                                                                            }
+                                                                        });
+                                                                    }}
+                                                                    className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"
+                                                                >
+                                                                    <FileText className="w-4 h-4" /> Lihat Data Log
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 )}
+
+                                                {/* Shared: Export PDF Button (Desktop) */}
+                                                <div className="pt-2">
+                                                    <button
+                                                        onClick={handleExportDetail}
+                                                        className="w-full py-3 bg-white border border-gray-100 text-gray-500 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-[11px] uppercase tracking-wider group"
+                                                    >
+                                                        <Download className="w-4 h-4 text-gray-300 group-hover:text-teal-500 transition-colors" /> Ekspor Detail Pengaduan (PDF)
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>

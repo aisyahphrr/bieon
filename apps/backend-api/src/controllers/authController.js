@@ -409,3 +409,34 @@ exports.resetForgotPassword = async (req, res) => {
         return res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });
     }
 };
+
+/**
+ * Ganti Password (Memerlukan autentikasi)
+ */
+exports.changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user.userId;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: 'Password lama dan baru wajib diisi' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Password lama salah' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({ success: true, message: 'Password berhasil diperbarui' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Gagal memperbarui password', error: error.message });
+    }
+};

@@ -12,6 +12,7 @@ const SecurityLog = require('../models/SecurityLog');
 const WaterQualityLog = require('../models/WaterQualityLog');
 const Activity = require('../models/Activity');
 const alertService = require('../services/alertService');
+const AuthEvent = require('../models/AuthEvent');
 
 let mqttClient = null;
 let ioInstance = null;
@@ -147,6 +148,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
 
       await Alert.create({
         owner: device.owner,
+        hub: device.hubId,
         category,
         title: `Perangkat ${statusText}`,
         message: `[Log] Perangkat ${device.name} di ${device.location} telah berubah status menjadi ${statusText}.`,
@@ -171,8 +173,8 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
           const tariffPrice = tariffRecord ? tariffRecord.tariff : 1444;
           const cost = deltaKwh * tariffPrice;
           
-          user.tokenBalance = Math.max(0, (user.tokenBalance || 0) - cost);
-          await user.save();
+          // user.tokenBalance = Math.max(0, (user.tokenBalance || 0) - cost); // STOP DEDUCTION (Switching to Budget System)
+          // await user.save();
 
           await KendaliPerangkat.findByIdAndUpdate(updatedDevice._id, { 
             'currentValues.lastEnergyReading': currentEnergy,
@@ -182,6 +184,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
 
           await new EnergyLog({
             device: updatedDevice._id,
+            hub: updatedDevice.hubId,
             date: new Date(),
             totalKwh: deltaKwh,
             power: payload.currentLoad || 0,
@@ -206,9 +209,26 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
       if (payload.doorOpen !== undefined || payload.motion !== undefined) {
         await new SecurityLog({
           device: updatedDevice._id,
+          hub: updatedDevice.hubId,
           date: new Date(),
-          action: payload.doorOpen ? 'Terbuka' : (payload.motion ? 'Gerakan Terdeteksi' : 'Aman'),
+          room: updatedDevice.location || 'Lainnya',
+          door: payload.doorOpen ? 'Terbuka' : 'Tertutup',
+          motion: payload.motion ? 'Terdeteksi Gerak' : 'Tidak Ada Gerak',
+          status: (payload.doorOpen || payload.motion) ? 'Waspada' : 'Aman',
           owner: updatedDevice.owner
+        }).save();
+      }
+      if (payload.ph !== undefined || payload.turbidity !== undefined || payload.tds !== undefined) {
+        await new WaterQualityLog({
+          owner: updatedDevice.owner,
+          device: updatedDevice._id,
+          hub: updatedDevice.hubId,
+          ph: payload.ph || updatedDevice.currentValues?.ph || 0,
+          turbidity: payload.turbidity || updatedDevice.currentValues?.turbidity || 0,
+          temperature: payload.waterTemp || updatedDevice.currentValues?.waterTemp || 0,
+          tds: payload.tds || updatedDevice.currentValues?.tds || 0,
+          status: 'Layak Pakai',
+          date: new Date()
         }).save();
       }
       await alertService.simulateSensorData(updatedDevice._id, payload);
@@ -273,6 +293,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
 
               await new Activity({
                 user: act.owner,
+                hub: act.hubId,
                 room: act.location,
                 actuator: act.name,
                 status: newStatus === '1' ? 'ON' : 'OFF',
@@ -285,6 +306,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
               const Alert = require('../models/Alert');
               await Alert.create({
                 owner: act.owner,
+                hub: act.hubId,
                 category: aspect === 'Kualitas Air' ? 'Air Sanitasi' : aspect,
                 title: isMet ? 'Otomasi Aktif' : 'Otomasi Selesai',
                 message: `Sistem otomatis ${isMet ? 'menyalakan' : 'mematikan'} ${act.name} karena kondisi ${aspect} ${isMet ? 'memerlukan tindakan' : 'kembali normal'}.`,
@@ -325,41 +347,83 @@ const handleAuthRequest = async (masterId, payload) => {
     const responses = [];
 
     for (const device of devicesToAuth) {
-      const { device_ieee, device_name } = device;
+      const { device_ieee, device_name, device_profile: reqProfile, model_id: reqModel } = device;
       if (!device_ieee) continue;
 
       const last4Mac = device_ieee ? device_ieee.replace(/:/g, '').slice(-4).toUpperCase() : '0000';
       const currentTs = Math.floor(Date.now() / 1000);
+      const hub_ieee = payload.hub_ieee || masterId;
 
-      // Cek di whitelist db
-      const whitelistEntry = await DeviceWhitelist.findOne({ device_ieee });
+      // Normalisasi IEEE untuk memastikan format cocok dengan database
+      let cleanIeee = device_ieee.replace(/:/g, '').toUpperCase();
+      let colonIeee = cleanIeee.match(/.{1,2}/g).join(':');
+
+      // Cek di whitelist db dengan berbagai kombinasi format
+      const whitelistEntry = await DeviceWhitelist.findOne({
+        $or: [
+          { device_ieee: device_ieee },
+          { device_ieee: cleanIeee },
+          { device_ieee: cleanIeee.toLowerCase() },
+          { device_ieee: colonIeee },
+          { device_ieee: colonIeee.toLowerCase() }
+        ]
+      });
+
+      let decision = 'block';
+      let responseObj = {
+        type: "auth_response",
+        master_ieee: masterId,
+        device_ieee: device_ieee,
+        ts: currentTs
+      };
 
       if (whitelistEntry && whitelistEntry.approved) {
+        decision = 'allow';
+        const profile = whitelistEntry.device_profile && whitelistEntry.device_profile !== 'UNKNOWN' ? whitelistEntry.device_profile : (reqProfile || whitelistEntry.model_id || 'UNKNOWN');
+        
         console.log(`[Auth Decision] Allow for ${device_ieee} (${whitelistEntry.device_name || 'Unknown'})`);
-        responses.push({
-          type: "auth_response",
+        responseObj = {
+          ...responseObj,
           decision: "allow",
-          master_ieee: masterId,
-          device_ieee: device_ieee,
           device_id: whitelistEntry.device_id || "unknown",
           device_name: whitelistEntry.device_name || "Unknown",
+          device_profile: profile,
           model_id: whitelistEntry.model_id || "UNKNOWN",
-          alias: `${whitelistEntry.model_id || 'UNKNOWN'}_${last4Mac}`,
-          ts: currentTs
-        });
+          alias: `${profile}_${last4Mac}`,
+        };
       } else {
+        decision = 'block';
+        const profile = reqProfile || 'UNKNOWN';
         console.log(`[Auth Decision] Block for ${device_ieee} (${device_name || 'Unknown'})`);
-        responses.push({
-          type: "auth_response",
+        responseObj = {
+          ...responseObj,
           decision: "block",
-          master_ieee: masterId,
-          device_ieee: device_ieee,
           device_id: "unknown",
-          model_id: "UNKNOWN",
-          alias: `UNKNOWN_${last4Mac}`,
-          ts: currentTs
-        });
+          device_profile: profile,
+          model_id: reqModel || "UNKNOWN",
+          alias: `${profile}_${last4Mac}`,
+        };
       }
+
+      responses.push(responseObj);
+
+      // Log AuthEvent
+      await AuthEvent.create({
+        type: 'auth_request',
+        status: decision === 'allow' ? 'allow' : (whitelistEntry ? 'rejected' : 'pending'),
+        decision: decision,
+        master_ieee: masterId,
+        hub_ieee: hub_ieee,
+        device_ieee: device_ieee,
+        device_id: responseObj.device_id,
+        device_name: responseObj.device_name || device_name,
+        device_profile: responseObj.device_profile,
+        model_id: responseObj.model_id,
+        alias: responseObj.alias,
+        cached: payload.cached || false,
+        source: 'mqtt',
+        ts: currentTs
+      });
     }
 
     // Publish ke response topic

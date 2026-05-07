@@ -11,6 +11,7 @@ const devicesSeedData = {
       "device_id": "plug_01",
       "device_name": "Smart Plug",
       "model_id": "SMART_PLUG",
+      "device_profile": "plug_power",
       "approved": true,
       "reason": "Factory default - sudah embedded di firmware"
     },
@@ -18,6 +19,7 @@ const devicesSeedData = {
       "device_id": "water_sensor_01",
       "device_name": "Water Sensor",
       "model_id": "WATER_SENSOR",
+      "device_profile": "water_sensor",
       "approved": true,
       "reason": "Factory default - sudah embedded di firmware"
     },
@@ -25,6 +27,7 @@ const devicesSeedData = {
       "device_id": "th_sensor_01",
       "device_name": "Sensor TH",
       "model_id": "SNZB-02",
+      "device_profile": "sensor_th",
       "approved": true,
       "reason": "Factory default - sudah embedded di firmware"
     },
@@ -32,6 +35,7 @@ const devicesSeedData = {
       "device_id": "hub_01",
       "device_name": "Hub Node 1",
       "model_id": "HUB_NODE",
+      "device_profile": "zigbee_hub",
       "approved": true,
       "reason": "Default Hub Node"
     },
@@ -39,6 +43,7 @@ const devicesSeedData = {
       "device_id": "master_01",
       "device_name": "Master Zigbee",
       "model_id": "MASTER",
+      "device_profile": "zigbee_master",
       "approved": true,
       "reason": "Master node"
     }
@@ -55,6 +60,7 @@ const seedDB = async () => {
             device_ieee: ieee,
             device_name: data.device_name,
             model_id: data.model_id,
+            device_profile: data.device_profile,
             device_id: data.device_id,
             approved: data.approved,
             reason: data.reason

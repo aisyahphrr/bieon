@@ -19,6 +19,16 @@ const deviceWhitelistSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    device_profile: {
+        type: String,
+        default: 'UNKNOWN'
+    },
+    hub_ieee: {
+        type: String
+    },
+    master_ieee: {
+        type: String
+    },
     approved: { 
         type: Boolean, 
         default: true 

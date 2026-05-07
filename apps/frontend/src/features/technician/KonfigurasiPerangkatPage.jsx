@@ -15,7 +15,7 @@ export function KonfigurasiPerangkatPage({ onNavigate, triggerToast }) {
     }
 
     try {
-      const technicianId = localStorage.getItem('bieon_user_id'); // Pastikan ID teknisi tersimpan saat login
+      const technicianId = localStorage.getItem('userId'); // Konsisten dengan TechnicianProfilePage
       const response = await fetch('/api/technician-access/validate-token', {
         method: 'POST',
         headers: {

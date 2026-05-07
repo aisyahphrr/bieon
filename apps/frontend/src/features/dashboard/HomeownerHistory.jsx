@@ -102,8 +102,9 @@ export function HomeownerHistory({ onNavigate }) {
         try {
             const token = localStorage.getItem('token');
             const currentTabConfig = tabs.find(t => t.id === activeTab);
+            let url = currentTabConfig.endpoint;
 
-            const response = await fetch(currentTabConfig.endpoint, {
+            const response = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 

@@ -138,11 +138,18 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
           {view !== 'main' && <div className="mt-4 border-b border-gray-100" />}
         </div>
 
-        {/* Content Area - Scrollable */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar">
+        {/* Content Area - Seamless Scrollable with CSS Masking */}
+        <div 
+          className="flex-1 overflow-y-auto overflow-x-hidden p-6 pt-2 custom-scrollbar scroll-smooth"
+          style={{
+            maskImage: 'linear-gradient(to bottom, transparent, black 20px, black calc(100% - 40px), transparent)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 20px, black calc(100% - 40px), transparent)'
+          }}
+        >
           
+          {/* MAIN PROFILE VIEW */}
           {view === 'main' && (
-            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 pt-6">
               {/* Avatar Section */}
               <div className="flex flex-col items-center">
                 <div className="relative mb-4 group cursor-pointer" onClick={() => setView('edit')}>
@@ -196,7 +203,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   </button>
                 </div>
                 
-                <div className="px-2 mb-6 space-y-3">
+                <div className="px-2 mb-2 space-y-3">
                   {isLoadingBieon ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
@@ -237,10 +244,10 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                 </div>
               </div>
 
-              {/* Settings Action Row */}
-              <div className="pt-8 space-y-6 px-2">
+              {/* Settings Action Row - Tightened spacing */}
+              <div className="pt-2 space-y-4 px-2">
                 <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">SETTINGS</h4>
-                <div className="space-y-3 pb-4">
+                <div className="space-y-1 pb-4">
                   <button 
                     onClick={() => setView('settings')}
                     className="w-full flex items-center gap-4 group transition-all p-3 -mx-3 rounded-xl hover:bg-slate-50"
@@ -283,10 +290,9 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
             </div>
           )}
 
-          {/* EDIT VIEW */}
+          {/* EDIT PROFILE VIEW */}
           {view === 'edit' && (
-            <div className="space-y-8 flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300 pb-4">
-              
+            <div className="space-y-8 flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300 pb-4 pt-6">
               {/* Photo Input (Hidden) */}
               <input 
                 type="file" 
@@ -354,7 +360,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
 
           {/* SETTINGS VIEW */}
           {view === 'settings' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 pt-2 px-1 pb-6">
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 pt-6 px-1 pb-6">
               {/* Theme Dropdown */}
               <div className="space-y-2.5">
                 <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">Tampilan Tema</label>
@@ -451,19 +457,18 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               </div>
             </div>
           )}
-
         </div>
-      </div>
 
-      {/* Add Bieon Popup */}
-      <AddBieonPopup 
-        isOpen={showAddBieonPopup} 
-        onClose={() => setShowAddBieonPopup(false)} 
-        userId={userProfile?._id}
-        onSuccess={() => {
-          fetchBieonSystems();
-        }}
-      />
+        {/* Add Bieon Popup */}
+        <AddBieonPopup 
+          isOpen={showAddBieonPopup} 
+          onClose={() => setShowAddBieonPopup(false)} 
+          userId={userProfile?._id}
+          onSuccess={() => {
+            fetchBieonSystems();
+          }}
+        />
+      </div>
     </div>
   );
 }

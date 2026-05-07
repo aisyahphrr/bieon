@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Complaint = require('../models/Complaint');
+const TechnicianAccess = require('../models/TechnicianAccess');
 const mongoose = require('mongoose');
 
 /**
@@ -79,11 +80,11 @@ exports.getTechnicianProfile = async (req, res) => {
             .sort({ completedAt: -1 })
             .limit(5);
         
-        console.log('Step 8: Sending response');
+        // 4. Hitung Akses Kendali Perangkat (Access Codes)
+        console.log('Step 8: Fetching access code counts...');
+        const totalAccessCodes = await TechnicianAccess.countDocuments({ technicianId: id });
 
-        // Hitung Berdasarkan Kategori
-        const totalInstalasi = finishedTickets.filter(t => t.category?.toLowerCase().includes('instalasi')).length;
-        const totalRepairs = totalPekerjaan - totalInstalasi;
+        console.log('Step 9: Sending response');
 
         res.status(200).json({
             success: true,
@@ -91,8 +92,8 @@ exports.getTechnicianProfile = async (req, res) => {
                 profile: technician,
                 stats: {
                     totalPekerjaan,
-                    totalRepairs,
-                    totalInstalasi,
+                    totalRepairs: totalPekerjaan, // Standard repairs
+                    totalAccessCodes,
                     avgRating: parseFloat(avgRating),
                     responseSpeed: parseFloat(responseSpeedScale),
                     repairSpeed: parseFloat(repairSpeedScale),

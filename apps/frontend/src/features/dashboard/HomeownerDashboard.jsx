@@ -50,129 +50,7 @@ import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
 
-// ─────── Static mock data (outside component to avoid re-creation per render) ───────
-
-const ROOMS = [
-  { id: 'all', name: 'All Room', devices: 15 },
-  { id: 'r1', name: 'R1 - Living Room', devices: 6 },
-  { id: 'r2', name: 'R2 - Bedroom', devices: 4 },
-  { id: 'r3', name: 'R3 - Kitchen', devices: 4 },
-  { id: 'r4', name: 'R4 - Garage', devices: 3 },
-];
-
-const DEVICES_PER_ROOM = {
-  all: [
-    { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
-    { name: 'CCTV Depan', room: 'Garage', status: 'ON', power: 15, type: 'security' },
-    { name: 'Lampu Tamu 1', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
-    { name: 'Lampu Tamu 2', room: 'Living Room', status: 'OFF', power: 0, type: 'lighting' },
-    { name: 'AC Kamar', room: 'Bedroom', status: 'ON', power: 750, type: 'comfort' },
-    { name: 'Kipas Produksi', room: 'Garage', status: 'OFF', power: 0, type: 'comfort' },
-    { name: 'Lampu Kamar', room: 'Bedroom', status: 'ON', power: 20, type: 'lighting' },
-    { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
-    { name: 'Door Sensor Depan', room: 'Living Room', status: 'ON', power: 2, type: 'security' },
-    { name: 'Wi-Fi Router', room: 'Living Room', status: 'ON', power: 12, type: 'network' },
-    { name: 'Motion Sensor', room: 'Bedroom', status: 'ON', power: 3, type: 'security' },
-    { name: 'Lampu Terrace', room: 'Terrace', status: 'ON', power: 15, type: 'lighting' },
-    { name: 'Smart Plug Terrace', room: 'Terrace', status: 'ON', power: 50, type: 'appliance' },
-    { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
-  ],
-  r1: [
-    { name: 'AC', room: 'Living Room', status: 'ON', power: 750, type: 'comfort' },
-    { name: 'Lampu', room: 'Living Room', status: 'ON', power: 20, type: 'lighting' },
-    { name: 'Lampu 2', room: 'Living Room', status: 'ON', power: 25, type: 'lighting' },
-    { name: 'Motion Sensor', room: 'Living Room', status: 'OFF', power: 0, type: 'security' },
-  ],
-  r2: [
-    { name: 'AC Kamar', room: 'Bedroom', status: 'ON', power: 750, type: 'comfort' },
-    { name: 'Lampu Kamar', room: 'Bedroom', status: 'ON', power: 20, type: 'lighting' },
-    { name: 'Motion Sensor', room: 'Bedroom', status: 'ON', power: 3, type: 'security' },
-    { name: 'Kipas Angin', room: 'Bedroom', status: 'OFF', power: 0, type: 'comfort' },
-  ],
-  r3: [
-    { name: 'CCTV Dapur', room: 'Kitchen', status: 'ON', power: 15, type: 'security' },
-    { name: 'Smart Plug Kitchen', room: 'Kitchen', status: 'ON', power: 100, type: 'appliance' },
-    { name: 'Lampu Dapur', room: 'Kitchen', status: 'ON', power: 30, type: 'lighting' },
-  ],
-  r4: [
-    { name: 'CCTV Depan', room: 'Garage', status: 'ON', power: 15, type: 'security' },
-    { name: 'Kipas Produksi', room: 'Garage', status: 'OFF', power: 0, type: 'comfort' },
-    { name: 'Lampu Garage', room: 'Garage', status: 'OFF', power: 0, type: 'lighting' },
-  ],
-};
-
-const ROOM_SENSORS = {
-  all: {
-    comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
-    waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
-    security: [
-      { type: 'Door Sensor - Terrace', status: 'Closed', room: 'Terrace' },
-      { type: 'Door Sensor - Garage', status: 'Closed', room: 'Garage' },
-    ],
-  },
-  r1: {
-    comfort: { temp: 26, humidity: 68, comfortLevel: 82 },
-    security: [
-      { type: 'Motion Sensor', status: 'Active', room: 'Bedroom' },
-      { type: 'Door Sensor', status: 'Closed', room: 'Living Room' },
-    ],
-  },
-  r2: { comfort: { temp: 26, humidity: 68, comfortLevel: 82 } },
-  r3: {
-    waterQuality: { status: 'drinkable', ph: 7.2, turbidity: 2.1, tds: 78, temp: 24 },
-    security: [],
-  },
-  r4: {
-    security: [
-      { type: 'Door Sensor', status: 'Closed', room: 'Terrace' },
-      { type: 'Door Sensor', status: 'Closed', room: 'Garage' },
-    ],
-  },
-};
-
-const DAILY_ENERGY_DATA = [
-  { time: '00:00', kwh: 0.245, cost: 2450 },
-  { time: '01:00', kwh: 0.198, cost: 1980 },
-  { time: '02:00', kwh: 0.167, cost: 1670 },
-  { time: '03:00', kwh: 0.189, cost: 1890 },
-  { time: '04:00', kwh: 0.212, cost: 2120 },
-  { time: '05:00', kwh: 0.312, cost: 3120 },
-  { time: '06:00', kwh: 0.445, cost: 4450 },
-  { time: '07:00', kwh: 0.523, cost: 5230 },
-  { time: '08:00', kwh: 0.589, cost: 5890 },
-  { time: '09:00', kwh: 0.612, cost: 6120 },
-  { time: '10:00', kwh: 0.567, cost: 5670 },
-  { time: '11:00', kwh: 0.634, cost: 6340 },
-  { time: '12:00', kwh: 0.701, cost: 7010 },
-  { time: '13:00', kwh: 0.678, cost: 6780 },
-  { time: '14:00', kwh: 0.645, cost: 6450 },
-  { time: '15:00', kwh: 0.598, cost: 5980 },
-  { time: '16:00', kwh: 0.534, cost: 5340 },
-];
-
-const MONTHLY_ENERGY_DATA = [
-  { month: 'Jan', kwh: 100, cost: 100000 },
-  { month: 'Feb', kwh: 90, cost: 90000 },
-  { month: 'Mar', kwh: 95, cost: 95000 },
-  { month: 'Apr', kwh: 105, cost: 105000 },
-  { month: 'Mei', kwh: 130, cost: 130000 },
-  { month: 'Jun', kwh: 160, cost: 160000 },
-  { month: 'Jul', kwh: 180, cost: 180000 },
-  { month: 'Agt', kwh: 195, cost: 195000 },
-  { month: 'Sep', kwh: 205, cost: 205000 },
-  { month: 'Okt', kwh: 195, cost: 195000 },
-  { month: 'Nov', kwh: 210, cost: 210000 },
-  { month: 'Des', kwh: 230, cost: 230000 },
-];
-
-const NOTIFICATIONS = [
-  { id: 1, title: 'Motion Detected', desc: 'Gerakan terdeteksi di ruang tamu', type: 'security', time: '2 min ago', icon: Activity },
-  { id: 2, title: 'Suhu Tinggi - Kipas Auto ON', desc: 'Suhu ruang produksi 31°C, kipas otomatis menyala', type: 'auto', time: '5 min ago', icon: Fan },
-  { id: 3, title: 'Door Sensor Alert', desc: 'Pintu depan terbuka tanpa otoritas', type: 'security', time: '15 min ago', icon: Lock },
-  { id: 4, title: 'Peringatan Token PLN', desc: 'Sisa token PLN hampir habis (Rp 50.000)', type: 'warning', time: '1 hour ago', icon: Zap },
-  { id: 5, title: 'Kualitas Udara Buruk', desc: 'CO₂ melebihi batas normal (1200 ppm)', type: 'warning', time: '2 hours ago', icon: Wind },
-];
-
+// ─────── Utility Toast ───────
 function Toast({ message, type = 'success', onClose }) {
   return (
     <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-top-4 duration-500">
@@ -185,26 +63,51 @@ function Toast({ message, type = 'success', onClose }) {
   );
 }
 
-function ComplaintModal({ isOpen, onClose }) {
+function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
   const [formData, setFormData] = useState({
     device: '',
     issue: '',
     description: '',
     priority: 'medium'
   });
+  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    // Auto-close after 2 seconds
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ device: '', issue: '', description: '', priority: 'medium' });
-      onClose();
-    }, 2000);
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/complaints', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          topic: formData.issue,
+          category: formData.priority === 'high' ? 'Danger' : formData.priority === 'medium' ? 'Warning' : 'Info',
+          device: formData.device,
+          desc: formData.description
+        })
+      });
+
+      if (!response.ok) throw new Error('Gagal mengirim pengaduan');
+
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({ device: '', issue: '', description: '', priority: 'medium' });
+        onClose();
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      alert('Gagal mengirim pengaduan. Silakan coba lagi.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Inline success feedback instead of alert()
@@ -256,12 +159,10 @@ function ComplaintModal({ isOpen, onClose }) {
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="">Pilih perangkat...</option>
-                <option>CCTV Dapur</option>
-                <option>CCTV Depan</option>
-                <option>Lampu Ruang Tamu</option>
-                <option>AC Kamar</option>
-                <option>Door Sensor</option>
-                <option>Lainnya</option>
+                {realDevices.map(d => (
+                  <option key={d._id} value={d.name}>{d.name} ({d.location})</option>
+                ))}
+                <option value="Lainnya">Lainnya</option>
               </select>
             </div>
 
@@ -335,10 +236,15 @@ function ComplaintModal({ isOpen, onClose }) {
             </button>
             <button
               type="submit"
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
             >
-              <Send className="w-5 h-5" />
-              Kirim Pengaduan
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+              {loading ? 'Mengirim...' : 'Kirim Pengaduan'}
             </button>
           </div>
         </form>
@@ -519,7 +425,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
   );
 }
 
-function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDeposit, onRefresh }) {
+function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDeposit, onRefresh, energySummary }) {
   const [inputLimit, setInputLimit] = useState(limit.toString());
   const [inputDeposit, setInputDeposit] = useState(deposit.toString());
   const [submitted, setSubmitted] = useState(false);
@@ -531,8 +437,10 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 
   if (!isOpen) return null;
 
-  const totalTerpakai = window.totalCostToday || 0;
-  const isKritis = deposit <= limit;
+  const totalTerpakai = energySummary?.monthlyData?.[new Date().getMonth()]?.cost || 0;
+  const sisaAnggaran = deposit - totalTerpakai;
+  const isOverBudget = sisaAnggaran <= 0;
+  const isWaspada = sisaAnggaran <= limit && sisaAnggaran > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -589,8 +497,8 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               <Zap className="w-7 h-7 text-white fill-white/20" />
             </div>
             <div className="pr-8">
-              <h2 className="text-xl font-bold leading-tight">Pengaturan Token Listrik</h2>
-              <p className="text-amber-100 text-xs mt-1 font-medium opacity-90">Monitoring saldo & batas peringatan kritis</p>
+              <h2 className="text-xl font-bold leading-tight">Manajemen Anggaran Listrik</h2>
+              <p className="text-amber-100 text-xs mt-1 font-medium opacity-90">Monitoring anggaran & batas peringatan kritis</p>
             </div>
           </div>
           <button
@@ -603,31 +511,43 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 
         <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
           {/* Status Section */}
-          <div className={`border rounded-2xl p-5 flex flex-col gap-3 mb-8 transition-colors ${isKritis ? 'bg-red-50 border-red-100' : 'bg-emerald-50 border-emerald-100'}`}>
+          <div className={`border rounded-2xl p-5 flex flex-col gap-3 mb-8 transition-colors ${
+            isOverBudget ? 'bg-red-50 border-red-100' : 
+            isWaspada ? 'bg-amber-50 border-amber-100' : 
+            'bg-emerald-50 border-emerald-100'
+          }`}>
             <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
-              <span>Saldo Saat Ini:</span>
+              <span>Anggaran Bulan Ini:</span>
               <span className="font-semibold text-gray-900">Rp {deposit.toLocaleString('id-ID')}</span>
             </div>
             <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
-              <span>Konsumsi Hari Ini:</span>
+              <span>Terpakai Bulan Ini:</span>
               <span className="font-semibold text-gray-900">Rp {totalTerpakai.toLocaleString('id-ID')}</span>
             </div>
-            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${isKritis ? 'border-red-200' : 'border-emerald-200'}`}>
-              <span className={isKritis ? 'text-red-800' : 'text-emerald-800'}>Estimasi Sisa Saldo:</span>
-              <span className={`text-xl font-bold ${isKritis ? 'text-red-600' : 'text-emerald-600'}`}>Rp {Math.max(0, deposit).toLocaleString('id-ID')}</span>
+            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${
+              isOverBudget ? 'border-red-200' : 
+              isWaspada ? 'border-amber-200' : 
+              'border-emerald-200'
+            }`}>
+              <span className={isOverBudget ? 'text-red-800' : isWaspada ? 'text-amber-800' : 'text-emerald-800'}>Sisa Anggaran:</span>
+              <span className={`text-xl font-bold ${isOverBudget ? 'text-red-600' : isWaspada ? 'text-amber-600' : 'text-emerald-600'}`}>Rp {Math.max(0, sisaAnggaran).toLocaleString('id-ID')}</span>
             </div>
-            <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold uppercase tracking-wider ${isKritis ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+            <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold tracking-wide ${
+              isOverBudget ? 'bg-red-100 text-red-700' : 
+              isWaspada ? 'bg-amber-100 text-amber-700' : 
+              'bg-emerald-100 text-emerald-700'
+            }`}>
               <span>Status:</span>
               <span className="flex items-center gap-1">
-                {isKritis ? <AlertTriangle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                {isKritis ? 'Kritis' : 'Aman'}
+                {isOverBudget ? <AlertTriangle className="w-3.5 h-3.5" /> : isWaspada ? <Zap className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                {isOverBudget ? 'Over Budget' : isWaspada ? 'Waspada' : 'Aman'}
               </span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Batas Peringatan (Rp)</label>
+              <label className="text-xs font-bold text-gray-500 ml-1">Batas Peringatan (Rp)</label>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[10000, 20000, 30000, 50000].map(val => (
                   <button
@@ -657,14 +577,14 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Tambah Saldo Token (Top-up)</label>
+              <label className="text-xs font-bold text-gray-500 ml-1">Atur Anggaran Bulanan (Rp)</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 group-focus-within:text-emerald-500 transition-colors">Rp</div>
                 <input
                   type="number"
                   value={inputDeposit}
                   onChange={(e) => setInputDeposit(e.target.value)}
-                  placeholder="Masukkan nominal (Contoh: 50000)"
+                  placeholder="Masukkan nominal (Contoh: 1000000)"
                   required={!inputLimit}
                   className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
                 />
@@ -683,7 +603,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               {submitted ? (
                 <>
                   <CheckCircle2 className="w-5 h-5" />
-                  <span>Saldo Berhasil Ditambah</span>
+                  <span>Anggaran Berhasil Disimpan</span>
                 </>
               ) : (
                 'Simpan Pengaturan'
@@ -899,7 +819,8 @@ export function HomeownerDashboard() {
 
   let currentSensors = {};
   // Gunakan data mock untuk visual, tapi hanya jika kategorinya relevan dengan perangkat user
-  if (hasComfort) currentSensors.comfort = ROOM_SENSORS.all.comfort;
+  // Gunakan data real-time jika ada
+  if (hasComfort) currentSensors.comfort = { temp: liveTemp, humidity: liveHumidity, comfortLevel: 82 };
   if (hasSecurity) {
     // Ambil status asli dari perangkat security jika ada
     const securityDevices = currentDevices.filter(d => d.environmentAspect === 'Keamanan');
@@ -913,9 +834,9 @@ export function HomeownerDashboard() {
       currentSensors.security = ROOM_SENSORS.all.security;
     }
   }
-  if (hasWater) currentSensors.waterQuality = ROOM_SENSORS.all.waterQuality;
-  const dailyData = energySummary?.dailyData || DAILY_ENERGY_DATA;
-  const monthlyData = energySummary?.monthlyData || MONTHLY_ENERGY_DATA;
+  if (hasWater) currentSensors.waterQuality = { status: 'drinkable', ph: livePh, turbidity: liveTurbidity, tds: liveTds, temp: liveWaterTemp };
+  const dailyData = energySummary?.dailyData || [];
+  const monthlyData = energySummary?.monthlyData || [];
   const notifications = realNotifications;
   
   const mappedActivities = realActivities.map(act => {
@@ -1237,8 +1158,8 @@ export function HomeownerDashboard() {
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-amber-500 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-amber-600 transition-all shadow-md group"
                   >
                     <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="hidden sm:inline">Atur Peringatan</span>
-                    <span className="sm:hidden">Peringatan</span>
+                    <span className="hidden sm:inline">Manajemen Anggaran</span>
+                    <span className="sm:hidden">Anggaran</span>
                   </button>
                   <button
                     onClick={() => setShowDataModal(true)}
@@ -1255,7 +1176,7 @@ export function HomeownerDashboard() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 p-4 sm:p-6 bg-[#ebfbf5] rounded-[2rem] border border-[#bbf7d0] items-start">
                 {/* Item 1 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
                     {chartType === 'daily' ? 'Konsumsi Beban Saat Ini' : 'Konsumsi Beban Bulan Ini'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
@@ -1265,7 +1186,7 @@ export function HomeownerDashboard() {
 
                 {/* Item 2 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
                     {chartType === 'daily' ? 'Konsumsi Beban Berjalan' : 'Total Konsumsi Beban Tahun Ini'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
@@ -1275,7 +1196,7 @@ export function HomeownerDashboard() {
 
                 {/* Item 3 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
                     {chartType === 'daily' ? 'Rata-rata beban /jam' : 'Rata-rata beban/bulan'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
@@ -1290,8 +1211,8 @@ export function HomeownerDashboard() {
 
                 {/* Item 4 */}
                 <div className="text-center px-2 flex flex-col items-center">
-                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-extrabold mb-1 uppercase tracking-widest leading-snug h-[40px] flex items-center justify-center">
-                    Total Biaya Pemakaian Beban Berjalan (Rp)
+                  <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
+                    Estimasi Biaya Pemakaian Beban Berjalan (Rp)
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     <span className="text-sm sm:text-base font-semibold opacity-60">Rp</span> {
@@ -1523,8 +1444,12 @@ export function HomeownerDashboard() {
           role="homeowner" 
         />
         <DataModal isOpen={showDataModal} onClose={() => setShowDataModal(false)} chartType={chartType} energySummary={energySummary} />
-        <WarningLimitModal isOpen={showWarningModal} onClose={() => setShowWarningModal(false)} limit={warningLimit} setLimit={setWarningLimit} deposit={depositBalance} setDeposit={setDepositBalance} onRefresh={fetchDashboardData} />
-        <ComplaintModal isOpen={showComplaintModal} onClose={() => setShowComplaintModal(false)} />
+        <WarningLimitModal isOpen={showWarningModal} onClose={() => setShowWarningModal(false)} limit={warningLimit} setLimit={setWarningLimit} deposit={depositBalance} setDeposit={setDepositBalance} onRefresh={fetchDashboardData} energySummary={energySummary} />
+        <ComplaintModal
+          isOpen={showComplaintModal}
+          onClose={() => setShowComplaintModal(false)}
+          realDevices={realDevices}
+        />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
 

@@ -24,15 +24,28 @@ const buildMonthlySeries = (rows = []) => {
  */
 exports.getDashboardMetrics = async () => {
     try {
-        const currentYear = new Date().getFullYear();
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+        
+        const startOfCurrentMonth = new Date(currentYear, currentMonth, 1);
+        const startOfLastMonth = new Date(currentYear, currentMonth - 1, 1);
+        const endOfLastMonth = new Date(currentYear, currentMonth, 0, 23, 59, 59);
+
         const startOfYear = new Date(currentYear, 0, 1);
         const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59);
 
         const [
             totalUsers,
+            activeHomeowners,
+            inactiveHomeowners,
+            warningHomeowners,
             totalHubs,
+            lastMonthHubs,
             totalDevices,
+            lastMonthDevices,
             totalComplaints,
+            pendingComplaints,
             totalTechnicians,
             activeTechnicians,
             monthlyInstalasiRows,
@@ -43,15 +56,20 @@ exports.getDashboardMetrics = async () => {
             monthlyHubsRows,
         ] = await Promise.all([
             User.countDocuments({ role: 'Homeowner' }),
+            User.countDocuments({ role: 'Homeowner', status: { $nin: ['nonaktif', 'warning'] } }),
+            User.countDocuments({ role: 'Homeowner', status: 'nonaktif' }),
+            User.countDocuments({ role: 'Homeowner', status: 'warning' }),
             Hub.countDocuments(),
+            Hub.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
             KendaliPerangkat.countDocuments(),
+            KendaliPerangkat.countDocuments({ createdAt: { $lt: startOfCurrentMonth } }),
             Complaint.countDocuments(),
+            Complaint.countDocuments({ status: { $in: ['proses', 'perbaikan'] } }),
             User.countDocuments({ role: 'Technician' }),
             User.countDocuments({ role: 'Technician', status: 'aktif' }),
             User.aggregate([
                 {
                     $match: {
-                        role: 'Homeowner',
                         bieonId: { $exists: true, $nin: [null, ''] },
                         createdAt: { $gte: startOfYear, $lte: endOfYear },
                     },
@@ -138,13 +156,26 @@ exports.getDashboardMetrics = async () => {
             ]),
         ]);
 
+        // Hitung Tren Persentase
+        const calculateTrend = (total, lastMonth) => {
+            if (lastMonth === 0) return total > 0 ? 100 : 0;
+            const diff = total - lastMonth;
+            return Math.round((diff / lastMonth) * 100);
+        };
+
         return {
             totalUsers,
             totalHubs,
+            hubTrend: calculateTrend(totalHubs, lastMonthHubs),
             totalDevices,
+            deviceTrend: calculateTrend(totalDevices, lastMonthDevices),
             totalComplaints,
+            pendingComplaints,
             totalTechnicians,
             activeTechnicians,
+            activeHomeowners,
+            inactiveHomeowners,
+            warningHomeowners,
             monthlyInstalasi: buildMonthlySeries(monthlyInstalasiRows),
             monthlyPelanggan: buildMonthlySeries(monthlyPelangganRows),
             monthlyTechnicians: buildMonthlySeries(monthlyTechniciansRows),

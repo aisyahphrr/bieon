@@ -18,7 +18,7 @@ const typeStyles = {
   kenyamanan: { border: 'border-teal-500', bg: 'bg-teal-50', iconText: 'text-teal-600', iconBg: 'bg-teal-100', icon: Fan, accent: 'bg-teal-500' }
 };
 
-const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange }) => {
+const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange, onNavigate }) => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -108,32 +108,50 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
       // Optimistic Update
       setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
 
-      // Jika ada link, arahkan ke halaman tersebut
+      // Handle Deep Linking
       if (notif.link) {
-        if (notif.link === 'pengaduan') navigate('/pengaduan');
-        else if (notif.link === 'kendali') {
-          if (notif.metadata?.deviceId) {
-            sessionStorage.setItem('pendingHighlight', notif.metadata.deviceId);
-          }
-          navigate('/kendali');
-        }
-        else if (notif.link === 'dashboard' || notif.link === 'history-energi') {
-          const target = notif.metadata?.scrollTarget || 'section-energi';
-          sessionStorage.setItem('pendingScroll', target);
-          navigate('/dashboard');
-          
-          // Scroll instan jika kita sudah di dashboard
-          setTimeout(() => {
-            const element = document.getElementById(target);
-            if (element) {
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              sessionStorage.removeItem('pendingScroll');
+        // Special Logic for Technician Dashboard (SPA state-based)
+        if (role === 'technician' && onNavigate) {
+           if (notif.link === 'pengaduan') {
+              const msg = (notif.message || "").toLowerCase();
+              const title = (notif.title || "").toLowerCase();
+              // If it's about completion or rating, go to history
+              if (msg.includes('rating') || msg.includes('selesai') || title.includes('rating') || title.includes('selesai')) {
+                onNavigate('riwayat');
+              } else {
+                onNavigate('pengaduan');
+              }
+           } else {
+             // Default state-based navigation for other links
+             onNavigate(notif.link);
+           }
+        } 
+        // Default Logic for Homeowner/Other (Route-based)
+        else {
+          if (notif.link === 'pengaduan') navigate('/pengaduan');
+          else if (notif.link === 'kendali') {
+            if (notif.metadata?.deviceId) {
+              sessionStorage.setItem('pendingHighlight', notif.metadata.deviceId);
             }
-          }, 100);
-        } else {
-          navigate(`/${notif.link}`);
+            navigate('/kendali');
+          }
+          else if (notif.link === 'dashboard' || notif.link === 'history-energi') {
+            const target = notif.metadata?.scrollTarget || 'section-energi';
+            sessionStorage.setItem('pendingScroll', target);
+            navigate('/dashboard');
+            
+            setTimeout(() => {
+              const element = document.getElementById(target);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                sessionStorage.removeItem('pendingScroll');
+              }
+            }, 100);
+          } else {
+            navigate(`/${notif.link}`);
+          }
         }
-        onClose(); // Tutup popup setelah navigasi
+        onClose(); // Close popup after navigation
       }
 
       // Update to backend

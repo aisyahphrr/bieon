@@ -18,6 +18,7 @@ const complaintSchema = new mongoose.Schema({
         default: 'unassigned' 
     },
     homeowner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     technician: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     timeline: [complaintTimelineSchema],
     files: [{

@@ -16,12 +16,45 @@ import {
     Cpu,
     Clock,
     X,
-    AlertCircle
+    AlertCircle,
+    Eye,
+    Star
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
+import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
+import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
+
+const UrgencyBadge = ({ level, pingCount }) => {
+    if ((!level || level === 'low') && !pingCount) return null;
+
+    const mainBadgeStyles = {
+        high: 'bg-red-50 text-red-600 border-red-100',
+        critical: 'bg-red-900 text-white border-red-900 animate-pulse'
+    };
+
+    const mainLabels = {
+        high: '🔥 Prioritas (Alihan)',
+        critical: '🚨 KRITIS'
+    };
+
+    return (
+        <div className="flex flex-wrap gap-1 items-center">
+            {Array.from({ length: pingCount || 0 }).map((_, i) => (
+                <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black uppercase shadow-sm">
+                    ⚠️ Ping
+                </span>
+            ))}
+            {(level === 'high' || level === 'critical') && (
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase border ${mainBadgeStyles[level]}`}>
+                    {mainLabels[level]}
+                </span>
+            )}
+        </div>
+    );
+};
 
 export default function AdminHistory({ onNavigate }) {
     // --- Data Master States ---
@@ -41,12 +74,16 @@ export default function AdminHistory({ onNavigate }) {
     const [isExportingAll, setIsExportingAll] = useState(false);
     const [apiError, setApiError] = useState(null);
 
+    // --- Detail Modal States ---
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [selectedTicket, setSelectedTicket] = useState(null);
+
     // --- Filter & Pagination States ---
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRoomFilter, setSelectedRoomFilter] = useState('');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
     
     // --- Dropdown States ---
@@ -166,7 +203,8 @@ export default function AdminHistory({ onNavigate }) {
         { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Air', endpoint: '/api/history/water' },
         { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Energi', endpoint: '/api/history/energy' },
         { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log', endpoint: '/api/history/activity' },
-        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Alert', endpoint: '/api/history/alerts' }
+        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Alert', endpoint: '/api/history/alerts' },
+        { id: 'Pengaduan',        full: 'Pengaduan',        short: 'Tiket', endpoint: '/api/complaints' }
     ];
 
     const formatDateTime = (dateStr) => {
@@ -201,7 +239,19 @@ export default function AdminHistory({ onNavigate }) {
         if (tabId === 'Kualitas Air') return { ...base, device: item.device?.name || item.device || 'Sensor Air', ph: item.ph, turbidity: cleanValue(item.turbidity), temp: cleanValue(item.temperature), tds: cleanValue(item.tds) };
         if (tabId === 'Konsumsi Energi') return { ...base, device: item.device?.name || item.device || 'Power Meter', kwh: cleanValue(item.totalKwh), voltage: cleanValue(item.voltage), current: cleanValue(item.current), power: cleanValue(item.power), pf: item.pf + ' PF' };
         if (tabId === 'Log Perangkat') return { ...base, room: item.room, actuator: item.actuator, trigger: item.trigger };
-        if (tabId === 'Notifikasi & Alert') return { ...base, status: item.type || item.status || 'Normal', category: item.category, room: item.room, message: item.message, isRead: item.isRead };
+        if (tabId === 'Notifikasi & Alert') return { ...base, status: item.type || item.status || 'Normal', category: item.category, message: item.message, isRead: item.isRead };
+        if (tabId === 'Pengaduan') return { 
+            ...base, 
+            id: item._id ? `TCK-${item._id.substring(item._id.length - 6).toUpperCase()}` : base.id, 
+            customer: item.homeowner?.fullName || 'Unknown User',
+            category: item.category || 'Umum',
+            topic: item.topic, 
+            device: item.device || item.hub?.name || 'General', 
+            technician: item.technician?.fullName || 'Belum Ditugaskan', 
+            rating: item.rating?.stars || '-',
+            status: item.status,
+            rawItem: item // Original data for modal
+        };
         return item;
     };
 
@@ -214,9 +264,6 @@ export default function AdminHistory({ onNavigate }) {
             const result = await response.json();
             if (result.success && result.data) {
                 setAllHomeowners(result.data);
-                const defaultCustomer = result.data.find(h => (h.fullName || h.name || '').toLowerCase().includes('testingakun'));
-                if (defaultCustomer) setSelectedHomeowner(defaultCustomer);
-                else if (result.data.length > 0) setSelectedHomeowner(result.data[0]);
             } else { setApiError(result.message); }
         } catch (err) { setApiError("Koneksi gagal."); }
         finally { setIsLoadingHomeowners(false); }
@@ -253,6 +300,8 @@ export default function AdminHistory({ onNavigate }) {
             if (selectedBieon) query += `&bieonId=${selectedBieon}`;
             if (dateRange.start) query += `&startDate=${dateRange.start}`;
             if (dateRange.end) query += `&endDate=${dateRange.end}`;
+            if (activeTab === 'Pengaduan') query += `&isHistory=true`;
+            
             const response = await fetch(`${currentTabConfig.endpoint}?${query}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const result = await response.json();
             if (result.success && result.data) setHistoryData(result.data.map((item, index) => mapItemData(activeTab, item, index)));
@@ -265,10 +314,18 @@ export default function AdminHistory({ onNavigate }) {
 
     const processedData = useMemo(() => {
         let filtered = [...historyData];
-        if (selectedRoomFilter) filtered = filtered.filter(item => (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) ? item.device === selectedRoomFilter : item.room === selectedRoomFilter);
+        if (selectedRoomFilter) {
+            if (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab)) filtered = filtered.filter(item => item.category === selectedRoomFilter);
+            else if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) filtered = filtered.filter(item => item.device === selectedRoomFilter);
+            else filtered = filtered.filter(item => item.room === selectedRoomFilter);
+        }
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            filtered = filtered.filter(item => `${item.time} ${item.room || item.device} ${item.status || ''} ${item.message || ''}`.toLowerCase().includes(q));
+            filtered = filtered.filter(item => {
+                const baseStr = `${item.time} ${item.status || ''} ${item.message || ''}`;
+                if (activeTab === 'Notifikasi & Alert') return `${baseStr} ${item.category}`.toLowerCase().includes(q);
+                return `${baseStr} ${item.room || item.device || ''}`.toLowerCase().includes(q);
+            });
         }
         if (sortConfig.key) {
             filtered.sort((a, b) => {
@@ -286,7 +343,10 @@ export default function AdminHistory({ onNavigate }) {
         return filtered;
     }, [activeTab, historyData, searchQuery, selectedRoomFilter, sortConfig]);
 
-    const availableFilters = useMemo(() => Array.from(new Set(historyData.map(d => d.room || d.device))), [historyData]);
+    const availableFilters = useMemo(() => {
+        if (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab)) return Array.from(new Set(historyData.map(d => d.category))).filter(Boolean);
+        return Array.from(new Set(historyData.map(d => d.room || d.device))).filter(Boolean);
+    }, [historyData, activeTab]);
     const totalItems = processedData.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / rowsPerPage));
     const startIndex = (currentPage - 1) * rowsPerPage;
@@ -374,7 +434,10 @@ export default function AdminHistory({ onNavigate }) {
             if (dateRange.end) queryParams += `&endDate=${dateRange.end}`;
 
             for (let tab of tabs) {
-                const res = await fetch(`${tab.endpoint}?${queryParams}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                let tabUrl = `${tab.endpoint}?${queryParams}`;
+                if (tab.id === 'Pengaduan') tabUrl += '&isHistory=true';
+                
+                const res = await fetch(tabUrl, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 
                 if (result.success && result.data && result.data.length > 0) {
@@ -413,7 +476,8 @@ export default function AdminHistory({ onNavigate }) {
         else if (tabId === 'Kualitas Air') { headers = [["Waktu", "Perangkat", "pH", "Kekeruhan", "Suhu", "TDS", "Status"]]; body = data.map(e => [e.time, e.device, e.ph, `${e.turbidity} NTU`, `${e.temp}°C`, `${e.tds} ppm`, e.status]); }
         else if (tabId === 'Konsumsi Energi') { headers = [["Waktu", "Perangkat", "Energy", "Voltase", "Arus", "Beban", "PF"]]; body = data.map(e => [e.time, e.device, `${e.kwh} kWh`, `${e.voltage} V`, `${e.current} A`, `${e.power} W`, e.pf]); }
         else if (tabId === 'Log Perangkat') { headers = [["Waktu", "Ruangan", "Perangkat", "Status", "Pemicu"]]; body = data.map(e => [e.time, e.room, e.actuator, e.status, e.trigger]); }
-        else if (tabId === 'Notifikasi & Alert') { headers = [["Waktu", "Kategori", "Ruangan", "Level", "Pesan"]]; body = data.map(e => [e.time, e.category, e.room, e.status, e.message]); }
+        else if (tabId === 'Notifikasi & Alert') { headers = [["Waktu", "Kategori", "Level", "Pesan"]]; body = data.map(e => [e.time, e.category, e.status, e.message]); }
+        else if (tabId === 'Pengaduan') { headers = [["Waktu", "ID Tiket", "Pelanggan", "Kategori", "Topik", "Teknisi", "Rating", "Status"]]; body = data.map(e => [e.time, e.id, e.customer, e.category, e.topic, e.technician, e.rating, e.status.toUpperCase()]); }
         return { headers, body };
     };
 
@@ -560,14 +624,14 @@ export default function AdminHistory({ onNavigate }) {
                                 <div className="relative">
                                     <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}>
                                         <Filter className="w-4 h-4" />
-                                        <span>{selectedRoomFilter || 'Semua'}</span>
+                                        <span>{selectedRoomFilter || (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? 'Semua Kategori' : 'Semua')}</span>
                                         <ChevronDown className="w-4 h-4" />
                                     </button>
                                     {showFilterDropdown && (
                                         <>
                                             <div className="fixed inset-0 z-20" onClick={() => setShowFilterDropdown(false)}></div>
                                             <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-30">
-                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>Semua</button>
+                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? 'Semua Kategori' : 'Semua'}</button>
                                                 {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{f}</button>)}
                                             </div>
                                         </>
@@ -581,28 +645,34 @@ export default function AdminHistory({ onNavigate }) {
                         <div className="overflow-x-auto pb-2 custom-scrollbar-x">
                             <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
                                 <thead className="bg-white border-b border-gray-200 text-gray-500">
-                                    <tr>
-                                        <th onClick={() => requestSort('time')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Waktu {getSortIcon('time')}</div></th>
-                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Kategori {getSortIcon('category')}</div></th>}
-                                        <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Perangkat' : 'Ruangan'} {getSortIcon(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')}</div></th>
+                                    <tr className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
+                                        <th onClick={() => requestSort('time')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Waktu {getSortIcon('time')}</div></th>
+                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Kategori {getSortIcon('category')}</div></th>}
+                                        {!['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) && (
+                                            <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                                <div className="flex items-center gap-1.5">
+                                                    {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Perangkat' : 'Ruangan'} {getSortIcon(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')}
+                                                </div>
+                                            </th>
+                                        )}
                                         {activeTab === 'Kenyamanan' && (
                                             <>
-                                                <th onClick={() => requestSort('temp')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Suhu {getSortIcon('temp')}</div></th>
-                                                <th onClick={() => requestSort('humidity')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Kelembapan {getSortIcon('humidity')}</div></th>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Suhu {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('humidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Kelembapan {getSortIcon('humidity')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Keamanan' && (
                                             <>
-                                                <th onClick={() => requestSort('door')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Pintu {getSortIcon('door')}</div></th>
-                                                <th onClick={() => requestSort('motion')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Gerak {getSortIcon('motion')}</div></th>
+                                                <th onClick={() => requestSort('door')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Pintu {getSortIcon('door')}</div></th>
+                                                <th onClick={() => requestSort('motion')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Gerak {getSortIcon('motion')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Kualitas Air' && (
                                             <>
-                                                <th onClick={() => requestSort('ph')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">pH {getSortIcon('ph')}</div></th>
-                                                <th onClick={() => requestSort('turbidity')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Kekeruhan {getSortIcon('turbidity')}</div></th>
-                                                <th onClick={() => requestSort('temp')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Suhu {getSortIcon('temp')}</div></th>
-                                                <th onClick={() => requestSort('tds')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Padatan Terlarut (TDS) {getSortIcon('tds')}</div></th>
+                                                <th onClick={() => requestSort('ph')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">pH {getSortIcon('ph')}</div></th>
+                                                <th onClick={() => requestSort('turbidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Kekeruhan {getSortIcon('turbidity')}</div></th>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Suhu {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('tds')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">TDS {getSortIcon('tds')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Konsumsi Energi' && (
@@ -615,38 +685,163 @@ export default function AdminHistory({ onNavigate }) {
                                             </>
                                         )}
                                         {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('actuator')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Perangkat (Aktuator) {getSortIcon('actuator')}</div></th>}
-                                        {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{activeTab === 'Notifikasi & Alert' ? 'Tingkat Bahaya' : 'Status'} {getSortIcon('status')}</div></th>}
+                                        {activeTab === 'Pengaduan' && (
+                                            <>
+                                                <th onClick={() => requestSort('id')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">ID Tiket {getSortIcon('id')}</div></th>
+                                                <th onClick={() => requestSort('customer')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Pelanggan {getSortIcon('customer')}</div></th>
+                                                <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Kategori {getSortIcon('category')}</div></th>
+                                                <th className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold whitespace-nowrap">Topik Kendala</th>
+                                                <th onClick={() => requestSort('technician')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Teknisi {getSortIcon('technician')}</div></th>
+                                                <th onClick={() => requestSort('rating')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Rating {getSortIcon('rating')}</div></th>
+                                            </>
+                                        )}
+                                        {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{activeTab === 'Notifikasi & Alert' ? 'Tingkat Bahaya' : 'Status'} {getSortIcon('status')}</div></th>}
+                                        {activeTab === 'Pengaduan' && <th className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold whitespace-nowrap">Aksi</th>}
                                         {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('trigger')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pemicu (Trigger) {getSortIcon('trigger')}</div></th>}
                                         {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('message')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pesan Detail Alert {getSortIcon('message')}</div></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {paginatedData.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 text-[13px] font-bold text-gray-900">{item.time}</td>
-                                            {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-[13px] text-gray-600 font-bold">{item.category}</td>}
-                                            <td className="px-6 py-4 text-[13px] text-gray-600 font-bold">{item.room || item.device}</td>
-                                            {activeTab === 'Kenyamanan' && (<><td className="px-6 py-4 text-center">{Number(item.temp).toFixed(1)}°C</td><td className="px-6 py-4 text-center">{item.humidity}%</td></>)}
-                                            {activeTab === 'Keamanan' && (<><td className="px-6 py-4 text-center">{item.door}</td><td className="px-6 py-4 text-center">{item.motion}</td></>)}
-                                            {activeTab === 'Kualitas Air' && (<><td className="px-6 py-4 text-center">{item.ph}</td><td className="px-6 py-4 text-center">{item.turbidity} NTU</td><td className="px-6 py-4 text-center">{item.temp}°C</td><td className="px-6 py-4 text-center">{item.tds} ppm</td></>)}
-                                            {activeTab === 'Konsumsi Energi' && (<><td className="px-6 py-4 text-center">{Number(item.kwh).toFixed(2)} kWh</td><td className="px-6 py-4 text-center">{item.voltage} V</td><td className="px-6 py-4 text-center">{item.current} A</td><td className="px-6 py-4 text-center">{item.power} W</td><td className="px-6 py-4 text-center">{item.pf}</td></>)}
-                                            {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.actuator}</td>}
-                                            {activeTab !== 'Konsumsi Energi' && <td className="px-6 py-4 text-center"><div className="flex justify-center"><StatusBadge status={item.status} isRead={item.isRead} /></div></td>}
-                                            {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.trigger}</td>}
-                                            {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-xs text-gray-500 max-w-md">{item.message}</td>}
+                                    {paginatedData.length > 0 ? (
+                                        paginatedData.map((item) => (
+                                            <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
+                                                <td className="px-6 py-4 text-[13px] font-medium text-gray-500 whitespace-nowrap">{item.time}</td>
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-[13px] font-bold text-gray-800">{item.category}</td>}
+                                                {!['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) && <td className="px-6 py-4 text-[13px] font-bold text-gray-800">{item.room || item.device}</td>}
+                                                {activeTab === 'Kenyamanan' && (<><td className="px-6 py-4 text-center">{Number(item.temp).toFixed(1)}°C</td><td className="px-6 py-4 text-center">{item.humidity}%</td></>)}
+                                                {activeTab === 'Keamanan' && (<><td className="px-6 py-4 text-center">{item.door}</td><td className="px-6 py-4 text-center">{item.motion}</td></>)}
+                                                {activeTab === 'Kualitas Air' && (<><td className="px-6 py-4 text-center">{item.ph}</td><td className="px-6 py-4 text-center">{item.turbidity} NTU</td><td className="px-6 py-4 text-center">{item.temp}°C</td><td className="px-6 py-4 text-center">{item.tds} ppm</td></>)}
+                                                {activeTab === 'Konsumsi Energi' && (<><td className="px-6 py-4 text-center">{Number(item.kwh).toFixed(2)} kWh</td><td className="px-6 py-4 text-center">{item.voltage} V</td><td className="px-6 py-4 text-center">{item.current} A</td><td className="px-6 py-4 text-center">{item.power} W</td><td className="px-6 py-4 text-center">{item.pf}</td></>)}
+                                                {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.actuator}</td>}
+                                                {activeTab === 'Pengaduan' && (
+                                                    <>
+                                                        <td className="px-6 py-4 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
+                                                        <td className="px-6 py-4 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
+                                                        <td className="px-6 py-4 text-[13px] font-medium text-gray-900">{item.category}</td>
+                                                        <td className="px-6 py-4 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
+                                                        <td className="px-6 py-4 text-[13px]">
+                                                            <span className={item.technician === 'Belum Ditugaskan' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
+                                                                {item.technician === 'Belum Ditugaskan' ? 'Menunggu Teknisi' : item.technician}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            {item.status === 'selesai' && item.rating !== '-' ? (
+                                                                <div className="inline-flex items-center gap-1 font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                                                                    <Star className="w-3 h-3 fill-amber-500" />
+                                                                    {item.rating}/5
+                                                                </div>
+                                                            ) : <span className="text-gray-300 font-bold">—</span>}
+                                                        </td>
+                                                    </>
+                                                )}
+                                                {activeTab !== 'Konsumsi Energi' && (
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="flex justify-center">
+                                                            {activeTab === 'Pengaduan' ? (
+                                                                <TicketStatusBadge status={item.status} rating={item.rating} />
+                                                            ) : (
+                                                                <StatusBadge status={item.status} isRead={item.isRead} />
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                )}
+                                                {activeTab === 'Pengaduan' && (
+                                                    <td className="px-6 py-4">
+                                                        <button 
+                                                            onClick={() => { setSelectedTicket(item.rawItem); setIsDetailModalOpen(true); }}
+                                                            className="flex items-center gap-2 px-4 py-2.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-[11px] font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
+                                                        >
+                                                            <Eye className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
+                                                            <span>Detail</span>
+                                                        </button>
+                                                    </td>
+                                                )}
+                                                {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.trigger}</td>}
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-xs text-gray-500 max-w-md">{item.message}</td>}
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="10" className="px-6 py-20 text-center">
+                                                <div className="flex flex-col items-center justify-center opacity-40">
+                                                    <AlertCircle className="w-12 h-12 mb-4 text-gray-300" />
+                                                    <p className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Tidak ada data riwayat</p>
+                                                    <p className="text-[11px] font-bold text-gray-400 mt-2">Data untuk filter ini belum tersedia atau belum sinkron.</p>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
-                        <div className="flex flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/30">
-                            <div className="flex items-center gap-3"><span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Rows:</span><div className="relative"><button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm">{rowsPerPage} <ChevronDown className="w-3 h-3 text-gray-400" /></button>{showRowsDropdown && (<><div className="fixed inset-0 z-10" onClick={() => setShowRowsDropdown(false)}></div><div className="absolute bottom-full left-0 mb-2 w-16 bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 z-20">{[5, 10, 20, 50].map(val => (<button key={val} onClick={() => { setRowsPerPage(val); setCurrentPage(1); setShowRowsDropdown(false); }} className={`w-full text-left px-4 py-1.5 text-xs ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{val}</button>))}</div></>)}</div></div>
-                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">{totalItems > 0 ? `${startIndex + 1}-${Math.min(startIndex + rowsPerPage, totalItems)} OF ${totalItems}` : '0 OF 0'}</div>
-                            <div className="flex items-center gap-2"><button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-40"><ChevronLeft className="w-5 h-5 text-gray-600" /></button><button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="p-2 bg-white border border-gray-200 rounded-xl disabled:opacity-40"><ChevronRight className="w-5 h-5 text-gray-600" /></button></div>
+                        <div className="flex flex-col md:flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem] gap-6">
+                            {/* Rows Per Page - Left */}
+                            <div className="flex items-center gap-3 order-2 md:order-1">
+                                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows:</span>
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => setShowRowsDropdown(!showRowsDropdown)} 
+                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-[#009b7c]/30 transition-all"
+                                    >
+                                        {rowsPerPage} <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {showRowsDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-30" onClick={() => setShowRowsDropdown(false)}></div>
+                                            <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                                                {[5, 10, 30, 50].map(val => (
+                                                    <button 
+                                                        key={val} 
+                                                        onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} 
+                                                        className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                    >
+                                                        {val}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Page Info - Center */}
+                            <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
+                                <span className="md:hidden">rows </span>{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                            </div>
+
+                            {/* Pagination Controls - Right */}
+                            <div className="flex items-center gap-2 md:gap-3 order-3">
+                                <button
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                >
+                                    <ChevronLeft className="w-4 h-4 md:hidden" />
+                                    <span className="hidden md:inline lg:hidden">Prev</span>
+                                    <span className="hidden lg:inline">Previous</span>
+                                </button>
+                                <button
+                                    disabled={currentPage >= totalPages}
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                                >
+                                    <span className="hidden lg:inline">Next</span>
+                                    <span className="hidden md:inline lg:hidden">Next</span>
+                                    <ChevronRight className="w-4 h-4 md:hidden" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {isDetailModalOpen && selectedTicket && (
+                <ComplaintDetailModal 
+                    isOpen={isDetailModalOpen}
+                    onClose={() => setIsDetailModalOpen(false)}
+                    ticket={selectedTicket}
+                />
+            )}
         </SuperAdminLayout>
     );
 }

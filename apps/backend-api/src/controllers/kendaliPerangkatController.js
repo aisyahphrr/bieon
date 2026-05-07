@@ -4,6 +4,7 @@ const RegisteredProduct = require('../models/RegisteredProduct');
 const Activity = require('../models/Activity');
 const { publishCommand } = require('../config/mqtt');
 const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
+const TechnicianAccess = require('../models/TechnicianAccess');
 
 // 1. Mencatat perangkat yang terdeteksi (tanda icon di UI)
 exports.discoverDevice = async (req, res) => {
@@ -32,8 +33,25 @@ exports.discoverDevice = async (req, res) => {
 // 2. Simpan perangkat baru (Direct dari Form UI)
 exports.createDevice = async (req, res) => {
     try {
-        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice } = req.body;
-        const ownerId = req.user.userId;
+        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice, ownerId: manualOwnerId } = req.body;
+        let ownerId = req.user.userId;
+        
+        // Cek jika teknisi sedang mendaftarkan perangkat untuk homeowner
+        if (manualOwnerId && manualOwnerId !== ownerId) {
+            if (req.user.role === 'Technician') {
+                const session = await TechnicianAccess.findOne({
+                    homeownerId: manualOwnerId,
+                    technicianId: ownerId,
+                    status: 'Active'
+                });
+                if (!session) return res.status(403).json({ message: 'Sesi akses teknisi tidak valid.' });
+                ownerId = manualOwnerId;
+            } else if (req.user.role !== 'SuperAdmin') {
+                return res.status(403).json({ message: 'Akses ditolak.' });
+            } else {
+                ownerId = manualOwnerId;
+            }
+        }
         
         const newDevice = new KendaliPerangkat({
             name,
@@ -129,7 +147,29 @@ exports.configureDevice = async (req, res) => {
 // 4. Ambil perangkat berdasarkan User (Self)
 exports.getDevicesByUser = async (req, res) => {
     try {
-        const userId = req.user.userId;
+        let userId = req.user.userId;
+        const targetOwnerId = req.query.ownerId;
+
+        // Jika ada targetOwnerId, cek otorisasi teknisi
+        if (targetOwnerId && targetOwnerId !== userId) {
+            if (req.user.role === 'Technician') {
+                const activeSession = await TechnicianAccess.findOne({
+                    homeownerId: targetOwnerId,
+                    technicianId: userId,
+                    status: 'Active'
+                });
+
+                if (!activeSession) {
+                    return res.status(403).json({ message: 'Anda tidak memiliki sesi aktif untuk pelanggan ini.' });
+                }
+                userId = targetOwnerId;
+            } else if (req.user.role !== 'SuperAdmin') {
+                return res.status(403).json({ message: 'Akses ditolak.' });
+            } else {
+                userId = targetOwnerId;
+            }
+        }
+
         const devices = await KendaliPerangkat.find({ owner: userId });
         res.status(200).json(devices);
     } catch (error) {
@@ -150,7 +190,25 @@ exports.getDevicesByHub = async (req, res) => {
 // 6. Ambil semua perangkat yang baru terdeteksi (discovered) - Khusus milik user
 exports.getDiscoveredDevices = async (req, res) => {
     try {
-        const userId = req.user.userId;
+        let userId = req.user.userId;
+        const targetOwnerId = req.query.ownerId;
+
+        if (targetOwnerId && targetOwnerId !== userId) {
+            if (req.user.role === 'Technician') {
+                const activeSession = await TechnicianAccess.findOne({
+                    homeownerId: targetOwnerId,
+                    technicianId: userId,
+                    status: 'Active'
+                });
+                if (!activeSession) return res.status(403).json({ message: 'Akses ditolak.' });
+                userId = targetOwnerId;
+            } else if (req.user.role !== 'SuperAdmin') {
+                return res.status(403).json({ message: 'Akses ditolak.' });
+            } else {
+                userId = targetOwnerId;
+            }
+        }
+
         const devices = await KendaliPerangkat.find({ owner: userId, status: 'Discovered' });
         res.status(200).json(devices);
     } catch (error) {
@@ -189,7 +247,19 @@ exports.toggleDevice = async (req, res) => {
 
         // Cek kepemilikan (PENTING!)
         if (req.user.role !== 'SuperAdmin' && String(device.owner) !== String(req.user.userId)) {
-            return res.status(403).json({ message: 'Anda tidak diizinkan mengontrol perangkat ini.' });
+            // Cek jika ini adalah teknisi dengan sesi aktif untuk owner ini
+            if (req.user.role === 'Technician') {
+                const session = await TechnicianAccess.findOne({
+                    homeownerId: device.owner,
+                    technicianId: req.user.userId,
+                    status: 'Active'
+                });
+                if (!session) {
+                    return res.status(403).json({ message: 'Anda tidak diizinkan mengontrol perangkat ini (Sesi tidak aktif).' });
+                }
+            } else {
+                return res.status(403).json({ message: 'Anda tidak diizinkan mengontrol perangkat ini.' });
+            }
         }
         
         // UPDATE STATUS DI DATABASE SEKARANG JUGA (Sinkronisasi Mutlak)
@@ -212,6 +282,7 @@ exports.toggleDevice = async (req, res) => {
         // LOGGING KE AKTIVITAS TERBARU
         await new Activity({
             user: device.owner,
+            hub: device.hubId,
             room: device.location,
             actuator: device.name,
             status: newStatus === '1' ? 'ON' : 'OFF',
@@ -230,6 +301,7 @@ exports.toggleDevice = async (req, res) => {
 
         await Alert.create({
             owner: device.owner,
+            hub: device.hubId,
             category: category,
             title: `Kontrol Perangkat: ${statusText}`,
             message: `[Manual] Anda telah ${newStatus === '1' ? 'menyalakan' : 'mematikan'} ${device.name} di ${device.location}.`,

@@ -164,7 +164,7 @@ const Setup = ({ tempData }) => {
             setError('Data pendaftaran hilang. Harap ulangi dari halaman signup.');
             return;
         }
-        
+
         setLoading(true);
         setError('');
         try {
@@ -177,7 +177,7 @@ const Setup = ({ tempData }) => {
                 const token = localStorage.getItem('token');
                 const updateRes = await fetch('/api/auth/settings', {
                     method: 'PUT',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
@@ -197,7 +197,7 @@ const Setup = ({ tempData }) => {
                     const errJson = await updateRes.json();
                     throw new Error(errJson.message || 'Gagal melengkapi profil');
                 }
-                
+
                 const updateData = await updateRes.json();
                 userId = updateData.user._id;
 
@@ -254,7 +254,7 @@ const Setup = ({ tempData }) => {
             if (formData.bieonId && userId) {
                 await fetch('/api/hubs/setup', {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     },
@@ -293,59 +293,88 @@ const Setup = ({ tempData }) => {
 
     return (
         <div className="min-h-[100dvh] bg-slate-50 flex font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white">
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[50%] bg-emerald-300/40 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_8s_ease-in-out_infinite] z-0 pointer-events-none"></div>
+            {/* Multi-layered Ambient Background */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[50%] bg-emerald-200/30 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_10s_ease-in-out_infinite] z-0 pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] right-[-5%] w-[35%] h-[45%] bg-blue-200/20 rounded-full mix-blend-multiply filter blur-[100px] animate-[pulse_12s_ease-in-out_infinite] delay-1000 z-0 pointer-events-none"></div>
+            <div className="absolute top-[20%] right-[10%] w-[25%] h-[30%] bg-emerald-100/20 rounded-full mix-blend-multiply filter blur-[80px] animate-[pulse_15s_ease-in-out_infinite] delay-2000 z-0 pointer-events-none"></div>
 
-            <div className="flex-1 flex flex-col px-6 md:px-16 py-10 overflow-y-auto relative z-10 bg-white/60 backdrop-blur-xl">
-                <div className="mb-14">
-                    <img src="/logo_bieon.png" alt="BIEON" className="h-[30px] object-contain" />
+            <div className="flex-1 flex flex-col px-6 md:px-16 py-10 overflow-y-auto relative z-10 bg-white/70 backdrop-blur-2xl">
+                <div className="mb-12">
+                    <img src="/logo_bieon.png" alt="BIEON" className="h-[28px] object-contain" />
                 </div>
 
                 <div className="w-full max-w-md mx-auto">
-                    <div className="flex items-center ml-4 md:ml-12 max-w-[280px] mb-12">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step === 1 ? 'bg-[#009b7c] text-white shadow-[0_0_15px_rgba(0,155,124,0.4)] scale-110' : 'bg-slate-200 text-transparent'}`}>{step === 1 ? '1' : ''}</div>
-                        <div className="h-[2px] flex-1 bg-slate-200 mx-2 rounded-full"></div>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step === 2 ? 'bg-[#009b7c] text-white shadow-[0_0_15px_rgba(0,155,124,0.4)] scale-110' : 'bg-slate-200 text-transparent'}`}>{step === 2 ? '2' : ''}</div>
-                        <div className="h-[2px] flex-1 bg-slate-200 mx-2 rounded-full"></div>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${step === 3 ? 'bg-[#009b7c] text-white shadow-[0_0_15px_rgba(0,155,124,0.4)] scale-110' : 'bg-slate-200 text-transparent'}`}>{step === 3 ? '3' : ''}</div>
+                    {/* High-end Stepper UI */}
+                    <div className="mb-14 relative px-2">
+                        <div className="flex items-center justify-between relative z-10">
+                            {[1, 2, 3].map((num) => (
+                                <div key={num} className="flex flex-col items-center">
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm transition-all duration-500 border-2 ${step === num
+                                            ? 'bg-[#009b7c] text-white border-[#009b7c] shadow-[0_8px_20px_rgba(0,155,124,0.3)] scale-110 -translate-y-1'
+                                            : step > num
+                                                ? 'bg-emerald-50 text-[#009b7c] border-emerald-200'
+                                                : 'bg-white text-slate-300 border-slate-100 shadow-sm'
+                                        }`}>
+                                        {step > num ? (
+                                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        ) : num}
+                                    </div>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest mt-3 transition-colors duration-300 ${step === num ? 'text-slate-800' : 'text-slate-400'}`}>
+                                        {num === 1 ? 'Profil' : num === 2 ? 'Sistem' : 'Selesai'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Progress Line */}
+                        <div className="absolute top-5 left-10 right-10 h-[2px] bg-slate-100 -z-0">
+                            <div
+                                className="h-full bg-gradient-to-r from-emerald-400 to-[#009b7c] transition-all duration-700 ease-out shadow-[0_0_10px_rgba(0,155,124,0.3)]"
+                                style={{ width: `${(step - 1) * 50}%` }}
+                            ></div>
+                        </div>
                     </div>
 
-                    {step === 1 && (
-                        <ProfileInfoStep 
-                            formData={formData} setFormData={setFormData}
-                            selectedDate={selectedDate} setSelectedDate={setSelectedDate}
-                            showCalendar={showCalendar} setShowCalendar={setShowCalendar}
-                            monthNames={monthNames} viewMonth={viewMonth} viewYear={viewYear}
-                            setViewMonth={setViewMonth} setViewYear={setViewYear}
-                            showYearDropdown={showYearDropdown} setShowYearDropdown={setShowYearDropdown}
-                            calendarDays={calendarDays} changeMonth={changeMonth} formatDate={formatDate}
-                            isTermsAccepted={isTermsAccepted} openTermsModal={openTermsModal}
-                            onNext={() => setStep(2)}
-                        />
-                    )}
+                    <div className="transition-all duration-500">
+                        {step === 1 && (
+                            <ProfileInfoStep
+                                formData={formData} setFormData={setFormData}
+                                selectedDate={selectedDate} setSelectedDate={setSelectedDate}
+                                showCalendar={showCalendar} setShowCalendar={setShowCalendar}
+                                monthNames={monthNames} viewMonth={viewMonth} viewYear={viewYear}
+                                setViewMonth={setViewMonth} setViewYear={setViewYear}
+                                showYearDropdown={showYearDropdown} setShowYearDropdown={setShowYearDropdown}
+                                calendarDays={calendarDays} changeMonth={changeMonth} formatDate={formatDate}
+                                isTermsAccepted={isTermsAccepted} openTermsModal={openTermsModal}
+                                onNext={() => setStep(2)}
+                            />
+                        )}
 
-                    {step === 2 && (
-                        <SystemHardwareStep 
-                            formData={formData} setFormData={setFormData}
-                            selectedPln={selectedPln} setSelectedPln={setSelectedPln}
-                            showPlnDropdown={showPlnDropdown} setShowPlnDropdown={setShowPlnDropdown}
-                            plnSearch={plnSearch} setPlnSearch={setPlnSearch}
-                            filteredPlnCategories={filteredPlnCategories}
-                            groupedPlnCategories={groupedPlnCategories}
-                            PLN_SEGMENT_ORDER={PLN_SEGMENT_ORDER}
-                            onBack={() => setStep(1)} onNext={() => setStep(3)}
-                        />
-                    )}
+                        {step === 2 && (
+                            <SystemHardwareStep
+                                formData={formData} setFormData={setFormData}
+                                selectedPln={selectedPln} setSelectedPln={setSelectedPln}
+                                showPlnDropdown={showPlnDropdown} setShowPlnDropdown={setShowPlnDropdown}
+                                plnSearch={plnSearch} setPlnSearch={setPlnSearch}
+                                filteredPlnCategories={filteredPlnCategories}
+                                groupedPlnCategories={groupedPlnCategories}
+                                PLN_SEGMENT_ORDER={PLN_SEGMENT_ORDER}
+                                onBack={() => setStep(1)} onNext={() => setStep(3)}
+                            />
+                        )}
 
-                    {step === 3 && (
-                        <SuccessStep 
-                            loading={loading} error={error}
-                            handleRegister={handleRegister}
-                        />
-                    )}
+                        {step === 3 && (
+                            <SuccessStep
+                                loading={loading} error={error}
+                                handleRegister={handleRegister}
+                                formData={formData}
+                                selectedPln={selectedPln}
+                            />
+                        )}
+                    </div>
                 </div>
             </div>
 
-            <TermsModal 
+            <TermsModal
                 show={showTermsModal}
                 onClose={() => setShowTermsModal(false)}
                 onAccept={() => { setIsTermsAccepted(true); setShowTermsModal(false); }}
