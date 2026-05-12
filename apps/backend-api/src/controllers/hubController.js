@@ -5,50 +5,104 @@ const Alert = require('../models/Alert');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
 
-// Setup Hubs awal untuk sistem baru
+const { publishCommand } = require('../config/mqtt');
+
+// Setup Hubs awal untuk sistem baru atau klaim stok yang sudah ada
 exports.setupHubs = async (req, res) => {
     try {
         const { bieonId, totalHubs, hubCount, userId } = req.body;
         const count = totalHubs || hubCount || 1;
 
-        // Cek jika sistem BIEON yatim piatu (pemilik sudah terhapus)
-        const existingSystem = await BieonSystem.findOne({ bieonId });
-        if (existingSystem) {
-            const ownerExists = await User.findById(existingSystem.owner);
-            if (!ownerExists) {
-                // Bersihkan rekaman yatim piatu
-                await Hub.deleteMany({ bieonId });
-                await KendaliPerangkat.deleteMany({ bieonId });
-                await BieonSystem.deleteOne({ bieonId });
+        // 1. Cek apakah sistem sudah ada
+        let system = await BieonSystem.findOne({ bieonId });
+
+        if (system) {
+            // Jika ada owner, cek apakah owner tersebut masih aktif (bukan yatim piatu)
+            if (system.owner) {
+                const ownerExists = await User.findById(system.owner);
+                if (!ownerExists) {
+                    // Bersihkan rekaman yatim piatu (Cleanup Orphan)
+                    await Hub.deleteMany({ bieonId });
+                    await KendaliPerangkat.deleteMany({ bieonId });
+                    await BieonSystem.deleteOne({ bieonId });
+                    system = null; // Set null agar nanti dibuat baru
+                } else {
+                    // Jika owner masih ada, berarti benar-benar duplikat
+                    return res.status(400).json({ message: 'ID BIEON ini sudah digunakan di sistem kami!' });
+                }
             } else {
-                return res.status(400).json({ message: 'ID BIEON ini sudah digunakan di sistem kami!' });
+                // Jika sistem ada tapi owner kosong (Stok Gudang), klaim sistem ini
+                system.owner = userId;
+                system.status = 'Active';
+                await system.save();
             }
         }
 
-        // 1. Simpan rekaman sistem BIEON (agar unik secara global)
-        const newSystem = new BieonSystem({
-            bieonId,
-            owner: userId,
-            hubCount: count
-        });
-        await newSystem.save();
-
-        // 2. Buat Hub-nya secara dinamis
-        const hubs = [];
-        for (let i = 1; i <= count; i++) {
-            hubs.push({
-                name: `Hub ${i}`,
-                bieonId: bieonId, // Hub merujuk ke ID sistem
-                owner: userId,    // Diperlukan oleh model Hub
-                status: 'Offline' // Sesuaikan dengan enum model Hub
+        // Jika sistem belum ada sama sekali atau baru saja dihapus karena yatim piatu
+        if (!system) {
+            system = new BieonSystem({
+                bieonId,
+                owner: userId,
+                hubCount: count
             });
+            await system.save();
         }
 
-        const savedHubs = await Hub.insertMany(hubs);
+        // 2. Klaim semua Hub terkait
+        const hubs = await Hub.find({ bieonId });
+        const hubsPayload = [];
+
+        if (hubs.length > 0) {
+            for (const hub of hubs) {
+                const user = await User.findById(userId);
+                hub.owner = userId;
+                hub.tenantId = user?.tenantId || "tenant_001";
+                await hub.save();
+
+                let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
+                let rawIeee = hub.device_ieee || "0000000000000000";
+                let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
+
+                hubsPayload.push({
+                    id: formattedHubId,
+                    ieee: canonicalIeee
+                });
+            }
+        } else {
+            // Fallback legacy (buat Hub dinamis jika tidak ada di gudang)
+            for (let i = 1; i <= count; i++) {
+                const newHub = new Hub({
+                    name: `Hub ${i}`,
+                    bieonId: bieonId,
+                    owner: userId,
+                    status: 'Online'
+                });
+                await newHub.save();
+                hubs.push(newHub);
+            }
+        }
+
+        // 3. Klaim semua Perangkat terkait ke user baru ini
+        await KendaliPerangkat.updateMany(
+            { bieonId: bieonId, lifecycleState: 'UNCLAIMED' },
+            { $set: { owner: userId, tenantId: userId } }
+        );
+
+        // 4. Publikasi MQTT Claim jika stok berasal dari gudang
+        if (hubsPayload.length > 0) {
+            const payload = {
+                tenant_id: "tenant_001",
+                bieon_id: bieonId,
+                hub_id: "hub_001",
+                hubs: hubsPayload
+            };
+            publishCommand(`bieon/${bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
+        }
+
         res.status(201).json({ 
             message: 'Sistem BIEON dan Hub berhasil disiapkan!', 
-            system: newSystem,
-            hubs: savedHubs 
+            system: system,
+            hubs: hubs 
         });
     } catch (error) {
         console.error('Error setupHubs:', error);

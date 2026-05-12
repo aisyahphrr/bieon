@@ -21,6 +21,9 @@ router.put('/:id/toggle', kendaliPerangkatController.toggleDevice);
 // Route untuk semat/pin perangkat
 router.put('/:id/pin', kendaliPerangkatController.togglePinDevice);
 
+// Route untuk update parameter (Remote/Actuator)
+router.put('/:id/params', kendaliPerangkatController.updateDeviceParams);
+
 // Ambil semua perangkat di satu Hub
 router.get('/hub/:hubId', kendaliPerangkatController.getDevicesByHub);
 

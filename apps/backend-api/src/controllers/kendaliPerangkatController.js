@@ -2,9 +2,13 @@ const KendaliPerangkat = require('../models/KendaliPerangkat');
 const SensorData = require('../models/SensorData');
 const RegisteredProduct = require('../models/RegisteredProduct');
 const Activity = require('../models/Activity');
+const User = require('../models/User');
 const { publishCommand } = require('../config/mqtt');
 const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
+const Hub = require('../models/Hub');
 const TechnicianAccess = require('../models/TechnicianAccess');
+const DeviceWhitelist = require('../models/DeviceWhitelist');
+const { SUPPORTED_MODELS } = require('../config/supportedDevices');
 
 // 1. Mencatat perangkat yang terdeteksi (tanda icon di UI)
 exports.discoverDevice = async (req, res) => {
@@ -33,7 +37,7 @@ exports.discoverDevice = async (req, res) => {
 // 2. Simpan perangkat baru (Direct dari Form UI)
 exports.createDevice = async (req, res) => {
     try {
-        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice, ownerId: manualOwnerId } = req.body;
+        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice, ownerId: manualOwnerId, device_ieee } = req.body;
         let ownerId = req.user.userId;
         
         // Cek jika teknisi sedang mendaftarkan perangkat untuk homeowner
@@ -53,6 +57,31 @@ exports.createDevice = async (req, res) => {
             }
         }
         
+        const user = await User.findById(ownerId);
+        const hub = await Hub.findById(hubId);
+
+        // --- NEW: AUTO LOOKUP IEEE FROM WHITELIST ---
+        // Cari di Whitelist berdasarkan nama atau profile yang diinput user
+        let finalIeee = device_ieee || req.body.ieee || req.body.mac || req.body.productId;
+        let finalModelId = null;
+        
+        if (!finalIeee || finalIeee === "0000000000000000") {
+            const whitelistMatch = await DeviceWhitelist.findOne({
+                $or: [
+                    { device_id: name },
+                    { device_profile: name },
+                    { device_name: name }
+                ]
+            });
+            if (whitelistMatch) {
+                finalIeee = whitelistMatch.device_ieee;
+                finalModelId = whitelistMatch.model_id;
+                console.log(`[WHITELIST] Found matching IEEE for ${name}: ${finalIeee} (${finalModelId})`);
+            }
+        }
+        
+        const capturedIeee = finalIeee || "0000000000000000";
+
         const newDevice = new KendaliPerangkat({
             name,
             location,
@@ -61,11 +90,16 @@ exports.createDevice = async (req, res) => {
             category,
             type: deviceType,
             status: 'Active',
+            lifecycleState: 'PROVISIONED',
             owner: ownerId,
-            thresholds: sensorParams, // Mapping sensorsParams ke thresholds di model
+            tenantId: user?.tenantId || "tenant_001", 
+            bieonId: user?.bieonId || hub?.bieonId || 'Unknown',
+            device_ieee: capturedIeee, 
+            modelId: finalModelId, // Simpan model id asli
+            thresholds: sensorParams, 
             controlMethod: controlMode || 'manual',
             scheduleSettings,
-            sensorData, // Data simulasi awal
+            sensorData, 
             controlledDevice,
             lastActivity: new Date()
         });
@@ -81,6 +115,56 @@ exports.createDevice = async (req, res) => {
         }
 
         broadcastNewDevice(newDevice);
+
+        // --- MQTT CONFIG & HIERARCHY SYNC ---
+        try {
+            if (hub) {
+                const formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
+                const userTenantId = user?.tenantId || "tenant_001";
+                
+                // 1. Collective Device Map Publish (Command to Hardware)
+                const allUserDevices = await KendaliPerangkat.find({ owner: ownerId, status: 'Active' });
+                const configTopic = `tenant/${userTenantId}/bieon/${newDevice.bieonId}/config/device-map`;
+                
+                const mappedDevices = allUserDevices.map(d => {
+                    // Smart Matching: Cek di Nama, Tipe, dan Kategori
+                    let modelInfo = SUPPORTED_MODELS[d.type] || SUPPORTED_MODELS[d.category] || {};
+                    
+                    if (!modelInfo.telemetry_fields) {
+                        const searchString = `${d.name} ${d.type} ${d.category}`.toLowerCase();
+                        if (searchString.includes('kenyamanan') || searchString.includes('th') || searchString.includes('temp') || searchString.includes('sensor')) {
+                            modelInfo = SUPPORTED_MODELS["SNZB-02DR2"];
+                        } else if (searchString.includes('plug') || searchString.includes('switch') || searchString.includes('stop kontak') || searchString.includes('listrik')) {
+                            modelInfo = SUPPORTED_MODELS["smart_plug"];
+                        } else if (searchString.includes('analog') || searchString.includes('water') || searchString.includes('quality') || searchString.includes('air')) {
+                            modelInfo = SUPPORTED_MODELS["analog_sensor"];
+                        }
+                    }
+                    
+                    let rawIeee = d.device_ieee || "0000000000000000";
+                    let cleanIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
+                    let formattedIeee = (cleanIeee.match(/.{1,2}/g) || ["00", "00", "00", "00", "00", "00", "00", "00"]).join(':');
+
+                    return {
+                        ieee: formattedIeee,
+                        device_id: d.name, 
+                        telemetry_fields: modelInfo.telemetry_fields || ["status"],
+                        command_fields: modelInfo.command_fields || []
+                    };
+                });
+
+                publishCommand(configTopic, {
+                    type: "device_map",
+                    devices: mappedDevices,
+                    ts: Math.floor(Date.now() / 1000)
+                }, { qos: 1, retain: true });
+
+                console.log(`[MQTT] Config Map published for tenant: ${userTenantId}. Waiting for hardware to announce status.`);
+            }
+        } catch (mqttErr) {
+            console.error('[MQTT] Config Sync Failed:', mqttErr.message);
+        }
+
         res.status(201).json({ message: 'Perangkat berhasil disimpan ke database!', device: newDevice });
     } catch (error) {
         console.error('SERVER ERROR [createDevice]:', error);
@@ -270,13 +354,22 @@ exports.toggleDevice = async (req, res) => {
         device.lastCommandTime = new Date();
         await device.save();
 
-        // Topic format: bieon/<bieonId>/<deviceName>/command
-        // Isolasi berdasarkan bieonId agar tidak tabrakan antar user
-        const bieonId = req.user.bieonId;
-        const sanitizedName = device.name.toLowerCase().replace(/\s+/g, '_');
-        const topicCommand = `bieon/${bieonId}/${sanitizedName}/command`;
+        // --- HIERARCHICAL TOPIC GENERATION (Hardware Flow) ---
+        // Format: tenant/<tenantId>/bieon/<bieonId>/hub/<hubId>/device/<deviceId>/command
+        const tenantId = String(device.owner);
+        const bieonId = device.bieonId || req.user.bieonId;
+        
+        // Cari info hub (bieonId/alias hub-nya)
+        const Hub = require('../models/Hub');
+        const hub = await Hub.findById(device.hubId);
+        const hubIdAlias = hub?.bieonId || 'hub_01'; // Fallback ke alias hub
 
-        // Publish ke MQTT dalam format angka TELANJANG (Raw) 
+        const sanitizedDeviceName = device.name.toLowerCase().replace(/\s+/g, '_');
+        const topicCommand = `tenant/${tenantId}/bieon/${bieonId}/hub/${hubIdAlias}/device/${sanitizedDeviceName}/command`;
+
+        console.log(`[MQTT] Sending hierarchical command to: ${topicCommand}`);
+
+        // Publish ke MQTT
         publishCommand(topicCommand, newStatus);
 
         // LOGGING KE AKTIVITAS TERBARU
@@ -360,5 +453,33 @@ exports.togglePinDevice = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Gagal menyematkan perangkat', error: error.message });
+    }
+};
+
+// 8. Update parameters (Suhu, Volume, Speed, etc) untuk remote atau actuator
+exports.updateDeviceParams = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { controlType, value } = req.body;
+
+        const device = await KendaliPerangkat.findById(id);
+        if (!device) return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+
+        // Update remoteState (Persistent state untuk sub-targets)
+        if (!device.remoteState) device.remoteState = new Map();
+        
+        // Simpan nilai baru ke Map
+        device.remoteState.set(controlType, value);
+        
+        // Tandai modifikasi untuk Map
+        device.markModified('remoteState');
+        await device.save();
+
+        res.status(200).json({ 
+            message: 'Parameter berhasil diperbarui', 
+            device 
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal memperbarui parameter', error: error.message });
     }
 };
