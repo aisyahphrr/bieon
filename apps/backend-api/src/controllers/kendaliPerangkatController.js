@@ -69,11 +69,12 @@ exports.createDevice = async (req, res) => {
         let finalModelId = null;
         
         if (!finalIeee || finalIeee === "0000000000000000") {
+            const searchKey = req.body.productId || deviceType; // Ambil ID Teknis
             const whitelistMatch = await DeviceWhitelist.findOne({
                 $or: [
-                    { device_id: deviceType },    // SNZB_02DR2
-                    { model_id: deviceType },     // S60ZBTPF
-                    { device_profile: deviceType },
+                    { device_id: searchKey },     // SNZB_02DR2
+                    { model_id: searchKey },      // S60ZBTPF
+                    { device_profile: searchKey },
                     { device_id: name },          // Fallback ke Nama
                     { device_profile: name }
                 ]
@@ -81,11 +82,12 @@ exports.createDevice = async (req, res) => {
             if (whitelistMatch) {
                 finalIeee = whitelistMatch.device_ieee;
                 finalModelId = whitelistMatch.model_id;
-                console.log(`[WHITELIST] Found matching IEEE for Type: ${deviceType} (Name: ${name}): ${finalIeee}`);
+                console.log(`[WHITELIST] Found matching IEEE for ${searchKey}: ${finalIeee}`);
             }
         }
         
         const capturedIeee = finalIeee || "0000000000000000";
+        const capturedModelId = finalModelId || req.body.productId || deviceType;
 
         const newDevice = new KendaliPerangkat({
             name,
@@ -100,7 +102,7 @@ exports.createDevice = async (req, res) => {
             tenantId: user?.tenantId || "tenant_001", 
             bieonId: user?.bieonId || hub?.bieonId || 'Unknown',
             device_ieee: capturedIeee, 
-            modelId: finalModelId, // Simpan model id asli
+            modelId: capturedModelId, // Simpan model id asli (ID Teknis)
             thresholds: sensorParams, 
             controlMethod: controlMode || 'manual',
             scheduleSettings,
@@ -128,15 +130,20 @@ exports.createDevice = async (req, res) => {
                 const userTenantId = user?.tenantId || "tenant_001";
                 
                 // 1. Collective Device Map Publish (Command to Hardware)
-                const allUserDevices = await KendaliPerangkat.find({ owner: ownerId, status: 'Active' });
+                // PENTING: Filter berdasarkan OWNER dan BIEON_ID agar tidak campur aduk!
+                const allUserDevices = await KendaliPerangkat.find({ 
+                    owner: ownerId, 
+                    bieonId: newDevice.bieonId, // Tambahkan filter ini!
+                    status: 'Active' 
+                });
                 const configTopic = `tenant/${userTenantId}/bieon/${newDevice.bieonId}/config/device-map`;
                 
                 const mappedDevices = allUserDevices.map(d => {
                     // Smart Matching: Cek di Nama, Tipe, dan Kategori
-                    let modelInfo = SUPPORTED_MODELS[d.type] || SUPPORTED_MODELS[d.category] || {};
+                    let modelInfo = SUPPORTED_MODELS[d.modelId] || SUPPORTED_MODELS[d.type] || SUPPORTED_MODELS[d.category] || {};
                     
                     if (!modelInfo.telemetry_fields) {
-                        const searchString = `${d.name} ${d.type} ${d.category}`.toLowerCase();
+                        const searchString = `${d.name} ${d.type} ${d.category} ${d.modelId}`.toLowerCase();
                         if (searchString.includes('kenyamanan') || searchString.includes('th') || searchString.includes('temp') || searchString.includes('sensor')) {
                             modelInfo = SUPPORTED_MODELS["SNZB-02DR2"];
                         } else if (searchString.includes('plug') || searchString.includes('switch') || searchString.includes('stop kontak') || searchString.includes('listrik')) {

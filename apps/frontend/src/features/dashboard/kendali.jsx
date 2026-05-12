@@ -880,6 +880,7 @@ export function DeviceControlPage({ onNavigate }) {
 
       const deviceData = {
         name: deviceForm.name,
+        productId: selectedProduct?.productId || selectedProduct?.id || null, // Tambahkan ID Teknis Asli
         deviceType: backendType,
         category: backendCategory,
         location: deviceForm.location,
