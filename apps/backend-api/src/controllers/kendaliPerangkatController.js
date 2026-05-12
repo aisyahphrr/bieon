@@ -38,6 +38,9 @@ exports.discoverDevice = async (req, res) => {
 exports.createDevice = async (req, res) => {
     try {
         const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice, ownerId: manualOwnerId, device_ieee } = req.body;
+        
+        // Fallback untuk lokasi agar tidak error validation failed
+        const finalLocation = location || "Ruangan Utama";
         let ownerId = req.user.userId;
         
         // Cek jika teknisi sedang mendaftarkan perangkat untuk homeowner
@@ -84,7 +87,7 @@ exports.createDevice = async (req, res) => {
 
         const newDevice = new KendaliPerangkat({
             name,
-            location,
+            location: finalLocation,
             notes,
             hubId,
             category,

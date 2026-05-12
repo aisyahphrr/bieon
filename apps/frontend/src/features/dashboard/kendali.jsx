@@ -2434,12 +2434,18 @@ export function DeviceControlPage({ onNavigate }) {
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">ID Device (Stiker)</label>
                       <input
                         required
+                        list="device-ids"
                         type="text"
                         value={productRegForm.id}
                         onChange={(e) => setProductRegForm({ ...productRegForm, id: e.target.value })}
                         className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold"
-                        placeholder="Contoh: 54304000..."
+                        placeholder="Ketik atau pilih ID (Contoh: SNZB...)"
                       />
+                      <datalist id="device-ids">
+                        <option value="SNZB_02DR2" />
+                        <option value="S60ZBTPF" />
+                        <option value="BLCK04WQS" />
+                      </datalist>
                     </div>
                     <div className="space-y-4">
                       <label className="text-xs font-bold uppercase tracking-widest text-gray-400">Jenis Device</label>
