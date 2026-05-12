@@ -3,6 +3,7 @@ const BieonSystem = require('../models/BieonSystem');
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const Alert = require('../models/Alert');
 const Activity = require('../models/Activity');
+const User = require('../models/User');
 
 const { publishCommand } = require('../config/mqtt');
 
@@ -14,18 +15,31 @@ exports.setupHubs = async (req, res) => {
 
         // 1. Cek apakah sistem sudah ada
         let system = await BieonSystem.findOne({ bieonId });
-        
+
         if (system) {
-            // Jika sudah ada tapi sudah ada ownernya, tolak
+            // Jika ada owner, cek apakah owner tersebut masih aktif (bukan yatim piatu)
             if (system.owner) {
-                return res.status(400).json({ message: 'ID BIEON ini sudah digunakan di sistem kami!' });
+                const ownerExists = await User.findById(system.owner);
+                if (!ownerExists) {
+                    // Bersihkan rekaman yatim piatu (Cleanup Orphan)
+                    await Hub.deleteMany({ bieonId });
+                    await KendaliPerangkat.deleteMany({ bieonId });
+                    await BieonSystem.deleteOne({ bieonId });
+                    system = null; // Set null agar nanti dibuat baru
+                } else {
+                    // Jika owner masih ada, berarti benar-benar duplikat
+                    return res.status(400).json({ message: 'ID BIEON ini sudah digunakan di sistem kami!' });
+                }
+            } else {
+                // Jika sistem ada tapi owner kosong (Stok Gudang), klaim sistem ini
+                system.owner = userId;
+                system.status = 'Active';
+                await system.save();
             }
-            // Jika belum ada owner, klaim sistem ini
-            system.owner = userId;
-            system.status = 'Active';
-            await system.save();
-        } else {
-            // Jika sistem belum ada sama sekali, buat baru (Legacy Support)
+        }
+
+        // Jika sistem belum ada sama sekali atau baru saja dihapus karena yatim piatu
+        if (!system) {
             system = new BieonSystem({
                 bieonId,
                 owner: userId,
