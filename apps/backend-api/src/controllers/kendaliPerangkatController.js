@@ -64,22 +64,24 @@ exports.createDevice = async (req, res) => {
         const hub = await Hub.findById(hubId);
 
         // --- NEW: AUTO LOOKUP IEEE FROM WHITELIST ---
-        // Cari di Whitelist berdasarkan nama atau profile yang diinput user
+        // Prioritaskan pencarian berdasarkan deviceType (ID Teknis dari Dropdown)
         let finalIeee = device_ieee || req.body.ieee || req.body.mac || req.body.productId;
         let finalModelId = null;
         
         if (!finalIeee || finalIeee === "0000000000000000") {
             const whitelistMatch = await DeviceWhitelist.findOne({
                 $or: [
-                    { device_id: name },
-                    { device_profile: name },
-                    { device_name: name }
+                    { device_id: deviceType },    // SNZB_02DR2
+                    { model_id: deviceType },     // S60ZBTPF
+                    { device_profile: deviceType },
+                    { device_id: name },          // Fallback ke Nama
+                    { device_profile: name }
                 ]
             });
             if (whitelistMatch) {
                 finalIeee = whitelistMatch.device_ieee;
                 finalModelId = whitelistMatch.model_id;
-                console.log(`[WHITELIST] Found matching IEEE for ${name}: ${finalIeee} (${finalModelId})`);
+                console.log(`[WHITELIST] Found matching IEEE for Type: ${deviceType} (Name: ${name}): ${finalIeee}`);
             }
         }
         
@@ -150,7 +152,7 @@ exports.createDevice = async (req, res) => {
 
                     return {
                         ieee: formattedIeee,
-                        device_id: d.name, 
+                        device_id: d.modelId || d.type || "SNZB_02DR2", 
                         telemetry_fields: modelInfo.telemetry_fields || ["status"],
                         command_fields: modelInfo.command_fields || []
                     };
