@@ -30,7 +30,88 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: 'Email sudah terdaftar!' });
         }
 
-        // Buat user baru (Data yang kosong dari frontend akan otomatis diabaikan oleh MongoDB)
+        // --- VALIDASI BIEON ID (Hardware Flow) ---
+        if (bieonId) {
+            const BieonSystem = require('../models/BieonSystem');
+            
+            // 1. Cek apakah ID ada di stok developer
+            const systemStock = await BieonSystem.findOne({ bieonId });
+            if (!systemStock) {
+                return res.status(400).json({ message: 'Bieon ID tidak valid atau tidak terdaftar di stok developer.' });
+            }
+
+            // 2. Cek apakah ID sudah diklaim user lain
+            const ownerExists = await User.findOne({ bieonId });
+            if (ownerExists || systemStock.owner) {
+                return res.status(400).json({ message: 'Bieon ID sudah digunakan oleh pengguna lain.' });
+            }
+
+            // Simpan User Baru
+            const newUser = new User({
+                email: normalizedEmail,
+                password,
+                role,
+                fullName,
+                username,
+                dateOfBirth,
+                phoneNumber: phoneNumber ? normalizePhoneE164(phoneNumber) : undefined,
+                address,
+                systemName,
+                plnTariff,
+                bieonId,
+                technicianId,
+                assignedRegion,
+                tenantId: `tenant_${String(await User.countDocuments({ role: 'Homeowner' }) + 1).padStart(3, '0')}`
+            });
+
+            await newUser.save();
+
+            // 3. Link BieonSystem ke Owner baru (Claiming)
+            systemStock.owner = newUser._id;
+            await systemStock.save();
+
+            // 4. Link semua Hub yang terkait dengan bieonId ini ke Owner baru
+            const Hub = require('../models/Hub');
+            const { publishCommand } = require('../config/mqtt');
+            
+            const hubs = await Hub.find({ bieonId });
+            const hubsPayload = [];
+
+            for (const hub of hubs) {
+                hub.owner = newUser._id;
+                hub.tenantId = newUser.tenantId;
+                await hub.save();
+
+                // Format nama hub dari "Hub Node 001" menjadi "hubnode_001"
+                let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
+                
+                // Format IEEE ke kanonik: uppercase hex tanpa pemisah (misal AABBCCDDEEFF)
+                let rawIeee = hub.device_ieee || "0000000000000000";
+                let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
+
+                hubsPayload.push({
+                    id: formattedHubId,
+                    ieee: canonicalIeee
+                });
+            }
+
+            // 5. MENGIRIM BOOTSTRAP CLAIM KE HARDWARE SECARA KOLEKTIF
+            if (hubsPayload.length > 0) {
+                const payload = {
+                    tenant_id: newUser.tenantId, 
+                    bieon_id: bieonId,
+                    hub_id: "hub_001", // ID Master/Gateway
+                    hubs: hubsPayload
+                };
+                
+                // Tambahkan RETAIN agar ESP32 yang telat nyala tetap menerimanya
+                publishCommand(`bieon/${bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
+            }
+
+            return res.status(201).json({ message: 'Registrasi berhasil!', user: { id: newUser._id, email: newUser.email, role: newUser.role } });
+        }
+
+        // Fallback jika tidak ada bieonId (misal untuk teknisi/admin)
         const newUser = new User({
             email: normalizedEmail,
             password,
@@ -47,7 +128,7 @@ exports.register = async (req, res) => {
             assignedRegion
         });
 
-        await newUser.save(); // Password otomatis dienkripsi karena hook di User.js sebelumnya
+        await newUser.save();
 
         res.status(201).json({ message: 'Registrasi berhasil!', user: { id: newUser._id, email: newUser.email, role: newUser.role } });
     } catch (error) {

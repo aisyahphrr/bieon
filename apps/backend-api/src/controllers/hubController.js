@@ -4,36 +4,91 @@ const KendaliPerangkat = require('../models/KendaliPerangkat');
 const Alert = require('../models/Alert');
 const Activity = require('../models/Activity');
 
-// Setup Hubs awal untuk sistem baru
+const { publishCommand } = require('../config/mqtt');
+
+// Setup Hubs awal untuk sistem baru atau klaim stok yang sudah ada
 exports.setupHubs = async (req, res) => {
     try {
         const { bieonId, totalHubs, hubCount, userId } = req.body;
         const count = totalHubs || hubCount || 1;
 
-        // 1. Simpan rekaman sistem BIEON (agar unik secara global)
-        const newSystem = new BieonSystem({
-            bieonId,
-            owner: userId,
-            hubCount: count
-        });
-        await newSystem.save();
-
-        // 2. Buat Hub-nya secara dinamis
-        const hubs = [];
-        for (let i = 1; i <= count; i++) {
-            hubs.push({
-                name: `Hub ${i}`,
-                bieonId: bieonId, // Hub merujuk ke ID sistem
-                owner: userId,    // Diperlukan oleh model Hub
-                status: 'Offline' // Sesuaikan dengan enum model Hub
+        // 1. Cek apakah sistem sudah ada
+        let system = await BieonSystem.findOne({ bieonId });
+        
+        if (system) {
+            // Jika sudah ada tapi sudah ada ownernya, tolak
+            if (system.owner) {
+                return res.status(400).json({ message: 'ID BIEON ini sudah digunakan di sistem kami!' });
+            }
+            // Jika belum ada owner, klaim sistem ini
+            system.owner = userId;
+            system.status = 'Active';
+            await system.save();
+        } else {
+            // Jika sistem belum ada sama sekali, buat baru (Legacy Support)
+            system = new BieonSystem({
+                bieonId,
+                owner: userId,
+                hubCount: count
             });
+            await system.save();
         }
 
-        const savedHubs = await Hub.insertMany(hubs);
+        // 2. Klaim semua Hub terkait
+        const hubs = await Hub.find({ bieonId });
+        const hubsPayload = [];
+
+        if (hubs.length > 0) {
+            for (const hub of hubs) {
+                const user = await User.findById(userId);
+                hub.owner = userId;
+                hub.tenantId = user?.tenantId || "tenant_001";
+                await hub.save();
+
+                let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
+                let rawIeee = hub.device_ieee || "0000000000000000";
+                let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
+
+                hubsPayload.push({
+                    id: formattedHubId,
+                    ieee: canonicalIeee
+                });
+            }
+        } else {
+            // Fallback legacy (buat Hub dinamis jika tidak ada di gudang)
+            for (let i = 1; i <= count; i++) {
+                const newHub = new Hub({
+                    name: `Hub ${i}`,
+                    bieonId: bieonId,
+                    owner: userId,
+                    status: 'Online'
+                });
+                await newHub.save();
+                hubs.push(newHub);
+            }
+        }
+
+        // 3. Klaim semua Perangkat terkait ke user baru ini
+        await KendaliPerangkat.updateMany(
+            { bieonId: bieonId, lifecycleState: 'UNCLAIMED' },
+            { $set: { owner: userId, tenantId: userId } }
+        );
+
+        // 4. Publikasi MQTT Claim jika stok berasal dari gudang
+        if (hubsPayload.length > 0) {
+            const payload = {
+                tenant_id: "tenant_001",
+                bieon_id: bieonId,
+                hub_id: "hub_001",
+                hubs: hubsPayload
+            };
+            publishCommand(`bieon/${bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
+        }
+
         res.status(201).json({ 
             message: 'Sistem BIEON dan Hub berhasil disiapkan!', 
-            system: newSystem,
-            hubs: savedHubs 
+            system: system,
+            hubs: hubs 
         });
     } catch (error) {
         console.error('Error setupHubs:', error);

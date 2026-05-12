@@ -13,6 +13,8 @@ const WaterQualityLog = require('../models/WaterQualityLog');
 const Activity = require('../models/Activity');
 const alertService = require('../services/alertService');
 const AuthEvent = require('../models/AuthEvent');
+const BieonSystem = require('../models/BieonSystem');
+const Hub = require('../models/Hub');
 
 let mqttClient = null;
 let ioInstance = null;
@@ -33,7 +35,19 @@ const connectMQTT = (io) => {
     // Subscribe ke event bridge dan SEMUA data perangkat
     mqttClient.subscribe('zigbee2mqtt/bridge/event');
     mqttClient.subscribe('zigbee2mqtt/#');
-    mqttClient.subscribe('bieon/#'); // Menangkap status & command
+    
+    // Bootstrap & Legacy Auth
+    mqttClient.subscribe('bieon/#'); 
+    
+    // Hierarchical Tree Structure Subscriptions (Hardware Doc V2)
+    mqttClient.subscribe('tenant/+/bieon/+/hub/+/device/+/command');
+    mqttClient.subscribe('tenant/+/bieon/+/hub/+/device/+/auth/request');
+    mqttClient.subscribe('tenant/+/bieon/+/hub/+/device/+/telemetry');
+    mqttClient.subscribe('tenant/+/bieon/+/hub/+/device/+/status');
+    mqttClient.subscribe('tenant/+/bieon/+/log/system');
+    mqttClient.subscribe('tenant/+/bieon/+/status');
+    mqttClient.subscribe('tenant/+/bieon/+/diagnostic');
+    mqttClient.subscribe('bieon/+/bootstrap/#');
   });
 
   mqttClient.on('message', async (topic, message) => {
@@ -50,6 +64,42 @@ const connectMQTT = (io) => {
         const friendlyName = topic.split('/')[1];
         if (friendlyName !== 'bridge') {
           await handleDeviceTelemetry(friendlyName, payload);
+        }
+      } else if (topic.startsWith('tenant/')) {
+        // Hierarchical Tree Structure
+        const parts = topic.split('/');
+        
+        // Device level topics: tenant/{tenant}/bieon/{bieon}/hub/{hub}/device/{device}/...
+        if (parts.length >= 9 && parts[2] === 'bieon' && parts[4] === 'hub' && parts[6] === 'device') {
+          const tenantId = parts[1];
+          const bieonId = parts[3];
+          const hubId = parts[5];
+          const deviceId = parts[7];
+          const streamType = parts[8]; // telemetry, command, status, auth, response
+          
+          if (streamType === 'telemetry' || streamType === 'status') {
+            await handleHierarchicalTelemetry(tenantId, bieonId, hubId, deviceId, payload);
+          } else if (streamType === 'response') {
+            console.log(`[MQTT] Command response received for ${deviceId} in tenant ${tenantId}`);
+            try {
+              const device = await KendaliPerangkat.findOne({ name: deviceId, tenantId: tenantId });
+              if (device) {
+                device.lastCommandStatus = payload.status === 'ok' ? 'completed' : 'failed';
+                await device.save();
+              }
+            } catch (err) { console.error(err.message); }
+          } else if (streamType === 'auth') {
+             // Substream: auth/request
+             const subStream = parts[9];
+             if (subStream === 'request') {
+                 await handleHierarchicalAuth(tenantId, bieonId, hubId, deviceId, payload);
+             }
+          }
+        } else if (parts.length >= 5 && parts[2] === 'bieon') {
+           // System level logs: tenant/{tenant}/bieon/{bieon}/log/system
+           if (parts[4] === 'log' || parts[4] === 'status' || parts[4] === 'diagnostic') {
+              // Ignore spamming logs for now, but they are correctly routed
+           }
         }
       } else if (topic.startsWith('bieon/')) {
         const parts = topic.split('/');
@@ -442,17 +492,305 @@ const handleAuthRequest = async (masterId, payload) => {
   }
 };
 
+// ===== HIERARCHICAL AUTH HANDLER (TREE STRUCTURE) =====
+const handleHierarchicalAuth = async (tenantId, bieonId, hubId, deviceId, payload) => {
+    console.log(`\n[MQTT-AUTH] 🔐 Device Auth Request: ${deviceId} (Tenant: ${tenantId})`);
+    
+    try {
+        // --- PENCARIAN BERLAPIS (EXHAUSTIVE SEARCH) ---
+        let cleanIeee = deviceId.replace(/[:\-]/g, '').toUpperCase();
+        let colonIeee = (cleanIeee.match(/.{1,2}/g) || []).join(':');
+
+        let device = await KendaliPerangkat.findOne({ 
+            tenantId: tenantId,
+            $or: [
+                { name: deviceId },
+                { device_ieee: deviceId },
+                { device_ieee: cleanIeee },
+                { device_ieee: colonIeee },
+                { device_ieee: cleanIeee.toLowerCase() },
+                { device_ieee: colonIeee.toLowerCase() }
+            ]
+        });
+        
+        // Jurus Terakhir: Suffix Matching (misal: th_sensor_FFFF)
+        if (!device && deviceId.includes('_')) {
+            const parts = deviceId.split('_');
+            const suffix = parts[parts.length - 1].toUpperCase();
+            if (suffix.length >= 4) {
+                console.log(`[MQTT-AUTH] 🔍 Final attempt with suffix: ...${suffix}`);
+                device = await KendaliPerangkat.findOne({ 
+                    tenantId: tenantId,
+                    device_ieee: { $regex: new RegExp(suffix + '$', 'i') } 
+                });
+            }
+        }
+
+        const responseTopic = `tenant/${tenantId}/bieon/${bieonId}/hub/${hubId}/device/${deviceId}/auth/response`;
+        const configTopic = `tenant/${tenantId}/bieon/${bieonId}/config/device-map`;
+
+        if (!device) {
+            console.log(`[MQTT-AUTH] ❌ Device ${deviceId} not found in DB even with suffix search. Blocking.`);
+            publishCommand(responseTopic, { 
+                type: "auth_response",
+                device_ieee: deviceId,
+                decision: "block", 
+                tenant_id: tenantId,
+                hub_id: hubId,
+                ts: Math.floor(Date.now()/1000) 
+            });
+            return;
+        }
+
+        if (device.lifecycleState === 'PROVISIONED' || device.lifecycleState === 'AUTHORIZED' || device.lifecycleState === 'STALE') {
+            console.log(`[MQTT-AUTH] ✅ Device ${deviceId} is approved (${device.lifecycleState}). Allowing.`);
+            
+            // Mark as authorized
+            if (device.lifecycleState !== 'AUTHORIZED') {
+                device.lifecycleState = 'AUTHORIZED';
+                device.isAuthorized = true;
+                device.status = 'Active';
+                device.lastSeen = new Date();
+                await device.save();
+                
+                if (ioInstance) {
+                    ioInstance.emit('device_telemetry', {
+                        _id: device._id,
+                        status: 'Active',
+                        lifecycleState: 'AUTHORIZED'
+                    });
+                }
+            }
+
+            // Publish Auth Response (FORMAT DIVISI HARDWARE)
+            publishCommand(responseTopic, { 
+                type: "auth_response",
+                device_ieee: (device.device_ieee || deviceId).replace(/[:\-]/g, '').toLowerCase(),
+                device_id: device.modelId || device.type || "SNZB_02DR2", 
+                decision: "allow", 
+                tenant_id: tenantId,
+                hub_id: hubId.replace('hubnode_', 'hub_'), // Normalisasi hubnode_001 -> hub_001
+                ts: Math.floor(Date.now()/1000) 
+            });
+
+            // Publish Device Map Config
+            publishCommand(configTopic, {
+                device_id: deviceId,
+                model: device.type || "UNKNOWN",
+                features: ["telemetry", "command", "status"],
+                ts: Math.floor(Date.now()/1000)
+            });
+
+        } else {
+            console.log(`[MQTT-AUTH] ⚠️ Device ${deviceId} rejected due to state: ${device.lifecycleState}`);
+            publishCommand(responseTopic, { 
+                type: "auth_response",
+                device_ieee: device.device_ieee || deviceId,
+                decision: "block", 
+                tenant_id: tenantId,
+                hub_id: hubId,
+                ts: Math.floor(Date.now()/1000) 
+            });
+        }
+
+    } catch (err) {
+        console.error(`[MQTT-AUTH] Error handling auth for ${deviceId}:`, err.message);
+    }
+};
+
+const handleHierarchicalTelemetry = async (tenantId, bieonId, hubId, deviceId, payload) => {
+  try {
+    console.log(`\n[MQTT] 📥 RECEIVED: ${deviceId} (Tenant: ${tenantId}, Bieon: ${bieonId}, Hub: ${hubId})`);
+    
+    // Find device by device_id (alias). 
+    let device = await KendaliPerangkat.findOne({ 
+      name: deviceId,
+      $or: [
+        { tenantId: tenantId },
+        { tenantId: { $exists: false } },
+        { tenantId: null }
+      ]
+    });
+
+    if (!device) {
+      console.log(`[MQTT] ❌ Hierarchical device not found in DB: ${deviceId}`);
+      return;
+    }
+
+    // --- STRICT AUTH FLOW ENFORCEMENT ---
+    if (device.lifecycleState === 'UNCLAIMED' || device.lifecycleState === 'BLOCKED' || device.lifecycleState === 'DECOMMISSIONED') {
+      console.log(`[MQTT] ⚠️ Rejecting telemetry. Device ${deviceId} is in state: ${device.lifecycleState}`);
+      return; // Stop processing if not provisioned or authorized
+    }
+
+    // --- DEBUG: START AUTO-PROVISIONING ---
+    console.log(`[DEBUG] Checking hierarchy for Bieon: ${bieonId}, Hub: ${hubId}`);
+
+    // 1. BieonSystem
+    let system = await BieonSystem.findOne({ bieonId: bieonId });
+    if (!system) {
+        console.log(`[DEBUG] ➕ BieonSystem ${bieonId} NOT FOUND. Creating now...`);
+        try {
+            const newSystem = new BieonSystem({
+                bieonId: bieonId,
+                owner: device.owner,
+                status: 'Active'
+            });
+            await newSystem.save();
+            console.log(`[DEBUG] ✨ SUCCESS: BieonSystem ${bieonId} saved to DB.`);
+        } catch (e) {
+            console.error(`[DEBUG] ❌ FAILED to save BieonSystem: ${e.message}`);
+        }
+    } else {
+        console.log(`[DEBUG] ✅ BieonSystem ${bieonId} already exists.`);
+    }
+
+    // 2. Hub
+    let hubRecord = await Hub.findOne({ bieonId: hubId });
+    if (!hubRecord) {
+        console.log(`[DEBUG] ➕ Hub ${hubId} NOT FOUND. Creating now...`);
+        try {
+            hubRecord = new Hub({
+                name: `Hub ${hubId}`,
+                bieonId: hubId,
+                tenantId: tenantId,
+                owner: device.owner,
+                status: 'Online'
+            });
+            await hubRecord.save();
+            console.log(`[DEBUG] ✨ SUCCESS: Hub ${hubId} saved to DB.`);
+        } catch (e) {
+            console.error(`[DEBUG] ❌ FAILED to save Hub: ${e.message}`);
+        }
+    } else {
+        console.log(`[DEBUG] ✅ Hub ${hubId} already exists.`);
+    }
+
+    const updates = { 
+      lastSeen: new Date(),
+      lifecycleState: 'AUTHORIZED', // Data received means it's authorized and active
+      status: 'Active',
+      isAuthorized: true,
+      tenantId: tenantId,
+      bieonId: bieonId,
+      hub: hubRecord?._id // Link to the hub record
+    };
+
+    // Parse clusters if present (Hardware Doc Format)
+    if (payload.clusters && Array.isArray(payload.clusters)) {
+      payload.clusters.forEach(c => {
+        if (c.cluster === 'temperature') updates['currentValues.temperature'] = c.value;
+        if (c.cluster === 'humidity') updates['currentValues.humidity'] = c.value;
+        if (c.cluster === 'on_off') {
+            let normStatus = String(c.value).toUpperCase();
+            if (normStatus === 'ON' || normStatus === '1') normStatus = '1';
+            else if (normStatus === 'OFF' || normStatus === '0') normStatus = '0';
+            updates.status = normStatus;
+        }
+        // Add more cluster mappings as needed
+      });
+    } else {
+      // Fallback to flat payload (Backward Compatibility)
+      if (payload.temperature !== undefined) updates['currentValues.temperature'] = payload.temperature;
+      if (payload.humidity !== undefined) updates['currentValues.humidity'] = payload.humidity;
+      if (payload.status !== undefined) updates.status = String(payload.status);
+    }
+
+    const updatedDevice = await KendaliPerangkat.findOneAndUpdate(
+      { _id: device._id },
+      { $set: updates },
+      { new: true }
+    );
+
+    if (updatedDevice && ioInstance) {
+      ioInstance.emit('device_telemetry', {
+        _id: updatedDevice._id,
+        currentValues: updatedDevice.currentValues,
+        status: String(updatedDevice.status),
+        lifecycleState: updatedDevice.lifecycleState
+      });
+    }
+
+    // --- INTEGRASI KE DATABASE LAIN (LOGGING) ---
+
+    // 1. SensorData (Suhu & Kelembapan sesuai permintaan User)
+    if (updates['currentValues.temperature'] !== undefined) {
+        await new SensorData({ topic: `tenant/${tenantId}/bieon/${bieonId}/temp`, value: updates['currentValues.temperature'] }).save();
+    }
+    if (updates['currentValues.humidity'] !== undefined) {
+        await new SensorData({ topic: `tenant/${tenantId}/bieon/${bieonId}/humi`, value: updates['currentValues.humidity'] }).save();
+    }
+
+    // 2. WaterQualityLog
+    if (updates['currentValues.ph'] !== undefined || updates['currentValues.tds'] !== undefined) {
+        await new WaterQualityLog({
+          owner: updatedDevice.owner,
+          device: updatedDevice._id,
+          hub: updatedDevice.hubId,
+          ph: updates['currentValues.ph'] || updatedDevice.currentValues?.ph || 0,
+          tds: updates['currentValues.tds'] || updatedDevice.currentValues?.tds || 0,
+          temperature: updates['currentValues.waterTemp'] || updatedDevice.currentValues?.waterTemp || 0,
+          status: 'Layak Pakai',
+          date: new Date()
+        }).save();
+    }
+
+    // 3. Alerts (Jika status berubah)
+    if (updates.status !== undefined && device.status !== updates.status) {
+        const Alert = require('../models/Alert');
+        const statusText = updates.status === '1' ? 'Menyala (ON)' : 'Mati (OFF)';
+        await Alert.create({
+          owner: updatedDevice.owner,
+          hub: updatedDevice.hubId,
+          category: 'Sistem',
+          title: `Perangkat ${statusText}`,
+          message: `[Hardware Baru] Perangkat ${updatedDevice.name} telah berubah status menjadi ${statusText}.`,
+          type: 'Info',
+          link: 'kendali',
+          metadata: { deviceId: updatedDevice._id }
+        });
+    }
+
+    // 4. EnergyLog (Jika ada payload energy - Adaptasi dari handleDeviceTelemetry)
+    if (payload.energyToday !== undefined) {
+        await new EnergyLog({
+            device: updatedDevice._id,
+            hub: updatedDevice.hubId,
+            date: new Date(),
+            totalKwh: payload.energyToday,
+            power: payload.currentLoad || 0,
+            owner: updatedDevice.owner
+        }).save();
+    }
+
+    console.log(`[MQTT] Hierarchical Telemetry updated & logged for ${deviceId}`);
+  } catch (err) {
+    console.error('❌ Hierarchical Telemetry Error:', err.message);
+  }
+};
+
 const startPermitJoin = (duration = 60) => {
   if (mqttClient) {
     mqttClient.publish('zigbee2mqtt/bridge/request/permit_join', JSON.stringify({ value: true, time: duration }));
   }
 };
 
-const publishCommand = (topic, payload) => {
+const publishCommand = (topic, payload, options = { qos: 1 }) => {
   if (mqttClient) {
-    const message = typeof payload === 'object' ? JSON.stringify(payload) : String(payload);
-    mqttClient.publish(topic, message, { qos: 1 });
+    const message = typeof payload === 'object' ? JSON.stringify(payload, null, 2) : String(payload);
+    mqttClient.publish(topic, message, options);
   }
 };
 
-module.exports = { connectMQTT, startPermitJoin, publishCommand };
+const publishHierarchicalCommand = (tenantId, bieonId, hubId, deviceId, command, params) => {
+    const topic = `tenant/${tenantId}/bieon/${bieonId}/hub/${hubId}/device/${deviceId}/command`;
+    const payload = {
+        command_id: `cmd_${Date.now()}`,
+        timestamp: Date.now(),
+        command: command,
+        parameters: params
+    };
+    publishCommand(topic, payload);
+};
+
+module.exports = { connectMQTT, startPermitJoin, publishCommand, publishHierarchicalCommand };
