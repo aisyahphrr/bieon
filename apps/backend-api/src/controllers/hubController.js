@@ -3,12 +3,27 @@ const BieonSystem = require('../models/BieonSystem');
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const Alert = require('../models/Alert');
 const Activity = require('../models/Activity');
+const User = require('../models/User');
 
 // Setup Hubs awal untuk sistem baru
 exports.setupHubs = async (req, res) => {
     try {
         const { bieonId, totalHubs, hubCount, userId } = req.body;
         const count = totalHubs || hubCount || 1;
+
+        // Cek jika sistem BIEON yatim piatu (pemilik sudah terhapus)
+        const existingSystem = await BieonSystem.findOne({ bieonId });
+        if (existingSystem) {
+            const ownerExists = await User.findById(existingSystem.owner);
+            if (!ownerExists) {
+                // Bersihkan rekaman yatim piatu
+                await Hub.deleteMany({ bieonId });
+                await KendaliPerangkat.deleteMany({ bieonId });
+                await BieonSystem.deleteOne({ bieonId });
+            } else {
+                return res.status(400).json({ message: 'ID BIEON ini sudah digunakan di sistem kami!' });
+            }
+        }
 
         // 1. Simpan rekaman sistem BIEON (agar unik secara global)
         const newSystem = new BieonSystem({
