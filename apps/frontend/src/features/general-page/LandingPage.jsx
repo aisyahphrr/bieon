@@ -322,12 +322,12 @@ const LandingPage = () => {
             </Reveal>
 
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
-              {/* 1. Matra Kreasi */}
+              {/* 1. Matra Kreasi Mandiri */}
               <Reveal delay="0.1s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-4 mb-2 group-hover:scale-110 transition-transform duration-300">
-                  <Activity className="text-slate-400 group-hover:text-[#009b7c] transition-colors" size={32} />
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/logo_matra.jpeg" alt="Matra Kreasi Mandiri" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Matra Kreasi</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Matra Kreasi Mandiri</span>
               </Reveal>
 
               {/* 2. SV IPB */}
