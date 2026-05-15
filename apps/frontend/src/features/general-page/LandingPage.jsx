@@ -360,6 +360,50 @@ const LandingPage = () => {
           </div>
         </section>
 
+        {/* Section Solution */}
+        <section className="bg-white py-16 border-b border-slate-100 relative overflow-hidden">
+          <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
+            <Reveal>
+              <p className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">SOLUTION</p>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-12" style={{ fontFamily: "'Poppins', sans-serif" }}>ONE PLATFORM. TOTAL MONITORING</h2>
+            </Reveal>
+
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
+              {/* 1. Energi */}
+              <Reveal delay="0.1s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/5ENERGY.png" alt="Energi" className="w-full h-full object-cover rounded-2xl transition-all" />
+                </div>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Energi</span>
+              </Reveal>
+
+              {/* 2. Air */}
+              <Reveal delay="0.2s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/6AIR.png" alt="Air" className="w-full h-full object-cover rounded-2xl transition-all" />
+                </div>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Air</span>
+              </Reveal>
+
+              {/* 3. Lingkungan */}
+              <Reveal delay="0.3s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/7LINGKUNGAN.png" alt="Lingkungan" className="w-full h-full object-cover rounded-2xl transition-all" />
+                </div>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Lingkungan</span>
+              </Reveal>
+
+              {/* 4. Keamanan */}
+              <Reveal delay="0.4s" className="flex flex-col items-center group">
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/8PROTEKSI.png" alt="Keamanan" className="w-full h-full object-cover rounded-2xl transition-all" />
+                </div>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Keamanan</span>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
         {/* Section Statistik Animasi */}
         <section className="bg-[#050B0F] py-20 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5"></div>
@@ -461,6 +505,86 @@ const LandingPage = () => {
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
                   Seluruh data dapat diakses kapan saja dan di mana saja melalui dashboard berbasis cloud yang terintegrasi.
+                </p>
+              </div>
+            </Reveal>
+
+          </div>
+        </section>
+
+        {/* Products Line Section */}
+        <section id="products" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
+          <div className="text-center mb-8 max-w-2xl mx-auto pt-10">
+            <div className="inline-flex py-1 px-3 rounded-full bg-blue-500/10 text-blue-600 font-bold text-[11px] uppercase tracking-widest mb-4">
+              Our Products
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-6 drop-shadow-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Products Line
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+            {/* Product Card 1 */}
+            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/feature_1.png" alt="EcoSense Energy" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out grayscale group-hover:grayscale-0" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-blue-700 mb-4 flex items-center justify-center gap-2">
+                  <Zap size={18} /> EcoSense Energy
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Sistem monitoring energi cerdas untuk memantau konsumsi listrik, efisiensi penggunaan energi, dan performa sistem secara real-time.
+                </p>
+              </div>
+            </Reveal>
+
+            {/* Product Card 2 */}
+            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-cyan-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/feature_2.png" alt="EcoSense Water" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out grayscale group-hover:grayscale-0" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-cyan-600 mb-4 flex items-center justify-center gap-2">
+                  <Droplets size={18} /> EcoSense Water
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Solusi monitoring kualitas dan penggunaan air untuk membantu menjaga kesehatan, keamanan, efisiensi dan keberlanjutan sumber daya air.
+                </p>
+              </div>
+            </Reveal>
+
+            {/* Product Card 3 */}
+            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/feature_3.png" alt="EcoSense Environment" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out grayscale group-hover:grayscale-0" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
+                  <ThermometerSun size={18} /> EcoSense Environment
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Platform monitoring lingkungan yang mengukur berbagai parameter seperti kualitas udara, suhu, kelembaban, dan kondisi lingkungan lainnya secara terintegrasi.
+                </p>
+              </div>
+            </Reveal>
+
+            {/* Product Card 4 */}
+            <Reveal delay="0.4s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-slate-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/hero.png" alt="EcoSense Security" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out grayscale group-hover:grayscale-0" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center justify-center gap-2">
+                  <ShieldCheck size={18} /> EcoSense Security
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Sistem monitoring dan notifikasi cerdas untuk meningkatkan keamanan area, aset, dan infrastruktur melalui pemantauan real-time dan smart alert system.
                 </p>
               </div>
             </Reveal>
