@@ -6,6 +6,7 @@ const registeredProductSchema = new mongoose.Schema({
     category: { type: String, enum: ['sensor', 'control'], required: true }, // Jenis: Sensor atau Control
     aspect: { type: String, enum: ['kenyamanan', 'air', 'keamanan', 'none', 'smart-switch', 'smart-plug', 'remote'], default: 'none' }, // Aspek Sensor/Control
     isUsed: { type: Boolean, default: false },
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // PEMILIK BARANG
     registeredAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

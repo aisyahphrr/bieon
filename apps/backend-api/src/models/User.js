@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
     tokenThreshold: { type: Number, default: 50000 }, // Ambang batas peringatan anggaran menipis (Rp)
     lastBudgetReset: { type: Date, default: Date.now }, // Tanggal terakhir anggaran di-reset
     bieonId: { type: String },    // ID BIEON Master
+    tenantId: { type: String },   // ID Tenant (tenant_001, tenant_002, dst)
     assignedTechnician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Referensi ke Teknisi yang menangani
 
     // Field Khusus Teknisi

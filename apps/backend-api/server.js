@@ -5,6 +5,7 @@ const app = require('./src/app');
 const connectDB = require('./src/config/database');
 const { connectMQTT } = require('./src/config/mqtt');
 const { startScheduler } = require('./src/services/scheduler');
+const { startMonitoring } = require('./src/services/state-monitor');
 
 // Jalankan koneksi ke database
 connectDB();
@@ -42,6 +43,9 @@ server.listen(PORT, () => {
     
     // Jalankan Scheduler Otomatis untuk mengecek Jadwal
     startScheduler();
+    
+    // Jalankan State Monitoring (Stale/Orphan detection)
+    startMonitoring();
 
     console.log(`=========================================\n`);
 });

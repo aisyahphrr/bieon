@@ -4,6 +4,7 @@ const RegisteredProduct = require('../models/RegisteredProduct');
 exports.registerProduct = async (req, res) => {
     try {
         const { productId, productName, category, aspect } = req.body;
+        const ownerId = req.user.userId; // Ambil dari token login
         
         // Cek jika ID sudah ada
         const existing = await RegisteredProduct.findOne({ productId });
@@ -15,7 +16,8 @@ exports.registerProduct = async (req, res) => {
             productId, 
             productName, 
             category, 
-            aspect: aspect || 'none' 
+            aspect: aspect || 'none',
+            owner: ownerId // SIMPAN PEMILIK
         });
         await newProduct.save();
 
@@ -30,7 +32,11 @@ exports.registerProduct = async (req, res) => {
 
 exports.getProductsByCategory = async (req, res) => {
     try {
-        const products = await RegisteredProduct.find({ isUsed: false }); // Hanya yang belum dipasangkan
+        const ownerId = req.user.userId;
+        const products = await RegisteredProduct.find({ 
+            owner: ownerId, // FILTER MILIK SENDIRI
+            isUsed: false 
+        }); 
         res.status(200).json(products);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil daftar produk', error: error.message });
@@ -41,10 +47,11 @@ exports.getProductsByCategory = async (req, res) => {
 exports.validateProductId = async (req, res) => {
     try {
         const { id } = req.params;
-        const product = await RegisteredProduct.findOne({ productId: id });
+        const ownerId = req.user.userId;
+        const product = await RegisteredProduct.findOne({ productId: id, owner: ownerId });
 
         if (!product) {
-            return res.status(404).json({ isValid: false, message: 'ID Produk tidak ditemukan / tidak valid.' });
+            return res.status(404).json({ isValid: false, message: 'ID Produk tidak ditemukan atau bukan milik Anda.' });
         }
 
         res.status(200).json({ 
@@ -60,10 +67,11 @@ exports.validateProductId = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const product = await RegisteredProduct.findOne({ productId: id });
+        const ownerId = req.user.userId;
+        const product = await RegisteredProduct.findOne({ productId: id, owner: ownerId });
 
         if (!product) {
-            return res.status(404).json({ message: 'Produk tidak ditemukan.' });
+            return res.status(404).json({ message: 'Produk tidak ditemukan atau Anda tidak berwenang.' });
         }
 
         if (product.isUsed) {

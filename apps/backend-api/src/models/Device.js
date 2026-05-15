@@ -3,13 +3,22 @@ const mongoose = require('mongoose');
 const deviceSchema = new mongoose.Schema({
     name: { type: String, required: true },
     type: { type: String, required: true }, 
-    status: { type: String, default: 'OFFLINE' },
+    status: { type: String, default: 'OFFLINE' }, // Backward Compatibility
+    lifecycleState: { 
+        type: String, 
+        enum: ['UNCLAIMED', 'PROVISIONED', 'AUTH_PENDING', 'AUTHORIZED', 'STALE', 'ORPHAN', 'BLOCKED', 'DECOMMISSIONED'],
+        default: 'UNCLAIMED' 
+    },
+    isAuthorized: { type: Boolean, default: false },
     ieeeAddress: { type: String, unique: true, sparse: true }, // Network Source of Truth
     model: { type: String },
     vendor: { type: String },
     metadata: [String],
     hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    tenantId: { type: String }, // For multi-tenant isolation
+    bieonId: { type: String },  // Hierarchical mapping
+    hubId: { type: String },    // Hierarchical mapping
     room: { type: String, default: 'Unassigned' },
     
     // Real-time Telemetry (Data Asli dari Sensor)
