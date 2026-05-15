@@ -1,43 +1,40 @@
+import i18n from '../lib/i18n';
+
 /**
  * Helpers for Complaint Status and Action Logic
  */
 
-export const formatStatusDisplay = (status, role, timeElapsedMinutes = 0) => {
-    const s = status?.toLowerCase();
+export const getRawDisplayStatus = (status, role, timeElapsedMinutes = 0) => {
+    if (!status) return '-';
+    const s = status.toLowerCase();
     
-    // Dynamic Overdue Label Logic (Frontend-side transformation)
     let displayStatus = s;
     if (s === 'menunggu respons' && timeElapsedMinutes > 15) displayStatus = 'overdue respons';
     if (s === 'diproses' && timeElapsedMinutes > 2880) displayStatus = 'overdue perbaikan';
 
-    // Role-based aliasing
     if (role === 'homeowner') {
-        if (displayStatus === 'unassigned') return 'Baru';
-        if (displayStatus === 'overdue respons' || displayStatus === 'menunggu respons') return 'Menunggu Respons';
-        if (displayStatus === 'overdue perbaikan' || displayStatus === 'diproses') return 'Diproses';
+        if (displayStatus === 'unassigned' || displayStatus === 'baru') displayStatus = 'unassigned_homeowner';
     }
     
-    if (role === 'technician') {
-        if (displayStatus === 'overdue respons' || displayStatus === 'menunggu respons') return 'Menunggu Respons';
-        if (displayStatus === 'overdue perbaikan' || displayStatus === 'diproses') return 'Diproses';
-    }
-
-    // Default mapping for display
-    const mapping = {
-        'unassigned': 'Baru',
-        'menunggu respons': 'Menunggu Respons',
-        'diproses': 'Diproses',
-        'menunggu konfirmasi pelanggan': 'Menunggu Konfirmasi Pelanggan',
-        'selesai': 'Selesai',
-        'overdue respons': 'Overdue Respons',
-        'overdue perbaikan': 'Overdue Perbaikan',
-        'ditolak': 'Ditolak'
-    };
-
-    return mapping[displayStatus] || status;
+    return displayStatus;
 };
 
-export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
+export const formatStatusDisplay = (status, role, timeElapsedMinutes = 0) => {
+    const displayStatus = getRawDisplayStatus(status, role, timeElapsedMinutes);
+    if (displayStatus === '-') return '-';
+    
+    // Normalize to match i18n key format (lowercase, spaces to underscores)
+    const sanitizedStatus = displayStatus.replace(/\s+/g, '_');
+    
+    // Use i18n to get the translation
+    const translationKey = `complaint.status.${sanitizedStatus}`;
+    const translated = i18n.t(translationKey);
+    
+    // Fallback to original status if translation is missing
+    return translated !== translationKey ? translated : status;
+};
+
+export const getActionButtons = (role, status, timeElapsedMinutes = 0, t = (k, f) => f) => {
     const s = status?.toLowerCase();
 
     if (role === 'admin' || role === 'superadmin') {
@@ -46,8 +43,8 @@ export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
 
         if (isUnassigned) {
             return [
-                { action: 'assign', label: 'Tugaskan', variant: 'primary' },
-                { action: 'reject', label: 'Tolak', variant: 'danger' }
+                { action: 'assign', label: t('complaint.action.admin.assign_tech', 'Tugaskan'), variant: 'primary' },
+                { action: 'reject', label: t('complaint.action.admin.reject_complaint', 'Tolak'), variant: 'danger' }
             ];
         }
 
@@ -60,9 +57,9 @@ export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
             const btns = [{ action: 'detail', label: 'Detail', variant: 'info' }];
             // ONLY show 'Alihkan' if status is already overdue (mapped in backend or helpers)
             if (s === 'overdue respons' || timeElapsedMinutes >= 15) { 
-                btns.unshift({ action: 'reassign', label: 'Alihkan', variant: 'primary' });
+                btns.unshift({ action: 'reassign', label: t('complaint.action.admin.reassign_tech', 'Alihkan'), variant: 'primary' });
             } else if (timeElapsedMinutes >= 8) {
-                btns.unshift({ action: 'ping', label: 'Ping Teknisi', variant: 'danger' });
+                btns.unshift({ action: 'ping', label: t('complaint.action.admin.ping', 'Ping Teknisi'), variant: 'danger' });
             }
             return btns;
         }
@@ -71,9 +68,9 @@ export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
             const btns = [{ action: 'detail', label: 'Detail', variant: 'info' }];
             // ONLY show 'Alihkan' if status is already overdue
             if (s === 'overdue perbaikan' || timeElapsedMinutes >= 2880) {
-                btns.unshift({ action: 'reassign', label: 'Alihkan', variant: 'primary' });
+                btns.unshift({ action: 'reassign', label: t('complaint.action.admin.reassign_tech', 'Alihkan'), variant: 'primary' });
             } else if (timeElapsedMinutes >= 1440) {
-                btns.unshift({ action: 'ping', label: 'Ping Teknisi', variant: 'danger' });
+                btns.unshift({ action: 'ping', label: t('complaint.action.admin.ping', 'Ping Teknisi'), variant: 'danger' });
             }
             return btns;
         }
@@ -83,16 +80,16 @@ export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
 
     if (role === 'technician') {
         if (['menunggu respons', 'overdue respons'].includes(s)) {
-            return [{ action: 'process', label: 'Terima & Proses', variant: 'primary' }];
+            return [{ action: 'process', label: t('complaint.action.technician.start_process', 'Terima & Proses'), variant: 'primary' }];
         }
         if (['diproses', 'overdue perbaikan'].includes(s)) {
-            return [{ action: 'finish', label: 'Selesaikan', variant: 'primary' }];
+            return [{ action: 'finish', label: t('complaint.action.technician.finish_repair', 'Selesaikan'), variant: 'primary' }];
         }
     }
 
     if (role === 'homeowner') {
         if (s === 'menunggu konfirmasi pelanggan') {
-            return [{ action: 'confirm', label: 'Konfirmasi Selesai', variant: 'success' }];
+            return [{ action: 'confirm', label: t('complaint.action.homeowner.confirm_done', 'Konfirmasi Selesai'), variant: 'success' }];
         }
     }
 
@@ -100,7 +97,7 @@ export const getActionButtons = (role, status, timeElapsedMinutes = 0) => {
 };
 
 export const getPerformanceIndicator = (points) => {
-    if (points >= 90) return { icon: '🟢', label: 'Bagus', color: 'text-green-600', bg: 'bg-green-50' };
-    if (points >= 70) return { icon: '🟡', label: 'Standar', color: 'text-yellow-600', bg: 'bg-yellow-50' };
-    return { icon: '🔴', label: 'Butuh Training', color: 'text-red-600', bg: 'bg-red-50' };
+    if (points >= 90) return { icon: '🟢', label: i18n.t('export.perf_excellent', 'Bagus'), color: 'text-green-600', bg: 'bg-green-50' };
+    if (points >= 70) return { icon: '🟡', label: i18n.t('export.perf_good', 'Standar'), color: 'text-yellow-600', bg: 'bg-yellow-50' };
+    return { icon: '🔴', label: i18n.t('export.perf_needs_improvement', 'Butuh Training'), color: 'text-red-600', bg: 'bg-red-50' };
 };

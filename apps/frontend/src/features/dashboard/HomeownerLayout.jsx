@@ -3,16 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerProfilePopup from './components/HomeownerProfilePopup';
+import { useTranslation } from 'react-i18next';
 
 function TechReportModal({ isOpen, onClose, onSubmit }) {
+  const { t } = useTranslation();
   const [report, setReport] = useState('');
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
       <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 flex flex-col">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Laporan Teknisi</h3>
-        <p className="text-gray-500 text-sm mb-4">Silakan catat aktivitas sinkronisasi atau masalah kendali perangkat yang baru saja dilakukan. Laporan akan otomatis diteruskan ke Super Admin.</p>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{t('nav.tech_mode')}</h3>
+        <p className="text-gray-500 text-sm mb-4">{t('nav.warning_tech_mode')}</p>
         <textarea
           value={report}
           onChange={(e) => setReport(e.target.value)}
@@ -20,13 +22,13 @@ function TechReportModal({ isOpen, onClose, onSubmit }) {
           className="w-full border-2 border-gray-300 rounded-xl p-4 focus:outline-none focus:border-orange-500 min-h-[120px] mb-4 text-sm"
         />
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-gray-500 font-semibold hover:bg-gray-100">Batal</button>
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-gray-500 font-semibold hover:bg-gray-100">{t('dashboard.cancel')}</button>
           <button
             onClick={() => onSubmit(report)}
             disabled={!report.trim()}
             className="px-6 py-2 rounded-lg bg-orange-600 text-white font-bold hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Kirim & Keluar
+            {t('nav.exit_tech_mode')}
           </button>
         </div>
       </div>
@@ -36,12 +38,13 @@ function TechReportModal({ isOpen, onClose, onSubmit }) {
 
 // Nav items shared between desktop navbar and mobile bottom nav
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Beranda', mobileIcon: Home },
-  { id: 'kendali', label: 'Kendali Perangkat', mobileIcon: Zap },
-  { id: 'history', label: 'Riwayat', mobileIcon: Clock },
+  { id: 'dashboard', labelKey: 'nav.dashboard', mobileIcon: Home },
+  { id: 'kendali', labelKey: 'nav.kendali', mobileIcon: Zap },
+  { id: 'history', labelKey: 'nav.history', mobileIcon: Clock },
 ];
 
 export default function HomeownerLayout({ children, currentPage, onNavigate, hideBottomNav }) {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [showNotif, setShowNotif] = useState(false);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
@@ -220,7 +223,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 lg:gap-10">
-              {filteredNavItems.map(({ id, label }) => (
+              {filteredNavItems.map(({ id, labelKey }) => (
                 <button
                   key={id}
                   onClick={() => navigate(`/${id}`)}
@@ -229,21 +232,34 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                       : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
                     }`}
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               ))}
             </nav>
 
             {/* Actions */}
             <div className="flex items-center gap-3 lg:gap-4 shrink-0">
+              {/* Language Toggle for Testing */}
+              <button
+                onClick={() => {
+                  const newLang = i18n.language === 'id' ? 'en' : 'id';
+                  i18n.changeLanguage(newLang);
+                  localStorage.setItem('bieon_language', newLang);
+                }}
+                className="hidden sm:flex items-center justify-center p-2 rounded-lg font-bold text-sm bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors border border-teal-200"
+                title="Toggle Language"
+              >
+                {i18n.language === 'id' ? 'ID' : 'EN'}
+              </button>
+
               {!isTechnicianMode && (
                 <button
                   onClick={() => navigate('/pengaduan')}
                   className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                  title="Ajukan Pengaduan"
+                  title={t('nav.complaint')}
                 >
                   <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
-                  <span className="hidden xl:block ml-2">Ajukan Pengaduan</span>
+                  <span className="hidden xl:block ml-2">{t('nav.complaint')}</span>
                 </button>
               )}
 
@@ -308,15 +324,15 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   <ShieldAlert className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold uppercase tracking-wide">Mode Teknisi — Akses Berbasis Token</h3>
-                  <p className="text-xs text-orange-100 italic">Harap hati-hati karena sedang di halaman Homeowner. Akses Anda hanya dibatasi pada halaman Kendali Perangkat saja tanpa pengaturan otomatis/jadwal.</p>
+                  <h3 className="font-bold uppercase tracking-wide">{t('nav.tech_mode')}</h3>
+                  <p className="text-xs text-orange-100 italic">{t('nav.warning_tech_mode')}</p>
                 </div>
               </div>
               <button
                 onClick={handleExitTechnicianMode}
                 className="px-4 py-2 bg-white text-orange-600 font-bold rounded-xl text-sm hover:bg-orange-50 transition-colors shadow-sm whitespace-nowrap"
               >
-                KELUAR SESI
+                {t('nav.exit_tech_mode')}
               </button>
             </div>
           </div>
@@ -328,7 +344,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       {!hideBottomNav && (
         <div className="md:hidden fixed bottom-6 left-4 right-4 z-40">
           <div className="bg-white/90 backdrop-blur-lg border border-emerald-100 shadow-2xl rounded-2xl flex items-center justify-around h-16 p-2 ring-4 ring-emerald-500/10">
-            {filteredNavItems.map(({ id, label, mobileIcon: Icon }) => (
+            {filteredNavItems.map(({ id, labelKey, mobileIcon: Icon }) => (
               <button
                 key={id}
                 onClick={() => navigate(`/${id}`)}
@@ -336,7 +352,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   }`}
               >
                 <Icon className={`w-6 h-6 ${currentPage === id ? 'fill-teal-600/10' : ''}`} strokeWidth={currentPage === id ? 2.5 : 2} />
-                <span className={`text-[10px] sm:text-xs font-bold mt-1 ${currentPage === id ? '' : 'text-gray-400'}`}>{label}</span>
+                <span className={`text-[10px] sm:text-xs font-bold mt-1 ${currentPage === id ? '' : 'text-gray-400'}`}>{t(labelKey)}</span>
               </button>
             ))}
           </div>

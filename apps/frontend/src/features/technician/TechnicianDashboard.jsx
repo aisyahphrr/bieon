@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   Monitor,
@@ -45,6 +46,7 @@ import { KonfigurasiPerangkatPage } from './KonfigurasiPerangkatPage';
 import { RiwayatPerbaikanPage } from './RiwayatPerbaikanPage';
 import { TechnicianProfilePage } from './profileteknisi';
 import TechnicianLayout from './TechnicianLayout';
+import { formatStatusDisplay } from '../../utils/complaintHelpers';
 
 // Helper to load Leaflet assets dynamically
 const loadLeafletAssets = async () => {
@@ -299,6 +301,7 @@ function Toast({ message, type = 'success' }) {
 }
 
 export function TechnicianDashboard({ onNavigate }) {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [returnTicketId, setReturnTicketId] = useState(location.state?.openComplaintId || null);
@@ -396,7 +399,7 @@ export function TechnicianDashboard({ onNavigate }) {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const today = new Date().toLocaleDateString('id-ID', { 
+    const today = new Date().toLocaleDateString(i18n.language === 'id' ? 'id-ID' : 'en-US', { 
       day: 'numeric', 
       month: 'long', 
       year: 'numeric' 
@@ -413,58 +416,82 @@ export function TechnicianDashboard({ onNavigate }) {
     
     doc.setFontSize(14);
     doc.setTextColor(0);
-    doc.text('Laporan Monitoring Status Pelanggan', 14, 40);
+    doc.text(t('tech_dashboard.table.title', 'Laporan Monitoring Status Pelanggan'), 14, 40);
 
     doc.setFontSize(10);
-    doc.text(`Tanggal Cetak: ${today}`, 14, 48);
-    doc.text(`Total Pelanggan: ${filteredClients.length}`, 14, 54);
+    doc.text(`${t('complaint.pdf_printed_date', 'Tanggal Cetak:')} ${today}`, 14, 48);
+    doc.text(`${t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}: ${filteredClients.length}`, 14, 54);
 
     try {
       // Summary Box
-    doc.setDrawColor(200);
-    doc.rect(14, 60, 182, 25);
-    doc.setFontSize(9);
-    doc.text('RINGKASAN METRIK (FILTER SAAT INI)', 18, 66);
-    doc.setFontSize(11);
-    doc.text(`Total Klien: ${filteredClients.length}`, 18, 75);
-    doc.text(`Total BIEON Hub: ${filteredClients.reduce((acc, c) => acc + c.jumlahBieon, 0)}`, 80, 75);
-    doc.text(`Total Perangkat: ${filteredClients.reduce((acc, c) => acc + c.jumlahDevice, 0)}`, 140, 75);
+      doc.setDrawColor(200);
+      doc.rect(14, 60, 182, 25);
+      doc.setFontSize(9);
+      doc.text(t('complaint.summary_metrics', 'RINGKASAN METRIK (FILTER SAAT INI)'), 18, 66);
+      doc.setFontSize(11);
+      doc.text(`${t('tech_dashboard.charts.clients_title', 'Jumlah Pelanggan')}: ${filteredClients.length}`, 18, 75);
+      doc.text(`BIEON Hub: ${filteredClients.reduce((acc, c) => acc + c.jumlahBieon, 0)}`, 80, 75);
+      doc.text(`Device: ${filteredClients.reduce((acc, c) => acc + c.jumlahDevice, 0)}`, 140, 75);
 
-    // Table
-    const tableData = filteredClients.map(c => [
-      c.nama,
-      c.lokasi,
-      c.status.toUpperCase(),
-      c.jumlahBieon,
-      c.jumlahDevice,
-      c.statusSistem
-    ]);
+      // Table
+      const tableData = filteredClients.map(c => [
+        c.nama,
+        c.lokasi,
+        formatStatusDisplay(c.status, 'technician').toUpperCase(),
+        c.jumlahBieon,
+        c.jumlahDevice,
+        c.statusSistem === 'No BIEON Installed' ? t('tech_dashboard.table.no_bieon', 'Belum Ada BIEON Terpasang') : c.statusSistem
+      ]);
 
-    autoTable(doc, {
-      startY: 95,
-      head: [['Nama Pelanggan', 'Lokasi', 'Status', 'Hub', 'Node', 'Keterangan Sistem']],
-      body: tableData,
-      headStyles: { fillColor: [15, 158, 120] },
-      styles: { fontSize: 9 },
-      alternateRowStyles: { fillColor: [245, 245, 245] }
-    });
+      autoTable(doc, {
+        startY: 95,
+        head: [[
+          t('tech_dashboard.table.col_client_name', 'Nama Pelanggan'),
+          t('tech_dashboard.table.col_location', 'Lokasi'),
+          t('tech_dashboard.table.col_status', 'Status'),
+          t('tech_dashboard.table.col_bieon', 'BIEON'),
+          t('tech_dashboard.table.col_device', 'Device'),
+          t('tech_dashboard.table.col_sys_status', 'Status Sistem')
+        ]],
+        body: tableData,
+        headStyles: { fillColor: [15, 158, 120] },
+        styles: { fontSize: 9 },
+        alternateRowStyles: { fillColor: [245, 245, 245] }
+      });
 
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for(let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.text(`Halaman ${i} dari ${pageCount} - BIEON Technician Dashboard`, 14, doc.internal.pageSize.height - 10);
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`${t('table.page', 'Halaman')} ${i} ${t('table.of', 'dari')} ${pageCount} - BIEON Technician Dashboard`, 14, doc.internal.pageSize.height - 10);
+      }
+
+      doc.save(`Laporan_Monitoring_BIEON_${new Date().getTime()}.pdf`);
+      triggerToast(t('complaint.pdf_success', 'Laporan PDF berhasil diunduh'));
+    } catch (error) {
+      console.error('PDF Export Error:', error);
+      triggerToast(t('complaint.pdf_error', 'Gagal mengekspor PDF. Silakan coba lagi.'), 'error');
     }
+  };
 
-    doc.save(`Laporan_Monitoring_BIEON_${new Date().getTime()}.pdf`);
-    triggerToast('Laporan PDF berhasil diunduh');
-  } catch (error) {
-    console.error('PDF Export Error:', error);
-    triggerToast('Gagal mengekspor PDF. Silakan coba lagi.', 'error');
-  }
-};
+  const getLocalizedMonthLabel = (monthInput, currentLang) => {
+    if (!monthInput) return '';
+    try {
+      const isNumber = !isNaN(monthInput);
+      const monthIndex = isNumber 
+        ? parseInt(monthInput, 10) - 1 
+        : new Date(`${monthInput} 1, 2026`).getMonth();
+        
+      const dateObj = new Date(2026, monthIndex >= 0 && monthIndex <= 11 ? monthIndex : 0, 1);
+      return new Intl.DateTimeFormat(currentLang === 'id' ? 'id-ID' : 'en-US', { 
+        month: 'short' 
+      }).format(dateObj);
+    } catch (e) {
+      return monthInput;
+    }
+  };
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -487,8 +514,8 @@ export function TechnicianDashboard({ onNavigate }) {
         return (
           <div>
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard Teknisi</h1>
-              <p className="text-gray-500">Monitoring &amp; Manajemen Sistem Pelanggan BIEON</p>
+              <h1 className="text-2xl font-bold text-gray-900">{t('tech_dashboard.metrics.title', 'Dashboard Teknisi')}</h1>
+              <p className="text-gray-500">{t('tech_dashboard.metrics.subtitle', 'Monitoring & Manajemen Sistem Pelanggan BIEON')}</p>
             </div>
 
             {/* Summary Cards */}
@@ -498,7 +525,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalClients}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">Total Pelanggan Ditangani</p>
+                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
               </div>
 
               <div className="relative overflow-hidden bg-gradient-to-br from-[#0F9E78] to-[#235C50] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
@@ -506,7 +533,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   <ShieldCheck className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalAccessCodes || 0}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">Akses Kendali Perangkat</p>
+                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.access_codes', 'Akses Kendali Perangkat')}</p>
               </div>
 
               <div className="relative overflow-hidden bg-gradient-to-br from-[#5C6AFF] to-[#8F98FF] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
@@ -514,7 +541,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   <HardDrive className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalDevices}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">Smart Device Aktif</p>
+                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.active_devices', 'Smart Device Aktif')}</p>
               </div>
 
               <div className="relative overflow-hidden bg-gradient-to-br from-[#FF7A00] to-[#FF9E42] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
@@ -522,7 +549,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   <AlertCircle className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.activeComplaints}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">Pengaduan Aktif</p>
+                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.active_complaints', 'Pengaduan Aktif')}</p>
               </div>
             </div>
 
@@ -530,15 +557,15 @@ export function TechnicianDashboard({ onNavigate }) {
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">Monitoring Status Pelanggan</h2>
-                  <p className="text-gray-600 text-sm mt-1">Status Sistem Per Pelanggan</p>
+                  <h2 className="text-xl font-bold text-gray-800">{t('tech_dashboard.table.title', 'Monitoring Status Pelanggan')}</h2>
+                  <p className="text-gray-600 text-sm mt-1">{t('tech_dashboard.table.subtitle', 'Status Sistem Per Pelanggan')}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                   <div className="relative flex-1 sm:w-64">
                     <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      placeholder="Cari No. Tiket, Nama Pelanggan, atau Topik..."
+                      placeholder={t('table.search_placeholder', 'Cari No. Tiket, Nama Pelanggan, atau Topik...')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
@@ -552,9 +579,9 @@ export function TechnicianDashboard({ onNavigate }) {
                       >
                         <Filter className="w-4 h-4 text-gray-500" />
                         <span className="text-sm font-semibold text-gray-700">
-                          {statusFilter === 'all' ? 'Semua Status Sistem' : 
-                           statusFilter === 'online' ? 'Online' : 
-                           statusFilter === 'offline' ? 'Offline' : 'Warning'}
+                          {statusFilter === 'all' ? t('tech_dashboard.table.filter_all', 'Semua Status Sistem') : 
+                           statusFilter === 'online' ? t('tech_dashboard.table.status_online', 'Online') : 
+                           statusFilter === 'offline' ? t('tech_dashboard.table.status_offline', 'Offline') : t('tech_dashboard.table.status_warning', 'Warning')}
                         </span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
                       </button>
@@ -563,10 +590,10 @@ export function TechnicianDashboard({ onNavigate }) {
                         <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
                           <div className="py-1">
                             {[
-                              { id: 'all', label: 'Semua Status Sistem' },
-                              { id: 'online', label: 'Online' },
-                              { id: 'offline', label: 'Offline' },
-                              { id: 'warning', label: 'Warning' }
+                              { id: 'all', label: t('tech_dashboard.table.filter_all', 'Semua Status Sistem') },
+                              { id: 'online', label: t('tech_dashboard.table.status_online', 'Online') },
+                              { id: 'offline', label: t('tech_dashboard.table.status_offline', 'Offline') },
+                              { id: 'warning', label: t('tech_dashboard.table.status_warning', 'Warning') }
                             ].map((opt) => (
                               <button
                                 key={opt.id}
@@ -588,7 +615,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F9E78] text-white hover:bg-[#0B8563] rounded-xl transition-colors shadow-sm shadow-[#0F9E78]/20 w-full sm:w-auto"
                     >
                       <FileText className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Export</span>
+                      <span className="text-sm font-semibold">{t('table.export', 'Export')}</span>
                     </button>
                   </div>
                 </div>
@@ -598,13 +625,13 @@ export function TechnicianDashboard({ onNavigate }) {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Nama Pelanggan</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Lokasi</th>
-                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Status Sistem</th>
-                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">BIEON</th>
-                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Device</th>
-                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Aksi</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">{t('tech_dashboard.table.col_client_name', 'Nama Pelanggan')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">{t('tech_dashboard.table.col_location', 'Lokasi')}</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">{t('tech_dashboard.table.col_sys_status', 'Status Sistem')}</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">{t('tech_dashboard.table.col_bieon', 'BIEON')}</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">{t('tech_dashboard.table.col_device', 'Device')}</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">{t('tech_dashboard.table.col_status', 'Status')}</th>
+                      <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">{t('tech_dashboard.table.col_action', 'Aksi')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -629,7 +656,9 @@ export function TechnicianDashboard({ onNavigate }) {
                               ? 'bg-red-100 text-red-700'
                               : 'bg-yellow-100 text-yellow-700'
                             }`}>
-                            {client.status === 'online' ? 'Online' : client.status === 'offline' ? 'Offline' : 'Warning'}
+                            {client.status === 'online' ? t('tech_dashboard.table.status_online', 'Online') : 
+                             client.status === 'offline' ? t('tech_dashboard.table.status_offline', 'Offline') : 
+                             t('tech_dashboard.table.status_warning', 'Warning')}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center">
@@ -643,14 +672,14 @@ export function TechnicianDashboard({ onNavigate }) {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center text-sm font-semibold text-gray-700">
-                          {client.statusSistem}
+                          {client.statusSistem === 'No BIEON Installed' ? t('tech_dashboard.table.no_bieon', 'Belum Ada BIEON Terpasang') : client.statusSistem}
                         </td>
                         <td className="px-6 py-4 text-center">
                           <button
                             onClick={() => setSelectedClient(client)}
                             className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
                           >
-                            Detail
+                            {t('tech_dashboard.table.btn_detail', 'Detail')}
                             <ChevronRight className="w-4 h-4" />
                           </button>
                         </td>
@@ -711,13 +740,13 @@ export function TechnicianDashboard({ onNavigate }) {
 
                     <div className="flex items-center justify-between pt-1">
                       <div className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${client.statusSistem === 'Normal' ? 'text-gray-700 bg-gray-100 border border-gray-200' : 'text-rose-700 bg-rose-50 border border-rose-100'}`}>
-                        {client.statusSistem}
+                        {client.statusSistem === 'No BIEON Installed' ? t('tech_dashboard.table.no_bieon', 'Belum Ada BIEON Terpasang') : client.statusSistem}
                       </div>
                       <button
                         onClick={() => setSelectedClient(client)}
                         className="inline-flex items-center gap-1 px-4 py-2 bg-[#0D9488] text-white rounded-xl text-xs font-bold hover:bg-[#0F766E] transition-all shadow-sm shadow-teal-500/20 active:scale-95"
                       >
-                        Detail <ChevronRight className="w-3.5 h-3.5" />
+                        {t('tech_dashboard.table.btn_detail', 'Detail')} <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -725,7 +754,7 @@ export function TechnicianDashboard({ onNavigate }) {
                 {filteredClients.length === 0 && (
                   <div className="py-12 text-center text-gray-500 text-sm">
                     <Search className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                    Tidak ada pelanggan yang ditemukan.
+                    {t('tech_dashboard.table.no_clients', 'Tidak ada pelanggan yang ditemukan.')}
                   </div>
                 )}
               </div>
@@ -738,8 +767,8 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="bg-gradient-to-br from-white to-emerald-50/30 rounded-3xl shadow-xl border border-emerald-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">Akses Kode Kendali Perangkat</h3>
-                    <p className="text-sm text-gray-600 mt-1">Frekuensi akses token per bulan</p>
+                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.token_access_title', 'Layanan Akses Kendali Perangkat')}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.token_access_sub', 'Frekuensi akses token per bulan')}</p>
                   </div>
                   <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
                     <Cpu className="w-6 h-6 text-white" />
@@ -750,6 +779,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="#d1fae5" vertical={false} />
                     <XAxis
                       dataKey="bulan"
+                      tickFormatter={(value) => getLocalizedMonthLabel(value, i18n.language)}
                       tick={{ fontSize: 11, fill: '#6b7280' }}
                       axisLine={{ stroke: '#d1fae5' }}
                       padding={{ left: 0, right: 0 }}
@@ -788,8 +818,8 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="bg-gradient-to-br from-white to-purple-50/30 rounded-3xl shadow-xl border border-purple-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">Jumlah Pelanggan</h3>
-                    <p className="text-sm text-gray-600 mt-1">Jumlah Pelanggan yang ditangani oleh teknisi per bulan</p>
+                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.clients_title', 'Jumlah Pelanggan')}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.clients_sub', 'Jumlah Pelanggan yang ditangani oleh teknisi per bulan')}</p>
                   </div>
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl flex items-center justify-center">
                     <Users className="w-6 h-6 text-white" />
@@ -800,6 +830,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="#e9d5ff" vertical={false} />
                     <XAxis
                       dataKey="bulan"
+                      tickFormatter={(value) => getLocalizedMonthLabel(value, i18n.language)}
                       tick={{ fontSize: 11, fill: '#6b7280' }}
                       axisLine={{ stroke: '#e9d5ff' }}
                     />
@@ -841,8 +872,8 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="bg-gradient-to-br from-white to-amber-50/30 rounded-3xl shadow-xl border border-amber-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">Jumlah Pengaduan Pelanggan</h3>
-                    <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
+                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.complaints_title', 'Jumlah Pengaduan Pelanggan')}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.complaints_sub', 'Laporan per bulan')}</p>
                   </div>
                   <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center">
                     <MessageSquare className="w-6 h-6 text-white" />
@@ -853,6 +884,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="#fef3c7" vertical={false} />
                     <XAxis
                       dataKey="bulan"
+                      tickFormatter={(value) => getLocalizedMonthLabel(value, i18n.language)}
                       tick={{ fontSize: 11, fill: '#6b7280' }}
                       axisLine={{ stroke: '#fef3c7' }}
                     />
@@ -885,8 +917,8 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-3xl shadow-xl border border-blue-100 p-6 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">Peta Persebaran Pelanggan</h3>
-                    <p className="text-sm text-gray-600 mt-1">Visualisasi distribusi pelanggan berdasarkan wilayah teknisi</p>
+                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.map_title', 'Peta Persebaran Pelanggan')}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.map_sub', 'Visualisasi distribusi pelanggan berdasarkan wilayah teknisi')}</p>
                   </div>
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
                     <MapPin className="w-6 h-6 text-white" />
@@ -900,6 +932,63 @@ export function TechnicianDashboard({ onNavigate }) {
           </div>
         );
     }
+  };
+
+  const renderComplaintStatus = (client) => {
+    if (!client.statusPengaduan || client.statusPengaduan === 'Tidak ada') {
+      return t('tech_dashboard.client_modal.no_tickets', 'Tidak ada');
+    }
+    const match = client.statusPengaduan.match(/\d+/);
+    if (match) {
+      return t('tech_dashboard.client_modal.active_tickets', { count: parseInt(match[0], 10) });
+    }
+    return client.statusPengaduan;
+  };
+
+  const renderInstallDate = (client) => {
+    if (client.createdAtRaw) {
+      try {
+        return new Intl.DateTimeFormat(i18n.language === 'id' ? 'id-ID' : 'en-US', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(new Date(client.createdAtRaw));
+      } catch (e) {
+        // fallback below
+      }
+    }
+    if (client.tanggalInstalasi && client.tanggalInstalasi !== '-') {
+      if (i18n.language === 'en') {
+        const parts = client.tanggalInstalasi.split(' ');
+        if (parts.length === 3) {
+          const monthsId = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+          const mIndex = monthsId.findIndex(m => m.toLowerCase().startsWith(parts[1].toLowerCase()));
+          if (mIndex !== -1) {
+            const dObj = new Date(parseInt(parts[2], 10), mIndex, parseInt(parts[0], 10));
+            return new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(dObj);
+          }
+        }
+      }
+      return client.tanggalInstalasi;
+    }
+    return '-';
+  };
+
+  const renderLastUpdate = (client) => {
+    if (client.lastUpdateRaw) {
+      try {
+        return new Intl.DateTimeFormat(i18n.language === 'id' ? 'id-ID' : 'en-US', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).format(new Date(client.lastUpdateRaw));
+      } catch (e) {
+        // fallback below
+      }
+    }
+    return client.lastUpdate || '-';
   };
 
   return (
@@ -918,8 +1007,8 @@ export function TechnicianDashboard({ onNavigate }) {
             {/* Modal Header */}
             <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-3xl flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold mb-1">Detail Pelanggan</h2>
-                <p className="text-emerald-100">Informasi Lengkap Sistem Smart Home</p>
+                <h2 className="text-2xl font-bold mb-1">{t('tech_dashboard.client_modal.title', 'Detail Pelanggan')}</h2>
+                <p className="text-emerald-100">{t('tech_dashboard.client_modal.subtitle', 'Informasi Lengkap Sistem Smart Home')}</p>
               </div>
               <button
                 onClick={() => setSelectedClient(null)}
@@ -953,7 +1042,7 @@ export function TechnicianDashboard({ onNavigate }) {
 
               {/* Statistik Sistem - Grid Responsive */}
               <div className="mb-6">
-                <h4 className="font-bold text-gray-800 mb-4 text-lg">Statistik Sistem</h4>
+                <h4 className="font-bold text-gray-800 mb-4 text-lg">{t('tech_dashboard.client_modal.section_stats', 'Statistik Sistem')}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100">
                     <div className="flex items-center gap-3 mb-2">
@@ -961,7 +1050,7 @@ export function TechnicianDashboard({ onNavigate }) {
                         <Cpu className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Jumlah BIEON</p>
+                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.total_bieon', 'Jumlah BIEON')}</p>
                         <p className="text-3xl font-bold text-gray-800">{selectedClient.jumlahBieon}</p>
                       </div>
                     </div>
@@ -973,7 +1062,7 @@ export function TechnicianDashboard({ onNavigate }) {
                         <Package className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Total Perangkat</p>
+                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.total_devices', 'Total Perangkat')}</p>
                         <p className="text-3xl font-bold text-gray-800">{selectedClient.jumlahDevice}</p>
                       </div>
                     </div>
@@ -985,7 +1074,7 @@ export function TechnicianDashboard({ onNavigate }) {
                         <Activity className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Device Online</p>
+                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.device_online', 'Device Online')}</p>
                         <p className="text-3xl font-bold text-green-600">{selectedClient.devicesOnline || 0}</p>
                       </div>
                     </div>
@@ -997,7 +1086,7 @@ export function TechnicianDashboard({ onNavigate }) {
                         <AlertCircle className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">Device Offline</p>
+                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.device_offline', 'Device Offline')}</p>
                         <p className="text-3xl font-bold text-red-600">{selectedClient.devicesOffline || 0}</p>
                       </div>
                     </div>
@@ -1009,12 +1098,12 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Left Column - Contact */}
                 <div className="space-y-3">
-                  <h4 className="font-bold text-gray-800 mb-3 text-lg">Informasi Kontak</h4>
+                  <h4 className="font-bold text-gray-800 mb-3 text-lg">{t('tech_dashboard.client_modal.section_contact', 'Informasi Kontak')}</h4>
                   <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
                     <div className="flex items-start gap-3">
                       <Phone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1" />
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-gray-600 mb-1">Nomor Telepon</p>
+                        <p className="text-xs font-semibold text-gray-600 mb-1">{t('tech_dashboard.client_modal.phone', 'Nomor Telepon')}</p>
                         <p className="font-bold text-gray-800">{selectedClient.noTelp}</p>
                       </div>
                     </div>
@@ -1026,7 +1115,7 @@ export function TechnicianDashboard({ onNavigate }) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-gray-600 mb-1">Email</p>
+                        <p className="text-xs font-semibold text-gray-600 mb-1">{t('tech_dashboard.client_modal.email', 'Email')}</p>
                         <p className="font-bold text-gray-800 break-words">{selectedClient.email}</p>
                       </div>
                     </div>
@@ -1036,7 +1125,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     <div className="flex items-start gap-3">
                       <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-gray-600 mb-1">Alamat Lengkap</p>
+                        <p className="text-xs font-semibold text-gray-600 mb-1">{t('tech_dashboard.client_modal.address', 'Alamat Lengkap')}</p>
                         <p className="font-bold text-gray-800">{selectedClient.alamatLengkap}</p>
                       </div>
                     </div>
@@ -1045,35 +1134,35 @@ export function TechnicianDashboard({ onNavigate }) {
 
                 {/* Right Column - Status & Dates */}
                 <div className="space-y-3">
-                  <h4 className="font-bold text-gray-800 mb-3 text-lg">Status & Informasi</h4>
+                  <h4 className="font-bold text-gray-800 mb-3 text-lg">{t('tech_dashboard.client_modal.section_info', 'Status & Informasi')}</h4>
                   <div className={`rounded-xl p-5 border-2 ${selectedClient.adaPengaduan ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'}`}>
                     <div className="flex items-center gap-3 mb-2">
                       <AlertCircle className={`w-6 h-6 ${selectedClient.adaPengaduan ? 'text-red-600' : 'text-green-600'}`} />
-                      <p className="text-sm font-semibold text-gray-600">Status Pengaduan</p>
+                      <p className="text-sm font-semibold text-gray-600">{t('tech_dashboard.client_modal.complaint_status', 'Status Pengaduan')}</p>
                     </div>
                     <p className={`text-xl font-bold ${selectedClient.adaPengaduan ? 'text-red-700' : 'text-green-700'}`}>
-                      {selectedClient.statusPengaduan || 'Tidak ada'}
+                      {renderComplaintStatus(selectedClient)}
                     </p>
                   </div>
 
                   <div className={`rounded-xl p-5 border-2 ${selectedClient.status === 'online' ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'}`}>
                     <div className="flex items-center gap-3 mb-2">
                       <Activity className={`w-6 h-6 ${selectedClient.status === 'online' ? 'text-green-600' : 'text-red-600'}`} />
-                      <p className="text-sm font-semibold text-gray-600">System Active</p>
+                      <p className="text-sm font-semibold text-gray-600">{t('tech_dashboard.client_modal.system_active', 'System Active')}</p>
                     </div>
                     <p className={`text-xl font-bold ${selectedClient.status === 'online' ? 'text-green-700' : 'text-red-700'}`}>
-                      {selectedClient.status === 'online' ? 'Aktif' : selectedClient.status === 'offline' ? 'Tidak Aktif' : 'Masalah'}
+                      {selectedClient.status === 'online' ? t('tech_dashboard.client_modal.status_active', 'Aktif') : selectedClient.status === 'offline' ? t('tech_dashboard.client_modal.status_inactive', 'Tidak Aktif') : t('tech_dashboard.client_modal.status_issue', 'Masalah')}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-100">
-                      <p className="text-xs font-semibold text-gray-600 mb-1">Tanggal Instalasi</p>
-                      <p className="font-bold text-gray-800 text-sm">{selectedClient.tanggalInstalasi}</p>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">{t('tech_dashboard.client_modal.install_date', 'Tanggal Instalasi')}</p>
+                      <p className="font-bold text-gray-800 text-sm">{renderInstallDate(selectedClient)}</p>
                     </div>
                     <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl p-4 border border-cyan-100">
-                      <p className="text-xs font-semibold text-gray-600 mb-1">Update Terakhir</p>
-                      <p className="font-bold text-gray-800 text-sm">{selectedClient.lastUpdate}</p>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">{t('tech_dashboard.client_modal.last_update', 'Update Terakhir')}</p>
+                      <p className="font-bold text-gray-800 text-sm">{renderLastUpdate(selectedClient)}</p>
                     </div>
                   </div>
                 </div>

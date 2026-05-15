@@ -304,10 +304,16 @@ exports.toggleDevice = async (req, res) => {
             hub: device.hubId,
             category: category,
             title: `Kontrol Perangkat: ${statusText}`,
+            messageKey: 'notification.global.device_manual_control',
             message: `[Manual] Anda telah ${newStatus === '1' ? 'menyalakan' : 'mematikan'} ${device.name} di ${device.location}.`,
             type: 'Info',
             link: 'kendali',
-            metadata: { deviceId: device._id }
+            metadata: { 
+                deviceId: device._id,
+                deviceName: device.name,
+                location: device.location,
+                action: newStatus === '1' ? 'ON' : 'OFF'
+            }
         });
 
         // SINKRONISASI REAL-TIME: Langsung kirim balasan ke frontend agar tidak stuck di 'Memproses...'

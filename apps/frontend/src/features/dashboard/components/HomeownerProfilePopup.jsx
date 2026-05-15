@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Edit2, Plus, Settings, LogOut, ChevronDown, Check, User, Camera, Zap, Cpu, Loader2 } from 'lucide-react';
 import AddBieonPopup from './AddBieonPopup';
+import { useTranslation } from 'react-i18next';
 
 export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, userProfile }) {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState('main'); // 'main', 'edit', 'settings'
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80');
@@ -34,8 +36,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
   }, [userProfile]);
 
   const [settingsData, setSettingsData] = useState({
-    theme: 'Light',
-    language: 'Eng'
+    theme: 'Light'
   });
 
   const [bieonSystems, setBieonSystems] = useState([]);
@@ -123,7 +124,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
         <div className="px-8 pt-8 pb-4 relative z-10 shrink-0 border-b border-gray-100/50">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
-              {view === 'main' ? 'Your Profile' : view === 'edit' ? 'Edit Profile' : 'Settings'}
+              {view === 'main' ? t('profile.title') : view === 'edit' ? t('profile.edit_title') : t('profile.settings_title')}
             </h2>
             <button 
               onClick={() => {
@@ -177,15 +178,15 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               {/* Info Details Glass Card */}
               <div className="space-y-4 p-5 bg-slate-50/50 rounded-2xl border border-slate-100/50 shadow-sm">
                 <div className="flex justify-between items-center text-[13px]">
-                  <span className="font-bold text-slate-500">Phone No</span>
+                  <span className="font-bold text-slate-500">{t('profile.phone')}</span>
                   <span className="font-bold text-slate-700">{formData.phoneNo}</span>
                 </div>
                 <div className="flex justify-between items-center text-[13px]">
-                  <span className="font-bold text-slate-500">Date of Birth</span>
+                  <span className="font-bold text-slate-500">{t('profile.dob')}</span>
                   <span className="font-bold text-slate-700">{formData.dob}</span>
                 </div>
                 <div className="flex justify-between items-center text-[13px]">
-                  <span className="font-bold text-slate-500">Address</span>
+                  <span className="font-bold text-slate-500">{t('profile.address')}</span>
                   <span className="font-bold text-slate-700">{formData.address}</span>
                 </div>
               </div>
@@ -193,11 +194,11 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               {/* Your Device Section */}
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-5 px-2">
-                  <h4 className="text-lg font-extrabold text-slate-800 tracking-tight">Your Device</h4>
+                  <h4 className="text-lg font-extrabold text-slate-800 tracking-tight">{t('profile.your_device')}</h4>
                   <button 
                     onClick={() => setShowAddBieonPopup(true)}
                     className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-[#009b7c] hover:text-white transition-all shadow-sm"
-                    title="Tambah BIEON ID"
+                    title={t('profile.add_bieon_id')}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -229,16 +230,16 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                           <div className="text-[12px] font-bold text-emerald-600 font-mono mt-0.5">{sys.bieonId}</div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sys.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                            {sys.status}
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sys.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : sys.status === 'Inactive' ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-600'}`}>
+                            {sys.status === 'Active' ? t('homeowner_qc.device.status_active') : sys.status === 'Inactive' ? t('homeowner_qc.device.status_inactive') : t('homeowner_qc.device.status_unknown')}
                           </span>
-                          <span className="text-[9px] text-slate-400 font-bold uppercase">{sys.hubCount || 0} Hubs</span>
+                          <span className="text-[9px] text-slate-400 font-bold uppercase">{t('homeowner_qc.device.hub_count', { count: sys.hubCount || 0 })}</span>
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="text-center py-8 text-slate-400 text-sm font-medium border border-dashed border-slate-200 rounded-xl">
-                      Belum ada perangkat BIEON terdaftar.
+                      {t('profile.no_device')}
                     </div>
                   )}
                 </div>
@@ -246,7 +247,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
 
               {/* Settings Action Row - Tightened spacing */}
               <div className="pt-2 space-y-4 px-2">
-                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">SETTINGS</h4>
+                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">{t('profile.settings_title')}</h4>
                 <div className="space-y-1 pb-4">
                   <button 
                     onClick={() => setView('settings')}
@@ -255,7 +256,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-[#009b7c] group-hover:text-white transition-all">
                       <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
                     </div>
-                    <span className="text-[15px] font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Settings</span>
+                    <span className="text-[15px] font-bold text-slate-700 group-hover:text-slate-900 transition-colors">{t('profile.settings_title')}</span>
                   </button>
                   <button 
                     onClick={async () => {
@@ -283,7 +284,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all">
                       <LogOut className="w-5 h-5" />
                     </div>
-                    <span className="text-[15px] font-bold text-red-500 group-hover:text-red-600 transition-colors">Logout</span>
+                    <span className="text-[15px] font-bold text-red-500 group-hover:text-red-600 transition-colors">{t('profile.logout')}</span>
                   </button>
                 </div>
               </div>
@@ -322,16 +323,16 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                     <Plus className="w-4 h-4" />
                   </div>
                 </div>
-                <span className="text-[11px] font-bold text-[#009b7c]">Change Photo</span>
+                <span className="text-[11px] font-bold text-[#009b7c]">{t('profile.change_photo')}</span>
               </div>
 
               <div className="space-y-4 flex-1 px-1">
                 {[
-                  { label: 'Username', name: 'username' },
-                  { label: 'Full Name', name: 'fullName' },
-                  { label: 'Phone No', name: 'phoneNo' },
-                  { label: 'Date of Birth', name: 'dob' },
-                  { label: 'Address', name: 'address' },
+                  { label: t('profile.username'), name: 'username' },
+                  { label: t('profile.full_name'), name: 'fullName' },
+                  { label: t('profile.phone'), name: 'phoneNo' },
+                  { label: t('profile.dob'), name: 'dob' },
+                  { label: t('profile.address'), name: 'address' },
                 ].map((field) => (
                   <div key={field.name} className="flex flex-col space-y-1.5 group">
                     <label className="text-[12px] font-bold text-slate-500 pl-1">{field.label}</label>
@@ -352,7 +353,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   className="w-full py-3.5 bg-[#009b7c] text-white font-bold text-[14px] rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5" />
-                  Save Changes
+                  {t('profile.save_changes')}
                 </button>
               </div>
             </div>
@@ -363,7 +364,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 pt-6 px-1 pb-6">
               {/* Theme Dropdown */}
               <div className="space-y-2.5">
-                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">Tampilan Tema</label>
+                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">{t('profile.theme')}</label>
                 <div className="relative">
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === 'theme' ? null : 'theme')}
@@ -374,10 +375,10 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${settingsData.theme === 'Dark' ? 'bg-slate-800 text-white' : 'bg-amber-100 text-amber-600'}`}>
+                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${settingsData.theme === 'Dark' ? 'bg-slate-800 text-white' : 'bg-amber-100 text-amber-600'}`}>
                         {settingsData.theme === 'Dark' ? <Zap className="w-4 h-4" /> : <Zap className="w-4 h-4 fill-amber-500" />}
                       </div>
-                      <span className="text-[15px] font-bold text-slate-700">{settingsData.theme === 'Dark' ? 'Gelap (Dark)' : 'Terang (Light)'}</span>
+                      <span className="text-[15px] font-bold text-slate-700">{settingsData.theme === 'Dark' ? t('profile.theme_dark') : t('profile.theme_light')}</span>
                     </div>
                     <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'theme' ? 'rotate-180 text-emerald-500' : ''}`} />
                   </button>
@@ -388,14 +389,14 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                         onClick={() => { setSettingsData({...settingsData, theme: 'Light'}); setOpenDropdown(null); }}
                         className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors"
                       >
-                        <span className={`text-sm font-bold ${settingsData.theme === 'Light' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Terang (Light)</span>
+                        <span className={`text-sm font-bold ${settingsData.theme === 'Light' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.theme_light')}</span>
                         {settingsData.theme === 'Light' && <Check className="w-4 h-4 text-emerald-500" />}
                       </div>
                       <div 
                         onClick={() => { setSettingsData({...settingsData, theme: 'Dark'}); setOpenDropdown(null); }}
                         className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors border-t border-slate-50"
                       >
-                        <span className={`text-sm font-bold ${settingsData.theme === 'Dark' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Gelap (Dark)</span>
+                        <span className={`text-sm font-bold ${settingsData.theme === 'Dark' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.theme_dark')}</span>
                         {settingsData.theme === 'Dark' && <Check className="w-4 h-4 text-emerald-500" />}
                       </div>
                     </div>
@@ -405,7 +406,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               
               {/* Language Dropdown */}
               <div className="space-y-2.5">
-                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">Pilihan Bahasa</label>
+                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">{t('profile.language')}</label>
                 <div className="relative">
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === 'language' ? null : 'language')}
@@ -417,9 +418,9 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-[10px]">
-                        {settingsData.language === 'Indo' ? 'ID' : 'EN'}
+                        {i18n.language === 'id' ? 'ID' : 'EN'}
                       </div>
-                      <span className="text-[15px] font-bold text-slate-700">{settingsData.language === 'Indo' ? 'Indonesia (Indonesian)' : 'Inggris (English)'}</span>
+                      <span className="text-[15px] font-bold text-slate-700">{i18n.language === 'id' ? t('profile.lang_id') : t('profile.lang_en')}</span>
                     </div>
                     <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'language' ? 'rotate-180 text-emerald-500' : ''}`} />
                   </button>
@@ -427,18 +428,26 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   {openDropdown === 'language' && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
                       <div 
-                        onClick={() => { setSettingsData({...settingsData, language: 'Eng'}); setOpenDropdown(null); }}
+                        onClick={() => { 
+                          i18n.changeLanguage('en');
+                          localStorage.setItem('bieon_language', 'en');
+                          setOpenDropdown(null); 
+                        }}
                         className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors"
                       >
-                        <span className={`text-sm font-bold ${settingsData.language === 'Eng' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Inggris (English)</span>
-                        {settingsData.language === 'Eng' && <Check className="w-4 h-4 text-emerald-500" />}
+                        <span className={`text-sm font-bold ${i18n.language === 'en' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.lang_en')}</span>
+                        {i18n.language === 'en' && <Check className="w-4 h-4 text-emerald-500" />}
                       </div>
                       <div 
-                        onClick={() => { setSettingsData({...settingsData, language: 'Indo'}); setOpenDropdown(null); }}
+                        onClick={() => { 
+                          i18n.changeLanguage('id');
+                          localStorage.setItem('bieon_language', 'id');
+                          setOpenDropdown(null); 
+                        }}
                         className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors border-t border-slate-50"
                       >
-                        <span className={`text-sm font-bold ${settingsData.language === 'Indo' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>Indonesia (Indonesian)</span>
-                        {settingsData.language === 'Indo' && <Check className="w-4 h-4 text-emerald-500" />}
+                        <span className={`text-sm font-bold ${i18n.language === 'id' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.lang_id')}</span>
+                        {i18n.language === 'id' && <Check className="w-4 h-4 text-emerald-500" />}
                       </div>
                     </div>
                   )}
@@ -451,7 +460,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                     <Settings className="w-5 h-5 text-emerald-600" />
                   </div>
                   <p className="text-[12px] text-emerald-800 font-bold leading-relaxed">
-                    Perubahan akan diterapkan secara otomatis. Kami akan menyimpan preferensi Anda ke cloud segera.
+                    {t('profile.settings_note')}
                   </p>
                 </div>
               </div>

@@ -22,9 +22,41 @@ import {
     LineChart, Line, PieChart, Pie, Cell, Legend,
     XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import { SuperAdminLayout } from './SuperAdminLayout';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function AdminTariff({ onNavigate }) {
+    const { t, i18n } = useTranslation();
+
+    const getSegmentKey = (seg) => {
+        switch(seg) {
+            case 'Subsidi Rumah Tangga': return 'subsidi';
+            case 'Rumah Tangga': return 'rumah_tangga';
+            case 'Bisnis': return 'bisnis';
+            case 'Industri': return 'industri';
+            case 'Pemerintah & PJU': return 'pemerintah_pju';
+            case 'Pelayanan Sosial': return 'sosial';
+            default: return seg;
+        }
+    };
+
+    const translatePlnCategory = (label) => {
+        if (!label) return '-';
+        if (i18n.language !== 'en') return label;
+        return label
+            .replace('(Subsidi)', '(Subsidized)')
+            .replace('(Non-Subsidi)', '(Non-Subsidized)')
+            .replace('Rumah Tangga', 'Household')
+            .replace('Bisnis', 'Business')
+            .replace('Industri', 'Industry')
+            .replace('Pemerintah', 'Government')
+            .replace('Sosial', 'Social')
+            .replace('Pelayanan', 'Service')
+            .replace('Lainnya', 'Others')
+            .replace('Penerangan Jalan Umum', 'Street Lighting');
+    };
 
     const PLN_SEGMENT_ORDER = [
         'Subsidi Rumah Tangga',
@@ -161,7 +193,9 @@ export default function AdminTariff({ onNavigate }) {
         setTimeout(() => setToast({ show: false, message: '' }), 3000);
     };
 
-    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const monthNames = i18n.language === 'id' 
+        ? ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+        : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     const calendarDays = useMemo(() => {
         const firstDay = new Date(viewYear, viewMonth, 1).getDay();
@@ -206,6 +240,10 @@ export default function AdminTariff({ onNavigate }) {
         let actualYear = year;
         if (month < 0) { actualMonth = 11; actualYear -= 1; }
         if (month > 11) { actualMonth = 0; actualYear += 1; }
+        
+        if (i18n.language === 'en') {
+            return `${monthNames[actualMonth]} ${day}, ${actualYear}`;
+        }
         return `${day} ${monthNames[actualMonth]} ${actualYear}`;
     };
 
@@ -239,7 +277,7 @@ export default function AdminTariff({ onNavigate }) {
 
             const extractResponseData = async (result, key) => {
                 if (result.status !== 'fulfilled') {
-                    setDataErrors((prev) => ({ ...prev, [key]: 'Request gagal dikirim.' }));
+                    setDataErrors((prev) => ({ ...prev, [key]: t('admin_tariff.messages.fail_request', 'Request gagal dikirim.') }));
                     return null;
                 }
 
@@ -250,7 +288,7 @@ export default function AdminTariff({ onNavigate }) {
 
                 const payload = await result.value.json();
                 if (!payload?.success) {
-                    setDataErrors((prev) => ({ ...prev, [key]: payload?.message || 'Data tidak valid.' }));
+                    setDataErrors((prev) => ({ ...prev, [key]: payload?.message || t('admin_tariff.charts.error_default', 'Data tidak valid.') }));
                     return null;
                 }
 
@@ -266,15 +304,15 @@ export default function AdminTariff({ onNavigate }) {
 
             setCategoryStats(Array.isArray(currentData) ? currentData : []);
             setHistoryData(Array.isArray(nextHistoryData) ? nextHistoryData : []);
-            setPieData(Array.isArray(distData) ? distData : []);
+            setPieData(Array.isArray(distData) ? distData.map(d => ({ ...d, name: translatePlnCategory(d.name) })) : []);
             setMultiLineChartData(Array.isArray(trendData) ? trendData : []);
         } catch (error) {
             console.error('Gagal mengambil data tarif:', error);
             setDataErrors({
-                current: 'Terjadi kesalahan saat memuat data.',
-                history: 'Terjadi kesalahan saat memuat data.',
-                distribution: 'Terjadi kesalahan saat memuat data.',
-                trend: 'Terjadi kesalahan saat memuat data.'
+                current: t('admin_tariff.messages.error_update', 'Terjadi kesalahan saat memuat data.'),
+                history: t('admin_tariff.messages.error_update', 'Terjadi kesalahan saat memuat data.'),
+                distribution: t('admin_tariff.messages.error_update', 'Terjadi kesalahan saat memuat data.'),
+                trend: t('admin_tariff.messages.error_update', 'Terjadi kesalahan saat memuat data.')
             });
             setCategoryStats([]);
             setHistoryData([]);
@@ -389,6 +427,61 @@ export default function AdminTariff({ onNavigate }) {
         return sortableItems;
     }, [historyData, sortConfig, searchQuery, filterGolongan]);
 
+    const allGolonganOptions = useMemo(() => {
+        const categories = new Set();
+        historyData.forEach(item => {
+            if (item.category) categories.add(item.category);
+        });
+        return Array.from(categories).sort();
+    }, [historyData]);
+
+    const handleExportPDF = () => {
+        if (sortedHistory.length === 0) {
+            showToast(t('history.export.alert_no_data', 'Tidak ada data untuk diekspor'));
+            return;
+        }
+
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const isEn = i18n.language === 'en';
+        
+        // Header
+        doc.setFontSize(18);
+        doc.setTextColor(0, 155, 124);
+        doc.text(isEn ? "BIEON - Electricity Tariff History Report" : "BIEON - Laporan Riwayat Tarif Listrik", 15, 20);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(100, 100, 100);
+        doc.text(isEn ? `Generated on: ${new Date().toLocaleString()}` : `Dihasilkan pada: ${new Date().toLocaleString()}`, 15, 28);
+
+        const tableColumn = [
+            t('admin_tariff.history.col_category', 'GOLONGAN PLN'),
+            t('admin_tariff.history.col_tariff', 'TARIF (RP/KWH)'),
+            t('admin_tariff.history.col_date', 'TANGGAL BERLAKU'),
+            t('admin_tariff.history.col_author', 'DIUPDATE OLEH'),
+            t('admin_tariff.history.col_note', 'KETERANGAN')
+        ];
+
+        const tableRows = sortedHistory.map(item => [
+            item.category,
+            `Rp ${item.tariff.toLocaleString()}`,
+            item.date,
+            item.author,
+            item.note
+        ]);
+
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 35,
+            theme: 'striped',
+            headStyles: { fillColor: [0, 155, 124], fontSize: 10, halign: 'center' },
+            bodyStyles: { fontSize: 9, halign: 'center' },
+            margin: { top: 35 }
+        });
+
+        doc.save(`BIEON_Tariff_History_${new Date().getTime()}.pdf`);
+    };
+
     const totalPages = Math.max(1, Math.ceil(sortedHistory.length / rowsPerPage));
     const paginatedHistory = useMemo(() => {
         const start = (currentPage - 1) * rowsPerPage;
@@ -405,7 +498,7 @@ export default function AdminTariff({ onNavigate }) {
 
     const handleUpdateTariff = async () => {
         if (!formGolongan || !newTariff || !selectedDate) {
-            showToast("Harap isi Golongan, Nominal Tarif, dan Tanggal Berlaku!");
+            showToast(t('admin_tariff.messages.validation_required', 'Harap isi Golongan, Nominal Tarif, dan Tanggal Berlaku!'));
             return;
         }
 
@@ -413,9 +506,26 @@ export default function AdminTariff({ onNavigate }) {
             const token = localStorage.getItem('token');
 
             // Convert selectedDate dari format Indonesia ke ISO
-            const monthMap = { 'Januari': 0, 'Februari': 1, 'Maret': 2, 'April': 3, 'Mei': 4, 'Juni': 5, 'Juli': 6, 'Agustus': 7, 'September': 8, 'Oktober': 9, 'November': 10, 'Desember': 11 };
-            const parts = selectedDate.split(' ');
-            const dateISO = new Date(parseInt(parts[2]), monthMap[parts[1]], parseInt(parts[0])).toISOString();
+            const monthMapID = { 'Januari': 0, 'Februari': 1, 'Maret': 2, 'April': 3, 'Mei': 4, 'Juni': 5, 'Juli': 6, 'Agustus': 7, 'September': 8, 'Oktober': 9, 'November': 10, 'Desember': 11 };
+            const monthMapEN = { 'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5, 'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11 };
+            const monthMap = i18n.language === 'id' ? monthMapID : monthMapEN;
+
+            const parts = selectedDate.replace(',', '').split(' ');
+            let day, monthStr, year;
+            
+            if (i18n.language === 'en') {
+                // Format: "Month Day, Year"
+                monthStr = parts[0];
+                day = parseInt(parts[1]);
+                year = parseInt(parts[2]);
+            } else {
+                // Format: "Day Month Year"
+                day = parseInt(parts[0]);
+                monthStr = parts[1];
+                year = parseInt(parts[2]);
+            }
+
+            const dateISO = new Date(year, monthMap[monthStr], day).toISOString();
 
             const response = await fetch('/api/admin/tariffs', {
                 method: 'POST',
@@ -434,7 +544,7 @@ export default function AdminTariff({ onNavigate }) {
             const data = await response.json();
 
             if (data.success) {
-                showToast(`Tarif untuk ${formGolongan} berhasil diperbarui!`);
+                showToast(t('admin_tariff.messages.success_update', { category: formGolongan, defaultValue: 'Tarif untuk {{category}} berhasil diperbarui!' }));
                 setNewTariff('');
                 setSelectedDate('');
                 setNote('');
@@ -442,11 +552,11 @@ export default function AdminTariff({ onNavigate }) {
                 // Refresh semua data
                 await fetchAllData();
             } else {
-                showToast(data.message || 'Gagal memperbarui tarif.');
+                showToast(data.message || t('admin_tariff.messages.fail_update', 'Gagal memperbarui tarif.'));
             }
         } catch (error) {
             console.error('Error update tarif:', error);
-            showToast('Terjadi kesalahan saat memperbarui tarif.');
+            showToast(t('admin_tariff.messages.error_update', 'Terjadi kesalahan saat memperbarui tarif.'));
         }
     };
 
@@ -458,7 +568,7 @@ export default function AdminTariff({ onNavigate }) {
                     {payload.map((entry, index) => (
                         <div key={index} className="flex items-center gap-2 mb-1">
                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
-                            <p className="text-[11px] font-bold text-gray-700">
+                            <p className="text-[12px] font-black text-gray-700">
                                 {entry.name.toUpperCase()}: <span style={{ color: entry.color }}>Rp {entry.value.toFixed(2)}</span>
                             </p>
                         </div>
@@ -497,7 +607,7 @@ export default function AdminTariff({ onNavigate }) {
     const hasPieData = pieData.length > 0;
 
     return (
-        <SuperAdminLayout activeMenu="PLN Listrik" onNavigate={onNavigate} title="Manajemen Tarif Listrik">
+        <SuperAdminLayout activeMenu={t('admin_tariff.header.menu_label', 'PLN Listrik')} onNavigate={onNavigate} title={t('admin_tariff.header.title', 'Manajemen Tarif Listrik')}>
             {/* Content Workspace */}
             <div className="flex-1 w-full max-w-[1900px] mx-auto pb-10">
 
@@ -518,7 +628,7 @@ export default function AdminTariff({ onNavigate }) {
                                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
                                     }`}
                             >
-                                {opt}
+                                {t('admin_tariff.categories.' + getSegmentKey(opt), opt)}
                             </button>
                         ))}
                     </div>
@@ -562,10 +672,10 @@ export default function AdminTariff({ onNavigate }) {
                     {/* Card 1 - Info Golongan */}
                     <div className="bg-gradient-to-r from-[#10B981] to-[#059669] rounded-[1.25rem] shadow-md shadow-emerald-500/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex-1">
-                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">Informasi Golongan</p>
-                            <h3 className="text-[28px] font-extrabold tracking-tight leading-none mb-2">{activeSegmentName}</h3>
+                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">{t('admin_tariff.cards.info_title', 'Informasi Golongan')}</p>
+                            <h3 className="text-[28px] font-extrabold tracking-tight leading-none mb-2">{t('admin_tariff.categories.' + getSegmentKey(activeSegmentName), activeSegmentName)}</h3>
                             <div className="flex items-center gap-2">
-                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold">{totalSubCategories} Sub-Golongan</span>
+                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold">{t('admin_tariff.cards.sub_count', { count: totalSubCategories, defaultValue: '{{count}} Sub-Golongan' })}</span>
                             </div>
                         </div>
                         <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm hidden sm:block">
@@ -576,12 +686,12 @@ export default function AdminTariff({ onNavigate }) {
                     {/* Card 2 - Rentang Tarif */}
                     <div className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] rounded-[1.25rem] shadow-md shadow-orange-500/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
                         <div className="flex-1">
-                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">Rentang Tarif</p>
+                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">{t('admin_tariff.cards.range_title', 'Rentang Tarif')}</p>
                             <h3 className="text-[24px] xl:text-[28px] font-extrabold tracking-tight leading-none mb-2">
                                 {isSingleTariff ? `Rp ${minTariff.toFixed(2)}` : `Rp ${minTariff.toFixed(2)} - ${maxTariff.toFixed(2)}`}
                             </h3>
                             <div className="flex items-center gap-2">
-                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> Tipe Tarif Aktif</span>
+                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> {t('admin_tariff.cards.active_type', 'Tipe Tarif Aktif')}</span>
                             </div>
                         </div>
                         <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm hidden sm:block">
@@ -594,17 +704,17 @@ export default function AdminTariff({ onNavigate }) {
                 <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
                     <div className="p-6 border-b border-gray-50 flex items-center justify-between">
                         <div>
-                            <h2 className="text-lg font-bold text-gray-900 leading-tight">Matriks Sub-Golongan: {activeSegmentName}</h2>
-                            <p className="text-xs text-gray-500 mt-1 italic">Rincian tarif untuk setiap jenis pelanggan pada golongan ini.</p>
+                            <h2 className="text-lg font-bold text-gray-900 leading-tight">{t('admin_tariff.matrix.title', { segment: t('admin_tariff.categories.' + getSegmentKey(activeSegmentName), activeSegmentName), defaultValue: 'Matriks Sub-Golongan: {{segment}}' })}</h2>
+                            <p className="text-xs text-gray-500 mt-1 italic">{t('admin_tariff.matrix.subtitle', 'Rincian tarif untuk setiap jenis pelanggan pada golongan ini.')}</p>
                         </div>
                     </div>
                     <div className="overflow-x-auto custom-scrollbar-x pb-4 px-4 pt-4">
                         <table className="w-full text-left min-w-[800px]">
                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                 <tr>
-                                    <th className="px-6 py-4 font-normal rounded-tl-xl w-2/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Sub-Golongan & Status</div></th>
-                                    <th className="px-6 py-4 font-normal w-1/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Tarif Saat Ini</div></th>
-                                    <th className="px-6 py-4 font-normal rounded-tr-xl text-right w-1/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Aksi</div></th>
+                                    <th className="px-6 py-4 font-normal rounded-tl-xl w-2/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t('admin_tariff.matrix.col_category', 'Sub-Golongan & Status')}</div></th>
+                                    <th className="px-6 py-4 font-normal w-1/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t('admin_tariff.matrix.col_tariff', 'Tarif Saat Ini')}</div></th>
+                                    <th className="px-6 py-4 font-normal rounded-tr-xl text-right w-1/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t('admin_tariff.matrix.col_action', 'Aksi')}</div></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -614,12 +724,11 @@ export default function AdminTariff({ onNavigate }) {
                                             <div className="flex items-center justify-between max-w-sm">
                                                 <div className="text-sm font-bold text-gray-900">{stat.name}</div>
                                                 {stat.percentage !== 0 ? (
-                                                    <div className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${stat.percentage > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                                        {stat.percentage > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                                        {stat.percentage > 0 ? '+' : ''}{stat.percentage.toFixed(2)}%
+                                                    <div className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${stat.percentage > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                        {stat.percentage > 0 ? t('admin_tariff.matrix.status_up', 'Naik') : t('admin_tariff.matrix.status_down', 'Turun')} ({stat.percentage > 0 ? '+' : ''}{stat.percentage.toFixed(2)}%)
                                                     </div>
                                                 ) : (
-                                                    <div className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">Tetap</div>
+                                                    <div className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">{t('admin_tariff.matrix.status_unchanged', 'Tetap')}</div>
                                                 )}
                                             </div>
                                         </td>
@@ -627,7 +736,7 @@ export default function AdminTariff({ onNavigate }) {
                                             <div className="font-bold text-[#009B7C] text-[15px]">
                                                 Rp {stat.currentTariff.toFixed(2)}
                                             </div>
-                                            <div className="text-[10px] text-gray-400 font-medium">per kWh</div>
+                                            <div className="text-[10px] text-gray-400 font-medium">{t('admin_tariff.matrix.unit', 'per kWh')}</div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button
@@ -637,7 +746,7 @@ export default function AdminTariff({ onNavigate }) {
                                                 }}
                                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-[#E1F2EB] text-gray-600 hover:text-[#009B7C] rounded-lg text-xs font-bold transition-colors"
                                             >
-                                                <Zap className="w-3.5 h-3.5" /> Update
+                                                <Zap className="w-3.5 h-3.5" /> {t('admin_tariff.matrix.btn_update', 'Update')}
                                             </button>
                                         </td>
                                     </tr>
@@ -645,7 +754,7 @@ export default function AdminTariff({ onNavigate }) {
                                 {activeSubCategoryStats.length === 0 && (
                                     <tr>
                                         <td colSpan="3" className="px-6 py-8 text-center">
-                                            <p className="text-sm font-semibold text-gray-500">Tidak ada data sub-golongan.</p>
+                                            <p className="text-sm font-semibold text-gray-500">{t('admin_tariff.matrix.empty', 'Tidak ada data sub-golongan.')}</p>
                                         </td>
                                     </tr>
                                 )}
@@ -659,11 +768,11 @@ export default function AdminTariff({ onNavigate }) {
                     {/* CHART 1: Multi-line / Tren Perubahan */}
                     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 xl:col-span-3">
                         <div className="mb-6">
-                            <h2 className="text-xl font-bold text-gray-900 leading-tight">Tren Perubahan Tarif Listrik</h2>
-                            <p className="text-xs text-gray-500 mt-1 italic">Komparasi nilai pergerakan tarif antar golongan di BIEON.</p>
+                            <h2 className="text-xl font-bold text-gray-900 leading-tight">{t('admin_tariff.charts.trend_title', 'Tren Perubahan Tarif Listrik')}</h2>
+                            <p className="text-xs text-gray-500 mt-1 italic">{t('admin_tariff.charts.trend_desc', 'Komparasi nilai pergerakan tarif antar golongan di BIEON.')}</p>
                             {dataErrors.trend && (
                                 <p className="text-[11px] text-amber-600 font-semibold mt-2">
-                                    Data tren belum tersedia: {dataErrors.trend}
+                                    {t('admin_tariff.charts.trend_error', { error: dataErrors.trend, defaultValue: 'Data tren belum tersedia: {{error}}' })}
                                 </p>
                             )}
                         </div>
@@ -683,7 +792,7 @@ export default function AdminTariff({ onNavigate }) {
                             </div>
                         ) : (
                             <div className="h-[300px] w-full flex items-center justify-center text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                <p className="text-sm font-semibold text-gray-500">Data tren tarif belum tersedia.</p>
+                                <p className="text-sm font-semibold text-gray-500">{t('admin_tariff.charts.trend_empty', 'Data tren tarif belum tersedia.')}</p>
                             </div>
                         )}
                     </div>
@@ -691,11 +800,11 @@ export default function AdminTariff({ onNavigate }) {
                     {/* CHART 2: Sebaran Pelanggan (Pie) */}
                     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 xl:col-span-2">
                         <div className="mb-2">
-                            <h2 className="text-xl font-bold text-gray-900 leading-tight">Sebaran Konsumen BIEON</h2>
-                            <p className="text-xs text-gray-500 mt-1 italic">Distribusi pelanggan aktif berdasarkan klasifikasi PLN.</p>
+                            <h2 className="text-xl font-bold text-gray-900 leading-tight">{t('admin_tariff.charts.pie_title', 'Sebaran Konsumen BIEON')}</h2>
+                            <p className="text-xs text-gray-500 mt-1 italic">{t('admin_tariff.charts.pie_desc', 'Distribusi pelanggan aktif berdasarkan klasifikasi PLN.')}</p>
                             {dataErrors.distribution && (
                                 <p className="text-[11px] text-amber-600 font-semibold mt-2">
-                                    Data sebaran belum tersedia: {dataErrors.distribution}
+                                    {t('admin_tariff.charts.pie_error', { error: dataErrors.distribution, defaultValue: 'Data sebaran belum tersedia: {{error}}' })}
                                 </p>
                             )}
                         </div>
@@ -721,9 +830,9 @@ export default function AdminTariff({ onNavigate }) {
                                                 if (active && payload && payload.length) {
                                                     return (
                                                         <div className="bg-white border p-3 rounded-xl shadow-lg">
-                                                            <p className="text-xs font-bold text-gray-700">{payload[0].name}</p>
+                                                            <p className="text-[12px] font-black text-gray-700">{translatePlnCategory(payload[0].name)}</p>
                                                             <p className="text-sm font-bold mt-1" style={{ color: payload[0].payload.fill }}>
-                                                                {payload[0].value}% Pengguna
+                                                                {payload[0].value}{t('admin_tariff.charts.pie_unit', '% Pengguna')}
                                                             </p>
                                                         </div>
                                                     )
@@ -737,7 +846,7 @@ export default function AdminTariff({ onNavigate }) {
                             </div>
                         ) : (
                             <div className="h-[300px] w-full flex items-center justify-center text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                <p className="text-sm font-semibold text-gray-500">Data sebaran konsumen belum tersedia.</p>
+                                <p className="text-sm font-semibold text-gray-500">{t('admin_tariff.charts.pie_empty', 'Data sebaran konsumen belum tersedia.')}</p>
                             </div>
                         )}
                     </div>
@@ -749,17 +858,17 @@ export default function AdminTariff({ onNavigate }) {
                     <div id="update-form-section" className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 h-fit">
                         <div className="mb-6 border-b border-gray-100 pb-4">
                             <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 leading-tight mb-2">
-                                <Zap className="w-5 h-5 text-[#009b7c]" /> Update Tarif Listrik PLN
+                                <Zap className="w-5 h-5 text-[#009b7c]" /> {t('admin_tariff.form.title', 'Update Tarif Listrik PLN')}
                             </h2>
-                            <p className="text-sm text-gray-500">Perbarui tarif listrik sesuai dengan kebijakan terbaru PLN.</p>
+                            <p className="text-sm text-gray-500">{t('admin_tariff.form.subtitle', 'Perbarui tarif listrik sesuai dengan kebijakan terbaru PLN.')}</p>
                         </div>
 
                         <div className="bg-[#F0F7FF] border border-[#BFDBFE] rounded-2xl p-5 mb-8 text-blue-800">
-                            <h4 className="flex items-center gap-2 font-bold mb-2 text-sm"><Info className="w-5 h-5" /> Catatan Penting:</h4>
+                            <h4 className="flex items-center gap-2 font-bold mb-2 text-sm"><Info className="w-5 h-5" /> {t('admin_tariff.form.note_title', 'Catatan Penting:')}</h4>
                             <ul className="list-disc pl-6 text-xs space-y-1.5 font-medium opacity-90">
-                                <li>Perubahan tarif akan mempengaruhi perhitungan biaya energi untuk semua pelanggan</li>
-                                <li>Pastikan tarif yang dimasukkan sesuai dengan SK resmi dari PLN/Kementerian ESDM</li>
-                                <li>Sistem akan otomatis menghitung ulang estimasi biaya berdasarkan tarif baru</li>
+                                <li>{t('admin_tariff.form.note_p1', 'Perubahan tarif akan mempengaruhi perhitungan biaya energi untuk semua pelanggan')}</li>
+                                <li>{t('admin_tariff.form.note_p2', 'Pastikan tarif yang dimasukkan sesuai dengan SK resmi dari PLN/Kementerian ESDM')}</li>
+                                <li>{t('admin_tariff.form.note_p3', 'Sistem akan otomatis menghitung ulang estimasi biaya berdasarkan tarif baru')}</li>
                             </ul>
                         </div>
 
@@ -767,7 +876,7 @@ export default function AdminTariff({ onNavigate }) {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {/* GOLONGAN DROPDOWN */}
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-bold text-gray-700">Target Golongan <span className="text-red-500">*</span></label>
+                                    <label className="block text-xs font-bold text-gray-700">{t('admin_tariff.form.lbl_category', 'Target Golongan')} <span className="text-red-500">*</span></label>
                                     <div className="relative z-30">
                                         <button
                                             type="button"
@@ -775,7 +884,7 @@ export default function AdminTariff({ onNavigate }) {
                                             className={`w-full flex items-center justify-between px-4 py-3.5 bg-gray-50 border rounded-2xl text-sm font-bold transition-all ${showFormGolDropdown ? 'border-[#009b7c] bg-white ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-100/50'}`}
                                         >
                                             <span className={formGolongan ? 'text-gray-900' : 'text-gray-400'}>
-                                                {formGolongan || 'Pilih Golongan PLN'}
+                                                {formGolongan || t('admin_tariff.form.ph_category', 'Pilih Golongan PLN')}
                                             </span>
                                             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showFormGolDropdown ? 'rotate-180' : ''}`} />
                                         </button>
@@ -789,27 +898,27 @@ export default function AdminTariff({ onNavigate }) {
                                                             type="text"
                                                             value={formGolonganSearch}
                                                             onChange={(e) => setFormGolonganSearch(e.target.value)}
-                                                            placeholder="Cari golongan (mis. R1, B-2, PJU...)"
+                                                            placeholder={t('admin_tariff.form.search_category', 'Cari golongan (mis. R1, B-2, PJU...)')}
                                                             className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-[12px] font-bold text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-emerald-500/10 transition-all"
                                                         />
                                                     </div>
 
                                                     {plnCategoriesLoading && (
-                                                        <div className="px-5 pb-2 text-[11px] font-bold text-gray-400">
-                                                            Memuat kategori...
+                                                        <div className="px-5 pb-2 text-[12px] font-black text-gray-400">
+                                                            {t('admin_tariff.form.loading_category', 'Memuat kategori...')}
                                                         </div>
                                                     )}
 
                                                     {filteredFormCategories.length === 0 && (
                                                         <div className="px-5 py-3 text-[12px] font-bold text-gray-400">
-                                                            Tidak ada hasil.
+                                                            {t('admin_tariff.form.empty_category', 'Tidak ada hasil.')}
                                                         </div>
                                                     )}
 
                                                     {PLN_SEGMENT_ORDER.filter((seg) => groupedFormCategories[seg]?.length).map((seg) => (
                                                         <div key={seg} className="pb-1">
                                                             <div className="px-5 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                {seg}
+                                                                {t('admin_tariff.categories.' + getSegmentKey(seg), seg)}
                                                             </div>
                                                             {groupedFormCategories[seg].map((cat) => (
                                                                 <button
@@ -857,23 +966,23 @@ export default function AdminTariff({ onNavigate }) {
 
                                 {/* Input Nominal */}
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-bold text-gray-700">Tarif Listrik Baru (per kWh) <span className="text-red-500">*</span></label>
+                                    <label className="block text-xs font-bold text-gray-700">{t('admin_tariff.form.lbl_tariff', 'Tarif Listrik Baru (per kWh)')} <span className="text-red-500">*</span></label>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">Rp</span>
                                         <input
                                             type="number"
                                             value={newTariff}
                                             onChange={(e) => setNewTariff(e.target.value)}
-                                            placeholder="Contoh: 1495"
+                                            placeholder={t('admin_tariff.form.ph_tariff', 'Contoh: 1495')}
                                             className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-[#009b7c] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all custom-scrollbar-hide"
                                         />
                                     </div>
-                                    <p className="text-[10px] text-gray-400">Masukkan tarif dalam Rupiah (Rp)</p>
+                                    <p className="text-[10px] text-gray-400">{t('admin_tariff.form.hint_tariff', 'Masukkan tarif dalam Rupiah (Rp)')}</p>
                                 </div>
 
                                 {/* Custom Date Picker */}
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-bold text-gray-700">Tanggal Berlaku <span className="text-red-500">*</span></label>
+                                    <label className="block text-xs font-bold text-gray-700">{t('admin_tariff.form.lbl_date', 'Tanggal Berlaku')} <span className="text-red-500">*</span></label>
                                     <div className="relative">
                                         <button
                                             type="button"
@@ -881,7 +990,7 @@ export default function AdminTariff({ onNavigate }) {
                                             className={`w-full flex items-center justify-between px-4 py-3.5 bg-gray-50 border rounded-2xl text-sm font-bold transition-all ${showCalendar ? 'border-[#009b7c] bg-white ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-100/50'}`}
                                         >
                                             <span className={selectedDate ? 'text-gray-900' : 'text-gray-400'}>
-                                                {selectedDate || 'Pilih Tanggal'}
+                                                {selectedDate || t('admin_tariff.form.ph_date', 'Pilih Tanggal')}
                                             </span>
                                             <Calendar className={`w-4 h-4 text-gray-400 transition-colors ${showCalendar ? 'text-[#009b7c]' : ''}`} />
                                         </button>
@@ -957,90 +1066,89 @@ export default function AdminTariff({ onNavigate }) {
                                             </>
                                         )}
                                     </div>
-                                    <p className="text-[10px] text-gray-400">Tentukan kapan tarif baru mulai berlaku</p>
+                                    <p className="text-[10px] text-gray-400">{t('admin_tariff.form.hint_date', 'Tentukan kapan tarif baru mulai berlaku')}</p>
                                 </div>
                             </div>
 
                             {/* Textarea Keterangan */}
                             <div className="space-y-2">
-                                <label className="block text-xs font-bold text-gray-700">Catatan/Keterangan <span className="text-red-500">*</span></label>
+                                <label className="block text-xs font-bold text-gray-700">{t('admin_tariff.form.lbl_note', 'Catatan/Keterangan')} <span className="text-red-500">*</span></label>
                                 <textarea
                                     value={note}
                                     onChange={(e) => setNote(e.target.value)}
-                                    placeholder="Contoh: Penyesuaian tarif PLN sesuai SK Menteri ESDM No. 28/2026"
+                                    placeholder={t('admin_tariff.form.ph_note', 'Contoh: Penyesuaian tarif PLN sesuai SK Menteri ESDM No. 28/2026')}
                                     className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium text-gray-900 focus:outline-none focus:border-[#009b7c] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all min-h-[100px] resize-none"
                                 />
-                                <p className="text-[10px] text-gray-400">Jelaskan alasan/dasar hukum perubahan tarif</p>
+                                <p className="text-[10px] text-gray-400">{t('admin_tariff.form.hint_note', 'Jelaskan alasan/dasar hukum perubahan tarif')}</p>
                             </div>
 
                             <button
                                 onClick={handleUpdateTariff}
                                 className="w-full py-4 bg-[#009B7C] text-white font-bold rounded-2xl text-sm hover:bg-[#008268] transition-all shadow-lg flex justify-center items-center gap-2 group mt-4"
                             >
-                                <Zap className="w-4 h-4 opacity-80" /> Update Tarif Listrik
+                                <Zap className="w-4 h-4 opacity-80" /> {t('admin_tariff.form.btn_submit', 'Update Tarif Listrik')}
                             </button>
                         </div>
                     </div>
 
                     {/* HISTORY TABLE */}
                     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col h-fit">
-                        <div className="p-8 border-b border-gray-50 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-900 leading-tight">Riwayat Perubahan Tarif</h2>
-                                <p className="text-xs text-gray-500 mt-1 italic">Log jejak rekam penyesuaian semua golongan.</p>
+                        <div className="p-8 border-b border-gray-50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                            <div className="shrink-0">
+                                <h2 className="text-xl font-bold text-gray-900 leading-tight">{t('admin_tariff.history.title', 'Riwayat Perubahan Tarif')}</h2>
+                                <p className="text-xs text-gray-500 mt-1 italic">{t('admin_tariff.history.subtitle', 'Log jejak rekam penyesuaian semua golongan.')}</p>
                             </div>
-                            <div className="flex flex-col gap-3 w-full xl:w-auto">
-                                {/* Baris 1: Pencarian */}
-                                <div className="relative w-full xl:w-64">
+                            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                                {/* Pencarian */}
+                                <div className="relative w-full sm:w-64">
                                     <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                                     <input
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Cari Keterangan..."
-                                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-emerald-500/10 transition-all custom-scrollbar-hide h-9"
+                                        placeholder={t('admin_tariff.history.search_ph', 'Cari Keterangan...')}
+                                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-emerald-500/10 transition-all custom-scrollbar-hide h-10"
                                     />
                                 </div>
-                                {/* Baris 2: Filter & Export (Mobile & Tablet) */}
-                                <div className="flex items-center gap-2 w-full xl:w-auto">
-                                    <div className="relative flex-1 xl:flex-none">
-                                        <button
-                                            onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                                            className={`flex items-center justify-center xl:justify-start gap-2 w-full px-4 py-2 bg-gray-50 border rounded-xl text-xs font-bold transition-all h-9 ${showFilterDropdown ? 'border-[#009b7c]' : 'border-gray-100 hover:bg-gray-100/50'}`}
-                                        >
-                                            <Filter className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                                            <span className="text-gray-700 whitespace-nowrap truncate">{filterGolongan === 'All' ? 'Semua Golongan' : filterGolongan}</span>
-                                        </button>
-                                        {showFilterDropdown && (
-                                            <>
-                                                <div className="fixed inset-0 z-[35]" onClick={() => setShowFilterDropdown(false)}></div>
-                                                <div className="absolute left-0 xl:right-0 xl:left-auto top-full mt-2 w-full xl:w-48 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[40]">
-                                                    <button
-                                                        onClick={() => { setFilterGolongan('All'); setShowFilterDropdown(false); }}
-                                                        className={`w-full text-left px-5 py-2.5 text-[11px] font-bold transition-colors ${filterGolongan === 'All' ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                    >
-                                                        Semua Golongan
-                                                    </button>
-                                                    {allGolonganOptions.map((opt) => (
-                                                        <button
-                                                            key={opt}
-                                                            onClick={() => { setFilterGolongan(opt); setShowFilterDropdown(false); }}
-                                                            className={`w-full text-left px-5 py-2.5 text-[11px] font-bold transition-colors ${filterGolongan === opt ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                        >
-                                                            {opt}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
+                                {/* Filter */}
+                                <div className="relative w-full sm:w-48">
                                     <button
-                                        onClick={() => showToast("Mengekspor Riwayat Tarif ke PDF...")}
-                                        className="flex items-center justify-center gap-2 px-5 py-2 h-9 bg-[#E1F2EB] text-[#1E4D40] rounded-xl text-xs font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0"
+                                        onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                                        className={`flex items-center justify-start gap-2 w-full px-4 py-2 bg-gray-50 border rounded-xl text-xs font-bold transition-all h-10 ${showFilterDropdown ? 'border-[#009b7c]' : 'border-gray-100 hover:bg-gray-100/50'}`}
                                     >
-                                        <Download className="w-3.5 h-3.5 shrink-0" /> <span className="whitespace-nowrap">Export PDF</span>
+                                        <Filter className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                                        <span className="text-gray-700 whitespace-nowrap truncate">{filterGolongan === 'All' ? t('admin_tariff.history.filter_all', 'Semua Golongan') : translatePlnCategory(filterGolongan)}</span>
                                     </button>
+                                    {showFilterDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-[35]" onClick={() => setShowFilterDropdown(false)}></div>
+                                            <div className="absolute right-0 top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[40] max-h-[240px] overflow-y-auto modal-custom-scrollbar">
+                                                <button
+                                                    onClick={() => { setFilterGolongan('All'); setShowFilterDropdown(false); }}
+                                                    className={`w-full text-left px-5 py-2.5 text-[12px] font-black transition-colors ${filterGolongan === 'All' ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    {t('admin_tariff.history.filter_all', 'Semua Golongan')}
+                                                </button>
+                                                {allGolonganOptions.map((opt) => (
+                                                    <button
+                                                        key={opt}
+                                                        onClick={() => { setFilterGolongan(opt); setShowFilterDropdown(false); }}
+                                                        className={`w-full text-left px-5 py-2.5 text-[12px] font-black transition-colors ${filterGolongan === opt ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                    >
+                                                        {opt}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
+                                {/* Export Button */}
+                                <button
+                                    onClick={handleExportPDF}
+                                    className="flex items-center justify-center gap-2 px-6 py-2 h-10 bg-[#E1F2EB] text-[#1E4D40] rounded-xl text-xs font-bold hover:bg-[#d4ece3] transition-all shadow-sm w-full sm:w-auto shrink-0"
+                                >
+                                    <Download className="w-3.5 h-3.5 shrink-0" /> <span className="whitespace-nowrap">{t('admin_tariff.history.btn_export', 'Export')}</span>
+                                </button>
                             </div>
                         </div>
 
@@ -1051,19 +1159,19 @@ export default function AdminTariff({ onNavigate }) {
                                 <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                     <tr>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('category')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">GOLONGAN PLN {getSortIcon('category')}</div>
+                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">{t('admin_tariff.history.col_category', 'GOLONGAN PLN')} {getSortIcon('category')}</div>
                                         </th>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('tariff')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">TARIF (RP/KWH) {getSortIcon('tariff')}</div>
+                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">{t('admin_tariff.history.col_tariff', 'TARIF (RP/KWH)')} {getSortIcon('tariff')}</div>
                                         </th>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('date')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">TANGGAL BERLAKU {getSortIcon('date')}</div>
+                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">{t('admin_tariff.history.col_date', 'TANGGAL BERLAKU')} {getSortIcon('date')}</div>
                                         </th>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('timestamp')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">DIUPDATE OLEH {getSortIcon('timestamp')}</div>
+                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">{t('admin_tariff.history.col_author', 'DIUPDATE OLEH')} {getSortIcon('timestamp')}</div>
                                         </th>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none min-w-[280px] hidden xl:table-cell" onClick={() => requestSort('note')}>
-                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">KETERANGAN {getSortIcon('note')}</div>
+                                            <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">{t('admin_tariff.history.col_note', 'KETERANGAN')} {getSortIcon('note')}</div>
                                         </th>
                                     </tr>
                                 </thead>
@@ -1073,7 +1181,7 @@ export default function AdminTariff({ onNavigate }) {
                                             <td className="px-6 py-4">
                                                 {/* COLOR CODED BADGE DEPENDING ON CATEGORY */}
                                                 <span className={`inline-flex px-3 py-1.5 rounded-xl font-bold text-[10px] ${getBadgeStyle(item.category)}`}>
-                                                    {item.category}
+                                                    {translatePlnCategory(item.category)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
@@ -1083,10 +1191,10 @@ export default function AdminTariff({ onNavigate }) {
                                                 {item.percentage !== 0 ? (
                                                     <div className={`flex items-center gap-0.5 text-[10px] font-bold mt-1 ${item.percentage > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                                                         {item.percentage > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                                        {item.percentage > 0 ? '+' : ''}{item.percentage}%
+                                                        {item.percentage > 0 ? t('admin_tariff.matrix.status_up', 'Naik') : t('admin_tariff.matrix.status_down', 'Turun')} ({item.percentage > 0 ? '+' : ''}{item.percentage}%)
                                                     </div>
                                                 ) : (
-                                                    <div className="text-[10px] text-gray-400 font-medium mt-1">Tarif Dasar</div>
+                                                    <div className="text-[10px] text-gray-400 font-medium mt-1">{t('admin_tariff.history.base_tariff', 'Tarif Dasar')}</div>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
@@ -1105,60 +1213,48 @@ export default function AdminTariff({ onNavigate }) {
                             </table>
                         </div>
 
-                        {/* Standardized Pagination UI */}
-                        <div className="flex flex-col md:flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem] gap-6">
-                            {/* Rows Per Page - Left */}
-                            <div className="flex items-center gap-3 order-2 md:order-1">
-                                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows:</span>
+                        {/* Standardized Pagination UI (AdminComplaint Style) */}
+                        <div className="bg-gray-50/50 px-5 md:px-8 py-4 md:py-6 border-t border-gray-100 flex flex-row items-center justify-between gap-2 rounded-b-[2rem]">
+                            {/* Rows per page - Left */}
+                            <div className="flex items-center gap-2">
+                                <span className="hidden sm:inline text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">{t('admin_tariff.pagination.rows', 'Baris')}:</span>
                                 <div className="relative">
-                                    <button 
-                                        onClick={() => setShowRowsDropdown(!showRowsDropdown)} 
-                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-[#009b7c]/30 transition-all"
-                                    >
-                                        {rowsPerPage} <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
+                                    <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-100 rounded-xl text-[10px] md:text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all min-w-[50px] md:min-w-[70px] justify-between">
+                                        {rowsPerPage} <ChevronDown className={`w-3 h-3 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                     </button>
                                     {showRowsDropdown && (
-                                        <>
-                                            <div className="fixed inset-0 z-30" onClick={() => setShowRowsDropdown(false)}></div>
-                                            <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
-                                                {[5, 10, 30, 50].map(val => (
-                                                    <button 
-                                                        key={val} 
-                                                        onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} 
-                                                        className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
-                                                    >
-                                                        {val}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </>
+                                        <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
+                                            {[5, 10, 30, 50].map(val => (
+                                                <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             {/* Page Info - Center */}
-                            <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
-                                <span className="md:hidden">rows </span>{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                            <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap">
+                                {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} {t('admin_tariff.pagination.of', 'dari')} {totalItems} {t('admin_tariff.pagination.items', 'item')}
                             </div>
 
                             {/* Pagination Controls - Right */}
-                            <div className="flex items-center gap-2 md:gap-3 order-3">
+                            <div className="flex items-center gap-1.5 md:gap-3">
                                 <button
                                     disabled={currentPage === 1}
-                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                    onClick={() => setCurrentPage(prev => prev - 1)}
                                     className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                                 >
                                     <ChevronLeft className="w-4 h-4 md:hidden" />
-                                    <span className="hidden md:inline lg:hidden">Prev</span>
-                                    <span className="hidden lg:inline">Previous</span>
+                                    <span className="hidden md:inline lg:hidden">{t('admin_tariff.pagination.prev', 'Sebelumnya').slice(0, 4)}</span>
+                                    <span className="hidden lg:inline">{t('admin_tariff.pagination.prev', 'Sebelumnya')}</span>
                                 </button>
                                 <button
                                     disabled={currentPage >= totalPages}
-                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                    onClick={() => setCurrentPage(prev => prev + 1)}
                                     className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                                 >
-                                    <span className="hidden lg:inline">Next</span>
-                                    <span className="hidden md:inline lg:hidden">Next</span>
+                                    <span className="hidden lg:inline">{t('admin_tariff.pagination.next', 'Selanjutnya')}</span>
+                                    <span className="hidden md:inline lg:hidden">{t('admin_tariff.pagination.next', 'Selanjutnya').slice(0, 4)}</span>
                                     <ChevronRight className="w-4 h-4 md:hidden" />
                                 </button>
                             </div>

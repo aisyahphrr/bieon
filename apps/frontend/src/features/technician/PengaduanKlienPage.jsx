@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Search,
     Filter,
@@ -31,9 +32,10 @@ import { useSLA } from '../../hooks/useSLA';
 import { formatStatusDisplay, getActionButtons } from '../../utils/complaintHelpers';
 
 const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }) => {
+    const { t } = useTranslation();
     const { timer, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
     const displayStatus = formatStatusDisplay(item.status, 'technician');
-    const actions = getActionButtons('technician', item.status, timeElapsedMinutes);
+    const actions = getActionButtons('technician', item.status, timeElapsedMinutes, t);
 
     return (
         <div className="p-4 bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
@@ -86,6 +88,7 @@ const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }
 };
 
 const UrgencyBadge = ({ level, pingCount }) => {
+    const { t } = useTranslation();
     if ((!level || level === 'low') && !pingCount) return null;
 
     const mainBadgeStyles = {
@@ -94,8 +97,8 @@ const UrgencyBadge = ({ level, pingCount }) => {
     };
 
     const mainLabels = {
-        high: '🔥 Prioritas (Alihan)',
-        critical: '🚨 KRITIS'
+        high: `🔥 ${t('complaint.urgency_alihan', 'Prioritas (Alihan)')}`,
+        critical: `🚨 ${t('complaint.urgency_critical', 'KRITIS')}`
     };
 
     return (
@@ -103,7 +106,7 @@ const UrgencyBadge = ({ level, pingCount }) => {
             {/* Render Kotak Ping (Max 3) */}
             {Array.from({ length: pingCount || 0 }).map((_, i) => (
                 <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black uppercase shadow-sm">
-                    ⚠️ Ping
+                    ⚠️ {t('complaint.ping_badge', 'Ping')}
                 </span>
             ))}
             
@@ -118,9 +121,10 @@ const UrgencyBadge = ({ level, pingCount }) => {
 };
 
 const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket }) => {
+    const { t } = useTranslation();
     const { timer, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
     const displayStatus = formatStatusDisplay(item.status, 'technician');
-    const actions = getActionButtons('technician', item.status, timeElapsedMinutes);
+    const actions = getActionButtons('technician', item.status, timeElapsedMinutes, t);
 
     return (
         <tr className="hover:bg-gray-50/50 transition-colors group border-b border-gray-50">
@@ -167,6 +171,7 @@ const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket })
 };
 
 export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketHandled }) {
+    const { t, i18n } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatusFilter, setSelectedStatusFilter] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
@@ -188,15 +193,22 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
         
         // Header PDF
         doc.setFontSize(18);
-        doc.setTextColor(15, 158, 120); // Teal BIEON
-        doc.text('Laporan Pengaduan BIEON - Taskboard Teknisi', 14, 22);
-        
-        doc.setFontSize(11);
-        doc.setTextColor(100);
-        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+        doc.setTextColor(15, 158, 120); // #0F9E78 (BIEON Teal)
+        doc.text(t('export.tech_taskboard_title', 'BIEON - Taskboard Teknisi'), 14, 22);
 
-        // Definisi Kolom sesuai urutan tabel: ID, Tanggal, Topik, Pelanggan, Lokasi, Status
-        const tableColumn = ["ID Tiket", "Tanggal", "Topik Kendala", "Pelanggan", "Lokasi", "Status"];
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(`${t('export.printed_at', 'Dicetak pada')}: ${new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`, 14, 30);
+
+        // Definisi Kolom sesuai urutan tabel
+        const tableColumn = [
+            t('complaint.detail_box.ticket_id', "ID TIKET"), 
+            t('complaint.detail_box.date_in', "TANGGAL"), 
+            t('complaint.detail_box.topic', "TOPIK KENDALA"), 
+            t('complaint.detail_box.customer_info', "PELANGGAN"), 
+            t('profile.address', "LOKASI"), 
+            t('complaint.detail_box.status', "STATUS")
+        ];
         const tableRows = [];
 
         // Isi Data dari State processedData (data yang sedang terfilter)
@@ -207,7 +219,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                 ticket.topic,
                 ticket.customer,
                 ticket.location,
-                ticket.status.toUpperCase()
+                formatStatusDisplay(ticket.status, 'technician').toUpperCase()
             ];
             tableRows.push(ticketData);
         });
@@ -245,7 +257,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                         ...item,
                         originalId: item._id,
                         id: safeId ? `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}` : 'TCK-000000',
-                        date: item.createdAt ? new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') : '-',
+                        date: item.createdAt ? new Date(item.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') : '-',
                         customer: item.homeowner?.fullName || 'Unknown User',
                         location: item.homeowner?.address || '-',
                         topic: item.topic || 'No Topic',
@@ -262,7 +274,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             id: item.technician._id,
                             name: item.technician.fullName,
                             phone: item.technician.phoneNumber,
-                            targetDate: item.assignedAt ? new Date(new Date(item.assignedAt).getTime() + (48 * 60 * 60 * 1000)).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA'
+                            targetDate: item.assignedAt ? new Date(new Date(item.assignedAt).getTime() + (48 * 60 * 60 * 1000)).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA'
                         } : null,
                         logRequestStatus: item.logRequestStatus || 'none',
                         logReason: item.logReason || '',
@@ -332,10 +344,10 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
             });
 
             if (response.ok) {
-                showToast("Tiket berhasil diterima & proses pemeriksaan dimulai.");
+                showToast(t('complaint.tech_dashboard.toast_success', "Tiket berhasil diterima & proses pemeriksaan dimulai."));
                 fetchData();
             } else {
-                showToast("Gagal memulai proses perbaikan.");
+                showToast(t('complaint.tech_dashboard.toast_fail', "Gagal memulai proses perbaikan."));
             }
         } catch (error) {
             console.error("Error starting process:", error);
@@ -425,8 +437,8 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
             `}</style>
             <div className="py-8">
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-[#1E4D40] mb-2 text-center sm:text-left">Taskboard Teknisi - Pusat Pengaduan</h1>
-                    <p className="text-gray-500 text-sm max-w-2xl text-center sm:text-left">Pantau dan selesaikan tiket pengaduan Pelanggan yang ditugaskan kepada Anda. Perhatikan batas waktu SLA untuk setiap tiket.</p>
+                    <h1 className="text-2xl font-bold text-[#1E4D40] mb-2 text-center sm:text-left">{t('complaint.tech_dashboard.header_title', 'Taskboard Teknisi - Pusat Pengaduan')}</h1>
+                    <p className="text-gray-500 text-sm max-w-2xl text-center sm:text-left">{t('complaint.tech_dashboard.header_desc', 'Pantau dan selesaikan tiket pengaduan Pelanggan yang ditugaskan kepada Anda. Perhatikan batas waktu SLA untuk setiap tiket.')}</p>
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
@@ -442,7 +454,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             )}
                         </div>
                         <div>
-                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Menunggu Respons</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">{t('complaint.tech_dashboard.urgent_waiting', 'Menunggu Respons')}</div>
                             <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.waiting}</div>
                         </div>
                     </div>
@@ -453,7 +465,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Sedang Diproses</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">{t('complaint.tech_dashboard.in_progress', 'Sedang Diproses')}</div>
                             <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.processing}</div>
                         </div>
                     </div>
@@ -464,7 +476,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Tiket Selesai</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">{t('complaint.tech_dashboard.resolved', 'Tiket Selesai')}</div>
                             <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.completed}</div>
                         </div>
                     </div>
@@ -475,7 +487,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             </div>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">Rata-Rata Penilaian</div>
+                            <div className="text-gray-500 text-[9px] md:text-xs font-medium mb-0.5 md:mb-1 truncate">{t('complaint.tech_dashboard.avg_rating', 'Rata-Rata Penilaian')}</div>
                             <div className="flex items-baseline gap-1">
                                 <div className="text-xl md:text-2xl font-bold text-gray-900">{stats.avgRating}</div>
                                 <Star className="w-4 h-4 md:w-5 md:h-5 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)] transition-transform group-hover:rotate-[15deg]" />
@@ -488,8 +500,8 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                     <div className="p-6 border-b border-gray-100">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900">Riwayat Pengaduan Saya</h2>
-                                <p className="text-xs text-gray-500 mt-0.5 italic">Pantau status perbaikan Anda secara real-time.</p>
+                                <h2 className="text-lg font-bold text-gray-900">{t('complaint.tech_dashboard.history_title', 'Riwayat Pengaduan Saya')}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5 italic">{t('complaint.tech_dashboard.history_desc', 'Pantau status perbaikan Anda secara real-time.')}</p>
                             </div>
 
                             <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
@@ -497,7 +509,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                     <input
                                         type="text"
-                                        placeholder="Cari No. Tiket, Nama Pelanggan, atau Topik..."
+                                        placeholder={t('table.search_placeholder', 'Cari tiket...')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
@@ -509,7 +521,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                         className={`flex items-center justify-center sm:justify-between gap-1.5 md:gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
                                     >
                                         <Filter className={`w-4 h-4 transition-colors ${selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
-                                        <span className="hidden sm:inline-block">{selectedStatusFilter || 'Semua Status'}</span>
+                                        <span className="hidden sm:inline-block">{selectedStatusFilter ? formatStatusDisplay(selectedStatusFilter, 'technician') : t('table.all_status', 'Semua Status')}</span>
                                         <ChevronDown className={`hidden sm:block w-4 h-4 transition-all ${showStatusDropdown ? 'rotate-180' : ''}`} />
                                     </button>
                                     {showStatusDropdown && (
@@ -522,7 +534,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                                         onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
                                                         className={`w-full text-left px-4 py-2 text-sm ${selectedStatusFilter === s ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                     >
-                                                        {s || 'Semua Status'}
+                                                        {s ? formatStatusDisplay(s, 'technician') : t('table.all_status', 'Semua Status')}
                                                     </button>
                                                 ))}
                                             </div>
@@ -531,7 +543,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                 </div>
                                 <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent">
                                     <Download className="w-4 h-4 shrink-0" />
-                                    <span className="hidden sm:inline-block">Export</span>
+                                    <span className="hidden sm:inline-block">{t('table.export', 'Ekspor')}</span>
                                 </button>
                             </div>
                         </div>
@@ -542,31 +554,31 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-400 select-none">
                                 <tr>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('id')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">ID Tiket {getSortIcon('id')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.ticket_id', 'ID Tiket')} {getSortIcon('id')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('date')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Dibuat {getSortIcon('date')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.date', 'Tanggal')} {getSortIcon('date')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('topic')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Topik Kendala {getSortIcon('topic')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.topic', 'Topik Kendala')} {getSortIcon('topic')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('customer')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Pelanggan {getSortIcon('customer')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.customer', 'Pelanggan')} {getSortIcon('customer')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('location')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Lokasi {getSortIcon('location')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('profile.address', 'Lokasi')} {getSortIcon('location')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('status')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status {getSortIcon('status')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.status', 'Status')} {getSortIcon('status')}</div>
                                     </th>
                                     <th className="px-6 py-4 font-normal whitespace-nowrap">
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Aksi</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.action', 'Aksi')}</div>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {isLoading ? (
-                                    <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500 animate-pulse font-bold">Memuat Tugas...</td></tr>
+                                    <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500 animate-pulse font-bold">{t('tech_dashboard.loading_tasks', 'Memuat Tugas...')}</td></tr>
                                 ) : apiError ? (
                                     <tr><td colSpan={6} className="px-6 py-20 text-center text-red-500 font-bold bg-red-50">{apiError}</td></tr>
                                 ) : currentData.length > 0 ? (
@@ -574,7 +586,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                         <TechnicianComplaintRow key={idx} item={item} handleStartProcess={handleStartProcess} setSelectedTicket={setSelectedTicket} />
                                     ))
                                 ) : (
-                                    <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500 italic">Belum ada tiket pengaduan untuk akun ini.</td></tr>
+                                    <tr><td colSpan={6} className="px-6 py-20 text-center text-gray-500 italic">{t('tech_dashboard.table.no_clients', 'Belum ada tiket pengaduan untuk akun ini.')}</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -588,7 +600,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
 
                     <div className="flex flex-row items-center justify-between p-6 text-sm text-gray-500 border-t border-gray-100 bg-white gap-2 sm:gap-4">
                         <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 font-medium">
-                            <span className="hidden sm:inline">Rows per page:</span>
+                            <span className="hidden sm:inline">{t('table.rows_per_page', 'Baris per halaman:')}</span>
                             <div className="relative">
                                 <button
                                     onClick={() => setShowRowsDropdown(!showRowsDropdown)}
@@ -615,7 +627,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             </div>
                         </div>
                         <div className="text-xs sm:text-sm font-medium">
-                            {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
+                            {t('table.pagination_info', '{{start}}-{{end}} dari {{total}} item', { start: totalItems === 0 ? 0 : startIndex + 1, end: Math.min(startIndex + rowsPerPage, totalItems), total: totalItems })}
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <button
@@ -624,7 +636,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                 className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600"
                             >
                                 <span className="sm:hidden">&lt;</span>
-                                <span className="hidden sm:inline">Previous</span>
+                                <span className="hidden sm:inline">{t('table.previous', 'Sebelumnya')}</span>
                             </button>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -632,7 +644,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                 className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600"
                             >
                                 <span className="sm:hidden">&gt;</span>
-                                <span className="hidden sm:inline">Next</span>
+                                <span className="hidden sm:inline">{t('table.next', 'Selanjutnya')}</span>
                             </button>
                         </div>
                     </div>

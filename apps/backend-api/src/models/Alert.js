@@ -10,7 +10,8 @@ const alertSchema = new mongoose.Schema({
     },
     title: { type: String },
     room: { type: String }, // e.g., "R1 - Pintu Utama"
-    message: { type: String, required: true },
+    messageKey: { type: String }, // Kunci translasi (contoh: 'notif.device_on')
+    message: { type: String }, // Raw message sebagai fallback
     type: { 
         type: String, 
         enum: ['Info', 'Warning', 'Danger', 'Waspada', 'Bahaya', 'Success'], 

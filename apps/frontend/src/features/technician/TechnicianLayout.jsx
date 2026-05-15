@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Home, Settings, Clock, MessageSquare, Bell, ChevronDown } from 'lucide-react';
+import { Home, Settings, Clock, MessageSquare, Bell, ChevronDown, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useState, useRef, useEffect } from 'react';
 import NotificationPopup from '../../components/NotificationPopup';
 
 // Navigation items for bottom tab bar
 const NAV_ITEMS = [
-  { id: 'dashboard', icon: Home,         label: 'Beranda'   },
-  { id: 'konfigurasi', icon: Settings,   label: 'Kendali'   },
-  { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan' },
-  { id: 'riwayat', icon: Clock,          label: 'Riwayat'   },
+  { id: 'dashboard', icon: Home,         label: 'Beranda',   tKey: 'nav.dashboard' },
+  { id: 'konfigurasi', icon: Settings,   label: 'Kendali',   tKey: 'nav.kendali_short' },
+  { id: 'pengaduan', icon: MessageSquare, label: 'Pengaduan', tKey: 'nav.complaint_tab' },
+  { id: 'riwayat', icon: Clock,          label: 'Riwayat',   tKey: 'nav.history' },
 ];
 
 export default function TechnicianLayout({ children, activeMenu, setActiveMenu, onNavigate }) {
+  const { t, i18n } = useTranslation();
   const [showNotif, setShowNotif] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
   const lastLocationSentRef = useRef({ lat: null, lng: null, sentAt: 0 });
@@ -128,10 +130,10 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
             {/* Desktop Navigation (Center Aligned via absolute positioning) */}
             <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 lg:gap-10">
               {[
-                { id: 'dashboard',   label: 'Beranda'          },
-                { id: 'konfigurasi', label: 'Kendali Perangkat' },
-                { id: 'riwayat',     label: 'Riwayat'          },
-              ].map(({ id, label }) => (
+                { id: 'dashboard',   label: 'Beranda',           tKey: 'nav.dashboard' },
+                { id: 'konfigurasi', label: 'Kendali Perangkat', tKey: 'nav.kendali' },
+                { id: 'riwayat',     label: 'Riwayat',           tKey: 'nav.history' },
+              ].map(({ id, label, tKey }) => (
                 <button
                   key={id}
                   onClick={() => setActiveMenu(id)}
@@ -141,7 +143,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                       : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
                   }`}
                 >
-                  {label}
+                  {t(tKey, label)}
                 </button>
               ))}
             </nav>
@@ -152,10 +154,24 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
               <button
                 onClick={() => setActiveMenu('pengaduan')}
                 className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                title="Pengaduan"
+                title={t('nav.complaint_tab', 'Pengaduan')}
               >
                 <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
-                <span className="hidden lg:block ml-2">Pengaduan</span>
+                <span className="hidden lg:block ml-2">{t('nav.complaint_tab', 'Pengaduan')}</span>
+              </button>
+
+              {/* Language Toggle */}
+              <button
+                onClick={() => {
+                  const newLang = i18n.language === 'id' ? 'en' : 'id';
+                  i18n.changeLanguage(newLang);
+                  localStorage.setItem('bieon_language', newLang);
+                }}
+                className="hidden sm:flex items-center justify-center p-2 rounded-lg font-bold text-xs bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors border border-teal-200 gap-2"
+                title="Toggle Language"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="uppercase">{i18n.language}</span>
               </button>
 
               {/* Notification */}
@@ -220,7 +236,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                 <Icon className={`w-5 h-5 stroke-[2.5] ${isActive ? 'text-[#009270]' : ''}`} />
               </div>
               <span className={`text-[10px] font-bold tracking-tight ${isActive ? 'text-[#009270]' : 'text-gray-400'}`}>
-                {item.label}
+                {t(item.tKey, item.label)}
               </span>
             </button>
           );
