@@ -167,7 +167,17 @@ exports.getAlertHistory = async (req, res) => {
 // 7. PUT /api/history/alerts/:id/read
 exports.markAlertAsRead = async (req, res) => {
     try {
-        await Alert.findByIdAndUpdate(req.params.id, { isRead: true });
+        const ownerId = getTargetHomeownerId(req);
+        const alert = await Alert.findOneAndUpdate(
+            { _id: req.params.id, owner: ownerId }, 
+            { isRead: true },
+            { new: true }
+        );
+
+        if (!alert) {
+            return res.status(403).json({ success: false, message: 'Notifikasi tidak ditemukan atau Anda tidak berwenang.' });
+        }
+
         res.status(200).json({ success: true, message: 'Notifikasi ditandai sebagai dibaca' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

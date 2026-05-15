@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const authMiddleware = (req, res, next) => {
+const protect = (req, res, next) => {
     // Ambil token dari header Authorization: Bearer <token>
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -18,4 +18,17 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+const restrictTo = (...roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ 
+                message: 'Anda tidak memiliki hak akses untuk melakukan tindakan ini.' 
+            });
+        }
+        next();
+    };
+};
+
+module.exports = protect; // Untuk backward compatibility
+module.exports.protect = protect;
+module.exports.restrictTo = restrictTo;

@@ -333,11 +333,16 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
           }
 
           if (hasCondition) {
-            const targetTopic = `bieon/${act.name.replace(/\s+/g, '_')}/command`;
+            const deviceIdentifier = act.device_ieee || act.modelId || act.name.replace(/\s+/g, '_').toLowerCase();
+            const hubAlias = updatedDevice.hubId ? (await require('../models/Hub').findById(updatedDevice.hubId))?.bieonId || 'hub_01' : 'hub_01';
+            
+            // Samakan format topik dengan Kontrol Manual (Hierarchical)
+            const targetTopic = `tenant/${act.owner}/bieon/${act.bieonId}/hub/${hubAlias}/device/${deviceIdentifier}/command`;
+            
             const newStatus = isMet ? '1' : '0';
             
             if (String(act.status) !== newStatus) {
-              console.log(`[Automation] ${act.name} -> ${newStatus === '1' ? 'ON' : 'OFF'}`);
+              console.log(`[Automation] ${act.name} (IEEE: ${deviceIdentifier}) -> ${newStatus === '1' ? 'ON' : 'OFF'}`);
               publishCommand(targetTopic, newStatus === '1' ? 'ON' : 'OFF');
               await KendaliPerangkat.findByIdAndUpdate(act._id, { status: newStatus });
 
@@ -351,7 +356,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
                 trigger: `Otomasi (${aspect})`
               }).save();
 
-              if (ioInstance) ioInstance.emit('device_telemetry', { _id: act._id, status: newStatus });
+              if (ioInstance) ioInstance.emit('device_telemetry', act);
 
               const Alert = require('../models/Alert');
               await Alert.create({

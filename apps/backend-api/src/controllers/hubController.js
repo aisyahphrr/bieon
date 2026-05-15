@@ -10,8 +10,14 @@ const { publishCommand } = require('../config/mqtt');
 // Setup Hubs awal untuk sistem baru atau klaim stok yang sudah ada
 exports.setupHubs = async (req, res) => {
     try {
-        const { bieonId, totalHubs, hubCount, userId } = req.body;
+        const { bieonId, totalHubs, hubCount } = req.body;
+        // PRIORITAS: Ambil ID dari Token (jauh lebih aman & akurat)
+        const userId = req.user?.userId || req.body.userId; 
         const count = totalHubs || hubCount || 1;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Sesi berakhir, silakan login kembali.' });
+        }
 
         // 1. Cek apakah sistem sudah ada
         let system = await BieonSystem.findOne({ bieonId });
@@ -53,8 +59,8 @@ exports.setupHubs = async (req, res) => {
         const hubsPayload = [];
 
         if (hubs.length > 0) {
+            const user = await User.findById(userId);
             for (const hub of hubs) {
-                const user = await User.findById(userId);
                 hub.owner = userId;
                 hub.tenantId = user?.tenantId || "tenant_001";
                 await hub.save();
@@ -117,6 +123,12 @@ exports.setupHubs = async (req, res) => {
 exports.getUserSystems = async (req, res) => {
     try {
         const { userId } = req.params;
+        
+        // --- KEAMANAN KETAT: Cek apakah yang minta adalah pemiliknya atau SuperAdmin ---
+        if (req.user.role !== 'SuperAdmin' && String(userId) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak diizinkan melihat data sistem pengguna lain.' });
+        }
+
         const systems = await BieonSystem.find({ owner: userId });
         
         // Untuk setiap sistem, ambil daftar hub-nya
@@ -141,7 +153,14 @@ exports.getUserSystems = async (req, res) => {
 
 exports.getHubs = async (req, res) => {
     try {
-        const hubs = await Hub.find({ owner: req.params.userId }); 
+        const { userId } = req.params;
+
+        // --- KEAMANAN KETAT ---
+        if (req.user.role !== 'SuperAdmin' && String(userId) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak diizinkan melihat data hub pengguna lain.' });
+        }
+
+        const hubs = await Hub.find({ owner: userId });
         res.status(200).json(hubs);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data hub', error: error.message });

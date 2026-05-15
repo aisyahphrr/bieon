@@ -63,6 +63,21 @@ exports.createDevice = async (req, res) => {
         const user = await User.findById(ownerId);
         const hub = await Hub.findById(hubId);
 
+        // --- VALIDASI KEPEMILIKAN BARANG (Anti-Maling) ---
+        const RegisteredProduct = require('../models/RegisteredProduct');
+        const prodId = req.body.productId || deviceType;
+        const myProduct = await RegisteredProduct.findOne({ 
+            productId: prodId, 
+            owner: ownerId,
+            isUsed: false 
+        });
+
+        if (!myProduct) {
+            return res.status(403).json({ 
+                message: 'Barang tidak ditemukan di daftar registrasi Anda atau sudah digunakan di hub lain.' 
+            });
+        }
+
         // --- NEW: AUTO LOOKUP IEEE FROM WHITELIST ---
         // Prioritaskan pencarian berdasarkan deviceType (ID Teknis dari Dropdown)
         let finalIeee = device_ieee || req.body.ieee || req.body.mac || req.body.productId;
@@ -322,8 +337,26 @@ exports.deleteDevice = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak memiliki hak akses.' });
         }
 
+        const productIdToReset = device.modelId || device.type;
+        
         await KendaliPerangkat.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: 'Perangkat berhasil dihapus' });
+
+        // CLEANUP: Bebaskan kembali produk di daftar registrasi agar bisa dipakai lagi
+        if (productIdToReset) {
+            const RegisteredProduct = require('../models/RegisteredProduct');
+            await RegisteredProduct.findOneAndUpdate(
+                { 
+                    $or: [
+                        { productId: productIdToReset },
+                        { productName: productIdToReset }
+                    ]
+                },
+                { isUsed: false, owner: null }
+            );
+            console.log(`[Cleanup] Product ${productIdToReset} has been released and is now reusable.`);
+        }
+
+        res.status(200).json({ message: 'Perangkat berhasil dihapus dan ID produk telah dilepaskan.' });
     } catch (error) {
         res.status(500).json({ message: 'Gagal menghapus perangkat', error: error.message });
     }
@@ -376,10 +409,11 @@ exports.toggleDevice = async (req, res) => {
         const hub = await Hub.findById(device.hubId);
         const hubIdAlias = hub?.bieonId || 'hub_01'; // Fallback ke alias hub
 
-        const sanitizedDeviceName = device.name.toLowerCase().replace(/\s+/g, '_');
-        const topicCommand = `tenant/${tenantId}/bieon/${bieonId}/hub/${hubIdAlias}/device/${sanitizedDeviceName}/command`;
+        // GUNAKAN IEEE (PERMANENT ID) BUKAN NAMA (DYNAMICAL ID)
+        const deviceIdentifier = device.device_ieee || device.modelId || device.name.toLowerCase().replace(/\s+/g, '_');
+        const topicCommand = `tenant/${tenantId}/bieon/${bieonId}/hub/${hubIdAlias}/device/${deviceIdentifier}/command`;
 
-        console.log(`[MQTT] Sending hierarchical command to: ${topicCommand}`);
+        console.log(`[MQTT] Sending stable command to: ${topicCommand}`);
 
         // Publish ke MQTT
         publishCommand(topicCommand, newStatus);
@@ -415,11 +449,8 @@ exports.toggleDevice = async (req, res) => {
             metadata: { deviceId: device._id }
         });
 
-        // SINKRONISASI REAL-TIME: Langsung kirim balasan ke frontend agar tidak stuck di 'Memproses...'
-        broadcastDeviceTelemetry(device.hubId, {
-            _id: device._id,
-            status: device.status
-        });
+        // SINKRONISASI REAL-TIME: Kirim data LENGKAP agar UI tidak kehilangan info sensor/baterai
+        broadcastDeviceTelemetry(device.hubId, device);
 
         res.status(200).json({ 
             message: `Perangkat ${device.name} berhasil diubah ke status ${newStatus}`,
