@@ -18,7 +18,9 @@ import {
   Wind,
   Users,
   Wrench,
-  Boxes
+  Boxes,
+  Bell,
+  Cloud
 } from 'lucide-react';
 
 const StatCard = ({ icon: Icon, target, label, suffix = "+", colorClass = "text-emerald-500" }) => {
@@ -146,8 +148,8 @@ const LandingPage = () => {
 
       {/* Background Ambient Glow */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-300 rounded-full mix-blend-multiply filter blur-[150px] opacity-[0.25] animate-[pulse_6s_ease-in-out_infinite]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-teal-200 rounded-full mix-blend-multiply filter blur-[150px] opacity-[0.35] animate-[pulse_8s_ease-in-out_infinite]" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#059b27] rounded-full filter blur-[150px] opacity-[0.15] animate-[pulse_6s_ease-in-out_infinite]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-[#129cc0] rounded-full filter blur-[150px] opacity-[0.2] animate-[pulse_8s_ease-in-out_infinite]" style={{ animationDelay: '2s' }}></div>
         <div className="absolute top-[30%] left-[20%] w-[35%] h-[35%] bg-emerald-100 rounded-full mix-blend-multiply filter blur-[120px] opacity-[0.4] animate-[pulse_7s_ease-in-out_infinite]" style={{ animationDelay: '4s' }}></div>
       </div>
 
@@ -184,32 +186,33 @@ const LandingPage = () => {
 
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
-            <div className="inline-flex items-center justify-center bg-white/80 backdrop-blur-sm border border-emerald-200/60 text-[#009b7c] px-4 py-1.5 rounded-sm text-[15px] font-bold tracking-widest mb-8 shadow-sm">
-              BIEON
+            <div className="mb-8">
+              <div className="text-5xl lg:text-6xl font-black tracking-tighter mb-2">
+                <span className="text-[#059b27]">ECO</span><span className="text-[#129cc0]">SENSE</span>
+              </div>
+              <div className="text-lg lg:text-xl font-bold text-slate-700 tracking-tight">
+                Smart Living Monitoring System
+              </div>
             </div>
 
-            <h1 className="text-5xl lg:text-[4rem] font-extrabold text-slate-900 leading-[1.05] tracking-tight mb-6">
-              Smart Green Living <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#009b7c] to-teal-800">Monitoring System</span>
+            <h1 className="text-5xl lg:text-[4.5rem] font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-8">
+              Monitor Today, <br />
+              <span className="text-[#059b27]">Sustain</span> Tomorrow.
             </h1>
 
-            <p className="text-xl lg:text-2xl text-slate-800 mb-6 font-bold">
-              Monitor Today, Sustain Tomorrow.
-            </p>
-
-            <div className="text-sm text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium space-y-4">
-              <p>
-                Di era modern, keberlanjutan bukan lagi pilihan—tetapi kebutuhan. Smart Green Living Monitoring System dari BIEON hadir sebagai solusi untuk membantu Anda memantau, memahami, dan mengelola kehidupan Anda secara real-time melalui teknologi cerdas berbasis data.
-              </p>
-              <p>
-                Dengan sistem monitoring terintegrasi, Anda dapat mengukur berbagai parameter penting seperti energi, kualitas air, lingkungan, dan efisiensi penggunaan sumber daya, sehingga setiap keputusan yang diambil menjadi lebih tepat, efisien, dan berdampak positif bagi lingkungan.
-              </p>
+            <div className="text-base lg:text-lg text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+              <p>Real-time monitoring untuk energi, air, udara, dan lingkungan.</p>
+              <p>Data akurat, keputusan lebih cepat, hidup lebih berkelanjutan.</p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
               <button onClick={() => navigate('/signup')} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-full font-bold transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2">
                 Mulai Sekarang <ArrowRight className="w-4 h-4" />
               </button>
-              <button className="w-full sm:w-auto bg-white/80 hover:bg-white backdrop-blur-md border border-slate-200 text-slate-700 px-8 py-3.5 rounded-full font-bold transition-all duration-300 hover:border-emerald-200 hover:shadow-lg shadow-sm flex items-center justify-center gap-2 group">
+              <button
+                onClick={() => window.open('https://wa.me/6282320007800', '_blank')}
+                className="w-full sm:w-auto bg-white/80 hover:bg-white backdrop-blur-md border border-slate-200 text-slate-700 px-8 py-3.5 rounded-full font-bold transition-all duration-300 hover:border-emerald-200 hover:shadow-lg shadow-sm flex items-center justify-center gap-2 group"
+              >
                 <PlayCircle className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform" /> Lihat Demo
               </button>
             </div>
@@ -304,7 +307,7 @@ const LandingPage = () => {
             </div>
 
             {/* Background Blob behind mockup */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-emerald-200/40 to-teal-200/40 blur-3xl -z-10 rounded-full mix-blend-multiply"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-[#059b27]/20 to-[#129cc0]/20 blur-3xl -z-10 rounded-full"></div>
           </Reveal>
         </section>
 
@@ -317,41 +320,41 @@ const LandingPage = () => {
 
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
-              <p className="text-[#009b7c] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">Telah Dipercaya Oleh</p>
-              <h2 className="text-3xl font-black text-slate-800 mb-12">Mitra Kami</h2>
+              <p className="text-[#009b7c] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">PROBLEM</p>
+              <h2 className="text-3xl font-black text-slate-800 mb-12">Masih Mengandalkan Data Manual?</h2>
             </Reveal>
 
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
-              {/* 1. Matra Kreasi Mandiri */}
+              {/* 1. Tidak Real Time */}
               <Reveal delay="0.1s" className="flex flex-col items-center group">
                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/logo_matra.jpeg" alt="Matra Kreasi Mandiri" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/1tidakrealtime.png" alt="Tidak Real Time" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Matra Kreasi Mandiri</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Tidak Real Time</span>
               </Reveal>
 
-              {/* 2. SV IPB */}
+              {/* 2. Sulit Monitoring */}
               <Reveal delay="0.2s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-3 mb-2 group-hover:scale-110 transition-transform duration-300">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/Logo_Institut_Pertanian_Bogor.png" alt="IPB" className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all" />
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/2sulitmonitoring.png" alt="Sulit Monitoring" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">SV IPB</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Sulit Monitoring</span>
               </Reveal>
 
-              {/* 3. BPJS */}
+              {/* 3. Keputusan Lambat */}
               <Reveal delay="0.3s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-3 mb-2 group-hover:scale-110 transition-transform duration-300">
-                  <ShieldCheck className="text-slate-400 group-hover:text-blue-600 transition-colors" size={32} />
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/3keputusanlambat.png" alt="Keputusan Lambat" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">BPJS</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Keputusan Lambat</span>
               </Reveal>
 
-              {/* 4. BIEON CORE */}
+              {/* 4. Potensi Pemborosan */}
               <Reveal delay="0.4s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center p-4 mb-2 group-hover:scale-110 transition-transform duration-300">
-                  <Wind className="text-slate-400 group-hover:text-cyan-500 transition-colors" size={32} />
+                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                  <img src="/4potensipemborosan.png" alt="Potensi Pemborosan" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">BIEON CORE</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Potensi Pemborosan</span>
               </Reveal>
             </div>
           </div>
@@ -396,20 +399,20 @@ const LandingPage = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
             {/* Feature Card 1 */}
             <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/feature_1.png" alt="Kontrol Intuitif" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/1REAL TIME MONITORING.png" alt="Real Time Monitoring" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
-                  <Smartphone size={18} /> Kontrol Intuitif
+                  <Activity size={18} /> Real Time Monitoring
                 </h3>
-                <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
-                  Dirancang dengan antarmuka web yang modern dan mudah digunakan. BIEON memungkinkan Anda memantau seluruh sudut ruang dan mengontrol perangkat secara praktis tanpa konfigurasi yang rumit.
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Pengguna dapat memantau seluruh parameter secara langsung dan real-time untuk pengambilan keputusan yang lebih cepat dan akurat.
                 </p>
               </div>
             </Reveal>
@@ -418,14 +421,14 @@ const LandingPage = () => {
             <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-amber-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/feature_2.png" alt="Monitoring Real-Time" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/2ANALYTICS.png" alt="Analytics" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-amber-500 mb-4 flex items-center justify-center gap-2">
-                  <Zap size={18} /> Monitoring Real-Time
+                  <BarChart3 size={18} /> Analytics
                 </h3>
-                <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
-                  Sistem IoT kami bekerja tanpa henti untuk menampilkan data kondisi lingkungan dan status perangkat secara real-time, membantu Anda mengambil keputusan cepat saat terjadi penyimpangan.
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Data diolah menjadi insight dan visualisasi yang membantu analisis tren, efisiensi, dan kondisi sistem secara lebih mendalam.
                 </p>
               </div>
             </Reveal>
@@ -434,14 +437,30 @@ const LandingPage = () => {
             <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-500/20 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/feature_3.png" alt="Ekosistem Terintegrasi" className="w-full h-56 lg:h-64 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/3SMART ALERT.png" alt="Smart Alert" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-slate-600 mb-4 flex items-center justify-center gap-2">
-                  <Cpu size={18} /> Ekosistem Terintegrasi
+                  <Bell size={18} /> Smart Alert
                 </h3>
-                <p className="text-slate-500 text-[15px] font-medium leading-relaxed">
-                  Menghubungkan berbagai perangkat cerdas ke dalam satu dashboard sentral. Menciptakan ekosistem smart living yang efisien, responsif, dan saling terhubung.
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Sistem memberikan notifikasi otomatis ketika terjadi kondisi abnormal atau parameter melewati batas tertentu.
+                </p>
+              </div>
+            </Reveal>
+
+            {/* Feature Card 4 */}
+            <Reveal delay="0.4s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-teal-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/4DASHBOARD.png" alt="Cloud Dashboard" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-[#009b7c] mb-4 flex items-center justify-center gap-2">
+                  <Cloud size={18} /> Cloud Dashboard
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Seluruh data dapat diakses kapan saja dan di mana saja melalui dashboard berbasis cloud yang terintegrasi.
                 </p>
               </div>
             </Reveal>
