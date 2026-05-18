@@ -187,19 +187,18 @@ const LandingPage = () => {
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
             <div className="mb-8">
-              <div className="text-5xl lg:text-6xl font-black tracking-tighter mb-2">
+              <div className="text-5xl lg:text-6xl font-black tracking-tighter mb-4">
                 <span className="text-[#059b27]">ECO</span><span className="text-[#129cc0]">SENSE</span>
               </div>
-              <div className="text-2xl lg:text-3xl font-bold text-slate-700 tracking-tight">
-                Smart Living Monitoring System
-              </div>
+              <h1 className="text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                Smart Living <br className="hidden lg:block"/>
+                Monitoring System
+              </h1>
             </div>
 
-            <h1 className="text-3xl lg:text-5xl font-extrabold text-slate-900 leading-[1.2] tracking-tight mb-8 mt-6">
-              Monitor Today, <br />
-              <span className="text-[#059b27]">Sustain</span> <br /> 
-              Tomorrow
-            </h1>
+            <h2 className="text-xl lg:text-2xl font-bold text-slate-800 mb-4 mt-8 tracking-wide">
+              Monitor Today, Sustain Tomorrow.
+            </h2>
 
             <div className="text-base lg:text-lg text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
               <p>Real-time monitoring untuk energi, air, udara, dan lingkungan.</p>
@@ -235,7 +234,7 @@ const LandingPage = () => {
           </Reveal>
 
           {/* Right Floating Dashboard Image */}
-          <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:flex items-center justify-center">
+          <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:flex items-center justify-center mt-12 lg:mt-24">
             
             <div className="relative z-20 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-700 ease-out">
               <img 
