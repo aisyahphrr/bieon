@@ -21,8 +21,11 @@ import autoTable from 'jspdf-autotable';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
+import { useTranslation } from 'react-i18next';
+import i18n_core from 'i18next';
 
 export function HomeownerHistory({ onNavigate }) {
+    const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState('Kenyamanan');
     const [historyData, setHistoryData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -39,17 +42,17 @@ export function HomeownerHistory({ onNavigate }) {
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
     const tabs = [
-        { id: 'Kenyamanan', full: 'Kenyamanan', short: 'Kenyamanan', endpoint: '/api/history/environment' },
-        { id: 'Keamanan', full: 'Keamanan', short: 'Keamanan', endpoint: '/api/history/security' },
-        { id: 'Kualitas Air', full: 'Kualitas Air', short: 'Kualitas Air', endpoint: '/api/history/water' },
-        { id: 'Konsumsi Energi', full: 'Konsumsi Energi', short: 'Energi', endpoint: '/api/history/energy' },
-        { id: 'Log Perangkat', full: 'Log Perangkat', short: 'Log Perangkat', endpoint: '/api/history/activity' },
-        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Notifikasi', endpoint: '/api/history/alerts' }
+        { id: 'Kenyamanan', full: t('history.comfort'), short: t('history.comfort'), endpoint: '/api/history/environment' },
+        { id: 'Keamanan', full: t('history.security'), short: t('history.security'), endpoint: '/api/history/security' },
+        { id: 'Kualitas Air', full: t('history.water_quality'), short: t('history.water_quality'), endpoint: '/api/history/water' },
+        { id: 'Konsumsi Energi', full: t('history.energy'), short: t('history.energy'), endpoint: '/api/history/energy' },
+        { id: 'Log Perangkat', full: t('history.device_logs'), short: t('history.device_logs'), endpoint: '/api/history/activity' },
+        { id: 'Notifikasi & Alert', full: t('history.notifications'), short: t('history.notifications'), endpoint: '/api/history/alerts' }
     ];
 
     const formatDateTime = (dateStr) => {
         const date = new Date(dateStr);
-        return date.toLocaleString('id-ID', {
+        return date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
@@ -59,27 +62,38 @@ export function HomeownerHistory({ onNavigate }) {
         });
     };
 
+    const localizeStatus = (s) => {
+        if (!s) return s;
+        const key = s.toLowerCase().replace(/\s+/g, '_');
+        return t(`history.status.${key}`, s);
+    };
+
+    const localizeTrigger = (trig) => {
+        if (!trig) return trig;
+        const key = trig.toLowerCase();
+        return t(`history.trigger.${key}`, trig);
+    };
+
     const mapItemData = (tabId, item, index) => {
         const rawTime = item.date || item.timestamp || item.createdAt;
         const base = {
             id: item._id || index,
-            time: formatDateTime(rawTime),
             rawTime: rawTime
         };
 
         if (tabId === 'Kenyamanan') {
-            return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity, status: item.status };
+            return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity, rawStatus: item.status };
         }
         if (tabId === 'Keamanan') {
-            return { ...base, room: item.room, door: item.door, motion: item.motion, status: item.status };
+            return { ...base, room: item.room, rawDoor: item.door, rawMotion: item.motion, rawStatus: item.status };
         }
         if (tabId === 'Kualitas Air') {
-            return { ...base, device: item.device, ph: item.ph, turbidity: item.turbidity, temp: item.temperature, tds: item.tds, status: item.status };
+            return { ...base, device: item.device, ph: item.ph, turbidity: item.turbidity, temp: item.temperature, tds: item.tds, rawStatus: item.status };
         }
         if (tabId === 'Konsumsi Energi') {
             return {
                 ...base,
-                device: item.device?.name || item.device || 'Power Meter Utama',
+                device: item.device?.name || item.device || t('history.columns.power_meter_main', 'Power Meter Utama'),
                 kwh: item.totalKwh + ' kWh',
                 voltage: item.voltage + ' V',
                 current: item.current + ' A',
@@ -88,10 +102,18 @@ export function HomeownerHistory({ onNavigate }) {
             };
         }
         if (tabId === 'Log Perangkat') {
-            return { ...base, room: item.room, actuator: item.actuator, status: item.status, trigger: item.trigger };
+            return { ...base, room: item.room, actuator: item.actuator, rawStatus: item.status, trigger: item.trigger };
         }
         if (tabId === 'Notifikasi & Alert') {
-            return { ...base, category: item.category, status: item.status || item.type, message: item.message };
+            return { 
+                ...base, 
+                device: item.room || item.deviceName || t('history.general', 'Umum'),
+                rawCategory: item.category, 
+                rawStatus: item.status || item.type, 
+                messageKey: item.messageKey,
+                metadata: item.metadata,
+                rawMessage: item.message 
+            };
         }
         return item;
     };
@@ -160,8 +182,8 @@ export function HomeownerHistory({ onNavigate }) {
                     return timeStr.includes(q) || item.room.toLowerCase().includes(q) || statusStr.includes(q) ||
                         item.actuator.toLowerCase().includes(q) || item.trigger.toLowerCase().includes(q);
                 } else if (activeTab === 'Notifikasi & Alert') {
-                    return timeStr.includes(q) || item.category.toLowerCase().includes(q) ||
-                        statusStr.includes(q) || item.message.toLowerCase().includes(q);
+                    return timeStr.includes(q) || item.rawCategory?.toLowerCase().includes(q) ||
+                        statusStr.includes(q) || (item.messageKey ? t(item.messageKey, item.metadata) : item.rawMessage || '').toLowerCase().includes(q);
                 }
                 return false;
             });
@@ -203,12 +225,12 @@ export function HomeownerHistory({ onNavigate }) {
 
     const availableFilters = useMemo(() => {
         if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) {
-            return Array.from(new Set(historyData.map(d => d.device)));
+            return Array.from(new Set(historyData.map(d => d.device))).filter(Boolean);
         }
         if (activeTab === 'Notifikasi & Alert') {
-            return Array.from(new Set(historyData.map(d => d.category)));
+            return Array.from(new Set(historyData.map(d => d.rawCategory))).filter(Boolean);
         }
-        return Array.from(new Set(historyData.map(d => d.room)));
+        return Array.from(new Set(historyData.map(d => d.room))).filter(Boolean);
     }, [activeTab, historyData]);
 
     const activeTabsConfigured = ['Kenyamanan', 'Keamanan', 'Kualitas Air', 'Konsumsi Energi', 'Log Perangkat', 'Notifikasi & Alert'];
@@ -229,29 +251,75 @@ export function HomeownerHistory({ onNavigate }) {
         let body = [];
 
         if (tabId === 'Kenyamanan') {
-            headers = [["Waktu", "Ruangan", "Suhu", "Kelembapan", "Status"]];
-            body = data.map(e => [e.time, e.room, `${e.temp}°C`, e.humidity, e.status]);
+            headers = [[t('history.columns.time'), t('history.columns.room'), t('history.columns.temperature'), t('history.columns.humidity'), t('history.columns.status')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.room, `${e.temp}°C`, e.humidity, localizeStatus(e.rawStatus)]);
         } else if (tabId === 'Keamanan') {
-            headers = [["Waktu", "Ruangan", "Pintu", "Gerak", "Status"]];
-            body = data.map(e => [e.time, e.room, e.door, e.motion, e.status]);
+            headers = [[t('history.columns.time'), t('history.columns.room'), t('history.columns.door_sensor'), t('history.columns.motion_sensor'), t('history.columns.status')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.room, localizeStatus(e.rawDoor), localizeStatus(e.rawMotion), localizeStatus(e.rawStatus)]);
         } else if (tabId === 'Kualitas Air') {
-            headers = [["Waktu", "Perangkat", "pH", "Kekeruhan", "Suhu", "TDS", "Status"]];
-            body = data.map(e => [e.time, e.device, e.ph, e.turbidity, e.temp, e.tds, e.status]);
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.ph'), t('history.columns.turbidity'), t('history.columns.temperature'), t('history.columns.tds'), t('history.columns.status')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.ph, e.turbidity, e.temp, e.tds, localizeStatus(e.rawStatus)]);
         } else if (tabId === 'Konsumsi Energi') {
-            headers = [["Waktu", "Perangkat", "Energi", "Voltase", "Arus", "Beban", "PF"]];
-            body = data.map(e => [e.time, e.device, e.kwh, e.voltage, e.current, e.power, e.pf]);
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.energy'), t('history.columns.voltage'), t('history.columns.current'), t('history.columns.power_load'), t('history.columns.power_factor')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.kwh, e.voltage, e.current, e.power, e.pf]);
         } else if (tabId === 'Log Perangkat') {
-            headers = [["Waktu", "Ruangan", "Perangkat", "Status", "Pemicu"]];
-            body = data.map(e => [e.time, e.room, e.actuator, e.status, e.trigger]);
+            headers = [[t('history.columns.time'), t('history.columns.room'), t('history.columns.actuator'), t('history.columns.status'), t('history.columns.trigger')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.room, e.actuator, localizeStatus(e.rawStatus), localizeTrigger(e.trigger)]);
         } else if (tabId === 'Notifikasi & Alert') {
-            headers = [["Waktu", "Kategori", "Level", "Pesan"]];
-            body = data.map(e => [e.time, e.category, e.status, e.message]);
+            headers = [[t('history.columns.time'), t('history.columns.category'), t('history.columns.status'), t('history.columns.message_detail')]];
+            body = data.map(e => {
+                const titleStr = (e.rawStatus || "").toLowerCase();
+                const msgStr = (e.rawMessage || "").toLowerCase();
+                let smartType = null;
+                
+                // Detection Logic (Check Title first, then Message)
+                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+
+                let localizedMsg = e.messageKey ? t(e.messageKey, e.metadata) : e.rawMessage;
+                const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
+                const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
+
+                if (smartType && dynamicBody !== '___MISSING___') {
+                    // Regex to find ticket ID in quotes or 8-char alphanumeric
+                    const ticketMatch = e.rawMessage.match(/"([^"]+)"/) || e.rawMessage.match(/\b[a-z0-9]{8}\b/);
+                    const extractedTicket = e.metadata?.ticketId || e.metadata?.ticket || e.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
+                    
+                    localizedMsg = t(dynamicBodyKey, { 
+                        ...e.metadata,
+                        ticket: extractedTicket,
+                        technician: e.metadata?.technicianName || e.metadata?.technician || e.metadata?.senderName || '',
+                        topic: e.metadata?.topic || '',
+                        name: e.metadata?.senderName || e.metadata?.name || '',
+                        hubId: e.metadata?.hubId || '',
+                        deviceName: e.metadata?.deviceName || '',
+                        status: e.metadata?.status || '',
+                        location: e.metadata?.location || '',
+                        percent: e.metadata?.percent || ''
+                    });
+                }
+                
+                return [
+                    formatDateTime(e.rawTime), 
+                    t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, e.rawCategory), 
+                    localizeStatus(e.rawStatus), 
+                    localizedMsg
+                ];
+            });
         }
         return { headers, body };
     };
 
     const handleExportPDF = () => {
-        if (!processedData || processedData.length === 0) return alert("Tidak ada data untuk diekspor!");
+        if (!processedData || processedData.length === 0) return alert(t('history.export.alert_no_data'));
 
         try {
             const doc = new jsPDF('l', 'mm', 'a4');
@@ -259,12 +327,12 @@ export function HomeownerHistory({ onNavigate }) {
 
             doc.setFontSize(22);
             doc.setTextColor(35, 92, 80);
-            doc.text(`Laporan Riwayat: ${activeTab}`, 15, 20);
+            doc.text(t('history.export.pdf_header', { tab: activeTab }), 15, 20);
 
             doc.setFontSize(10);
             doc.setTextColor(100);
-            doc.text(`BIEON Smart Green Living System`, 15, 28);
-            doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`, 15, 33);
+            doc.text(t('history.export.system_name', 'BIEON Monitoring System'), 15, 28);
+            doc.text(t('history.export.print_date', { date: formatDateTime(new Date()) }), 15, 33);
             doc.line(15, 38, pageWidth - 15, 38);
 
             const { headers, body } = generateTableConfig(activeTab, processedData);
@@ -279,7 +347,7 @@ export function HomeownerHistory({ onNavigate }) {
                 margin: { left: 15, right: 15 }
             });
 
-            doc.save(`BIEON_${activeTab}_History_${new Date().getTime()}.pdf`);
+            doc.save(`${t('history.export.filename_prefix', 'BIEON_History')}_${activeTab}_${new Date().getTime()}.pdf`);
         } catch (pdfError) {
             console.error('PDF ERROR:', pdfError);
             alert("Gagal membuat PDF.");
@@ -296,15 +364,15 @@ export function HomeownerHistory({ onNavigate }) {
             // --- COVER PAGE ---
             doc.setFontSize(28);
             doc.setTextColor(35, 92, 80);
-            doc.text("LAPORAN AUDIT SISTEM BIEON", pageWidth / 2, 80, { align: 'center' });
+            doc.text(t('history.export.audit_report_title', 'LAPORAN AUDIT SISTEM BIEON'), pageWidth / 2, 80, { align: 'center' });
 
             doc.setFontSize(14);
             doc.setTextColor(100);
-            doc.text("Smart Green Living Monitoring System", pageWidth / 2, 92, { align: 'center' });
+            doc.text(t('history.export.system_tagline', 'Smart Green Living Monitoring System'), pageWidth / 2, 92, { align: 'center' });
 
             doc.setFontSize(12);
-            doc.text(`Periode Laporan: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
-            doc.text(`Dihasilkan pada: ${new Date().toLocaleString('id-ID')}`, pageWidth / 2, 118, { align: 'center' });
+            doc.text(`${t('history.export.report_period', 'Periode Laporan')}: ${new Date().toLocaleDateString(i18n_core.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
+            doc.text(t('history.export.print_date', { date: formatDateTime(new Date()) }), pageWidth / 2, 118, { align: 'center' });
 
             doc.setDrawColor(35, 92, 80);
             doc.setLineWidth(1);
@@ -312,31 +380,37 @@ export function HomeownerHistory({ onNavigate }) {
 
             // Fetch and Append each tab as a new page
             for (let i = 0; i < tabs.length; i++) {
-                const tab = tabs[i];
-                const res = await fetch(tab.endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (!res.ok) continue;
+                try {
+                    const tab = tabs[i];
+                    const res = await fetch(tab.endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (!res.ok) continue;
 
-                const result = await res.json();
-                const mapped = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
+                    const result = await res.json();
+                    if (!result.success || !result.data || result.data.length === 0) continue;
 
-                doc.addPage();
-                doc.setFontSize(18);
-                doc.setTextColor(35, 92, 80);
-                doc.text(`Kategori: ${tab.full}`, 15, 20);
-                doc.line(15, 25, pageWidth - 15, 25);
+                    const mapped = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
 
-                const { headers, body } = generateTableConfig(tab.id, mapped);
-                autoTable(doc, {
-                    startY: 32,
-                    head: headers,
-                    body: body,
-                    theme: 'striped',
-                    headStyles: { fillColor: [35, 92, 80] },
-                    margin: { left: 15, right: 15 }
-                });
+                    doc.addPage();
+                    doc.setFontSize(18);
+                    doc.setTextColor(35, 92, 80);
+                    doc.text(`${t('history.export.category_label', 'Kategori')}: ${tab.full}`, 15, 20);
+                    doc.line(15, 25, pageWidth - 15, 25);
+
+                    const { headers, body } = generateTableConfig(tab.id, mapped);
+                    autoTable(doc, {
+                        startY: 32,
+                        head: headers,
+                        body: body,
+                        theme: 'striped',
+                        headStyles: { fillColor: [35, 92, 80] },
+                        margin: { left: 15, right: 15 }
+                    });
+                } catch (tabErr) {
+                    console.error(`Error exporting tab ${i}:`, tabErr);
+                }
             }
 
-            doc.save(`BIEON_Full_Report_${new Date().getTime()}.pdf`);
+            doc.save(`${t('history.export.filename_prefix', 'BIEON_Full_Report')}_${new Date().getTime()}.pdf`);
         } catch (err) {
             console.error('EXPORT ALL ERROR:', err);
             alert("Gagal mengekspor laporan lengkap.");
@@ -357,7 +431,7 @@ export function HomeownerHistory({ onNavigate }) {
             hideBottomNav={false}
         >
             <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8">
-                <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#235C50] mb-6 sm:mb-8">Riwayat Aktivitas</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#235C50] mb-6 sm:mb-8">{t('history.title')}</h1>
 
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
                     <div className="w-full lg:w-auto overflow-hidden">
@@ -395,7 +469,7 @@ export function HomeownerHistory({ onNavigate }) {
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder={t('history.search')}
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                                 className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
@@ -409,12 +483,12 @@ export function HomeownerHistory({ onNavigate }) {
                             >
                                 <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-teal-500' : 'text-gray-400'}`} />
                                 <span className={`hidden sm:inline ${selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}`}>
-                                    {selectedRoomFilter || (
+                                    {selectedRoomFilter ? (activeTab === 'Notifikasi & Alert' ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (
                                         ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
-                                            ? 'Semua Perangkat' 
+                                            ? t('history.all_devices') 
                                             : activeTab === 'Notifikasi & Alert' 
-                                                ? 'Semua Kategori' 
-                                                : 'Semua Ruangan'
+                                                ? t('history.all_categories') 
+                                                : t('history.all_rooms')
                                     )}
                                 </span>
                                 <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-teal-500' : ''}`} />
@@ -433,10 +507,10 @@ export function HomeownerHistory({ onNavigate }) {
                                             className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === '' ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                         >
                                             {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
-                                                ? 'Semua Perangkat' 
+                                                ? t('history.all_devices') 
                                                 : activeTab === 'Notifikasi & Alert' 
-                                                    ? 'Semua Kategori' 
-                                                    : 'Semua Ruangan'}
+                                                    ? t('history.all_categories') 
+                                                    : t('history.all_rooms')}
                                         </button>
                                         {availableFilters.map(r => (
                                             <button
@@ -448,7 +522,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                 }}
                                                 className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
-                                                {r}
+                                                {activeTab === 'Notifikasi & Alert' ? t(`notification.category.${r?.toLowerCase().replace(/\s+/g, '_')}`, r) : r}
                                             </button>
                                         ))}
                                     </div>
@@ -476,7 +550,7 @@ export function HomeownerHistory({ onNavigate }) {
                             ) : (
                                 <ClipboardList className="w-4 h-4 group-hover:scale-110 transition-transform" />
                             )}
-                            <span className="hidden sm:inline">Laporan Lengkap</span>
+                            <span className="hidden sm:inline">{t('history.full_report')}</span>
                         </button>
                     </div>
                 </div>
@@ -485,7 +559,7 @@ export function HomeownerHistory({ onNavigate }) {
                     {isLoading && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center">
                             <Loader2 className="w-10 h-10 text-teal-600 animate-spin mb-3" />
-                            <p className="text-gray-500 font-medium animate-pulse">Memuat data riwayat...</p>
+                            <p className="text-gray-500 font-medium animate-pulse">{t('history.loading')}</p>
                         </div>
                     )}
 
@@ -494,38 +568,38 @@ export function HomeownerHistory({ onNavigate }) {
                             <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                                 <tr>
                                     <th onClick={() => requestSort('time')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                        <div className="flex items-center gap-1">Waktu {getSortIcon('time')}</div>
+                                        <div className="flex items-center gap-1">{t('history.columns.time')} {getSortIcon('time')}</div>
                                     </th>
 
                                     {activeTab === 'Notifikasi & Alert' && (
                                         <th onClick={() => requestSort('category')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                            <div className="flex items-center gap-1">Kategori {getSortIcon('category')}</div>
+                                            <div className="flex items-center gap-1">{t('history.columns.category')} {getSortIcon('category')}</div>
                                         </th>
                                     )}
 
                                     {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
                                         <th onClick={() => requestSort('device')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                            <div className="flex items-center gap-1">Perangkat {getSortIcon('device')}</div>
+                                            <div className="flex items-center gap-1">{t('history.columns.device')} {getSortIcon('device')}</div>
                                         </th>
                                     ) : activeTab === 'Notifikasi & Alert' ? null : (
                                         <th onClick={() => requestSort('room')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                            <div className="flex items-center gap-1">Ruangan {getSortIcon('room')}</div>
+                                            <div className="flex items-center gap-1">{t('history.columns.room')} {getSortIcon('room')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Log Perangkat' && (
                                         <th onClick={() => requestSort('actuator')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                            <div className="flex items-center gap-1">Perangkat (Aktuator) {getSortIcon('actuator')}</div>
+                                            <div className="flex items-center gap-1">{t('history.columns.actuator')} {getSortIcon('actuator')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Kenyamanan' && (
                                         <>
                                             <th onClick={() => requestSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Suhu {getSortIcon('temp')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.temperature')} {getSortIcon('temp')}</div>
                                             </th>
                                             <th onClick={() => requestSort('humidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Kelembapan {getSortIcon('humidity')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.humidity')} {getSortIcon('humidity')}</div>
                                             </th>
                                         </>
                                     )}
@@ -533,10 +607,10 @@ export function HomeownerHistory({ onNavigate }) {
                                     {activeTab === 'Keamanan' && (
                                         <>
                                             <th onClick={() => requestSort('door')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Sensor Pintu {getSortIcon('door')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.door_sensor')} {getSortIcon('door')}</div>
                                             </th>
                                             <th onClick={() => requestSort('motion')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Sensor Gerak {getSortIcon('motion')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.motion_sensor')} {getSortIcon('motion')}</div>
                                             </th>
                                         </>
                                     )}
@@ -544,16 +618,16 @@ export function HomeownerHistory({ onNavigate }) {
                                     {activeTab === 'Kualitas Air' && (
                                         <>
                                             <th onClick={() => requestSort('ph')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">pH {getSortIcon('ph')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.ph')} {getSortIcon('ph')}</div>
                                             </th>
                                             <th onClick={() => requestSort('turbidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Kekeruhan {getSortIcon('turbidity')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.turbidity')} {getSortIcon('turbidity')}</div>
                                             </th>
                                             <th onClick={() => requestSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Suhu {getSortIcon('temp')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.temperature')} {getSortIcon('temp')}</div>
                                             </th>
                                             <th onClick={() => requestSort('tds')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Padatan Terlarut (TDS) {getSortIcon('tds')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.tds')} {getSortIcon('tds')}</div>
                                             </th>
                                         </>
                                     )}
@@ -561,36 +635,36 @@ export function HomeownerHistory({ onNavigate }) {
                                     {activeTab === 'Konsumsi Energi' && (
                                         <>
                                             <th onClick={() => requestSort('kwh')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">kWh {getSortIcon('kwh')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.energy')} {getSortIcon('kwh')}</div>
                                             </th>
                                             <th onClick={() => requestSort('voltage')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Voltase {getSortIcon('voltage')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.voltage')} {getSortIcon('voltage')}</div>
                                             </th>
                                             <th onClick={() => requestSort('current')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Arus {getSortIcon('current')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.current')} {getSortIcon('current')}</div>
                                             </th>
                                             <th onClick={() => requestSort('power')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Beban Daya {getSortIcon('power')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.power_load')} {getSortIcon('power')}</div>
                                             </th>
                                             <th onClick={() => requestSort('pf')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Power Factor {getSortIcon('pf')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.power_factor')} {getSortIcon('pf')}</div>
                                             </th>
                                         </>
                                     )}
 
                                     {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && activeTab !== 'Notifikasi & Alert' && (
                                         <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                            <div className="flex items-center gap-1">Status {getSortIcon('status')}</div>
+                                            <div className="flex items-center gap-1">{t('history.columns.status')} {getSortIcon('status')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Log Perangkat' && (
                                         <>
                                             <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Status {getSortIcon('status')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.status')} {getSortIcon('status')}</div>
                                             </th>
                                             <th onClick={() => requestSort('trigger')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Pemicu (Trigger) {getSortIcon('trigger')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.trigger')} {getSortIcon('trigger')}</div>
                                             </th>
                                         </>
                                     )}
@@ -598,10 +672,10 @@ export function HomeownerHistory({ onNavigate }) {
                                     {activeTab === 'Notifikasi & Alert' && (
                                         <>
                                             <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">Tingkat Bahaya {getSortIcon('status')}</div>
+                                                <div className="flex items-center gap-1">{t('history.columns.danger_level')} {getSortIcon('status')}</div>
                                             </th>
                                             <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal whitespace-nowrap">
-                                                Pesan Detail Alert
+                                                {t('history.columns.message_detail')}
                                             </th>
                                         </>
                                     )}
@@ -612,10 +686,10 @@ export function HomeownerHistory({ onNavigate }) {
                                     currentData.length > 0 ? (
                                         currentData.map((item) => (
                                             <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-medium text-gray-900 whitespace-nowrap">{item.time}</td>
+                                                <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-medium text-gray-900 whitespace-nowrap">{formatDateTime(item.rawTime)}</td>
 
                                                 {activeTab === 'Notifikasi & Alert' && (
-                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.category}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{t(`notification.category.${item.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, item.rawCategory)}</td>
                                                 )}
 
                                                 {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
@@ -633,8 +707,8 @@ export function HomeownerHistory({ onNavigate }) {
 
                                                 {activeTab === 'Keamanan' && (
                                                     <>
-                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.door}</td>
-                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.motion}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{localizeStatus(item.rawDoor)}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{localizeStatus(item.rawMotion)}</td>
                                                     </>
                                                 )}
 
@@ -663,26 +737,65 @@ export function HomeownerHistory({ onNavigate }) {
 
                                                 {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && activeTab !== 'Notifikasi & Alert' && (
                                                     <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
-                                                        <StatusBadge status={item.status} />
+                                                        <StatusBadge status={localizeStatus(item.rawStatus)} />
                                                     </td>
                                                 )}
 
                                                 {activeTab === 'Log Perangkat' && (
                                                     <>
                                                         <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
-                                                            <StatusBadge status={item.status} />
+                                                            <StatusBadge status={localizeStatus(item.rawStatus)} />
                                                         </td>
-                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.trigger}</td>
+                                                        <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{localizeTrigger(item.trigger)}</td>
                                                     </>
                                                 )}
 
                                                 {activeTab === 'Notifikasi & Alert' && (
                                                     <>
                                                         <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
-                                                            <StatusBadge status={item.status} />
+                                                            <StatusBadge status={localizeStatus(item.rawStatus)} />
                                                         </td>
                                                         <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 min-w-[280px]">
-                                                            {item.message}
+                                                            {(() => {
+                                                                const titleStr = (item.rawStatus || "").toLowerCase();
+                                                                const msgStr = (item.rawMessage || "").toLowerCase();
+                                                                let smartType = null;
+                                                                
+                                                                // Detection Logic (Check Title first, then Message)
+                                                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+                                                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+                                                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+                                                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+                                                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+                                                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+                                                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+                                                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+                                                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+                                                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+
+                                                                const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
+                                                                const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
+
+                                                                if (smartType && dynamicBody !== '___MISSING___') {
+                                                                    // Regex to find ticket ID in quotes or 8-char alphanumeric
+                                                                    const ticketMatch = item.rawMessage.match(/"([^"]+)"/) || item.rawMessage.match(/\b[a-z0-9]{8}\b/);
+                                                                    const extractedTicket = item.metadata?.ticketId || item.metadata?.ticket || item.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
+                                                                    
+                                                                    return t(dynamicBodyKey, { 
+                                                                        ...item.metadata,
+                                                                        ticket: extractedTicket,
+                                                                        technician: item.metadata?.technicianName || item.metadata?.technician || item.metadata?.senderName || '',
+                                                                        topic: item.metadata?.topic || '',
+                                                                        name: item.metadata?.senderName || item.metadata?.name || '',
+                                                                        hubId: item.metadata?.hubId || '',
+                                                                        deviceName: item.metadata?.deviceName || '',
+                                                                        status: item.metadata?.status || '',
+                                                                        location: item.metadata?.location || '',
+                                                                        percent: item.metadata?.percent || ''
+                                                                    });
+                                                                }
+                                                                return item.messageKey ? t(item.messageKey, item.metadata) : item.rawMessage;
+                                                            })()}
                                                         </td>
                                                     </>
                                                 )}
@@ -691,7 +804,8 @@ export function HomeownerHistory({ onNavigate }) {
                                     ) : (
                                         <tr>
                                             <td colSpan={(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) ? 7 : 5} className="px-6 py-20 text-center text-gray-500">
-                                                {isLoading ? 'Sedang memuat data...' : (error ? `Error: ${error}` : 'Tidak ada data yang tersedia.')}
+                                                {isLoading ? t('history.loading_data') : (error ? `Error: ${error}` : t('history.no_data'))}
+                                                {!isLoading && !error && <p className="text-[11px] text-gray-400 mt-2">{t('history.no_data_desc')}</p>}
                                             </td>
                                         </tr>
                                     )
@@ -703,7 +817,7 @@ export function HomeownerHistory({ onNavigate }) {
                     {totalItems > 0 && (
                         <div className="flex flex-row items-center justify-between px-3 sm:px-6 py-3 border-t border-gray-200 gap-2 sm:gap-4">
                             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500">
-                                <span className="hidden sm:inline">Rows per page:</span>
+                                <span className="hidden sm:inline">{t('history.rows_per_page')}</span>
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowRowsDropdown(!showRowsDropdown)}
@@ -736,7 +850,11 @@ export function HomeownerHistory({ onNavigate }) {
                             </div>
 
                             <div className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap">
-                                {startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}
+                                {t('history.page_info', { 
+                                    current: totalItems > 0 ? startIndex + 1 : 0, 
+                                    last: Math.min(startIndex + rowsPerPage, totalItems), 
+                                    total: totalItems 
+                                })}
                             </div>
 
                             <div className="flex items-center gap-2 text-xs sm:text-sm">
@@ -746,14 +864,14 @@ export function HomeownerHistory({ onNavigate }) {
                                     className="px-2 sm:px-4 py-1 sm:py-1.5 border border-gray-200 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed flex items-center justify-center"
                                 >
                                     <ChevronLeft className="w-4 h-4 sm:hidden" />
-                                    <span className="hidden sm:inline">Previous</span>
+                                    <span className="hidden sm:inline">{t('history.previous')}</span>
                                 </button>
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
                                     className="px-2 sm:px-4 py-1 sm:py-1.5 border border-gray-200 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:text-gray-400 disabled:hover:bg-white disabled:cursor-not-allowed flex items-center justify-center"
                                 >
-                                    <span className="hidden sm:inline">Next</span>
+                                    <span className="hidden sm:inline">{t('history.next')}</span>
                                     <ChevronRight className="w-4 h-4 sm:hidden" />
                                 </button>
                             </div>

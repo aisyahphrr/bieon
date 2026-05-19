@@ -49,6 +49,7 @@ import {
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
+import { useTranslation } from 'react-i18next';
 
 // ─────── Utility Toast ───────
 function Toast({ message, type = 'success', onClose }) {
@@ -64,6 +65,7 @@ function Toast({ message, type = 'success', onClose }) {
 }
 
 function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState({
     device: '',
     issue: '',
@@ -118,8 +120,8 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-10 h-10 text-emerald-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Pengaduan Terkirim!</h3>
-          <p className="text-gray-500 text-sm">Tim kami akan segera menindaklanjuti pengaduan Anda.</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('dashboard.complaint_sent', 'Pengaduan Terkirim!')}</h3>
+          <p className="text-gray-500 text-sm">{t('dashboard.complaint_sent_desc', 'Tim kami akan segera menindaklanjuti pengaduan Anda.')}</p>
         </div>
       </div>
     );
@@ -133,8 +135,8 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
             <div className="flex items-center gap-3">
               <MessageSquare className="w-6 h-6" />
               <div>
-                <h2 className="text-2xl font-bold">Form Pengaduan</h2>
-                <p className="text-emerald-100 text-sm mt-1">Laporkan kendala atau gangguan perangkat BIEON</p>
+                <h2 className="text-2xl font-bold">{t('dashboard.complaint_form_title', 'Form Pengaduan')}</h2>
+                <p className="text-emerald-100 text-sm mt-1">{t('dashboard.complaint_form_desc', 'Laporkan kendala atau gangguan perangkat BIEON')}</p>
               </div>
             </div>
             <button
@@ -150,7 +152,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
           <div className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Perangkat Bermasalah <span className="text-red-500">*</span>
+                {t('dashboard.problem_device', 'Perangkat Bermasalah')} <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.device}
@@ -168,7 +170,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Jenis Masalah <span className="text-red-500">*</span>
+                {t('dashboard.problem_type', 'Jenis Masalah')} <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.issue}
@@ -188,7 +190,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Prioritas
+                {t('dashboard.priority', 'Prioritas')}
               </label>
               <div className="flex gap-3">
                 {['low', 'medium', 'high'].map((level) => (
@@ -205,7 +207,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                   >
-                    {level === 'high' ? 'Tinggi' : level === 'medium' ? 'Sedang' : 'Rendah'}
+                    {level === 'high' ? t('dashboard.priority_high', 'Tinggi') : level === 'medium' ? t('dashboard.priority_medium', 'Sedang') : t('dashboard.priority_low', 'Rendah')}
                   </button>
                 ))}
               </div>
@@ -213,7 +215,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Deskripsi Masalah <span className="text-red-500">*</span>
+                {t('dashboard.problem_desc', 'Deskripsi Masalah')} <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={formData.description}
@@ -232,7 +234,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
               onClick={onClose}
               className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all"
             >
-              Batal
+              {t('dashboard.cancel')}
             </button>
             <button
               type="submit"
@@ -244,7 +246,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
               ) : (
                 <Send className="w-5 h-5" />
               )}
-              {loading ? 'Mengirim...' : 'Kirim Pengaduan'}
+              {loading ? t('dashboard.sending', 'Mengirim...') : t('dashboard.send_complaint', 'Kirim Pengaduan')}
             </button>
           </div>
         </form>
@@ -254,20 +256,26 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
 }
 
 function DataModal({ isOpen, onClose, chartType, energySummary }) {
+  const { t, i18n } = useTranslation();
   if (!isOpen) return null;
 
   const data = chartType === 'daily' 
     ? (energySummary?.dailyData || []) 
     : (energySummary?.monthlyData || []);
     
-  const title = chartType === 'daily' ? 'Data Energi Harian (Hari Berjalan)' : 'Data Energi Bulanan (1 Tahun Terakhir)';
+  const title = chartType === 'daily' ? t('dashboard.energy_daily', 'Data Energi Harian (Hari Berjalan)') : t('dashboard.energy_monthly', 'Data Energi Bulanan (1 Tahun Terakhir)');
 
   const totalKwh = data.reduce((acc, curr) => acc + (curr.kwh || 0), 0);
   const totalCost = data.reduce((acc, curr) => acc + (curr.cost || 0), 0);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = [chartType === 'daily' ? 'Jam' : 'Bulan', 'Konsumsi (kWh)', chartType === 'daily' ? 'Daya (Watt)' : '', 'Biaya (Rp)'].filter(Boolean);
+    const tableColumn = [
+      chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan'), 
+      t('dashboard.consumption', 'Konsumsi (kWh)'), 
+      chartType === 'daily' ? t('dashboard.power', 'Daya (Watt)') : '', 
+      t('dashboard.cost', 'Biaya (Rp)')
+    ].filter(Boolean);
     const tableRows = [];
 
     data.forEach(item => {
@@ -281,17 +289,17 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
     });
 
     tableRows.push([
-      'TOTAL',
+      t('dashboard.total', 'TOTAL'),
       totalKwh.toFixed(3),
       chartType === 'daily' ? '-' : undefined,
-      `Rp ${totalCost.toLocaleString('id-ID')}`
+      `Rp ${(totalCost || 0).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`
     ].filter(val => val !== undefined));
 
     doc.setFontSize(18);
     doc.text(title, 14, 22);
     doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+    doc.text(`${t('history.export.print_date_label', 'Dicetak pada')}: ${new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`, 14, 30);
 
     autoTable(doc, {
       head: [tableColumn],
@@ -306,7 +314,12 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
   };
 
   const handleExportCSV = () => {
-    const headers = [chartType === 'daily' ? 'Jam' : 'Bulan', 'Konsumsi (kWh)', chartType === 'daily' ? 'Daya (Watt)' : '', 'Biaya (Rp)'].filter(Boolean).join(',');
+    const headers = [
+      chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan'), 
+      t('dashboard.consumption', 'Konsumsi (kWh)'), 
+      chartType === 'daily' ? t('dashboard.power', 'Daya (Watt)') : '', 
+      t('dashboard.cost', 'Biaya (Rp)')
+    ].filter(Boolean).join(',');
     const rows = data.map(item => {
       return [
         'time' in item ? item.time : item.month,
@@ -317,7 +330,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
     });
 
     const totalRow = [
-      'TOTAL',
+      t('dashboard.total', 'TOTAL'),
       totalKwh.toFixed(3),
       chartType === 'daily' ? '-' : undefined,
       totalCost
@@ -342,8 +355,8 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
               <h2 className="text-2xl font-bold">{title}</h2>
               <p className="text-emerald-100 text-sm mt-1">
                 {chartType === 'daily'
-                  ? 'Data konsumsi energi per jam (00:00 - 23:59)'
-                  : 'Data konsumsi energi 12 bulan terakhir (Bulan berjalan: akumulasi s/d hari ini)'}
+                  ? t('dashboard.energy_daily_desc', 'Data konsumsi energi per jam (00:00 - 23:59)')
+                  : t('dashboard.energy_monthly_desc', 'Data konsumsi energi 12 bulan terakhir')}
               </p>
             </div>
             <button
@@ -362,14 +375,14 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all shadow-lg text-sm sm:text-base"
             >
               <FileDown className="w-5 h-5" />
-              Download PDF
+              {t('dashboard.download_pdf', 'Unduh PDF')}
             </button>
             <button
               onClick={handleExportCSV}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-lg text-sm sm:text-base"
             >
               <Download className="w-5 h-5" />
-              Download CSV
+              {t('dashboard.download_csv', 'Unduh CSV')}
             </button>
           </div>
 
@@ -378,11 +391,11 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
               <thead>
                 <tr className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
                   <th className="px-6 py-4 text-left font-bold">
-                    {chartType === 'daily' ? 'Jam' : 'Bulan'}
+                    {chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan')}
                   </th>
-                  <th className="px-6 py-4 text-left font-bold">Konsumsi (kWh)</th>
-                  {chartType === 'daily' && <th className="px-6 py-4 text-left font-bold">Daya (Watt)</th>}
-                  <th className="px-6 py-4 text-left font-bold">Biaya (Rp)</th>
+                  <th className="px-6 py-4 text-left font-bold">{t('dashboard.consumption', 'Konsumsi (kWh)')}</th>
+                  {chartType === 'daily' && <th className="px-6 py-4 text-left font-bold">{t('dashboard.power', 'Daya (Watt)')}</th>}
+                  <th className="px-6 py-4 text-left font-bold">{t('dashboard.cost', 'Biaya (Rp)')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -409,7 +422,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
               </tbody>
               <tfoot>
                 <tr className="bg-gradient-to-r from-gray-700 to-gray-800 text-white font-bold">
-                  <td className="px-6 py-4">TOTAL</td>
+                  <td className="px-6 py-4">{t('dashboard.total', 'TOTAL')}</td>
                   <td className="px-6 py-4">{totalKwh.toFixed(3)} kWh</td>
                   {chartType === 'daily' && <td className="px-6 py-4">-</td>}
                   <td className="px-6 py-4 text-yellow-300">
@@ -426,6 +439,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
 }
 
 function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDeposit, onRefresh, energySummary }) {
+  const { t, i18n } = useTranslation();
   const [inputLimit, setInputLimit] = useState(limit.toString());
   const [inputDeposit, setInputDeposit] = useState(deposit.toString());
   const [submitted, setSubmitted] = useState(false);
@@ -497,8 +511,8 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               <Zap className="w-7 h-7 text-white fill-white/20" />
             </div>
             <div className="pr-8">
-              <h2 className="text-xl font-bold leading-tight">Manajemen Anggaran Listrik</h2>
-              <p className="text-amber-100 text-xs mt-1 font-medium opacity-90">Monitoring anggaran & batas peringatan kritis</p>
+              <h2 className="text-xl font-bold leading-tight">{t('homeowner_qc.budget.title', 'Manajemen Anggaran Listrik')}</h2>
+              <p className="text-amber-100 text-xs mt-1 font-medium opacity-90">{t('homeowner_qc.budget.subtitle', 'Monitoring anggaran & batas peringatan kritis')}</p>
             </div>
           </div>
           <button
@@ -517,11 +531,11 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
             'bg-emerald-50 border-emerald-100'
           }`}>
             <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
-              <span>Anggaran Bulan Ini:</span>
+              <span>{t('dashboard.budget_this_month', 'Anggaran Bulan Ini:')}</span>
               <span className="font-semibold text-gray-900">Rp {deposit.toLocaleString('id-ID')}</span>
             </div>
             <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
-              <span>Terpakai Bulan Ini:</span>
+              <span>{t('dashboard.used_this_month', 'Terpakai Bulan Ini:')}</span>
               <span className="font-semibold text-gray-900">Rp {totalTerpakai.toLocaleString('id-ID')}</span>
             </div>
             <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${
@@ -529,7 +543,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               isWaspada ? 'border-amber-200' : 
               'border-emerald-200'
             }`}>
-              <span className={isOverBudget ? 'text-red-800' : isWaspada ? 'text-amber-800' : 'text-emerald-800'}>Sisa Anggaran:</span>
+              <span className={isOverBudget ? 'text-red-800' : isWaspada ? 'text-amber-800' : 'text-emerald-800'}>{t('dashboard.remaining_budget', 'Sisa Anggaran:')}</span>
               <span className={`text-xl font-bold ${isOverBudget ? 'text-red-600' : isWaspada ? 'text-amber-600' : 'text-emerald-600'}`}>Rp {Math.max(0, sisaAnggaran).toLocaleString('id-ID')}</span>
             </div>
             <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold tracking-wide ${
@@ -537,17 +551,17 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               isWaspada ? 'bg-amber-100 text-amber-700' : 
               'bg-emerald-100 text-emerald-700'
             }`}>
-              <span>Status:</span>
+              <span>{t('dashboard.status', 'Status:')}</span>
               <span className="flex items-center gap-1">
                 {isOverBudget ? <AlertTriangle className="w-3.5 h-3.5" /> : isWaspada ? <Zap className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                {isOverBudget ? 'Over Budget' : isWaspada ? 'Waspada' : 'Aman'}
+                                {isOverBudget ? t('dashboard.status_over_budget', 'Melebihi Anggaran') : isWaspada ? t('dashboard.status_budget_warning', 'Waspada') : t('dashboard.status_budget_safe', 'Aman')}
               </span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 ml-1">Batas Peringatan (Rp)</label>
+              <label className="text-xs font-bold text-gray-500 ml-1">{t('dashboard.warning_limit', 'Batas Peringatan (Rp)')}</label>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[10000, 20000, 30000, 50000].map(val => (
                   <button
@@ -577,15 +591,14 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 ml-1">Atur Anggaran Bulanan (Rp)</label>
+              <label className="text-xs font-bold text-gray-500 ml-1">{t('dashboard.set_budget', 'Atur Anggaran Bulanan (Rp)')}</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 group-focus-within:text-emerald-500 transition-colors">Rp</div>
                 <input
                   type="number"
                   value={inputDeposit}
                   onChange={(e) => setInputDeposit(e.target.value)}
-                  placeholder="Masukkan nominal (Contoh: 1000000)"
-                  required={!inputLimit}
+                  placeholder={t('homeowner_qc.budget.input_placeholder', 'Masukkan nominal (Contoh: 1000000)')}
                   className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
                 />
               </div>
@@ -603,10 +616,10 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               {submitted ? (
                 <>
                   <CheckCircle2 className="w-5 h-5" />
-                  <span>Anggaran Berhasil Disimpan</span>
+                  <span>{t('homeowner_qc.budget.success_msg', 'Berhasil Disimpan')}</span>
                 </>
               ) : (
-                'Simpan Pengaturan'
+                t('homeowner_qc.budget.btn_save', 'Simpan Pengaturan')
               )}
             </button>
           </form>
@@ -617,6 +630,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 }
 
 export function HomeownerDashboard() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [selectedRoom, setSelectedRoom] = useState('all');
   const [chartType, setChartType] = useState('daily');
@@ -661,16 +675,20 @@ export function HomeownerDashboard() {
             let iconType = Bell;
             let typeStr = 'info';
             
-            if (alert.category === 'Keamanan' || alert.type === 'Danger' || alert.type === 'Bahaya') {
+            const category = alert.category || '';
+            const msg = (alert.message || '').toLowerCase();
+            const type = alert.type || '';
+
+            if (category === 'Keamanan' || type === 'Danger' || type === 'Bahaya') {
               iconType = Lock;
               typeStr = 'danger';
-            } else if (alert.category === 'Energi' || alert.type === 'Warning' || alert.type === 'Waspada') {
+            } else if (category === 'Energi' || type === 'Warning' || type === 'Waspada') {
               iconType = Zap;
               typeStr = 'warning';
-            } else if (alert.type === 'Success' || alert.type === 'Berhasil') {
+            } else if (type === 'Success' || type === 'Berhasil' || msg.includes('berhasil') || msg.includes('selesai')) {
               iconType = CheckCircle2;
               typeStr = 'success';
-            } else if (alert.category === 'Air Sanitasi') {
+            } else if (category === 'Air Sanitasi' || category === 'Kualitas Air') {
               iconType = Droplets;
               typeStr = 'info';
             }
@@ -678,12 +696,14 @@ export function HomeownerDashboard() {
             return {
               id: alert._id,
               type: typeStr,
-              title: alert.title || (alert.category ? `Peringatan ${alert.category}` : 'Notifikasi'),
-              desc: alert.message,
-              time: new Date(alert.date || alert.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' lalu',
+              title: alert.title,
+              category: alert.category,
+              messageKey: alert.messageKey,
+              metadata: alert.metadata,
+              message: alert.message,
+              date: alert.date || alert.createdAt,
               icon: iconType,
-              link: alert.link,
-              metadata: alert.metadata // Sertakan metadata (scrollTarget/deviceId)
+              link: alert.link
             };
           });
           setRealNotifications(mappedAlerts);
@@ -794,10 +814,10 @@ export function HomeownerDashboard() {
         roomMap.get(loc).devices += 1;
       }
     });
-    rooms = [{ id: 'all', name: 'Semua Ruangan', devices: realDevices.length }, ...Array.from(roomMap.values())];
+    rooms = [{ id: 'all', name: t('dashboard.all_rooms'), devices: realDevices.length }, ...Array.from(roomMap.values())];
   } else {
     // Jika benar-benar kosong (user baru), tampilkan state kosong yang rapi
-    rooms = [{ id: 'all', name: 'Semua Ruangan', devices: 0 }];
+    rooms = [{ id: 'all', name: t('dashboard.all_rooms'), devices: 0 }];
   }
   
   let currentDevices = [];
@@ -839,6 +859,22 @@ export function HomeownerDashboard() {
   const monthlyData = energySummary?.monthlyData || [];
   const notifications = realNotifications;
   
+  const getLocalizedAction = (action) => {
+    if (!action) return action;
+    const lower = action.toLowerCase();
+    if (lower.includes('menyalakan') || lower === 'on') return t('dashboard.action_on', 'ON');
+    if (lower.includes('mematikan') || lower === 'off') return t('dashboard.action_off', 'OFF');
+    return action.toUpperCase();
+  };
+
+  const getLocalizedTrigger = (trigger) => {
+    if (!trigger) return trigger;
+    const lower = trigger.toLowerCase();
+    if (lower.includes('manual')) return t('dashboard.trigger_manual', 'MANUAL');
+    if (lower.includes('web')) return t('dashboard.trigger_web', 'WEB');
+    return trigger.toUpperCase();
+  };
+
   const mappedActivities = realActivities.map(act => {
     const statusStr = String(act.status || '').toUpperCase();
     const icon = (statusStr === 'ON' || statusStr === '1') ? Power : Zap;
@@ -846,13 +882,57 @@ export function HomeownerDashboard() {
     
     return {
       device: act.deviceName || act.actuator || 'Perangkat',
-      action: act.action || ((statusStr === 'ON' || statusStr === '1') ? 'Menyalakan' : 'Mematikan'),
+      action: act.action || ((statusStr === 'ON' || statusStr === '1') ? 'ON' : 'OFF'),
       trigger: act.trigger || 'Manual',
       time: act.timestamp ? new Date(act.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
       icon,
       color
     };
   });
+
+  const getLocalizedCategory = (text) => {
+    if (!text) return t('notification.ui.title', 'Notifikasi');
+    const lower = text.toLowerCase();
+    if (lower.includes('bahaya')) return t('notification.category.danger', 'Bahaya');
+    if (lower.includes('waspada')) return t('notification.category.warning', 'Waspada');
+    if (lower.includes('keamanan')) return t('notification.category.security', 'Keamanan');
+    if (lower.includes('sistem') || lower.includes('hub') || lower.includes('kontrol')) return t('notification.category.system', 'Sistem');
+    if (lower.includes('pengaduan') || lower.includes('tiket') || lower.includes('tugas') || lower.includes('perbaikan')) {
+      return t('notification.category.complaint', 'Pengaduan');
+    }
+    if (lower.includes('kenyamanan')) return t('notification.category.comfort', 'Kenyamanan');
+    if (lower.includes('energi') || lower.includes('anggaran') || lower.includes('tarif')) {
+      return t('notification.category.energy', 'Energi');
+    }
+    if (lower.includes('air') || lower.includes('tandon') || lower.includes('ph')) {
+      return t('notification.category.water', 'Air Sanitasi');
+    }
+    return text;
+  };
+
+  const getLocalizedTitle = (text, category) => {
+    if (!text) return getLocalizedCategory(category);
+    const lower = text.toLowerCase();
+    if (lower.includes('terkirim')) return t('notification.title.complaint_sent', text);
+    if (lower.includes('tiket pengaduan baru')) return t('notification.title.new_complaint_ticket', text);
+    if (lower.includes('mulai memproses')) return t('notification.title.tech_processing', text);
+    if (lower.includes('perbaikan selesai')) return t('notification.title.repair_finished', text);
+    if (lower.includes('pekerjaan selesai')) return t('notification.title.job_finished', text);
+    if (lower.includes('ditolak')) return t('notification.title.complaint_rejected', text);
+    if (lower.includes('dibatalkan')) return t('notification.title.ticket_cancelled', text);
+    if (lower.includes('update perbaikan')) return t('notification.title.repair_update', text);
+    if (lower.includes('permintaan data log')) return t('notification.title.log_request', text);
+    if (lower.includes('akses log diberikan')) return t('notification.title.log_granted', text);
+    if (lower.includes('akses log ditolak')) return t('notification.title.log_denied', text);
+    if (lower.includes('tugas perbaikan baru')) return t('notification.title.new_task', text);
+    if (lower.includes('teknisi ditugaskan')) return t('notification.title.tech_assigned', text);
+    if (lower.includes('overdue')) return t('notification.title.sla_overdue', text);
+    if (lower.includes('anggaran diperbarui')) return t('notification.title.budget_updated', text);
+    if (lower.includes('peringatan anggaran diperbarui')) return t('notification.title.threshold_updated', text);
+    if (lower.includes('terlalu rendah')) return t('notification.title.low_budget', text);
+    if (lower.includes('kontrol perangkat')) return t('notification.title.device_control', text);
+    return getLocalizedCategory(category || text);
+  };
 
 
 
@@ -865,7 +945,7 @@ export function HomeownerDashboard() {
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-6 mb-6 md:mb-8">
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <Home className="w-5 h-5 text-emerald-600" />
-            <h3 className="font-bold text-gray-900">Pilih Ruangan</h3>
+            <h3 className="font-bold text-gray-900">{t('dashboard.select_room')}</h3>
           </div>
           <div className="flex flex-wrap gap-2 sm:gap-3 pb-2">
             {rooms.map((room) => (
@@ -889,10 +969,10 @@ export function HomeownerDashboard() {
               <div>
                 <h2 id="section-kenyamanan" className="text-xl font-bold text-gray-900 mb-4">
                   {currentSensors.comfort && currentSensors.security && currentSensors.security.length > 0
-                    ? 'Kenyamanan & Keamanan'
+                    ? t('dashboard.comfort_security')
                     : currentSensors.comfort
-                      ? 'Kenyamanan'
-                      : 'Keamanan'}
+                      ? t('dashboard.comfort')
+                      : t('dashboard.security')}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-flow-col gap-3 sm:gap-4 mb-6 lg:overflow-x-auto lg:pb-4 lg:scrollbar-none desktop-comfort-grid">
                   {currentSensors.comfort && (
@@ -900,13 +980,13 @@ export function HomeownerDashboard() {
                       {currentSensors.comfort.humidity !== null && (
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-bold text-gray-900">Kelembapan</span>
+                            <span className="text-sm font-bold text-gray-900">{t('dashboard.humidity')}</span>
                             <Droplets className="w-5 h-5 text-blue-500" />
                           </div>
                           <div className="mb-3">
                             <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {(selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) < 50 ? 'Kering' : (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80 ? 'Nyaman' : 'Sangat Lembap'}
+                              {(selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) < 50 ? t('dashboard.status_humidity_dry', 'Kering') : (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80 ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_humidity_humid', 'Sangat Lembap')}
                             </div>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -918,13 +998,13 @@ export function HomeownerDashboard() {
                       {currentSensors.comfort.temp && (
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-bold text-gray-900">Suhu</span>
+                            <span className="text-sm font-bold text-gray-900">{t('dashboard.temperature')}</span>
                             <Thermometer className="w-5 h-5 text-orange-500" />
                           </div>
                           <div className="mb-3">
                             <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>
                             <div className="text-xs text-gray-500 mt-1">
-                              {(selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) < 20.5 ? 'Dingin' : (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 ? 'Nyaman' : 'Panas'}
+                              {(selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) < 20.5 ? t('dashboard.status_cold', 'Dingin') : (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_hot', 'Panas')}
                             </div>
                           </div>
                           <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -937,25 +1017,25 @@ export function HomeownerDashboard() {
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
                         <div className="relative flex flex-col h-full">
                           <div className="mb-1">
-                            <h3 className="text-2xl font-bold mb-1">Kenyamanan</h3>
-                            <p className="text-cyan-100 text-sm">Berdasarkan: suhu & kelembapan</p>
-                            <p className="text-emerald-100 text-xs mb-1">(Permenkes No. 2 Tahun 2023)</p>
+                            <h3 className="text-2xl font-bold mb-1">{t('dashboard.comfort')}</h3>
+                            <p className="text-cyan-100 text-sm">{t('dashboard.comfort_ref', 'Berdasarkan: suhu & kelembapan')}</p>
+                            <p className="text-emerald-100 text-xs mb-1">{t('dashboard.comfort_std', '(Permenkes No. 2 Tahun 2023)')}</p>
                           </div>
                           <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1 py-4 sm:py-0">
                             <div className="text-2xl font-bold mb-3 flex items-center gap-2">
                               {((selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) >= 20.5 && (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 &&
                                 (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) >= 50 && (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80) ?
-                                '😊 Nyaman' : '😕 Tidak Nyaman'}
+                                t('dashboard.status_comfort_ok', '😊 Nyaman') : t('dashboard.status_comfort_bad', '😕 Tidak Nyaman')}
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3 mt-auto">
                             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                              <div className="text-[10px] mb-1">Suhu</div>
+                              <div className="text-[10px] mb-1">{t('dashboard.temperature')}</div>
                               <div className="font-bold text-lg">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>
                             </div>
                             {currentSensors.comfort.humidity !== null && (
                               <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                                <div className="text-[10px] mb-1">Kelembapan</div>
+                                <div className="text-[10px] mb-1">{t('dashboard.humidity')}</div>
                                 <div className="font-bold text-lg">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>
                               </div>
                             )}
@@ -974,7 +1054,7 @@ export function HomeownerDashboard() {
                             <Activity className="w-5 h-5 text-purple-600" />
                           </div>
                           <div className="mb-3">
-                            <div className="text-4xl font-bold text-gray-900">{sensor.status === 'No Motion' ? 'Aman' : 'Gerak'}</div>
+                            <div className="text-4xl font-bold text-gray-900">{sensor.status === 'No Motion' ? t('dashboard.status_no_motion', 'Aman') : t('dashboard.status_motion', 'Gerak Terdeteksi')}</div>
                             <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
                           </div>
                           <div className={`mt-auto px-3 py-2 rounded-lg text-[10px] font-bold text-center ${sensor.status === 'No Motion' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -990,7 +1070,7 @@ export function HomeownerDashboard() {
                             <Lock className="w-5 h-5 text-purple-600" />
                           </div>
                           <div className="mb-3">
-                            <div className="text-4xl font-bold text-gray-900">{sensor.status === 'Closed' ? 'Tutup' : 'Buka'}</div>
+                            <div className="text-4xl font-bold text-gray-900">{sensor.status === 'Closed' ? t('dashboard.status_door_closed', 'Tertutup') : t('dashboard.status_door_open', 'Terbuka')}</div>
                             <div className="text-xs text-gray-500 mt-1">{sensor.room}</div>
                           </div>
                           <div className={`mt-auto px-3 py-2 rounded-lg text-[10px] font-bold text-center ${sensor.status === 'Closed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
@@ -1003,7 +1083,7 @@ export function HomeownerDashboard() {
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24"></div>
                         <div className="relative flex flex-col h-full">
                           <div className="mb-1">
-                            <h3 id="section-keamanan" className="text-2xl font-bold mb-1">Keamanan</h3>
+                            <h3 id="section-keamanan" className="text-2xl font-bold mb-1">{t('dashboard.security')}</h3>
                             <p className="text-purple-100 text-xs">{currentSensors.security.length} sensor aktif</p>
                           </div>
                           <div className="flex-1 flex flex-col justify-center items-center text-center py-4 sm:py-1">
@@ -1015,7 +1095,7 @@ export function HomeownerDashboard() {
                             <div className="text-xl font-semibold mt-1">
                               {currentSensors.security.every(s =>
                                 s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
-                              ) ? '🔒 Semua Aman' : '⚠️ Perlu Perhatian'}
+                              ) ? t('dashboard.status_all_safe', '🔒 Semua Aman') : t('dashboard.status_needs_attention', '⚠️ Perlu Perhatian')}
                             </div>
                           </div>
                           <div className="grid grid-cols-1 gap-2 mt-auto">
@@ -1036,19 +1116,19 @@ export function HomeownerDashboard() {
 
             {currentSensors.waterQuality && (
               <div id="section-kualitas-air">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Kesehatan Air</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">{t('dashboard.water_health')}</h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-flow-col gap-3 sm:gap-4 mb-6 lg:overflow-x-auto lg:pb-4 lg:scrollbar-none desktop-water-grid">
                   {/* pH */}
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-gray-900">Tingkat Keasaman (pH)</span>
+                      <span className="text-sm font-bold text-gray-900">{t('dashboard.ph_level')}</span>
                       <Beaker className="w-5 h-5 text-cyan-600" />
                     </div>
                     <div className="mb-3">
                       <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 ? 'Layak Pakai' : 'Tidak Layak Pakai'}
+                        {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak Pakai')}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -1059,13 +1139,13 @@ export function HomeownerDashboard() {
                   {/* Turbidity */}
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-gray-900">Kekeruhan</span>
+                      <span className="text-sm font-bold text-gray-900">{t('dashboard.turbidity')}</span>
                       <Droplets className="w-5 h-5 text-blue-600" />
                     </div>
                     <div className="mb-3">
                       <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {(selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 ? 'Layak Pakai' : 'Tidak Layak Pakai'}
+                        {(selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak Pakai')}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -1076,13 +1156,13 @@ export function HomeownerDashboard() {
                   {/* TDS */}
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-gray-900">Padatan Terlarut (TDS)</span>
+                      <span className="text-sm font-bold text-gray-900">{t('dashboard.tds')}</span>
                       <Wind className="w-5 h-5 text-teal-600" />
                     </div>
                     <div className="mb-3">
                       <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds}</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {(selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? 'Layak Pakai' : 'Tidak Layak Pakai'}
+                        {(selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak Pakai')}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -1093,13 +1173,13 @@ export function HomeownerDashboard() {
                   {/* Water Temperature */}
                   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all p-5 flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-gray-900">Suhu Air</span>
+                      <span className="text-sm font-bold text-gray-900">{t('dashboard.water_temperature')}</span>
                       <Thermometer className="w-5 h-5 text-orange-500" />
                     </div>
                     <div className="mb-3">
                       <div className="text-4xl font-bold text-gray-900">{selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp}°C</div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {(selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 10 ? 'Dingin' : (selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 30 ? 'Normal' : 'Hangat'}
+                        {(selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 10 ? t('dashboard.status_water_cold', 'Dingin') : (selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 30 ? t('dashboard.status_water_normal', 'Normal') : t('dashboard.status_water_warm', 'Hangat')}
                       </div>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden mt-auto">
@@ -1114,25 +1194,25 @@ export function HomeownerDashboard() {
                       <div className="mb-1">
                         <h3 className="text-2xl font-bold mb-1 flex items-center gap-3">
                           <Beaker className="w-6 h-6" />
-                          Status Air
+                          {t('dashboard.water_status_title', 'Status Air')}
                         </h3>
-                        <p className="text-cyan-100 text-sm">Berdasarkan: pH, Turbidity, TDS, Suhu</p>
-                        <p className="text-emerald-100 text-xs mb-1">(Permenkes No. 32 Tahun 2017)</p>
+                        <p className="text-cyan-100 text-sm">{t('dashboard.water_ref', 'Berdasarkan: pH, Turbidity, TDS, Suhu')}</p>
+                        <p className="text-emerald-100 text-xs mb-1">{t('dashboard.water_std', '(Permenkes No. 32 Tahun 2017)')}</p>
                       </div>
 
                       <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1">
                         <div className="text-2xl font-semibold mb-3 flex items-center gap-2 text-white">
-                          {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 && (selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 && (selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? '💧 Layak Pakai' : '⚠️ Tidak Layak Pakai'}
+                          {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 && (selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 && (selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? t('dashboard.status_water_ok', '💧 Layak Pakai') : t('dashboard.status_water_bad', '⚠️ Tidak Layak Pakai')}
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 mt-auto">
                         <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                          <div className="text-[10px] mb-1">Tingkat Keasaman (pH)</div>
+                          <div className="text-[10px] mb-1">{t('dashboard.ph_level')}</div>
                           <div className="font-bold text-lg">{selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph}</div>
                         </div>
                         <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 text-center">
-                          <div className="text-[10px] mb-1">Suhu</div>
+                          <div className="text-[10px] mb-1">{t('dashboard.water_temperature')}</div>
                           <div className="font-bold text-lg">{selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp}°C</div>
                         </div>
                       </div>
@@ -1145,11 +1225,11 @@ export function HomeownerDashboard() {
             <div id="section-energi" className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">Konsumsi Energi</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('dashboard.energy_consumption')}</h3>
                   <p className="text-xs text-gray-500 mt-1">
                     {chartType === 'daily'
-                      ? 'Update setiap jam | Hari berjalan 00:00-23:59'
-                      : 'Update setiap bulan | Periode 1 tahun (Januari–Desember)'}
+                      ? t('dashboard.energy_update_daily', 'Update setiap jam | Hari berjalan 00:00-23:59')
+                      : t('dashboard.energy_update_monthly', 'Update setiap bulan | Periode 1 tahun (Januari–Desember)')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1158,16 +1238,16 @@ export function HomeownerDashboard() {
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-amber-500 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-amber-600 transition-all shadow-md group"
                   >
                     <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="hidden sm:inline">Manajemen Anggaran</span>
-                    <span className="sm:hidden">Anggaran</span>
+                    <span className="hidden sm:inline">{t('dashboard.budget_management')}</span>
+                    <span className="sm:hidden">{t('dashboard.budget_management')}</span>
                   </button>
                   <button
                     onClick={() => setShowDataModal(true)}
                     className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#00a67d] text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-teal-700 transition-all shadow-md group"
                   >
                     <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="hidden sm:inline">View Details</span>
-                    <span className="sm:hidden">Detail</span>
+                    <span className="hidden sm:inline">{t('dashboard.view_details')}</span>
+                    <span className="sm:hidden">{t('dashboard.view_details')}</span>
                     <ChevronRight className="w-4 h-4 hidden sm:inline" />
                   </button>
                 </div>
@@ -1177,7 +1257,7 @@ export function HomeownerDashboard() {
                 {/* Item 1 */}
                 <div className="text-center px-2 flex flex-col items-center">
                   <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
-                    {chartType === 'daily' ? 'Konsumsi Beban Saat Ini' : 'Konsumsi Beban Bulan Ini'}
+                    {chartType === 'daily' ? t('dashboard.current_load') : t('dashboard.current_month_load')}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     {energySummary?.currentLoad || 0} <span className="text-xs sm:text-sm font-semibold opacity-60">{chartType === 'daily' ? 'Watt' : 'kWh'}</span>
@@ -1187,7 +1267,7 @@ export function HomeownerDashboard() {
                 {/* Item 2 */}
                 <div className="text-center px-2 flex flex-col items-center">
                   <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
-                    {chartType === 'daily' ? 'Konsumsi Beban Berjalan' : 'Total Konsumsi Beban Tahun Ini'}
+                    {chartType === 'daily' ? t('dashboard.running_consumption') : t('dashboard.total_year_consumption')}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     {chartType === 'daily' ? energySummary?.runningConsumption || 0 : (energySummary?.monthlyData?.reduce((acc, m) => acc + m.kwh, 0) || 0).toFixed(1)} <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
@@ -1197,7 +1277,7 @@ export function HomeownerDashboard() {
                 {/* Item 3 */}
                 <div className="text-center px-2 flex flex-col items-center">
                   <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
-                    {chartType === 'daily' ? 'Rata-rata beban /jam' : 'Rata-rata beban/bulan'}
+                    {chartType === 'daily' ? t('dashboard.avg_hourly') : t('dashboard.avg_monthly')}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     {chartType === 'daily' 
@@ -1212,7 +1292,7 @@ export function HomeownerDashboard() {
                 {/* Item 4 */}
                 <div className="text-center px-2 flex flex-col items-center">
                   <div className="text-[10px] sm:text-[11px] text-emerald-600 font-semibold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
-                    Estimasi Biaya Pemakaian Beban Berjalan (Rp)
+                    {t('dashboard.est_cost')}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     <span className="text-sm sm:text-base font-semibold opacity-60">Rp</span> {
@@ -1233,8 +1313,8 @@ export function HomeownerDashboard() {
                     }`}
                 >
                   <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Harian (Per Jam)</span>
-                  <span className="sm:hidden">Harian</span>
+                  <span className="hidden sm:inline">{t('dashboard.daily_chart')}</span>
+                  <span className="sm:hidden">{t('dashboard.daily_chart')}</span>
                 </button>
                 <button
                   onClick={() => setChartType('monthly')}
@@ -1242,8 +1322,8 @@ export function HomeownerDashboard() {
                     }`}
                 >
                   <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Bulanan (1 Tahun)</span>
-                  <span className="sm:hidden">Bulanan</span>
+                  <span className="hidden sm:inline">{t('dashboard.monthly_chart')}</span>
+                  <span className="sm:hidden">{t('dashboard.monthly_chart')}</span>
                 </button>
               </div>
 
@@ -1259,7 +1339,7 @@ export function HomeownerDashboard() {
                         tickLine={false}
                         style={{ fontSize: '11px' }}
                         dy={10}
-                        label={{ value: 'Waktu', position: 'insideBottom', offset: -15, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                        label={{ value: t('dashboard.time_label', 'Waktu'), position: 'insideBottom', offset: -15, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
                       />
                       <YAxis
                         stroke="#9ca3af"
@@ -1267,9 +1347,10 @@ export function HomeownerDashboard() {
                         tickLine={false}
                         style={{ fontSize: '11px' }}
                         dx={-10}
-                        label={{ value: 'Konsumsi (kWh)', angle: -90, position: 'insideLeft', offset: 0, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                        label={{ value: t('dashboard.energy_consumption_label', 'Konsumsi (kWh)'), angle: -90, position: 'insideLeft', offset: 0, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
                       />
                       <Tooltip
+                        labelFormatter={(val) => t(`dashboard.month_${val.toLowerCase()}`, val)}
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
@@ -1286,7 +1367,7 @@ export function HomeownerDashboard() {
                         strokeWidth={3}
                         dot={{ fill: '#10b981', r: 4, strokeWidth: 2, stroke: '#fff' }}
                         activeDot={{ r: 6 }}
-                        name="Konsumsi (kWh)"
+                        name={t('dashboard.energy_consumption_label', 'Konsumsi (kWh)')}
                       />
                     </RechartsLineChart>
                   </ResponsiveContainer>
@@ -1301,7 +1382,8 @@ export function HomeownerDashboard() {
                         tickLine={false}
                         style={{ fontSize: '11px' }}
                         dy={10}
-                        label={{ value: 'Waktu', position: 'insideBottom', offset: -15, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                        tickFormatter={(val) => t(`dashboard.month_${val.toLowerCase()}`, val)}
+                        label={{ value: t('dashboard.time_label', 'Waktu'), position: 'insideBottom', offset: -15, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
                       />
                       <YAxis
                         stroke="#9ca3af"
@@ -1309,11 +1391,12 @@ export function HomeownerDashboard() {
                         tickLine={false}
                         style={{ fontSize: '11px' }}
                         dx={-10}
-                        label={{ value: 'Daya (kWh)', angle: -90, position: 'insideLeft', offset: -10, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+                        label={{ value: t('dashboard.power_label', 'Daya (kWh)'), angle: -90, position: 'insideLeft', offset: -10, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
                         domain={[0, 250]}
                         ticks={[0, 50, 100, 150, 200, 250]}
                       />
                       <Tooltip
+                        labelFormatter={(val) => t(`dashboard.month_${val.toLowerCase()}`, val)}
                         contentStyle={{
                           backgroundColor: '#fff',
                           border: '1px solid #e5e7eb',
@@ -1322,7 +1405,7 @@ export function HomeownerDashboard() {
                           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
                         formatter={(value, name) => {
-                          if (name === 'Biaya (Rp)') return `Rp ${value.toLocaleString('id-ID')}`;
+                          if (name === t('dashboard.cost', 'Biaya (Rp)')) return `Rp ${value.toLocaleString('id-ID')}`;
                           return `${value} kWh`;
                         }}
                       />
@@ -1347,9 +1430,9 @@ export function HomeownerDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <Bell className="w-5 h-5 text-emerald-600" />
-                  Notifikasi & Alert
+                  {t('dashboard.notifications')}
                 </h3>
-                <button onClick={() => setShowNotifications(true)} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">View All</button>
+                <button onClick={() => setShowNotifications(true)} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">{t('dashboard.view_all')}</button>
               </div>
               <div className="relative">
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar transition-all">
@@ -1400,8 +1483,77 @@ export function HomeownerDashboard() {
                             }`} />
                         </div>
                         <div className="flex-1">
-                          <div className="text-sm text-gray-800 leading-relaxed">{notif.desc}</div>
-                          <div className="text-xs text-gray-400 mt-1">{notif.time}</div>
+                          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                            {(() => {
+                              const titleStr = (notif.title || "").toLowerCase();
+                              const msgStr = (notif.message || "").toLowerCase();
+                              let smartType = null;
+                              if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
+                                smartType = notif.type.toUpperCase();
+                              } else {
+                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+                              }
+                              const dynamicTitle = smartType && t(`notifications.dynamic.${smartType}.title`, { defaultValue: '' });
+                              return dynamicTitle || getLocalizedTitle(notif.title, notif.category);
+                            })()}
+                          </div>
+                          <div className="text-sm text-gray-800 leading-relaxed">
+                            {(() => {
+                              const titleStr = (notif.title || "").toLowerCase();
+                              const msgStr = (notif.message || "").toLowerCase();
+                              let smartType = null;
+                              if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
+                                smartType = notif.type.toUpperCase();
+                              } else {
+                                // Detection Logic (Check Title first, then Message)
+                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+                              }
+                              
+                              const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
+                              const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
+
+                              if (smartType && dynamicBody !== '___MISSING___') {
+                                // Regex to find ticket ID in quotes or 8-char alphanumeric
+                                const ticketMatch = notif.message.match(/"([^"]+)"/) || notif.message.match(/\b[a-z0-9]{8}\b/);
+                                const extractedTicket = notif.metadata?.ticketId || notif.metadata?.ticket || notif.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
+                                
+                                return t(dynamicBodyKey, { 
+                                   ...notif.metadata,
+                                   ticket: extractedTicket,
+                                   technician: notif.metadata?.technicianName || notif.metadata?.technician || notif.metadata?.senderName || '',
+                                   topic: notif.metadata?.topic || '',
+                                   name: notif.metadata?.senderName || notif.metadata?.name || '',
+                                   hubId: notif.metadata?.hubId || '',
+                                   deviceName: notif.metadata?.deviceName || '',
+                                   status: notif.metadata?.status || '',
+                                   location: notif.metadata?.location || '',
+                                   percent: notif.metadata?.percent || ''
+                                });
+                              }
+                              return notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : notif.message;
+                            })()}
+                          </div>
+                          <div className="text-[10px] text-gray-400 mt-1.5 font-medium">
+                            {notif.date ? new Date(notif.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : t('notification.ui.just_now')}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1414,7 +1566,7 @@ export function HomeownerDashboard() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-emerald-600" />
-                Aktivitas Terbaru
+                {t('dashboard.recent_activities')}
               </h3>
               <div className="space-y-3">
                 {mappedActivities.slice(0, 5).map((activity, idx) => {
@@ -1427,7 +1579,7 @@ export function HomeownerDashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-gray-900 leading-tight mb-0.5">{activity.device}</div>
-                        <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{activity.action} • {activity.trigger}</div>
+                        <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{getLocalizedAction(activity.action)} • {getLocalizedTrigger(activity.trigger)}</div>
                       </div>
                       <div className="text-[10px] font-semibold text-gray-400 bg-gray-100/50 px-2 py-1 rounded-lg">{activity.time}</div>
                     </div>

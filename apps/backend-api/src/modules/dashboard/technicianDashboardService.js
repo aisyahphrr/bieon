@@ -140,7 +140,7 @@ exports.getClientMonitoring = async (technicianId) => {
     const techObjectId = new mongoose.Types.ObjectId(technicianId);
 
     const clients = await User.find({ assignedTechnician: techObjectId, role: 'Homeowner' })
-        .select('fullName technicianId address createdAt status systemName bieonId phoneNumber email currentLocation')
+        .select('fullName technicianId address createdAt updatedAt status systemName bieonId phoneNumber email currentLocation')
         .lean();
 
     const formattedClients = await Promise.all(clients.map(async (client) => {
@@ -179,6 +179,37 @@ exports.getClientMonitoring = async (technicianId) => {
         const adaPengaduan = activeComplaintsCount > 0;
         const statusPengaduan = adaPengaduan ? `Ada (${activeComplaintsCount} tiket aktif)` : 'Tidak ada';
 
+        // Kumpulkan semua stempel waktu untuk mencari Update Terakhir mentah
+        const dates = [];
+        if (client.updatedAt) dates.push(new Date(client.updatedAt));
+        if (client.createdAt) dates.push(new Date(client.createdAt));
+        
+        hubs.forEach(h => {
+            if (h.updatedAt) dates.push(new Date(h.updatedAt));
+            else if (h.createdAt) dates.push(new Date(h.createdAt));
+        });
+        
+        devices.forEach(d => {
+            if (d.updatedAt) dates.push(new Date(d.updatedAt));
+            else if (d.createdAt) dates.push(new Date(d.createdAt));
+        });
+
+        // Kueri pengaduan terakhir milik pelanggan ini
+        const latestComplaint = await Complaint.findOne({ homeowner: client._id })
+            .sort({ updatedAt: -1 })
+            .select('updatedAt createdAt')
+            .lean();
+            
+        if (latestComplaint) {
+            if (latestComplaint.updatedAt) dates.push(new Date(latestComplaint.updatedAt));
+            else if (latestComplaint.createdAt) dates.push(new Date(latestComplaint.createdAt));
+        }
+
+        let latestUpdateDate = new Date();
+        if (dates.length > 0) {
+            latestUpdateDate = new Date(Math.max(...dates.map(d => d.getTime())));
+        }
+
         // Extract location or use a mock fallback for demonstration if empty
         // In real app, coordinates should be set during registration/installation
         let lat = client.currentLocation?.lat;
@@ -208,7 +239,9 @@ exports.getClientMonitoring = async (technicianId) => {
             noTelp: client.phoneNumber || '-',
             email: client.email || '-',
             tanggalInstalasi: client.createdAt ? client.createdAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-',
-            lastUpdate: 'Terbaru',
+            createdAtRaw: client.createdAt,
+            lastUpdateRaw: latestUpdateDate,
+            lastUpdate: latestUpdateDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
             adaPengaduan,
             statusPengaduan,
             devicesOnline,

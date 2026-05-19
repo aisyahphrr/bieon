@@ -304,9 +304,13 @@ exports.topupToken = async (req, res) => {
             owner: user._id,
             category: 'Energi',
             title: 'Anggaran Diperbarui',
+            messageKey: 'notification.homeowner.budget_updated',
             message: `Anggaran listrik bulanan Anda berhasil diatur menjadi Rp ${Number(amount).toLocaleString('id-ID')}.`,
             type: 'Success',
-            link: 'dashboard'
+            link: 'dashboard',
+            metadata: {
+                amount: `Rp ${Number(amount).toLocaleString('id-ID')}`
+            }
         });
 
         res.status(200).json({ 
@@ -341,9 +345,13 @@ exports.updateTokenThreshold = async (req, res) => {
             owner: user._id,
             category: 'Energi',
             title: 'Batas Peringatan Anggaran Diperbarui',
+            messageKey: 'notification.homeowner.budget_threshold_updated',
             message: `Batas peringatan sisa anggaran Anda telah diubah menjadi Rp ${Number(threshold).toLocaleString('id-ID')}.`,
             type: 'Info',
-            link: 'dashboard'
+            link: 'dashboard',
+            metadata: {
+                threshold: `Rp ${Number(threshold).toLocaleString('id-ID')}`
+            }
         });
 
         // --- CEK INSTAN APAKAH ANGGARAN LANGSUNG KRITIS ---
@@ -355,9 +363,14 @@ exports.updateTokenThreshold = async (req, res) => {
                 owner: user._id,
                 category: 'Energi',
                 title: 'Batas Anggaran Terlalu Rendah!',
+                messageKey: 'notification.homeowner.budget_low_warning',
                 message: `Peringatan: Batas peringatan yang Anda setel (Rp ${Number(threshold).toLocaleString('id-ID')}) lebih besar dari total anggaran Anda (Rp ${user.tokenBalance.toLocaleString('id-ID')}).`,
                 type: 'Warning',
-                link: 'dashboard'
+                link: 'dashboard',
+                metadata: {
+                    threshold: `Rp ${Number(threshold).toLocaleString('id-ID')}`,
+                    balance: `Rp ${user.tokenBalance.toLocaleString('id-ID')}`
+                }
             });
         }
 

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Users,
@@ -32,7 +33,7 @@ import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import { useSLA } from '../../hooks/useSLA';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
-import { formatStatusDisplay, getActionButtons, getPerformanceIndicator } from '../../utils/complaintHelpers';
+import { formatStatusDisplay, getRawDisplayStatus, getActionButtons, getPerformanceIndicator } from '../../utils/complaintHelpers';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -76,9 +77,10 @@ const UrgencyBadge = ({ level, pingCount }) => {
         critical: 'bg-red-900 text-white border-red-900 animate-pulse'
     };
 
+    const { t } = useTranslation();
     const mainLabels = {
-        high: '🔥 Prioritas (Alihan)',
-        critical: '🚨 KRITIS'
+        high: `🔥 ${t('complaint.urgency_alihan', 'Prioritas (Alihan)')}`,
+        critical: `🚨 ${t('complaint.urgency_critical', 'KRITIS')}`
     };
 
     return (
@@ -86,7 +88,7 @@ const UrgencyBadge = ({ level, pingCount }) => {
             {/* Render Kotak Ping (Max 3) */}
             {Array.from({ length: pingCount || 0 }).map((_, i) => (
                 <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black uppercase shadow-sm">
-                    ⚠️ Ping
+                    ⚠️ {t('complaint.ping_badge', 'Ping')}
                 </span>
             ))}
             
@@ -102,10 +104,11 @@ const UrgencyBadge = ({ level, pingCount }) => {
 
 // Sub-component for individual table rows to handle SLA hooks correctly
 const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, handlePing, handleReject, handleTransfer }) => {
+    const { t } = useTranslation();
     const { timer, points, isOverdue, timeElapsedMinutes } = useSLA(item.createdAt, item.assignedAt, item.processStartedAt, item.status);
     
-    const displayStatus = formatStatusDisplay(item.status, 'admin', timeElapsedMinutes);
-    const actions = getActionButtons('admin', item.status, timeElapsedMinutes);
+    const displayStatus = getRawDisplayStatus(item.status, 'admin', timeElapsedMinutes);
+    const actions = getActionButtons('admin', item.status, timeElapsedMinutes, t);
 
     return (
         <tr className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
@@ -118,9 +121,14 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
                     <UrgencyBadge level={item.urgencyLevel} pingCount={item.pingCount} />
                 </div>
             </td>
+            <td className="px-3 md:px-4 lg:px-6 py-4 whitespace-nowrap">
+                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                    {item.category ? t(`complaint.category_${item.category.toLowerCase().replace(/\s+/g, '_')}`, item.category) : t('history.category_others', 'Lainnya')}
+                </span>
+            </td>
             <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px]">
                 <span className={item.technician === 'Unassigned' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
-                    {item.technician === 'Unassigned' ? 'Menunggu Teknisi' : item.technician}
+                    {item.technician === 'Unassigned' ? t('complaint.table_col.waiting_tech', 'Menunggu Teknisi') : item.technician}
                 </span>
             </td>
             <td className="px-3 md:px-4 lg:px-6 py-4 text-[13px] text-center">
@@ -183,6 +191,7 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
 // Dummy data array has been moved directly to MongoDB via the Seed script!
 
 export default function AdminComplaint({ onNavigate }) {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     // --- Filter & Pagination States ---
@@ -237,7 +246,8 @@ export default function AdminComplaint({ onNavigate }) {
                     originalId: item._id, // Save DB ID to hit PUT endpoints
                     id: `TCK-${item._id ? item._id.substring(item._id.length - 6).toUpperCase() : '000000'}`,
                     description: item.desc, // Map from DB
-                    date: new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
+                    createdAt: item.createdAt, // Raw date for dynamic formatting
+                    date: new Date(item.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                     customer: item.homeowner?.fullName || 'Unknown User',
                     location: item.homeowner?.address || '-',
                     clientInfo: item.homeowner ? {
@@ -272,7 +282,7 @@ export default function AdminComplaint({ onNavigate }) {
                     logReason: item.logReason || '',
                     urgencyLevel: item.urgencyLevel || 'low',
                     pingCount: item.pingCount || 0,
-                    updatedAt: new Date(item.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')
+                    updatedAt: new Date(item.updatedAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':')
                 }));
                 setComplaints(formattedComplaints);
                 
@@ -307,14 +317,20 @@ export default function AdminComplaint({ onNavigate }) {
         // Header PDF
         doc.setFontSize(18);
         doc.setTextColor(0, 155, 124); // Admin Teal #009B7C
-        doc.text('BIEON - Laporan Pengaduan Pelanggan', 14, 22);
+        doc.text(t('export.admin_report_title', 'BIEON - Laporan Pengaduan Pelanggan'), 14, 22);
         
         doc.setFontSize(11);
         doc.setTextColor(100);
-        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+        doc.text(`${t('export.printed_at', 'Dicetak pada')}: ${new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`, 14, 30);
 
-        // Definisi Kolom sesuai urutan tabel: ID, Tanggal, Customer, Topik, Teknisi, Status
-        const tableColumn = ["ID Tiket", "Tanggal", "Customer", "Topik Kendala", "Teknisi", "Status"];
+        const tableColumn = [
+            t('complaint.detail_box.ticket_id', "ID Tiket"), 
+            t('complaint.detail_box.date_in', "Tanggal"), 
+            t('complaint.detail_box.customer_info', "Customer"), 
+            t('complaint.detail_box.desc', "Topik Kendala"), 
+            t('complaint.detail_box.technician_info', "Teknisi"), 
+            t('table.all_status', "Status").replace('Semua ', '').replace('All ', '') // Just simple 'Status'
+        ];
         const tableRows = [];
 
         // Isi Data dari State processedData (data yang sedang terfilter)
@@ -325,7 +341,7 @@ export default function AdminComplaint({ onNavigate }) {
                 ticket.customer,
                 ticket.topic,
                 ticket.technician,
-                ticket.status.toUpperCase()
+                formatStatusDisplay(ticket.status, 'admin').toUpperCase()
             ];
             tableRows.push(ticketData);
         });
@@ -368,6 +384,106 @@ export default function AdminComplaint({ onNavigate }) {
         return result.trim();
     };
 
+    // Helper Parser: Map string database log progres ke i18n
+    const getLocalizedTimelineDesc = (textStr) => {
+        if (!textStr) return '';
+        let cleaned = textStr.replace(/\s*\(Respons:.*?, Poin:.*?\)/gi, '').replace(/\s*\(Durasi:.*?, Poin:.*?\)/gi, '').trim();
+        
+        // Cek pola kalimat ID dari database
+        if (cleaned.includes('Laporan pengaduan berhasil dibuat')) {
+            return t('complaint.timeline_events.created', 'Laporan pengaduan berhasil dibuat. Menunggu penugasan teknisi.');
+        }
+        if (cleaned.includes('Tiket dialihkan dari')) {
+            const match = cleaned.match(/dari\s+(.*?)\s+ke\s+(.*?)\s+karena/i);
+            const oldTech = match ? match[1].trim() : '-';
+            const newTech = match ? match[2].trim() : '-';
+            return t('complaint.timeline_events.reassigned_from_to', 'Tiket dialihkan dari {{oldTech}} ke {{newTech}} karena melewati batas waktu.', { oldTech, newTech });
+        }
+        if (cleaned.includes('Tiket telah ditugaskan ke teknisi')) {
+            const match = cleaned.match(/teknisi:\s*(.*?)\.\s*Menunggu/i);
+            const techName = match ? match[1].trim() : cleaned.replace('Tiket telah ditugaskan ke teknisi:', '').split('.')[0].trim();
+            return t('complaint.timeline_events.assigned', 'Tiket telah ditugaskan ke teknisi: {{tech}}. Menunggu respon teknisi.', { tech: techName });
+        }
+        if (cleaned.includes('Teknisi mulai memproses pengaduan')) {
+            return t('complaint.timeline_events.process_started', 'Teknisi mulai memproses pengaduan.');
+        }
+        
+        // Progress options from Technician dropdown
+        if (cleaned.startsWith('Sedang Menuju Lokasi')) {
+            const notes = cleaned.replace('Sedang Menuju Lokasi', '').trim();
+            return t('complaint.timeline_events.prog_heading_location', 'Sedang Menuju Lokasi{{notes}}', { notes: notes ? ` ${notes}` : '' });
+        }
+        if (cleaned.startsWith('Mendiagnosa Masalah')) {
+            const notes = cleaned.replace('Mendiagnosa Masalah', '').trim();
+            return t('complaint.timeline_events.prog_diagnosing', 'Mendiagnosa Masalah{{notes}}', { notes: notes ? ` ${notes}` : '' });
+        }
+        if (cleaned.startsWith('Menunggu Suku Cadang')) {
+            const notes = cleaned.replace('Menunggu Suku Cadang', '').trim();
+            return t('complaint.timeline_events.prog_waiting_parts', 'Menunggu Suku Cadang{{notes}}', { notes: notes ? ` ${notes}` : '' });
+        }
+        if (cleaned.startsWith('Proses Perbaikan')) {
+            const notes = cleaned.replace('Proses Perbaikan', '').trim();
+            return t('complaint.timeline_events.prog_repairing', 'Proses Perbaikan{{notes}}', { notes: notes ? ` ${notes}` : '' });
+        }
+        
+        // Log Access
+        if (cleaned.includes('Teknisi meminta akses data log')) {
+            const reasonMatch = cleaned.match(/Alasan:\s*(.*)/i);
+            const reason = reasonMatch ? reasonMatch[1].trim() : '';
+            return t('complaint.timeline_events.log_requested', 'Teknisi meminta akses data log perangkat.{{reason}}', { reason: reason ? ` Alasan: ${reason}` : '' });
+        }
+        if (cleaned.includes('SuperAdmin memberikan izin akses data log')) {
+            return t('complaint.timeline_events.log_approved', 'SuperAdmin memberikan izin akses data log perangkat.');
+        }
+        if (cleaned.includes('SuperAdmin menolak akses data log')) {
+            return t('complaint.timeline_events.log_rejected', 'SuperAdmin menolak akses data log perangkat.');
+        }
+        
+        // PING
+        if (cleaned.includes('SuperAdmin mengirimkan PING')) {
+            const matchCount = cleaned.match(/Teguran ke-(\d+)/i);
+            const count = matchCount ? matchCount[1] : '1';
+            const matchUrg = cleaned.match(/menjadi:\s*(.*)/i);
+            const urgency = matchUrg ? matchUrg[1].replace(/\.$/, '').trim() : 'MEDIUM';
+            return t('complaint.timeline_events.ping_sent', 'SuperAdmin mengirimkan PING (Teguran ke-{{count}}). Urgensi ditingkatkan menjadi: {{urgency}}.', { count, urgency });
+        }
+        
+        // Completing & Rejection
+        if (cleaned.includes('Teknisi menyatakan perbaikan selesai')) {
+            return t('complaint.timeline_events.tech_completed', 'Teknisi menyatakan perbaikan selesai.');
+        }
+        if (cleaned.includes('Homeowner telah mengonfirmasi tiket selesai')) {
+            const ratingMatch = cleaned.match(/\(Rating:\s*(.*?)\)/i);
+            const rating = ratingMatch ? ratingMatch[0] : '';
+            return t('complaint.timeline_events.homeowner_confirmed', 'Homeowner telah mengonfirmasi tiket selesai{{rating}}.', { rating: rating ? ` ${rating}` : '' });
+        }
+        if (cleaned.includes('Tiket ditolak oleh SuperAdmin')) {
+            return t('complaint.timeline_events.rejected', 'Tiket ditolak oleh SuperAdmin.');
+        }
+        if (cleaned.includes('Menunggu konfirmasi')) {
+            return t('complaint.timeline_events.awaiting_confirmation', 'Menunggu konfirmasi pelanggan.');
+        }
+        if (cleaned.includes('Teknisi menuju lokasi')) {
+            return t('complaint.timeline_events.prog_heading_location', 'Teknisi sedang menuju lokasi.');
+        }
+        
+        // Overdues
+        if (cleaned.includes('Batas waktu respon terlampaui')) {
+            return t('complaint.timeline_events.response_overdue', 'Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.');
+        }
+        if (cleaned.includes('Batas waktu perbaikan terlampaui')) {
+            return t('complaint.timeline_events.repair_overdue', 'Batas waktu perbaikan terlampaui (56 jam). Status otomatis berubah menjadi Overdue Perbaikan.');
+        }
+        
+        // Fallback status/note matching
+        if (cleaned.startsWith('Status diperbarui menjadi')) {
+            const statusStr = cleaned.replace('Status diperbarui menjadi', '').replace(/\.$/, '').trim();
+            return t('complaint.timeline_events.status_updated_to', 'Status diperbarui menjadi {{status}}.', { status: statusStr });
+        }
+
+        return cleaned;
+    };
+
     const handleExportSingleDetailPDF = (ticket) => {
         if (!ticket) return;
         const doc = new jsPDF('portrait');
@@ -378,31 +494,31 @@ export default function AdminComplaint({ onNavigate }) {
         doc.rect(0, 0, 210, 40, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(22);
-        doc.text('LAPORAN DETAIL PENGADUAN', 105, 20, { align: 'center' });
+        doc.text(t('export.header_title', 'LAPORAN DETAIL PENGADUAN'), 105, 20, { align: 'center' });
         doc.setFontSize(10);
-        doc.text(`ID TIKET: ${ticket.id.replace('+P', '')}`, 105, 30, { align: 'center' });
+        doc.text(`${t('complaint.detail_box.ticket_id', 'ID Tiket').toUpperCase()}: ${ticket.id.replace('+P', '')}`, 105, 30, { align: 'center' });
 
         // Section 1: Informasi Dasar
         doc.setTextColor(40);
         doc.setFontSize(14);
-        doc.text('INFORMASI PENGADUAN', 14, 55);
+        doc.text(t('export.section_info', 'INFORMASI PENGADUAN'), 14, 55);
         doc.setLineWidth(0.5);
         doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.line(14, 58, 65, 58);
 
         doc.setFontSize(10);
         const infoData = [
-            ['Teknisi', `: ${ticket.technician} (${ticket.technicianInfo?.phone || '-'})`],
-            ['Rating Teknisi', `: ${ticket.rating !== '-' ? ticket.rating + '/5' : 'Belum dinilai'}`],
-            ['Nama Pelanggan', `: ${ticket.customer}`],
-            ['Alamat', `: ${ticket.location}`],
-            ['Topik Kendala', `: ${ticket.topic || '-'}`],
-            ['Kategori', `: ${ticket.category || 'Umum'}`],
-            ['Deskripsi Masalah', `: ${ticket.description || '-'}`],
-            ['Lampiran Foto', `: ${ticket.photos && ticket.photos.length > 0 ? ticket.photos.length + ' Foto (Tersedia di Dashboard)' : 'Tidak ada foto'}`],
-            ['Waktu Dibuat', `: ${ticket.date}`],
-            ['Waktu Selesai', `: ${ticket.completedAt ? new Date(ticket.completedAt).toLocaleString('id-ID') : '-'}`],
-            ['Durasi Pengerjaan', `: ${ticket.duration || '-'}`]
+            [t('export.row_technician', 'Teknisi'), `: ${ticket.technician} (${ticket.technicianInfo?.phone || '-'})`],
+            [t('export.row_tech_rating', 'Rating Teknisi'), `: ${ticket.rating !== '-' ? ticket.rating + '/5' : t('export.val_not_rated', 'Belum dinilai')}`],
+            [t('export.row_customer_name', 'Nama Pelanggan'), `: ${ticket.customer}`],
+            [t('export.row_address', 'Alamat'), `: ${ticket.location}`],
+            [t('export.row_topic', 'Topik Kendala'), `: ${ticket.topic || '-'}`],
+            [t('export.row_category', 'Kategori'), `: ${ticket.category || 'Umum'}`],
+            [t('export.row_desc', 'Deskripsi Masalah'), `: ${ticket.description || '-'}`],
+            [t('export.row_photos', 'Lampiran Foto'), `: ${ticket.photos && ticket.photos.length > 0 ? t('export.val_photos_count', '{{count}} Foto (Tersedia di Dashboard)', { count: ticket.photos.length }) : t('export.val_no_photos', 'Tidak ada foto')}`],
+            [t('export.row_created_at', 'Waktu Dibuat'), `: ${new Date(ticket.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`],
+            [t('export.row_completed_at', 'Waktu Selesai'), `: ${ticket.completedAt ? new Date(ticket.completedAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}`],
+            [t('export.row_duration', 'Durasi Pengerjaan'), `: ${ticket.duration || '-'}`]
         ];
 
         autoTable(doc, {
@@ -417,7 +533,7 @@ export default function AdminComplaint({ onNavigate }) {
         // Section 2: SLA Performance Metrics
         let currentY = doc.lastAutoTable.finalY + 15;
         doc.setFontSize(14);
-        doc.text('SLA PERFORMANCE & POINTS', 14, currentY);
+        doc.text(t('export.section_sla', 'SLA PERFORMANCE & POINTS'), 14, currentY);
         doc.line(14, currentY + 3, 75, currentY + 3);
 
         const timeline = ticket.timeline || [];
@@ -434,18 +550,21 @@ export default function AdminComplaint({ onNavigate }) {
         const repPts = ticket.technicianInfo?.repairPoints || ticket.repairPoints || 0;
         const totalPts = resPts + repPts;
 
-        let overallStatus = 'NEEDS IMPROVEMENT';
-        if (totalPts >= 100) overallStatus = 'EXCELLENT';
-        else if (totalPts >= 50) overallStatus = 'GOOD';
+        let overallStatus = t('export.perf_needs_improvement', 'NEEDS IMPROVEMENT');
+        if (totalPts >= 100) overallStatus = t('export.perf_excellent', 'EXCELLENT');
+        else if (totalPts >= 50) overallStatus = t('export.perf_good', 'GOOD');
+
+        const statusOntime = t('export.status_ontime', 'SESUAI SLA');
+        const statusOverdue = t('export.status_overdue', 'OVERDUE');
 
         const slaData = [
-            ['Respon Teknisi', '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? 'OVERDUE' : 'SESUAI SLA', `${resPts} Pts`],
-            ['Perbaikan Unit', '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? 'OVERDUE' : 'SESUAI SLA', `${repPts} Pts`]
+            [t('export.sla_response', 'Respon Teknisi'), '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime, `${resPts} Pts`],
+            [t('export.sla_repair', 'Perbaikan Unit'), '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime, `${repPts} Pts`]
         ];
 
         autoTable(doc, {
             startY: currentY + 8,
-            head: [['Aspek SLA', 'Target', 'Capaian', 'Status', 'Poin']],
+            head: [[t('export.col_sla_aspect', 'Aspek SLA'), t('export.col_target', 'Target'), t('export.col_achieved', 'Capaian'), t('export.col_status', 'Status'), t('export.col_points', 'Poin')]],
             body: slaData,
             theme: 'grid',
             styles: { fontSize: 9, cellPadding: 3 },
@@ -454,8 +573,8 @@ export default function AdminComplaint({ onNavigate }) {
             margin: { bottom: 25 },
             didParseCell: (data) => {
                 if (data.column.index === 3 && data.cell.section === 'body') {
-                    if (data.cell.text[0] === 'OVERDUE') data.cell.styles.textColor = [220, 38, 38];
-                    if (data.cell.text[0] === 'SESUAI SLA') data.cell.styles.textColor = [16, 185, 129];
+                    if (data.cell.text[0] === statusOverdue) data.cell.styles.textColor = [220, 38, 38];
+                    if (data.cell.text[0] === statusOntime) data.cell.styles.textColor = [16, 185, 129];
                 }
             }
         });
@@ -467,35 +586,40 @@ export default function AdminComplaint({ onNavigate }) {
         doc.setFontSize(10);
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.setFont('helvetica', 'bold');
-        doc.text(`OVERALL PERFORMANCE: ${totalPts} POINTS - ${overallStatus}`, 105, currentY + 8, { align: 'center' });
+        doc.text(t('export.overall_perf', 'OVERALL PERFORMANCE: {{points}} POINTS - {{status}}', { points: totalPts, status: overallStatus }), 105, currentY + 8, { align: 'center' });
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(40);
 
         // Section 3: Riwayat Progres
         currentY = currentY + 28;
         doc.setFontSize(14);
-        doc.text('RIWAYAT PROGRES PENGADUAN', 14, currentY);
+        doc.text(t('export.section_timeline', 'RIWAYAT PROGRES PENGADUAN'), 14, currentY);
         doc.line(14, currentY + 3, 85, currentY + 3);
 
-        const timelineData = timeline.length > 0 ? timeline.map(t => [
-            t.time || '-',
-            (t.status || 'UPDATE').toUpperCase(),
-            (t.desc || t.note || t.notes || '-').replace(/\s*\((?=.*(Respons|Durasi|Poin|Rating)).*?\)/gi, '').trim()
-        ]) : [['-', 'TIDAK ADA DATA PROGRES', '-']];
+        const timelineData = timeline.length > 0 ? timeline.map(tItem => [
+            tItem.time ? new Date(tItem.time).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-',
+            t('complaint.status.' + (tItem.status || 'BARU').toLowerCase(), formatStatusDisplay(tItem.status, 'admin')).toUpperCase(),
+            getLocalizedTimelineDesc(tItem.desc || tItem.note || tItem.notes || '-')
+        ]) : [['-', t('export.val_no_data_progress', 'TIDAK ADA DATA PROGRES'), '-']];
 
         autoTable(doc, {
             startY: currentY + 8,
-            head: [['Tanggal & Waktu', 'Aktivitas', 'Catatan/Keterangan']],
+            head: [[t('export.col_date_time', 'Tanggal & Waktu'), t('export.col_activity', 'Aktivitas'), t('export.col_notes', 'Catatan/Keterangan')]],
             body: timelineData,
             theme: 'striped',
-            styles: { fontSize: 9, cellPadding: 3 },
+            styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
             headStyles: { fillColor: primaryColor, textColor: [255, 255, 255] },
-            columnStyles: { 0: { width: 50 }, 1: { width: 45, fontStyle: 'bold' } },
+            columnStyles: { 
+                0: { cellWidth: 45, halign: 'left' }, 
+                1: { cellWidth: 35, fontStyle: 'bold', halign: 'left' },
+                2: { cellWidth: 'auto', halign: 'left' }
+            },
             margin: { bottom: 25 }
         });
 
         // Footer & Page Numbers
         const pageCount = doc.internal.getNumberOfPages();
+        const footerNote = t('export.auto_generated_note', 'Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON Smart Green Living.');
         for(let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
             
@@ -506,8 +630,8 @@ export default function AdminComplaint({ onNavigate }) {
 
             doc.setFontSize(7);
             doc.setTextColor(180);
-            doc.text('Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON Smart Green Living.', 105, 287, { align: 'center' });
-            doc.text(`Halaman ${i} dari ${pageCount}`, 105, 292, { align: 'center' });
+            doc.text(footerNote, 105, 287, { align: 'center' });
+            doc.text(t('export.page_indicator', 'Halaman {{current}} dari {{total}}', { current: i, total: pageCount }), 105, 292, { align: 'center' });
         }
 
         doc.save(`BIEON_SA_Detail_${ticket.id.replace('+P', '')}.pdf`);
@@ -535,7 +659,7 @@ export default function AdminComplaint({ onNavigate }) {
         const overdue = complaints.filter(c => ['overdue respons', 'overdue perbaikan'].includes(c.status?.toLowerCase())).length;
         const finished = complaints.filter(c => c.status?.toLowerCase() === 'selesai').length;
         
-        // Calculate Global CSAT from tickets with rating
+        // Calculate {t('complaint.admin_dashboard.global_csat', 'Global CSAT')} from tickets with rating
         const ratedTickets = complaints.filter(c => c.status?.toLowerCase() === 'selesai' && typeof c.rating === 'number');
         const avg = ratedTickets.length > 0 
             ? (ratedTickets.reduce((acc, curr) => acc + curr.rating, 0) / ratedTickets.length).toFixed(1)
@@ -545,10 +669,10 @@ export default function AdminComplaint({ onNavigate }) {
     }, [complaints]);
 
     const stats = [
-        { label: 'Total Tiket Aktif (BIEON)', value: statsMetrics.active, trend: 'Tiket sedang berjalan', color: 'blue', icon: Activity },
-        { label: 'Tiket Overdue (Batas SLA)', value: statsMetrics.overdue, trend: statsMetrics.overdue > 0 ? 'Perlu tindakan segera' : 'Sesuai target SLA', color: 'red', icon: AlertCircle },
-        { label: 'Total Diselesaikan', value: statsMetrics.finished, trend: 'Tiket status selesai', color: 'emerald', icon: CheckCircle2 },
-        { label: 'Global CSAT', value: statsMetrics.avg, trend: 'Rata-rata kepuasan', color: 'amber', icon: Star, isRating: true }
+        { label: t('complaint.admin_dashboard.total_active', 'Total Tiket Aktif (BIEON)'), value: statsMetrics.active, trend: t('complaint.admin_dashboard.total_active_desc', 'Tiket sedang berjalan'), color: 'blue', icon: Activity },
+        { label: t('complaint.admin_dashboard.total_overdue', 'Tiket Overdue (Batas SLA)'), value: statsMetrics.overdue, trend: statsMetrics.overdue > 0 ? t('complaint.admin_dashboard.total_overdue_desc', 'Perlu tindakan segera') : 'Sesuai target SLA', color: 'red', icon: AlertCircle },
+        { label: t('complaint.admin_dashboard.total_resolved', 'Total Diselesaikan'), value: statsMetrics.finished, trend: t('complaint.admin_dashboard.total_resolved_desc', 'Tiket status selesai'), color: 'emerald', icon: CheckCircle2 },
+        { label: t('complaint.admin_dashboard.global_csat', 'Global CSAT'), value: statsMetrics.avg, trend: t('complaint.admin_dashboard.global_csat_desc', 'Rata-rata kepuasan'), color: 'amber', icon: Star, isRating: true }
     ];
 
     const processedData = useMemo(() => {
@@ -583,8 +707,8 @@ export default function AdminComplaint({ onNavigate }) {
         if (selectedStatusFilter) {
             filtered = filtered.filter(item => {
                 const s = item.status?.toLowerCase();
-                if (selectedStatusFilter === 'Baru') {
-                    return (s === 'unassigned' || item.technician === 'Unassigned') && s !== 'ditolak';
+                if (selectedStatusFilter === 'unassigned') {
+                    return s === 'unassigned' || s === 'baru';
                 }
                 
                 if (selectedStatusFilter === 'Overdue Respons') {
@@ -597,6 +721,12 @@ export default function AdminComplaint({ onNavigate }) {
 
                 // Default matching
                 return s === selectedStatusFilter.toLowerCase();
+            });
+        }
+        if (selectedCategoryFilter) {
+            filtered = filtered.filter(item => {
+                const cat = (item.category || 'Lainnya').toLowerCase();
+                return cat === selectedCategoryFilter.toLowerCase();
             });
         }
 
@@ -697,7 +827,7 @@ export default function AdminComplaint({ onNavigate }) {
     };
 
     const handleReject = async (ticket) => {
-        if (!window.confirm(`Apakah Anda yakin ingin menolak tiket ${ticket.id}?`)) return;
+        if (!window.confirm(t('complaint.confirm_reject', 'Apakah Anda yakin ingin menolak tiket {{id}}?', { id: ticket.id }))) return;
         
         try {
             const response = await fetch(`/api/complaints/${ticket.originalId}/status`, {
@@ -715,7 +845,7 @@ export default function AdminComplaint({ onNavigate }) {
             if (response.ok) {
                 fetchData();
             } else {
-                alert("Gagal menolak tiket.");
+                alert(t('complaint.fail_reject', "Gagal menolak tiket."));
             }
         } catch (error) {
             console.error("Error rejecting ticket:", error);
@@ -760,12 +890,12 @@ export default function AdminComplaint({ onNavigate }) {
 
             if (response.ok) {
                 const resData = await response.json();
-                alert(`Ping Berhasil! Urgensi tiket kini menjadi: ${resData.urgencyLevel.toUpperCase()}`);
+                alert(t('complaint.ping_success', 'Ping Berhasil! Urgensi tiket kini menjadi: {{level}}', { level: resData.urgencyLevel.toUpperCase() }));
                 setIsPingModalOpen(false);
                 setSelectedPingType('');
                 fetchData();
             } else {
-                alert("Gagal mengirimkan PING.");
+                alert(t('complaint.ping_fail', "Gagal mengirimkan PING."));
             }
         } catch (error) {
             console.error("Error sending ping:", error);
@@ -873,15 +1003,15 @@ export default function AdminComplaint({ onNavigate }) {
                     <div className="p-5 md:p-8 border-b border-gray-50">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-6">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900 leading-tight">Daftar Pengaduan Masuk</h2>
-                                <p className="text-xs text-gray-500 mt-1 italic leading-relaxed">Pantau status laporan serta penugasan teknisi BIEON Smart Monitoring secara real-time.</p>
+                                <h2 className="text-xl font-bold text-gray-900 leading-tight">{t('complaint.admin_dashboard.header_title', 'Daftar Pengaduan Masuk')}</h2>
+                                <p className="text-xs text-gray-500 mt-1 italic leading-relaxed">{t('complaint.admin_dashboard.header_desc', 'Pantau status laporan serta penugasan teknisi BIEON Smart Monitoring secara real-time.')}</p>
                             </div>
                             <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto">
                                 <div className="relative flex-1 group min-w-0">
                                     <Search className="w-4 h-4 md:w-4 md:h-4 absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009B7C] transition-colors" />
                                     <input
                                         type="text"
-                                        placeholder="Cari Tiket, Hub..."
+                                        placeholder={t('table.search_placeholder', 'Cari tiket...')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full pl-10 md:pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-semibold text-gray-800 placeholder:font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#009B7C] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all truncate"
@@ -894,7 +1024,7 @@ export default function AdminComplaint({ onNavigate }) {
                                         className={`flex items-center justify-center gap-2 px-3.5 md:px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
                                     >
                                         <Filter className="w-4 h-4 text-gray-400" />
-                                        <span className="hidden md:block">{selectedStatusFilter || 'Semua Status'}</span>
+                                        <span className="hidden md:block">{selectedStatusFilter ? formatStatusDisplay(selectedStatusFilter, 'admin') : t('table.all_status', 'Semua Status')}</span>
                                         <ChevronDown className={`w-3.5 h-3.5 text-gray-400 hidden md:block transition-transform ${showStatusDropdown ? 'rotate-180' : ''}`} />
 
                                         {selectedStatusFilter && (
@@ -906,13 +1036,45 @@ export default function AdminComplaint({ onNavigate }) {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
                                             <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-[1.5rem] shadow-xl py-2 z-20">
-                                                {['', 'Baru', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi Pelanggan', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan', 'Ditolak'].map(s => (
+                                                {['', 'unassigned', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi Pelanggan', 'Selesai', 'Overdue Respons', 'Overdue Perbaikan', 'Ditolak'].map(s => (
                                                     <button
                                                         key={s}
                                                         onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
-                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedStatusFilter === s ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedStatusFilter === s ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-400 hover:bg-gray-50'}`}
                                                     >
-                                                        {s || 'Semua Status'}
+                                                        {s ? formatStatusDisplay(s, 'admin') : t('table.all_status', 'Semua Status')}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="relative shrink-0">
+                                    <button
+                                        onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                                        className={`flex items-center justify-center gap-2 px-3.5 md:px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showCategoryDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
+                                    >
+                                        <Activity className="w-4 h-4 text-gray-400" />
+                                        <span className="hidden md:block">{selectedCategoryFilter ? t(`complaint.category_${selectedCategoryFilter.toLowerCase().replace(/\s+/g, '_')}`, selectedCategoryFilter) : t('history.all_categories', 'Semua Kategori')}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 hidden md:block transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+
+                                        {selectedCategoryFilter && (
+                                            <span className="md:hidden absolute top-2.5 right-2 w-2 h-2 bg-[#009B7C] rounded-full border border-white"></span>
+                                        )}
+                                    </button>
+
+                                    {showCategoryDropdown && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setShowCategoryDropdown(false)}></div>
+                                            <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-[1.5rem] shadow-xl py-2 z-20">
+                                                {['', 'Sensor', 'Control Actuator System', 'Lainnya'].map(cat => (
+                                                    <button
+                                                        key={cat}
+                                                        onClick={() => { setSelectedCategoryFilter(cat); setShowCategoryDropdown(false); setCurrentPage(1); }}
+                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedCategoryFilter === cat ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-400 hover:bg-gray-50'}`}
+                                                    >
+                                                        {cat ? t(`complaint.category_${cat.toLowerCase().replace(/\s+/g, '_')}`, cat) : t('history.all_categories', 'Semua Kategori')}
                                                     </button>
                                                 ))}
                                             </div>
@@ -925,7 +1087,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
                                 >
                                     <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-                                    <span className="hidden md:block">Export</span>
+                                    <span className="hidden md:block">{t('table.export', 'Ekspor')}</span>
                                 </button>
                             </div>
                         </div>
@@ -933,30 +1095,33 @@ export default function AdminComplaint({ onNavigate }) {
 
                     <div className="overflow-x-auto custom-scrollbar-x pb-2 min-h-[400px]">
                         <table className="w-full text-left min-w-[1000px] table-auto">
-                            <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
+                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
                                 <tr>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('id')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">ID Tiket {getSortIcon('id')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.ticket_id', 'ID Tiket')} {getSortIcon('id')}</div>
                                     </th>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('date')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Tanggal {getSortIcon('date')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.date', 'Tanggal')} {getSortIcon('date')}</div>
                                     </th>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('customer')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Pelanggan {getSortIcon('customer')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.customer', 'Pelanggan')} {getSortIcon('customer')}</div>
                                     </th>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap outline-none">
-                                        <div className="uppercase tracking-wider text-[11px] font-bold">Topik Kendala</div>
+                                        <div className="uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.topic', 'Topik Kendala')}</div>
+                                    </th>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('category')}>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.detail_box.category', 'Kategori')} {getSortIcon('category')}</div>
                                     </th>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('technician')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Teknisi {getSortIcon('technician')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.technician', 'Teknisi')} {getSortIcon('technician')}</div>
                                     </th>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors text-center outline-none" onClick={() => requestSort('rating')}>
-                                        <div className="flex items-center justify-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Rating {getSortIcon('rating')}</div>
+                                        <div className="flex items-center justify-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.rating', 'Rating')} {getSortIcon('rating')}</div>
                                     </th>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('status')}>
-                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">Status {getSortIcon('status')}</div>
+                                        <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.status', 'Status')} {getSortIcon('status')}</div>
                                     </th>
-                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap text-left text-[11px] font-bold uppercase tracking-wider">Aksi</th>
+                                    <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap text-left text-[11px] font-bold uppercase tracking-wider">{t('complaint.table_col.action', 'Aksi')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -1003,7 +1168,7 @@ export default function AdminComplaint({ onNavigate }) {
                     <div className="bg-gray-50/50 px-5 md:px-8 py-4 md:py-6 border-t border-gray-100 flex flex-row items-center justify-between gap-2">
                         {/* Rows per page - Left: hanya kotak di HP, + label di desktop */}
                         <div className="flex items-center gap-2">
-                            <span className="hidden sm:inline text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows per page:</span>
+                            <span className="hidden sm:inline text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest whitespace-nowrap">{t('table.rows_per_page', 'Baris per halaman:')}</span>
                             <div className="relative">
                                 <button onClick={() => setShowRowsDropdown(!showRowsDropdown)} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-100 rounded-xl text-[10px] md:text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-sm transition-all min-w-[50px] md:min-w-[70px] justify-between">
                                     {rowsPerPage} <ChevronDown className={`w-3 h-3 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
@@ -1020,7 +1185,7 @@ export default function AdminComplaint({ onNavigate }) {
 
                         {/* Page Info - Center: selalu tampil "X-Y of Z", "items" disembunyikan di HP */}
                         <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap">
-                            <span className="md:hidden">rows </span>{startIndex + 1}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                            {t('table.pagination_info', '{{start}}-{{end}} dari {{total}} item', { start: startIndex + 1, end: Math.min(startIndex + rowsPerPage, totalItems), total: totalItems })}
                         </div>
 
                         {/* Pagination Controls - Right: ikon di HP, teks di desktop */}
@@ -1031,16 +1196,16 @@ export default function AdminComplaint({ onNavigate }) {
                                 className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                             >
                                 <ChevronLeft className="w-4 h-4 md:hidden" />
-                                <span className="hidden md:inline lg:hidden">Prev</span>
-                                <span className="hidden lg:inline">Previous</span>
+                                <span className="hidden md:inline lg:hidden">{t('table.previous', 'Sebelumnya').slice(0, 4)}</span>
+                                <span className="hidden lg:inline">{t('table.previous', 'Sebelumnya')}</span>
                             </button>
                             <button
                                 disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)}
                                 onClick={() => setCurrentPage(currentPage + 1)}
                                 className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                             >
-                                <span className="hidden lg:inline">Next</span>
-                                <span className="hidden md:inline lg:hidden">Next</span>
+                                <span className="hidden lg:inline">{t('table.next', 'Selanjutnya')}</span>
+                                <span className="hidden md:inline lg:hidden">{t('table.next', 'Selanjutnya').slice(0, 4)}</span>
                                 <ChevronRight className="w-4 h-4 md:hidden" />
                             </button>
                         </div>
@@ -1060,12 +1225,12 @@ export default function AdminComplaint({ onNavigate }) {
                         {(selectedTicket?.logRequestStatus === 'pending' || selectedTicket?.logRequestStatus === 'requested') && (
                             <div className="space-y-3 p-5 rounded-2xl border border-dashed bg-blue-50/50 border-blue-200 transition-all duration-300">
                                 <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-blue-600">
-                                    <FileText className="w-3 h-3" /> Teknisi Meminta Data Log
+                                    <FileText className="w-3 h-3" /> {t('complaint.action.admin.log_access_title', 'Teknisi Meminta Data Log')}
                                 </h4>
                                 
                                 {selectedTicket?.logReason && (
                                     <div className="bg-white/60 p-3 rounded-xl border border-blue-100/50">
-                                        <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Alasan Permintaan:</p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('complaint.action.technician.request_reason_label', 'Alasan Permintaan:')}</p>
                                         <p className="text-xs text-gray-700 italic leading-relaxed">"{selectedTicket.logReason}"</p>
                                     </div>
                                 )}
@@ -1075,13 +1240,13 @@ export default function AdminComplaint({ onNavigate }) {
                                         className="flex-1 py-3 bg-[#009B7C] text-white font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-[#008268] transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2"
                                         onClick={() => handleLogAction(selectedTicket.id, true)}
                                     >
-                                        <ShieldCheck className="w-3.5 h-3.5" /> Setujui
+                                        <ShieldCheck className="w-3.5 h-3.5" /> {t('complaint.action.admin.accept_access', 'Terima Akses')}
                                     </button>
                                     <button
                                         className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                                         onClick={() => handleLogAction(selectedTicket.id, false)}
                                     >
-                                        <XCircle className="w-3.5 h-3.5 text-red-500" /> Tolak
+                                        <XCircle className="w-3.5 h-3.5 text-red-500" /> {t('complaint.action.admin.reject_access', 'Tolak Akses')}
                                     </button>
                                 </div>
                             </div>
@@ -1100,12 +1265,12 @@ export default function AdminComplaint({ onNavigate }) {
                                 }}
                                 className="w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 shadow-sm"
                             >
-                                <Activity className="w-3.5 h-3.5" /> Lihat Data Log
+                                <Activity className="w-3.5 h-3.5" /> {t('complaint.action.technician.log_status_accepted', 'Lihat Data Log')}
                             </button>
                         )}
                         {selectedTicket?.logRequestStatus === 'rejected' && (
                             <div className="flex items-center gap-2 text-[10px] text-red-400 font-medium italic">
-                                <AlertCircle className="w-3 h-3" /> Anda menolak permintaan ini. Teknisi tidak dapat melihat log.
+                                <AlertCircle className="w-3 h-3" /> {t('complaint.action.admin.reject_log', 'Anda menolak permintaan ini. Teknisi tidak dapat melihat log.')}
                             </div>
                         )}
 
@@ -1119,7 +1284,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     }}
                                     className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
                                 >
-                                    <Users className="w-3.5 h-3.5" /> Alihkan Teknisi
+                                    <Users className="w-3.5 h-3.5" /> {t('complaint.action.admin.reassign_tech', 'Alihkan Teknisi')}
                                 </button>
                                 
                                 {selectedTicket?.status?.toLowerCase() !== 'unassigned' && (
@@ -1130,7 +1295,7 @@ export default function AdminComplaint({ onNavigate }) {
                                         }}
                                         className="w-full py-3 bg-red-500 text-white font-bold rounded-xl text-xs hover:bg-red-600 transition-all shadow-lg shadow-red-100 flex items-center justify-center gap-2"
                                     >
-                                        <Bell className="w-3.5 h-3.5" /> Kirim Ping Ke Teknisi
+                                        <Bell className="w-3.5 h-3.5" /> {t('complaint.action.admin.ping_tech', 'Kirim Ping Ke Teknisi')}
                                     </button>
                                 )}
                             </div>
@@ -1145,17 +1310,17 @@ export default function AdminComplaint({ onNavigate }) {
                                     }}
                                     className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                                 >
-                                    <MessageSquare className="w-3.5 h-3.5 text-[#009B7C]" /> Chat Teknisi (WA)
+                                    <MessageSquare className="w-3.5 h-3.5 text-[#009B7C]" /> {t('complaint.action.admin.chat_tech', 'Chat Teknisi')} (WA)
                                 </button>
                             )}
 
-                            {/* EXPORT DETAIL ACTION (Khusus SA jika status Selesai) */}
-                            {selectedTicket?.status?.toLowerCase() === 'selesai' && (
+                            {/* EXPORT DETAIL ACTION (Khusus SA jika status Selesai / Ditolak) */}
+                            {['selesai', 'ditolak'].includes(selectedTicket?.status?.toLowerCase()) && (
                                 <button
                                     onClick={() => handleExportSingleDetailPDF(selectedTicket)}
                                     className="w-full py-4 bg-white border-2 border-emerald-100 text-emerald-700 font-bold rounded-2xl text-[11px] uppercase tracking-wider hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-center gap-2 group active:scale-95"
                                 >
-                                    <Download className="w-4 h-4 group-hover:animate-bounce" /> Ekspor Detail Pengaduan (PDF)
+                                    <Download className="w-4 h-4 group-hover:animate-bounce" /> {t('complaint.detail_box.export_pdf', 'Ekspor Detail Pengaduan (PDF)')}
                                 </button>
                             )}
                         </div>
@@ -1210,12 +1375,12 @@ export default function AdminComplaint({ onNavigate }) {
                                     <X className="w-5 h-5 text-gray-400" />
                                 </button>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight">Alihkan Teknisi</h3>
-                            <p className="text-xs text-gray-500 mt-2">Pilih teknisi yang tersedia untuk menangani tiket <span className="font-bold text-gray-700">#{selectedTicket?.id}</span>.</p>
+                            <h3 className="text-xl font-bold text-gray-900 leading-tight">{t('complaint.action.admin.reassign_popup_title', 'Alihkan Teknisi')}</h3>
+                            <p className="text-xs text-gray-500 mt-2">{t('complaint.action.admin.assign_popup_desc', 'Pilih teknisi yang tersedia untuk menangani tiket pengaduan ini.')} <span className="font-bold text-gray-700">#{selectedTicket?.id}</span>.</p>
                         </div>
                         <div className="p-6 md:p-8 space-y-6 overflow-y-auto modal-custom-scrollbar">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Pilih Teknisi</label>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">{t('complaint.action.admin.select_tech_placeholder', 'Pilih Teknisi...').replace('...', '')}</label>
                                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 modal-custom-scrollbar">
                                     {technicians.length > 0 ? technicians.map(tech => (
                                         <button
@@ -1237,7 +1402,7 @@ export default function AdminComplaint({ onNavigate }) {
                                             </div>
                                         </button>
                                     )) : (
-                                        <div className="text-center py-4 text-xs font-bold text-gray-400">Tidak ada teknisi tersedia</div>
+                                        <div className="text-center py-4 text-xs font-bold text-gray-400">{t('complaint.detail_box.no_technician', 'Belum ada teknisi yang ditugaskan')}</div>
                                     )}
                                 </div>
                             </div>
@@ -1247,7 +1412,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     disabled={!selectedTechnicianId}
                                     className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50 disabled:shadow-none"
                                 >
-                                    Konfirmasi Penugasan
+                                    {t('complaint.action.admin.submit_assign', 'Tugaskan')}
                                 </button>
                                 <button
                                     onClick={() => {
@@ -1256,7 +1421,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     }}
                                     className="w-full py-3 bg-white border border-gray-100 text-gray-500 font-bold rounded-2xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                                 >
-                                    <FileText className="w-3.5 h-3.5" /> Detail Pengaduan
+                                    <FileText className="w-3.5 h-3.5" /> {t('complaint.detail_box.title_info', 'Informasi Pengaduan')}
                                 </button>
                             </div>
                         </div>
@@ -1277,17 +1442,29 @@ export default function AdminComplaint({ onNavigate }) {
                                     <X className="w-5 h-5 text-gray-400" />
                                 </button>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight">Kirim Peringatan (Ping)</h3>
-                            <p className="text-xs text-gray-500 mt-2">Kirim notifikasi urgent ke <span className="font-bold text-gray-700">{selectedTicket?.technician}</span> terkait keterlambatan respon.</p>
+                            <h3 className="text-xl font-bold text-gray-900 leading-tight">{t('complaint.action.admin.ping_popup_title', 'Kirim Peringatan PING!')}</h3>
+                            <p className="text-xs text-gray-500 mt-2">{t('complaint.action.admin.ping_popup_desc', 'Kirim notifikasi PING! kepada teknisi untuk mengingatkan batas waktu SLA perbaikan yang hampir habis atau telah terlewati.')}</p>
                         </div>
                         <div className="p-6 md:p-8 space-y-6 overflow-y-auto modal-custom-scrollbar">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">Alasan Peringatan (SLA)</label>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-1">{t('complaint.action.admin.ping_reasons_label', 'Alasan Peringatan (SLA)')}</label>
                                 <div className="grid grid-cols-1 gap-2">
                                     {[
-                                        { id: 'sla-15', label: 'Peringatan Respon (15 Menit)', desc: 'Teknisi belum memberikan respon awal sejak tiket masuk.' },
-                                        { id: 'sla-48', label: 'Peringatan Perbaikan (48 Jam)', desc: 'Tiket belum terselesaikan dalam batas waktu 48 jam.' },
-                                        { id: 'urgent', label: 'Urgent Follow-up', desc: 'Permintaan eskalasi dari customer yang mendesak.' }
+                                        { 
+                                            id: 'sla-15', 
+                                            label: t('complaint.action.admin.ping_reason_15m_label', 'Peringatan Respon (15 Menit)'), 
+                                            desc: t('complaint.action.admin.ping_reason_15m_desc', 'Teknisi belum memberikan respon awal sejak tiket masuk.') 
+                                        },
+                                        { 
+                                            id: 'sla-48', 
+                                            label: t('complaint.action.admin.ping_reason_48h_label', 'Peringatan Perbaikan (48 Jam)'), 
+                                            desc: t('complaint.action.admin.ping_reason_48h_desc', 'Tiket belum terselesaikan dalam batas waktu 48 jam.') 
+                                        },
+                                        { 
+                                            id: 'urgent', 
+                                            label: t('complaint.action.admin.ping_reason_urgent_label', 'Urgent Follow-up'), 
+                                            desc: t('complaint.action.admin.ping_reason_urgent_desc', 'Permintaan eskalasi dari customer yang mendesak.') 
+                                        }
                                     ].map(type => (
                                         <button
                                             key={type.id}
@@ -1306,7 +1483,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     disabled={!selectedPingType}
                                     className="w-full py-4 bg-red-500 text-white font-bold rounded-2xl text-sm hover:bg-red-600 transition-all shadow-lg shadow-red-100 disabled:opacity-50 disabled:shadow-none"
                                 >
-                                    Kirim Peringatan
+                                    {t('complaint.action.admin.submit_ping', 'Kirim PING')}
                                 </button>
                                 <button
                                     onClick={() => {
@@ -1315,7 +1492,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     }}
                                     className="w-full py-3 bg-white border border-gray-100 text-gray-500 font-bold rounded-2xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                                 >
-                                    <FileText className="w-3.5 h-3.5" /> Detail Pengaduan
+                                    <FileText className="w-3.5 h-3.5" /> {t('complaint.detail_box.title_info', 'Informasi Pengaduan')}
                                 </button>
                             </div>
                         </div>

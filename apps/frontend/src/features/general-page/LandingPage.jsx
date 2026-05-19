@@ -182,23 +182,23 @@ const LandingPage = () => {
 
       <main className="relative z-10">
         {/* High-Converting Hero Section */}
-        <section id="home" className="pt-24 pb-8 px-6 md:px-12 lg:px-16 flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full max-w-[1440px] mx-auto">
+        <section id="home" className="min-h-screen pt-24 pb-8 px-6 md:px-12 lg:px-16 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 w-full max-w-[1440px] mx-auto">
 
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
             <div className="mb-8">
-              <div className="text-5xl lg:text-6xl font-black tracking-tighter mb-2">
+              <div className="text-5xl lg:text-6xl font-black tracking-tighter mb-4">
                 <span className="text-[#059b27]">ECO</span><span className="text-[#129cc0]">SENSE</span>
               </div>
-              <div className="text-lg lg:text-xl font-bold text-slate-700 tracking-tight">
-                Smart Living Monitoring System
-              </div>
+              <h1 className="text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+                Smart Living <br className="hidden lg:block"/>
+                Monitoring System
+              </h1>
             </div>
 
-            <h1 className="text-5xl lg:text-[4.5rem] font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-8">
-              Monitor Today, <br />
-              <span className="text-[#059b27]">Sustain</span> Tomorrow.
-            </h1>
+            <h2 className="text-xl lg:text-2xl font-bold text-slate-800 mb-4 mt-8 tracking-wide">
+              Monitor Today, Sustain Tomorrow.
+            </h2>
 
             <div className="text-base lg:text-lg text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
               <p>Real-time monitoring untuk energi, air, udara, dan lingkungan.</p>
@@ -233,77 +233,15 @@ const LandingPage = () => {
             </div>
           </Reveal>
 
-          {/* Right Floating Live Mockup */}
-          <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:block">
-            {/* Primary Dashboard Card */}
-            <div className="relative z-20 bg-white/90 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl p-6 transform rotate-y-[-5deg] rotate-x-[5deg] transition-transform duration-700 hover:rotate-0 hover:scale-[1.02]">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">Living Room</h3>
-                  <p className="text-xs text-emerald-600 font-bold flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Online & Syncing</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><Activity size={16} /></div>
-                  <div className="bg-slate-100 p-2 rounded-xl text-slate-500"><ShieldCheck size={16} /></div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="bg-orange-50/50 border border-orange-100 rounded-2xl p-3 flex flex-col items-center justify-center">
-                  <ThermometerSun className="text-orange-500 mb-1" size={20} />
-                  <span className="text-[10px] text-slate-500 font-bold">Temp</span>
-                  <span className="text-sm font-black text-slate-800">24.5°C</span>
-                </div>
-                <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-3 flex flex-col items-center justify-center">
-                  <Droplets className="text-blue-500 mb-1" size={20} />
-                  <span className="text-[10px] text-slate-500 font-bold">Humidity</span>
-                  <span className="text-sm font-black text-slate-800">62%</span>
-                </div>
-                <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3 flex flex-col items-center justify-center">
-                  <Wind className="text-emerald-500 mb-1" size={20} />
-                  <span className="text-[10px] text-slate-500 font-bold">Air Qty</span>
-                  <span className="text-sm font-black text-slate-800">98%</span>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
-                <div className="flex justify-between items-end mb-4">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Power Usage Today</span>
-                    <div className="text-2xl font-black text-slate-800 mt-1 flex items-baseline gap-1">12.4 <span className="text-sm text-slate-400 font-bold">kWh</span></div>
-                  </div>
-                  <div className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">-4.2%</div>
-                </div>
-                {/* Mock Chart Bars */}
-                <div className="flex items-end gap-2 h-16 w-full opacity-70">
-                  <div className="w-1/6 bg-slate-200 rounded-t-md h-[40%]"></div>
-                  <div className="w-1/6 bg-slate-200 rounded-t-md h-[60%]"></div>
-                  <div className="w-1/6 bg-emerald-400 rounded-t-md h-[85%]"></div>
-                  <div className="w-1/6 bg-slate-200 rounded-t-md h-[50%]"></div>
-                  <div className="w-1/6 bg-slate-200 rounded-t-md h-[30%]"></div>
-                  <div className="w-1/6 bg-[#009b7c] rounded-t-md h-[100%] shadow-[0_0_15px_rgba(0,155,124,0.3)]"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Floating widget 1 */}
-            <div className="absolute top-10 -left-12 z-30 bg-white border border-slate-100 rounded-2xl shadow-xl w-48 p-4 flex items-center gap-4 animate-[bounce_4s_infinite]">
-              <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center shrink-0">
-                <Zap size={20} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400">All Devices</p>
-                <p className="text-sm font-black text-slate-800">Optimized</p>
-              </div>
-            </div>
-
-            {/* Floating widget 2 */}
-            <div className="absolute bottom-12 -right-8 z-30 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-48 p-4 flex items-center justify-between mx-auto" style={{ animation: 'bounce 5s infinite 1s' }}>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400">Security Ring</p>
-                <p className="text-sm font-black text-white">Armed</p>
-              </div>
-              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]"></div>
+          {/* Right Floating Dashboard Image */}
+          <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:flex items-center justify-center mt-12 lg:mt-24">
+            
+            <div className="relative z-20 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-700 ease-out">
+              <img 
+                src="/11BIEON ECO SENSE.png" 
+                alt="BIEON Eco Sense Dashboard" 
+                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
+              />
             </div>
 
             {/* Background Blob behind mockup */}
@@ -311,50 +249,126 @@ const LandingPage = () => {
           </Reveal>
         </section>
 
-        {/* Section Mitra Kami (Our Partners) */}
-        <section className="bg-[#f8fafc] py-16 border-y border-slate-100 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full opacity-30">
+        {/* Section Problem */}
+        <section className="bg-[#f8fafc] py-20 border-y border-slate-100 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
             <div className="absolute top-[-20%] left-[-10%] w-[40%] h-[100%] bg-emerald-50 blur-[100px] rounded-full"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[100%] bg-teal-50 blur-[100px] rounded-full"></div>
           </div>
 
+          <div className="w-full max-w-[1440px] mx-auto px-6 relative z-10">
+            
+            {/* Top Title Section */}
+            <Reveal className="w-full text-center lg:text-left mb-12">
+              <p className="text-[#009b7c] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">PROBLEM</p>
+              <h2 className="text-3xl lg:text-4xl font-black text-slate-800 leading-tight">Masih Mengandalkan Data Manual?</h2>
+            </Reveal>
+
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+              {/* Left Content: Stacked Points */}
+              <Reveal className="flex-1 w-full">
+                <div className="flex flex-col gap-6 md:gap-8">
+                  {/* 1. Tidak Real Time */}
+                  <Reveal delay="0.1s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/1tidakrealtime.png" alt="Tidak Real Time" className="w-full h-full object-cover rounded-2xl transition-all" />
+                    </div>
+                    <div className="text-center sm:text-left pt-1">
+                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Tidak Real Time</h4>
+                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Data seringkali terlambat dan tidak akurat.</p>
+                    </div>
+                  </Reveal>
+
+                  {/* 2. Sulit Monitoring */}
+                  <Reveal delay="0.2s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/2sulitmonitoring.png" alt="Sulit Monitoring" className="w-full h-full object-cover rounded-2xl transition-all" />
+                    </div>
+                    <div className="text-center sm:text-left pt-1">
+                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Sulit Monitoring</h4>
+                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Pemantauan manual memakan waktu.</p>
+                    </div>
+                  </Reveal>
+
+                  {/* 3. Keputusan Lambat */}
+                  <Reveal delay="0.3s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/3keputusanlambat.png" alt="Keputusan Lambat" className="w-full h-full object-cover rounded-2xl transition-all" />
+                    </div>
+                    <div className="text-center sm:text-left pt-1">
+                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Keputusan Lambat</h4>
+                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Keterlambatan aksi saat kondisi kritis.</p>
+                    </div>
+                  </Reveal>
+
+                  {/* 4. Potensi Pemborosan */}
+                  <Reveal delay="0.4s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/4potensipemborosan.png" alt="Potensi Pemborosan" className="w-full h-full object-cover rounded-2xl transition-all" />
+                    </div>
+                    <div className="text-center sm:text-left pt-1">
+                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Potensi Pemborosan</h4>
+                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Kerugian biaya karena inefisiensi.</p>
+                    </div>
+                  </Reveal>
+                </div>
+              </Reveal>
+
+              {/* Right Content: The Stressed Man Image */}
+              <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 mt-12 lg:mt-0">
+                <div className="relative z-20 rounded-3xl overflow-hidden shadow-2xl border-4 border-white transform hover:-translate-y-2 transition-all duration-700 ease-out">
+                  <img 
+                    src="/problem_illustration.png" 
+                    alt="Mengandalkan Data Manual" 
+                    className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
+                  />
+                </div>
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-amber-500/20 to-red-500/10 blur-3xl -z-10 rounded-full"></div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* Section Solution */}
+        <section className="bg-white py-16 border-b border-slate-100 relative overflow-hidden">
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
-              <p className="text-[#009b7c] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">PROBLEM</p>
-              <h2 className="text-3xl font-black text-slate-800 mb-12">Masih Mengandalkan Data Manual?</h2>
+              <p className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">SOLUTION</p>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-12" style={{ fontFamily: "'Poppins', sans-serif" }}>ONE PLATFORM. TOTAL MONITORING</h2>
             </Reveal>
 
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
-              {/* 1. Tidak Real Time */}
+              {/* 1. Energi */}
               <Reveal delay="0.1s" className="flex flex-col items-center group">
                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/1tidakrealtime.png" alt="Tidak Real Time" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/5ENERGY.png" alt="Energi" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Tidak Real Time</span>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Energi</span>
               </Reveal>
 
-              {/* 2. Sulit Monitoring */}
+              {/* 2. Air */}
               <Reveal delay="0.2s" className="flex flex-col items-center group">
                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/2sulitmonitoring.png" alt="Sulit Monitoring" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/6AIR.png" alt="Air" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Sulit Monitoring</span>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Air</span>
               </Reveal>
 
-              {/* 3. Keputusan Lambat */}
+              {/* 3. Lingkungan */}
               <Reveal delay="0.3s" className="flex flex-col items-center group">
                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/3keputusanlambat.png" alt="Keputusan Lambat" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/7LINGKUNGAN.png" alt="Lingkungan" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Keputusan Lambat</span>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Lingkungan</span>
               </Reveal>
 
-              {/* 4. Potensi Pemborosan */}
+              {/* 4. Keamanan */}
               <Reveal delay="0.4s" className="flex flex-col items-center group">
                 <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/4potensipemborosan.png" alt="Potensi Pemborosan" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/8PROTEKSI.png" alt="Keamanan" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Potensi Pemborosan</span>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Keamanan</span>
               </Reveal>
             </div>
           </div>
@@ -461,6 +475,86 @@ const LandingPage = () => {
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
                   Seluruh data dapat diakses kapan saja dan di mana saja melalui dashboard berbasis cloud yang terintegrasi.
+                </p>
+              </div>
+            </Reveal>
+
+          </div>
+        </section>
+
+        {/* Products Line Section */}
+        <section id="products" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
+          <div className="text-center mb-8 max-w-2xl mx-auto pt-10">
+            <div className="inline-flex py-1 px-3 rounded-full bg-blue-500/10 text-blue-600 font-bold text-[11px] uppercase tracking-widest mb-4">
+              Our Products
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-6 drop-shadow-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              Products Line
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+            {/* Product Card 1 */}
+            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/8ECO ENERGY.png" alt="EcoSense Energy" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-blue-700 mb-4 flex items-center justify-center gap-2">
+                  <Zap size={18} /> EcoSense Energy
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Sistem monitoring energi cerdas untuk memantau konsumsi listrik, efisiensi penggunaan energi, dan performa sistem secara real-time.
+                </p>
+              </div>
+            </Reveal>
+
+            {/* Product Card 2 */}
+            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-cyan-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/9ECOWATER.png" alt="EcoSense Water" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-cyan-600 mb-4 flex items-center justify-center gap-2">
+                  <Droplets size={18} /> EcoSense Water
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Solusi monitoring kualitas dan penggunaan air untuk membantu menjaga kesehatan, keamanan, efisiensi dan keberlanjutan sumber daya air.
+                </p>
+              </div>
+            </Reveal>
+
+            {/* Product Card 3 */}
+            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/9ECO ENVIRONMENT.png" alt="EcoSense Environment" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
+                  <ThermometerSun size={18} /> EcoSense Environment
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Platform monitoring lingkungan yang mengukur berbagai parameter seperti kualitas udara, suhu, kelembaban, dan kondisi lingkungan lainnya secara terintegrasi.
+                </p>
+              </div>
+            </Reveal>
+
+            {/* Product Card 4 */}
+            <Reveal delay="0.4s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-900/10 hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+                <div className="absolute inset-0 bg-slate-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/10ECO SECURITY.png" alt="EcoSense Security" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+              <div className="px-4 pb-6 text-center">
+                <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center justify-center gap-2">
+                  <ShieldCheck size={18} /> EcoSense Security
+                </h3>
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                  Sistem monitoring dan notifikasi cerdas untuk meningkatkan keamanan area, aset, dan infrastruktur melalui pemantauan real-time dan smart alert system.
                 </p>
               </div>
             </Reveal>

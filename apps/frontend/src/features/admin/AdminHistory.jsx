@@ -20,6 +20,7 @@ import {
     Eye,
     Star
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { SuperAdminLayout } from './SuperAdminLayout';
@@ -27,36 +28,37 @@ import { StatusBadge } from '../../shared/StatusBadge';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 
-const UrgencyBadge = ({ level, pingCount }) => {
-    if ((!level || level === 'low') && !pingCount) return null;
-
-    const mainBadgeStyles = {
-        high: 'bg-red-50 text-red-600 border-red-100',
-        critical: 'bg-red-900 text-white border-red-900 animate-pulse'
-    };
-
-    const mainLabels = {
-        high: '🔥 Prioritas (Alihan)',
-        critical: '🚨 KRITIS'
-    };
-
-    return (
-        <div className="flex flex-wrap gap-1 items-center">
-            {Array.from({ length: pingCount || 0 }).map((_, i) => (
-                <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black uppercase shadow-sm">
-                    ⚠️ Ping
-                </span>
-            ))}
-            {(level === 'high' || level === 'critical') && (
-                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase border ${mainBadgeStyles[level]}`}>
-                    {mainLabels[level]}
-                </span>
-            )}
-        </div>
-    );
-};
-
 export default function AdminHistory({ onNavigate }) {
+    const { t, i18n } = useTranslation();
+
+    const UrgencyBadge = ({ level, pingCount }) => {
+        if ((!level || level === 'low') && !pingCount) return null;
+
+        const mainBadgeStyles = {
+            high: 'bg-red-50 text-red-600 border-red-100',
+            critical: 'bg-red-900 text-white border-red-900 animate-pulse'
+        };
+
+        const mainLabels = {
+            high: `🔥 ${t('history.columns.priority')} (Alihan)`,
+            critical: `🚨 ${t('history.status.critical')}`
+        };
+
+        return (
+            <div className="flex flex-wrap gap-1 items-center">
+                {Array.from({ length: pingCount || 0 }).map((_, i) => (
+                    <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200 text-[8px] font-black uppercase shadow-sm">
+                        ⚠️ {t('history.ping', 'Ping')}
+                    </span>
+                ))}
+                {(level === 'high' || level === 'critical') && (
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase border ${mainBadgeStyles[level]}`}>
+                        {mainLabels[level]}
+                    </span>
+                )}
+            </div>
+        );
+    };
     // --- Data Master States ---
     const [activeTab, setActiveTab] = useState('Kenyamanan');
     const [historyData, setHistoryData] = useState([]);
@@ -98,7 +100,11 @@ export default function AdminHistory({ onNavigate }) {
     const [viewMonth, setViewMonth] = useState(new Date().getMonth());
     const [viewYear, setViewYear] = useState(new Date().getFullYear());
     const [showYearDropdown, setShowYearDropdown] = useState(false);
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthNames = [
+        t('dashboard.month_jan'), t('dashboard.month_feb'), t('dashboard.month_mar'), t('dashboard.month_apr'),
+        t('dashboard.month_may'), t('dashboard.month_jun'), t('dashboard.month_jul'), t('dashboard.month_aug'),
+        t('dashboard.month_sep'), t('dashboard.month_oct'), t('dashboard.month_nov'), t('dashboard.month_dec')
+    ];
 
     // ========================================================
     // BIDIRECTIONAL FILTERING LOGIC
@@ -198,18 +204,18 @@ export default function AdminHistory({ onNavigate }) {
     };
 
     const tabs = [
-        { id: 'Kenyamanan',       full: 'Kenyamanan',       short: 'Nyaman', endpoint: '/api/history/environment' },
-        { id: 'Keamanan',         full: 'Keamanan',         short: 'Aman', endpoint: '/api/history/security' },
-        { id: 'Kualitas Air',     full: 'Kualitas Air',     short: 'Air', endpoint: '/api/history/water' },
-        { id: 'Konsumsi Energi',  full: 'Konsumsi Energi',  short: 'Energi', endpoint: '/api/history/energy' },
-        { id: 'Log Perangkat',    full: 'Log Perangkat',    short: 'Log', endpoint: '/api/history/activity' },
-        { id: 'Notifikasi & Alert', full: 'Notifikasi & Alert', short: 'Alert', endpoint: '/api/history/alerts' },
-        { id: 'Pengaduan',        full: 'Pengaduan',        short: 'Tiket', endpoint: '/api/complaints' }
+        { id: 'Kenyamanan',       full: t('history.comfort'),       short: t('history.comfort'), endpoint: '/api/history/environment' },
+        { id: 'Keamanan',         full: t('history.security'),         short: t('history.security'), endpoint: '/api/history/security' },
+        { id: 'Kualitas Air',     full: t('history.water_quality'),     short: t('history.water_quality'), endpoint: '/api/history/water' },
+        { id: 'Konsumsi Energi',  full: t('history.energy'),  short: t('history.energy'), endpoint: '/api/history/energy' },
+        { id: 'Log Perangkat',    full: t('history.device_logs'),    short: t('history.device_logs'), endpoint: '/api/history/activity' },
+        { id: 'Notifikasi & Alert', full: t('history.notifications'), short: t('history.notifications'), endpoint: '/api/history/alerts' },
+        { id: 'Pengaduan',        full: t('history.complaints'),        short: t('history.complaints'), endpoint: '/api/complaints' }
     ];
 
     const formatDateTime = (dateStr) => {
         const date = new Date(dateStr);
-        return date.toLocaleString('id-ID', {
+        return date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
             day: '2-digit', month: 'short', year: 'numeric',
             hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
@@ -226,28 +232,50 @@ export default function AdminHistory({ onNavigate }) {
         return String(val).replace(/ NTU| ppm|°C| V| A| W| kWh/gi, '').trim();
     };
 
+    const localizeStatus = (s) => {
+        if (!s) return s;
+        const key = s.toLowerCase().replace(/\s+/g, '_');
+        return t(`history.status.${key}`, s);
+    };
+
+    const localizeTrigger = (trig) => {
+        if (!trig) return trig;
+        const key = trig.toLowerCase();
+        return t(`history.trigger.${key}`, trig);
+    };
+
     const mapItemData = (tabId, item, index) => {
         const rawDate = item.date || item.timestamp || item.createdAt;
         const base = {
             id: item._id || index,
-            time: formatDateTime(rawDate),
+            rawTime: rawDate,
             timestamp: new Date(rawDate).getTime(),
-            status: item.status || item.type || 'Normal'
+            room: item.room || '-',
+            device: item.device?.name || item.device || '-',
         };
-        if (tabId === 'Kenyamanan') return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity };
-        if (tabId === 'Keamanan') return { ...base, room: item.room, door: item.door, motion: item.motion };
-        if (tabId === 'Kualitas Air') return { ...base, device: item.device?.name || item.device || 'Sensor Air', ph: item.ph, turbidity: cleanValue(item.turbidity), temp: cleanValue(item.temperature), tds: cleanValue(item.tds) };
-        if (tabId === 'Konsumsi Energi') return { ...base, device: item.device?.name || item.device || 'Power Meter', kwh: cleanValue(item.totalKwh), voltage: cleanValue(item.voltage), current: cleanValue(item.current), power: cleanValue(item.power), pf: item.pf + ' PF' };
-        if (tabId === 'Log Perangkat') return { ...base, room: item.room, actuator: item.actuator, trigger: item.trigger };
-        if (tabId === 'Notifikasi & Alert') return { ...base, status: item.type || item.status || 'Normal', category: item.category, message: item.message, isRead: item.isRead };
+
+        if (tabId === 'Kenyamanan') return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity, rawStatus: item.status };
+        if (tabId === 'Keamanan') return { ...base, room: item.room, rawDoor: item.door, rawMotion: item.motion, rawStatus: item.status };
+        if (tabId === 'Kualitas Air') return { ...base, device: item.device?.name || item.device || t('history.columns.water_sensor', 'Sensor Air'), ph: item.ph, turbidity: cleanValue(item.turbidity), temp: cleanValue(item.temperature), tds: cleanValue(item.tds), rawStatus: item.status };
+        if (tabId === 'Konsumsi Energi') return { ...base, device: item.device?.name || item.device || t('history.columns.power_meter', 'Power Meter'), kwh: cleanValue(item.totalKwh), voltage: cleanValue(item.voltage), current: cleanValue(item.current), power: cleanValue(item.power), pf: item.pf + ' PF' };
+        if (tabId === 'Log Perangkat') return { ...base, room: item.room, actuator: item.actuator, rawStatus: item.status, trigger: item.trigger };
+        if (tabId === 'Notifikasi & Alert') return { 
+            ...base, 
+            rawStatus: item.type || item.status || 'Normal', 
+            rawCategory: item.category, 
+            messageKey: item.messageKey,
+            metadata: item.metadata,
+            rawMessage: item.message, 
+            isRead: item.isRead 
+        };
         if (tabId === 'Pengaduan') return { 
             ...base, 
             id: item._id ? `TCK-${item._id.substring(item._id.length - 6).toUpperCase()}` : base.id, 
-            customer: item.homeowner?.fullName || 'Unknown User',
-            category: item.category || 'Umum',
+            customer: item.homeowner?.fullName || t('history.unknown_user', 'Unknown User'),
+            rawCategory: item.category,
             topic: item.topic, 
-            device: item.device || item.hub?.name || 'General', 
-            technician: item.technician?.fullName || 'Belum Ditugaskan', 
+            device: item.device || item.hub?.name || t('history.general', 'General'), 
+            technician: item.technician?.fullName || t('complaint.status_unassigned'), 
             rating: item.rating?.stars || '-',
             status: item.status,
             rawItem: item // Original data for modal
@@ -265,7 +293,7 @@ export default function AdminHistory({ onNavigate }) {
             if (result.success && result.data) {
                 setAllHomeowners(result.data);
             } else { setApiError(result.message); }
-        } catch (err) { setApiError("Koneksi gagal."); }
+        } catch (err) { setApiError(t('history.connection_failed', 'Koneksi gagal.')); }
         finally { setIsLoadingHomeowners(false); }
     };
 
@@ -315,16 +343,25 @@ export default function AdminHistory({ onNavigate }) {
     const processedData = useMemo(() => {
         let filtered = [...historyData];
         if (selectedRoomFilter) {
-            if (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab)) filtered = filtered.filter(item => item.category === selectedRoomFilter);
+            if (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab)) filtered = filtered.filter(item => item.rawCategory === selectedRoomFilter);
             else if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) filtered = filtered.filter(item => item.device === selectedRoomFilter);
             else filtered = filtered.filter(item => item.room === selectedRoomFilter);
         }
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(item => {
-                const baseStr = `${item.time} ${item.status || ''} ${item.message || ''}`;
-                if (activeTab === 'Notifikasi & Alert') return `${baseStr} ${item.category}`.toLowerCase().includes(q);
-                return `${baseStr} ${item.room || item.device || ''}`.toLowerCase().includes(q);
+                const timeStr = formatDateTime(item.rawTime).toLowerCase();
+                const statusStr = localizeStatus(item.rawStatus || item.status).toLowerCase();
+                const q = searchQuery.toLowerCase();
+
+                if (activeTab === 'Notifikasi & Alert') {
+                    const msg = (item.messageKey ? t(item.messageKey, item.metadata) : item.rawMessage || '').toLowerCase();
+                    const cat = t(`notification.category.${item.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, item.rawCategory).toLowerCase();
+                    return timeStr.includes(q) || statusStr.includes(q) || msg.includes(q) || cat.includes(q);
+                }
+                
+                const baseStr = `${timeStr} ${statusStr} ${item.room || item.device || ''}`.toLowerCase();
+                return baseStr.includes(q);
             });
         }
         if (sortConfig.key) {
@@ -344,7 +381,7 @@ export default function AdminHistory({ onNavigate }) {
     }, [activeTab, historyData, searchQuery, selectedRoomFilter, sortConfig]);
 
     const availableFilters = useMemo(() => {
-        if (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab)) return Array.from(new Set(historyData.map(d => d.category))).filter(Boolean);
+        if (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab)) return Array.from(new Set(historyData.map(d => d.rawCategory))).filter(Boolean);
         return Array.from(new Set(historyData.map(d => d.room || d.device))).filter(Boolean);
     }, [historyData, activeTab]);
     const totalItems = processedData.length;
@@ -364,13 +401,13 @@ export default function AdminHistory({ onNavigate }) {
     };
 
     const handleExportPDF = () => {
-        if (processedData.length === 0) return;
+        if (processedData.length === 0) return alert(t('history.export.alert_no_data'));
         const doc = new jsPDF('l', 'mm', 'a4');
         doc.setFontSize(20); doc.setTextColor(0, 155, 124);
-        doc.text(`Laporan: ${activeTab}`, 15, 20);
+        doc.text(t('history.export.pdf_header', { tab: activeTab }), 15, 20);
         const { headers, body } = generateTableConfig(activeTab, processedData);
         autoTable(doc, { startY: 38, head: headers, body: body, theme: 'striped', headStyles: { fillColor: [0, 155, 124] } });
-        doc.save(`BIEON_${activeTab}.pdf`);
+        doc.save(`${t('history.export.filename_prefix', 'Laporan_Riwayat_BIEON')}_${activeTab}.pdf`);
     };
 
     const handleExportAllPDF = async () => {
@@ -389,11 +426,11 @@ export default function AdminHistory({ onNavigate }) {
             doc.setFontSize(32);
             doc.setTextColor(0, 155, 124);
             doc.setFont("helvetica", "bold");
-            doc.text("BIEON SMART SYSTEM", pageWidth / 2, 85, { align: 'center' });
+            doc.text(t('history.export.system_name', 'BIEON SMART SYSTEM'), pageWidth / 2, 85, { align: 'center' });
             
             doc.setFontSize(20);
             doc.setTextColor(60, 60, 60);
-            doc.text("LAPORAN RIWAYAT AKTIVITAS", pageWidth / 2, 98, { align: 'center' });
+            doc.text(t('history.title').toUpperCase(), pageWidth / 2, 98, { align: 'center' });
             
             doc.setDrawColor(0, 155, 124);
             doc.setLineWidth(1);
@@ -413,18 +450,18 @@ export default function AdminHistory({ onNavigate }) {
                 doc.text(String(value), valCol, y);
             };
 
-            addDetail("Nama Pelanggan", selectedHomeowner.fullName || selectedHomeowner.name, startY);
-            addDetail("Alamat", selectedHomeowner.address || "-", startY + lineSpacing);
-            addDetail("ID BIEON", selectedBieon || "Semua Perangkat", startY + lineSpacing * 2);
+            addDetail(t('history.columns.customer'), selectedHomeowner.fullName || selectedHomeowner.name, startY);
+            addDetail(t('profile.address', 'Alamat'), selectedHomeowner.address || "-", startY + lineSpacing);
+            addDetail("ID BIEON", selectedBieon || t('history.filters.all_bieon'), startY + lineSpacing * 2);
             
-            const startRange = dateRange.start ? formatDateDisplay(dateRange.start) : 'Awal Waktu';
-            const endRange = dateRange.end ? formatDateDisplay(dateRange.end) : 'Sekarang';
-            addDetail("Periode Laporan", `${startRange} - ${endRange}`, startY + lineSpacing * 3);
-            addDetail("Dihasilkan Pada", formatDateTime(new Date()), startY + lineSpacing * 4);
+            const startRange = dateRange.start ? formatDateDisplay(dateRange.start) : t('history.filters.start_date_null', 'Awal Waktu');
+            const endRange = dateRange.end ? formatDateDisplay(dateRange.end) : t('history.filters.end_date_null', 'Sekarang');
+            addDetail(t('history.filters.date_range'), `${startRange} - ${endRange}`, startY + lineSpacing * 3);
+            addDetail(t('history.export.print_date_label', 'Dihasilkan Pada'), formatDateTime(new Date()), startY + lineSpacing * 4);
 
             doc.setFontSize(10);
             doc.setTextColor(150, 150, 150);
-            doc.text("Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON.", pageWidth / 2, pageHeight - 25, { align: 'center' });
+            doc.text(t('history.export.auto_generated_note', 'Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON.'), pageWidth / 2, pageHeight - 25, { align: 'center' });
             doc.text("© 2026 BPJS - BIEON Project", pageWidth / 2, pageHeight - 19, { align: 'center' });
 
             // --- DATA PAGES ---
@@ -434,30 +471,34 @@ export default function AdminHistory({ onNavigate }) {
             if (dateRange.end) queryParams += `&endDate=${dateRange.end}`;
 
             for (let tab of tabs) {
-                let tabUrl = `${tab.endpoint}?${queryParams}`;
-                if (tab.id === 'Pengaduan') tabUrl += '&isHistory=true';
-                
-                const res = await fetch(tabUrl, { headers: { 'Authorization': `Bearer ${token}` } });
-                const result = await res.json();
-                
-                if (result.success && result.data && result.data.length > 0) {
-                    doc.addPage(); 
-                    doc.setFontSize(18);
-                    doc.setTextColor(0, 155, 124);
-                    doc.text(`Kategori: ${tab.full}`, 15, 18);
+                try {
+                    let tabUrl = `${tab.endpoint}?${queryParams}`;
+                    if (tab.id === 'Pengaduan') tabUrl += '&isHistory=true';
+
+                    const res = await fetch(tabUrl, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const result = await res.json();
                     
-                    const { headers, body } = generateTableConfig(tab.id, result.data.map((item, idx) => mapItemData(tab.id, item, idx)));
-                    
-                    autoTable(doc, { 
-                        startY: 25, 
-                        head: headers, 
-                        body: body, 
-                        theme: 'striped', 
-                        headStyles: { fillColor: [0, 155, 124], fontSize: 10, halign: 'center' },
-                        bodyStyles: { fontSize: 9, halign: 'center' },
-                        columnStyles: { 0: { halign: 'left' }, 1: { halign: 'left' } }, // Waktu & Ruangan left aligned
-                        margin: { top: 25, bottom: 20 }
-                    });
+                    if (result.success && result.data && result.data.length > 0) {
+                        doc.addPage(); 
+                        doc.setFontSize(18);
+                        doc.setTextColor(0, 155, 124);
+                        doc.text(`${t('history.columns.category')}: ${tab.full}`, 15, 18);
+                        
+                        const mappedData = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
+                        const { headers, body } = generateTableConfig(tab.id, mappedData);
+                        
+                        autoTable(doc, { 
+                            startY: 25, 
+                            head: headers, 
+                            body: body, 
+                            theme: 'striped', 
+                            headStyles: { fillColor: [0, 155, 124], fontSize: 10, halign: 'center' },
+                            bodyStyles: { fontSize: 9, halign: 'center' },
+                            margin: { top: 25, bottom: 20 }
+                        });
+                    }
+                } catch (tabErr) {
+                    console.error(`Error exporting tab ${tab.id}:`, tabErr);
                 }
             }
             
@@ -471,29 +512,50 @@ export default function AdminHistory({ onNavigate }) {
 
     const generateTableConfig = (tabId, data) => {
         let headers = [], body = [];
-        if (tabId === 'Kenyamanan') { headers = [["Waktu", "Ruangan", "Suhu", "Kelembapan", "Status"]]; body = data.map(e => [e.time, e.room, `${e.temp}°C`, e.humidity, e.status]); }
-        else if (tabId === 'Keamanan') { headers = [["Waktu", "Ruangan", "Pintu", "Gerak", "Status"]]; body = data.map(e => [e.time, e.room, e.door, e.motion, e.status]); }
-        else if (tabId === 'Kualitas Air') { headers = [["Waktu", "Perangkat", "pH", "Kekeruhan", "Suhu", "TDS", "Status"]]; body = data.map(e => [e.time, e.device, e.ph, `${e.turbidity} NTU`, `${e.temp}°C`, `${e.tds} ppm`, e.status]); }
-        else if (tabId === 'Konsumsi Energi') { headers = [["Waktu", "Perangkat", "Energy", "Voltase", "Arus", "Beban", "PF"]]; body = data.map(e => [e.time, e.device, `${e.kwh} kWh`, `${e.voltage} V`, `${e.current} A`, `${e.power} W`, e.pf]); }
-        else if (tabId === 'Log Perangkat') { headers = [["Waktu", "Ruangan", "Perangkat", "Status", "Pemicu"]]; body = data.map(e => [e.time, e.room, e.actuator, e.status, e.trigger]); }
-        else if (tabId === 'Notifikasi & Alert') { headers = [["Waktu", "Kategori", "Level", "Pesan"]]; body = data.map(e => [e.time, e.category, e.status, e.message]); }
-        else if (tabId === 'Pengaduan') { headers = [["Waktu", "ID Tiket", "Pelanggan", "Kategori", "Topik", "Teknisi", "Rating", "Status"]]; body = data.map(e => [e.time, e.id, e.customer, e.category, e.topic, e.technician, e.rating, e.status.toUpperCase()]); }
+        if (tabId === 'Kenyamanan') { 
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.temperature'), t('history.columns.humidity')]]; 
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, `${e.temp}°C`, `${e.humidity}%`]); 
+        }
+        else if (tabId === 'Keamanan') { 
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.door_sensor'), t('history.columns.motion_sensor')]]; 
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, localizeStatus(e.rawDoor), localizeStatus(e.rawMotion)]); 
+        }
+        else if (tabId === 'Kualitas Air') { 
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.ph'), t('history.columns.turbidity'), t('history.columns.tds')]]; 
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.ph, `${e.turbidity} NTU`, `${e.tds} ppm`]); 
+        }
+        else if (tabId === 'Konsumsi Energi') { 
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.energy'), t('history.columns.voltage'), t('history.columns.current'), t('history.columns.power_load'), t('history.columns.power_factor')]]; 
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, `${e.kwh} kWh`, `${e.voltage} V`, `${e.current} A`, `${e.power} W`, e.pf]); 
+        }
+        else if (tabId === 'Log Perangkat') { 
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.actuator'), t('history.columns.status'), t('history.columns.trigger')]]; 
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.actuator, localizeStatus(e.rawStatus), localizeTrigger(e.trigger)]); 
+        }
+        else if (tabId === 'Notifikasi & Alert') { 
+            headers = [[t('history.columns.time'), t('history.columns.category'), t('history.columns.status'), t('history.columns.message_detail')]]; 
+            body = data.map(e => [formatDateTime(e.rawTime), t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), localizeStatus(e.rawStatus), e.messageKey ? t(e.messageKey, e.metadata) : e.rawMessage]); 
+        }
+        else if (tabId === 'Pengaduan') { 
+            headers = [[t('history.columns.time'), t('history.columns.ticket_id'), t('history.columns.customer'), t('history.columns.category'), t('history.columns.topic'), t('history.columns.technician'), t('history.columns.rating'), t('history.columns.status')]]; 
+            body = data.map(e => [formatDateTime(e.rawTime), e.id, e.customer, t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), e.topic, e.technician, e.rating, localizeStatus(e.status)]); 
+        }
         return { headers, body };
     };
 
     return (
-        <SuperAdminLayout activeMenu="Riwayat" onNavigate={onNavigate} title="Riwayat Aktivitas">
+        <SuperAdminLayout activeMenu={t('nav.history')} onNavigate={onNavigate} title={t('history.title')}>
             <div className="space-y-6">
                 <div className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                     <div className="flex flex-wrap items-end gap-4 w-full">
                         
                         {/* Pilih Pelanggan (With Dynamic Filtering) */}
                         <div className="space-y-2 relative flex-1 min-w-[240px]">
-                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">Pilih Pelanggan</label>
+                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.select_customer')}</label>
                             <button onClick={() => setShowCustomerDropdown(!showCustomerDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showCustomerDropdown ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5 bg-white' : 'hover:bg-white hover:border-[#009b7c]/30 text-gray-700'}`}>
                                 <div className="flex items-center gap-2 truncate">
                                     <UserIcon className="w-4 h-4 text-[#009b7c]" />
-                                    <span className="truncate">{isLoadingHomeowners ? 'Memuat...' : (selectedHomeowner?.fullName || selectedHomeowner?.name || 'Pilih Pelanggan')}</span>
+                                    <span className="truncate">{isLoadingHomeowners ? t('history.loading') : (selectedHomeowner?.fullName || selectedHomeowner?.name || t('history.filters.select_customer'))}</span>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCustomerDropdown ? 'rotate-180' : ''}`} />
                             </button>
@@ -503,11 +565,11 @@ export default function AdminHistory({ onNavigate }) {
                                     <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-[50] max-h-64 overflow-y-auto custom-scrollbar">
                                         {/* Jika BIEON terpilih, tampilkan opsi "Semua Pelanggan" untuk mereset BIEON */}
                                         {selectedBieon && (
-                                            <button onClick={() => { setSelectedBieon(''); setCurrentPage(1); }} className="w-full text-center py-2 text-[10px] font-black text-[#009b7c] border-b border-gray-50 bg-[#F2F8F5]/50 hover:bg-[#F2F8F5] transition-colors uppercase tracking-widest">Tampilkan Semua Pelanggan</button>
+                                            <button onClick={() => { setSelectedBieon(''); setCurrentPage(1); }} className="w-full text-center py-2 text-[10px] font-black text-[#009b7c] border-b border-gray-50 bg-[#F2F8F5]/50 hover:bg-[#F2F8F5] transition-colors uppercase tracking-widest">{t('history.filters.all_customers', 'Tampilkan Semua Pelanggan')}</button>
                                         )}
                                         {displayHomeowners.length > 0 ? displayHomeowners.map(h => (
                                             <button key={h._id} onClick={() => handleSelectHomeowner(h)} className={`w-full text-left px-5 py-3 text-[13px] ${selectedHomeowner?._id === h._id ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{h.fullName || h.name}</button>
-                                        )) : <div className="px-5 py-4 text-center text-xs text-gray-400 font-bold italic">Tidak ada pelanggan untuk filter ini</div>}
+                                        )) : <div className="px-5 py-4 text-center text-xs text-gray-400 font-bold italic">{t('history.filters.no_customers', 'Tidak ada pelanggan untuk filter ini')}</div>}
                                     </div>
                                 </>
                             )}
@@ -515,11 +577,11 @@ export default function AdminHistory({ onNavigate }) {
 
                         {/* Pilih BIEON (With Dynamic Filtering) */}
                         <div className="space-y-2 relative flex-1 min-w-[180px]">
-                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">Pilih BIEON</label>
+                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.select_bieon')}</label>
                             <button onClick={() => setShowBieonDropdown(!showBieonDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showBieonDropdown ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5 bg-white' : 'hover:bg-white hover:border-[#009b7c]/30 text-gray-700'}`}>
                                 <div className="flex items-center gap-2 truncate">
                                     <Cpu className="w-4 h-4 text-[#009b7c]" />
-                                    <span className="truncate">{isLoadingBieon ? '...' : (selectedBieon || 'Pilih BIEON')}</span>
+                                    <span className="truncate">{isLoadingBieon ? '...' : (selectedBieon || t('history.filters.select_bieon'))}</span>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showBieonDropdown ? 'rotate-180' : ''}`} />
                             </button>
@@ -527,11 +589,11 @@ export default function AdminHistory({ onNavigate }) {
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowBieonDropdown(false)}></div>
                                     <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-[50] max-h-60 overflow-y-auto custom-scrollbar">
-                                        <button onClick={() => handleSelectBieon('')} className={`w-full text-left px-5 py-3 text-[13px] ${!selectedBieon ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>Semua BIEON</button>
+                                        <button onClick={() => handleSelectBieon('')} className={`w-full text-left px-5 py-3 text-[13px] ${!selectedBieon ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{t('history.filters.all_bieon')}</button>
                                         {displayBieonSystems.map((sys, idx) => (
                                             <button key={idx} onClick={() => handleSelectBieon(sys.bieonId)} className={`w-full text-left px-5 py-3 text-[13px] ${selectedBieon === sys.bieonId ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{sys.bieonId}</button>
                                         ))}
-                                        {displayBieonSystems.length === 0 && <div className="px-5 py-4 text-center text-xs text-gray-400 font-bold italic">Tidak ada BIEON untuk pelanggan ini</div>}
+                                        {displayBieonSystems.length === 0 && <div className="px-5 py-4 text-center text-xs text-gray-400 font-bold italic">{t('history.filters.no_bieon', 'Tidak ada BIEON untuk pelanggan ini')}</div>}
                                     </div>
                                 </>
                             )}
@@ -539,11 +601,11 @@ export default function AdminHistory({ onNavigate }) {
 
                         {/* Rentang Waktu */}
                         <div className="space-y-2 relative flex-1 min-w-[240px]">
-                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">Rentang Waktu</label>
+                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.date_range')}</label>
                             <button onClick={() => setShowDateDropdown(!showDateDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${dateRange.start || dateRange.end ? 'border-[#009b7c] text-[#009b7c] bg-[#F2F8F5]' : 'hover:bg-white hover:border-[#009b7c]/30 text-gray-500'}`}>
                                 <div className="flex items-center gap-2 truncate">
                                     <Calendar className="w-4 h-4" />
-                                    <span className="truncate">{dateRange.start || dateRange.end ? `${formatDateDisplay(dateRange.start)} - ${formatDateDisplay(dateRange.end)}` : 'Pilih Rentang Waktu'}</span>
+                                    <span className="truncate">{dateRange.start || dateRange.end ? `${formatDateDisplay(dateRange.start)} - ${formatDateDisplay(dateRange.end)}` : t('history.filters.date_range')}</span>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 transition-transform ${showDateDropdown ? 'rotate-180' : ''}`} />
                             </button>
@@ -554,20 +616,26 @@ export default function AdminHistory({ onNavigate }) {
                                         <div className="space-y-5">
                                             <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
                                                 <Calendar className="w-5 h-5 text-[#009b7c]" />
-                                                <h3 className="text-[12px] font-black text-gray-700 uppercase tracking-widest">Kustom Rentang</h3>
+                                                <h3 className="text-[12px] font-black text-gray-700 uppercase tracking-widest">{t('history.filters.custom_range', 'Kustom Rentang')}</h3>
                                             </div>
-                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">Dari Tanggal</label><button onClick={() => setActivePicker(activePicker === 'start' ? null : 'start')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'start' ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.start ? formatDateDisplay(dateRange.start) : 'Pilih Tanggal'}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'start' ? 'text-[#009b7c]' : ''}`} /></button></div>
-                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">Sampai Tanggal</label><button onClick={() => setActivePicker(activePicker === 'end' ? null : 'end')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'end' ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.end ? formatDateDisplay(dateRange.end) : 'Pilih Tanggal'}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'end' ? 'text-[#009b7c]' : ''}`} /></button></div>
+                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">{t('history.filters.from_date')}</label><button onClick={() => setActivePicker(activePicker === 'start' ? null : 'start')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'start' ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.start ? formatDateDisplay(dateRange.start) : t('history.filters.from_date')}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'start' ? 'text-[#009b7c]' : ''}`} /></button></div>
+                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">{t('history.filters.to_date')}</label><button onClick={() => setActivePicker(activePicker === 'end' ? null : 'end')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'end' ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.end ? formatDateDisplay(dateRange.end) : t('history.filters.to_date')}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'end' ? 'text-[#009b7c]' : ''}`} /></button></div>
                                             {activePicker && (
                                                 <div className="pt-2 border-t border-gray-50 animate-in slide-in-from-top-2 duration-300">
                                                     <div className="flex items-center justify-between mb-4"><div className="flex flex-col"><span className="text-xs font-black text-gray-900 uppercase tracking-tight">{monthNames[viewMonth]}</span><div className="relative"><button onClick={() => setShowYearDropdown(!showYearDropdown)} className="flex items-center gap-1 text-[10px] font-black text-[#009b7c] uppercase tracking-widest">{viewYear} <ChevronDown className={`w-3 h-3 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} /></button>{showYearDropdown && (<><div className="fixed inset-0 z-[60]" onClick={() => setShowYearDropdown(false)}></div><div className="absolute top-full left-0 mt-1 w-24 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[70] max-h-40 overflow-y-auto custom-scrollbar">{Array.from({ length: 11 }, (_, i) => 2026 - i).map(y => (<button key={y} onClick={() => { setViewYear(y); setShowYearDropdown(false); }} className={`w-full text-left px-4 py-2 text-[10px] font-bold ${viewYear === y ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}>{y}</button>))}</div></>)}</div></div><div className="flex items-center gap-1"><button onClick={() => changeMonth('prev')} className="p-2 hover:bg-gray-50 rounded-lg"><ChevronLeft className="w-4 h-4 text-gray-400" /></button><button onClick={() => changeMonth('next')} className="p-2 hover:bg-gray-50 rounded-lg"><ChevronRight className="w-4 h-4 text-gray-400" /></button></div></div>
-                                                    <div className="grid grid-cols-7 gap-1 mb-2">{['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <span key={d} className="text-[9px] font-black text-gray-300 text-center uppercase tracking-widest">{d}</span>)}</div>
+                                                    <div className="grid grid-cols-7 gap-1 mb-2">
+                                                        {['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'].map(d => (
+                                                            <span key={d} className="text-[9px] font-black text-gray-300 text-center uppercase tracking-widest">
+                                                                {t(`calendar.days.${d}`)}
+                                                            </span>
+                                                        ))}
+                                                    </div>
                                                     <div className="grid grid-cols-7 gap-1">{calendarDays.map((d, i) => { const currentVal = `${d.year}-${String(d.month + 1).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`; const isSelected = (activePicker === 'start' ? dateRange.start : dateRange.end) === currentVal; return (<button key={i} onClick={() => handleSelectDate(d)} className={`h-8 w-full flex items-center justify-center rounded-lg text-[11px] font-bold transition-all ${!d.current ? 'text-gray-200' : isSelected ? 'bg-[#009b7c] text-white' : 'text-gray-600 hover:bg-[#F2F8F5] hover:text-[#009b7c]'}`}>{d.day}</button>); })}</div>
                                                 </div>
                                             )}
                                             <div className="flex gap-3 pt-2">
-                                                <button onClick={() => { setDateRange({start:'', end:''}); setShowDateDropdown(false); setActivePicker(null); setCurrentPage(1); }} className="flex-1 h-[46px] text-[11px] font-black text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest border border-gray-50 rounded-xl hover:bg-gray-50">Reset All</button>
-                                                <button onClick={() => { setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 h-[46px] bg-[#009b7c] text-white rounded-xl text-[11px] font-black hover:bg-[#008268] transition-all shadow-lg shadow-[#009b7c]/20 uppercase tracking-widest">Terapkan</button>
+                                                <button onClick={() => { setDateRange({start:'', end:''}); setShowDateDropdown(false); setActivePicker(null); setCurrentPage(1); }} className="flex-1 h-[46px] text-[11px] font-black text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest border border-gray-50 rounded-xl hover:bg-gray-50">{t('history.filters.reset_all')}</button>
+                                                <button onClick={() => { setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 h-[46px] bg-[#009b7c] text-white rounded-xl text-[11px] font-black hover:bg-[#008268] transition-all shadow-lg shadow-[#009b7c]/20 uppercase tracking-widest">{t('history.filters.apply')}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -575,8 +643,8 @@ export default function AdminHistory({ onNavigate }) {
                             )}
                         </div>
 
-                        <button onClick={handleExportPDF} title="Export Tab Ini" className="flex items-center justify-center w-[54px] h-[54px] bg-white border border-gray-100 text-[#009b7c] rounded-[1.1rem] hover:bg-gray-50 transition-all shadow-sm active:scale-95 shrink-0"><Download className="w-5 h-5" /></button>
-                        <button onClick={handleExportAllPDF} disabled={isExportingAll} className="flex items-center justify-center gap-3 px-8 h-[54px] bg-[#009b7c] text-white rounded-[1.25rem] font-black text-[11px] uppercase tracking-widest hover:bg-[#008268] transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0">{isExportingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}<span className="whitespace-nowrap">Laporan Lengkap</span></button>
+                        <button onClick={handleExportPDF} title={t('history.export.button_tab')} className="flex items-center justify-center w-[54px] h-[54px] bg-white border border-gray-100 text-[#009b7c] rounded-[1.1rem] hover:bg-gray-50 transition-all shadow-sm active:scale-95 shrink-0"><Download className="w-5 h-5" /></button>
+                        <button onClick={handleExportAllPDF} disabled={isExportingAll} className="flex items-center justify-center gap-3 px-8 h-[54px] bg-[#009b7c] text-white rounded-[1.25rem] font-black text-[11px] uppercase tracking-widest hover:bg-[#008268] transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0">{isExportingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}<span className="whitespace-nowrap">{t('history.full_report')}</span></button>
                     </div>
                 </div>
 
@@ -613,7 +681,7 @@ export default function AdminHistory({ onNavigate }) {
                                 <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input 
                                     type="text" 
-                                    placeholder="Cari data..." 
+                                    placeholder={t('history.search_placeholder')} 
                                     value={searchQuery} 
                                     onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
                                     className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#009b7c]/10 shadow-sm" 
@@ -624,15 +692,15 @@ export default function AdminHistory({ onNavigate }) {
                                 <div className="relative">
                                     <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}>
                                         <Filter className="w-4 h-4" />
-                                        <span>{selectedRoomFilter || (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? 'Semua Kategori' : 'Semua')}</span>
+                                        <span>{selectedRoomFilter ? (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms'))}</span>
                                         <ChevronDown className="w-4 h-4" />
                                     </button>
                                     {showFilterDropdown && (
                                         <>
                                             <div className="fixed inset-0 z-20" onClick={() => setShowFilterDropdown(false)}></div>
                                             <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-30">
-                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? 'Semua Kategori' : 'Semua'}</button>
-                                                {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{f}</button>)}
+                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms')}</button>
+                                                {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${f?.toLowerCase().replace(/\s+/g, '_')}`, f) : f}</button>)}
                                             </div>
                                         </>
                                     )}
@@ -641,75 +709,75 @@ export default function AdminHistory({ onNavigate }) {
                     </div>
 
                     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden relative min-h-[400px]">
-                        {isLoading && <div className="absolute inset-0 bg-white/60 z-30 flex flex-col items-center justify-center"><Loader2 className="w-10 h-10 text-[#009b7c] animate-spin mb-3" /><p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Sinkronisasi...</p></div>}
+                        {isLoading && <div className="absolute inset-0 bg-white/60 z-30 flex flex-col items-center justify-center"><Loader2 className="w-10 h-10 text-[#009b7c] animate-spin mb-3" /><p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">{t('history.loading')}</p></div>}
                         <div className="overflow-x-auto pb-2 custom-scrollbar-x">
                             <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
                                 <thead className="bg-white border-b border-gray-200 text-gray-500">
                                     <tr className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
-                                        <th onClick={() => requestSort('time')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Waktu {getSortIcon('time')}</div></th>
-                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Kategori {getSortIcon('category')}</div></th>}
+                                        <th onClick={() => requestSort('time')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.time')} {getSortIcon('time')}</div></th>
+                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.category')} {getSortIcon('category')}</div></th>}
                                         {!['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) && (
-                                            <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1.5">
-                                                    {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'Perangkat' : 'Ruangan'} {getSortIcon(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')}
+                                                    {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? t('history.columns.device') : t('history.columns.room')} {getSortIcon(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')}
                                                 </div>
                                             </th>
                                         )}
                                         {activeTab === 'Kenyamanan' && (
                                             <>
-                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Suhu {getSortIcon('temp')}</div></th>
-                                                <th onClick={() => requestSort('humidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Kelembapan {getSortIcon('humidity')}</div></th>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.temperature')} {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('humidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.humidity')} {getSortIcon('humidity')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Keamanan' && (
                                             <>
-                                                <th onClick={() => requestSort('door')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Pintu {getSortIcon('door')}</div></th>
-                                                <th onClick={() => requestSort('motion')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Gerak {getSortIcon('motion')}</div></th>
+                                                <th onClick={() => requestSort('door')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.door_sensor')} {getSortIcon('door')}</div></th>
+                                                <th onClick={() => requestSort('motion')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.motion_sensor')} {getSortIcon('motion')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Kualitas Air' && (
                                             <>
-                                                <th onClick={() => requestSort('ph')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">pH {getSortIcon('ph')}</div></th>
-                                                <th onClick={() => requestSort('turbidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Kekeruhan {getSortIcon('turbidity')}</div></th>
-                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Suhu {getSortIcon('temp')}</div></th>
-                                                <th onClick={() => requestSort('tds')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">TDS {getSortIcon('tds')}</div></th>
+                                                <th onClick={() => requestSort('ph')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.ph')} {getSortIcon('ph')}</div></th>
+                                                <th onClick={() => requestSort('turbidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.turbidity')} {getSortIcon('turbidity')}</div></th>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.temperature')} {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('tds')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.tds')} {getSortIcon('tds')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Konsumsi Energi' && (
                                             <>
-                                                <th onClick={() => requestSort('kwh')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">kWh {getSortIcon('kwh')}</div></th>
-                                                <th onClick={() => requestSort('voltage')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Voltase {getSortIcon('voltage')}</div></th>
-                                                <th onClick={() => requestSort('current')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Arus {getSortIcon('current')}</div></th>
-                                                <th onClick={() => requestSort('power')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Beban Daya {getSortIcon('power')}</div></th>
-                                                <th onClick={() => requestSort('pf')} className="px-6 py-5 text-center font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">Power Factor {getSortIcon('pf')}</div></th>
+                                                <th onClick={() => requestSort('kwh')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.energy')} {getSortIcon('kwh')}</div></th>
+                                                <th onClick={() => requestSort('voltage')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.voltage')} {getSortIcon('voltage')}</div></th>
+                                                <th onClick={() => requestSort('current')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.current')} {getSortIcon('current')}</div></th>
+                                                <th onClick={() => requestSort('power')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.power_load')} {getSortIcon('power')}</div></th>
+                                                <th onClick={() => requestSort('pf')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.power_factor')} {getSortIcon('pf')}</div></th>
                                             </>
                                         )}
-                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('actuator')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Perangkat (Aktuator) {getSortIcon('actuator')}</div></th>}
+                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('actuator')} className="px-6 py-5 text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.actuator')} {getSortIcon('actuator')}</div></th>}
                                         {activeTab === 'Pengaduan' && (
                                             <>
-                                                <th onClick={() => requestSort('id')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">ID Tiket {getSortIcon('id')}</div></th>
-                                                <th onClick={() => requestSort('customer')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Pelanggan {getSortIcon('customer')}</div></th>
-                                                <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Kategori {getSortIcon('category')}</div></th>
-                                                <th className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold whitespace-nowrap">Topik Kendala</th>
-                                                <th onClick={() => requestSort('technician')} className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">Teknisi {getSortIcon('technician')}</div></th>
-                                                <th onClick={() => requestSort('rating')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">Rating {getSortIcon('rating')}</div></th>
+                                                <th onClick={() => requestSort('id')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.ticket_id')} {getSortIcon('id')}</div></th>
+                                                <th onClick={() => requestSort('customer')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.customer')} {getSortIcon('customer')}</div></th>
+                                                <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.category')} {getSortIcon('category')}</div></th>
+                                                <th className="px-6 py-4 uppercase tracking-wider text-[12px] font-black whitespace-nowrap">{t('history.columns.topic')}</th>
+                                                <th onClick={() => requestSort('technician')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.technician')} {getSortIcon('technician')}</div></th>
+                                                <th onClick={() => requestSort('rating')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.rating')} {getSortIcon('rating')}</div></th>
                                             </>
                                         )}
-                                        {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-4 text-center uppercase tracking-wider text-[11px] font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{activeTab === 'Notifikasi & Alert' ? 'Tingkat Bahaya' : 'Status'} {getSortIcon('status')}</div></th>}
-                                        {activeTab === 'Pengaduan' && <th className="px-6 py-4 uppercase tracking-wider text-[11px] font-bold whitespace-nowrap">Aksi</th>}
-                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('trigger')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pemicu (Trigger) {getSortIcon('trigger')}</div></th>}
-                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('message')} className="px-6 py-5 font-bold cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">Pesan Detail Alert {getSortIcon('message')}</div></th>}
+                                        {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{activeTab === 'Notifikasi & Alert' ? t('history.columns.danger_level') : t('history.columns.status')} {getSortIcon('status')}</div></th>}
+                                        {activeTab === 'Pengaduan' && <th className="px-6 py-4 uppercase tracking-wider text-[12px] font-black whitespace-nowrap">{t('history.columns.action')}</th>}
+                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('trigger')} className="px-6 py-5 text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.trigger')} {getSortIcon('trigger')}</div></th>}
+                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('message')} className="px-6 py-5 text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.message_detail')} {getSortIcon('message')}</div></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {paginatedData.length > 0 ? (
                                         paginatedData.map((item) => (
                                             <tr key={item.id} className="hover:bg-[#F8FAFB]/50 transition-colors group text-[#374151]">
-                                                <td className="px-6 py-4 text-[13px] font-medium text-gray-500 whitespace-nowrap">{item.time}</td>
-                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-[13px] font-bold text-gray-800">{item.category}</td>}
+                                                <td className="px-6 py-4 text-[13px] font-medium text-gray-500 whitespace-nowrap">{formatDateTime(item.rawTime)}</td>
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-[13px] font-bold text-gray-800">{t(`notification.category.${item.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, item.rawCategory)}</td>}
                                                 {!['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) && <td className="px-6 py-4 text-[13px] font-bold text-gray-800">{item.room || item.device}</td>}
                                                 {activeTab === 'Kenyamanan' && (<><td className="px-6 py-4 text-center">{Number(item.temp).toFixed(1)}°C</td><td className="px-6 py-4 text-center">{item.humidity}%</td></>)}
-                                                {activeTab === 'Keamanan' && (<><td className="px-6 py-4 text-center">{item.door}</td><td className="px-6 py-4 text-center">{item.motion}</td></>)}
+                                                {activeTab === 'Keamanan' && (<><td className="px-6 py-4 text-center">{localizeStatus(item.rawDoor)}</td><td className="px-6 py-4 text-center">{localizeStatus(item.rawMotion)}</td></>)}
                                                 {activeTab === 'Kualitas Air' && (<><td className="px-6 py-4 text-center">{item.ph}</td><td className="px-6 py-4 text-center">{item.turbidity} NTU</td><td className="px-6 py-4 text-center">{item.temp}°C</td><td className="px-6 py-4 text-center">{item.tds} ppm</td></>)}
                                                 {activeTab === 'Konsumsi Energi' && (<><td className="px-6 py-4 text-center">{Number(item.kwh).toFixed(2)} kWh</td><td className="px-6 py-4 text-center">{item.voltage} V</td><td className="px-6 py-4 text-center">{item.current} A</td><td className="px-6 py-4 text-center">{item.power} W</td><td className="px-6 py-4 text-center">{item.pf}</td></>)}
                                                 {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.actuator}</td>}
@@ -717,11 +785,11 @@ export default function AdminHistory({ onNavigate }) {
                                                     <>
                                                         <td className="px-6 py-4 text-[13px] font-bold text-gray-900 whitespace-nowrap">{item.id}</td>
                                                         <td className="px-6 py-4 text-[13px] font-bold text-gray-800 whitespace-nowrap">{item.customer}</td>
-                                                        <td className="px-6 py-4 text-[13px] font-medium text-gray-900">{item.category}</td>
+                                                        <td className="px-6 py-4 text-[13px] font-medium text-gray-900">{t(`notification.category.${item.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, item.rawCategory)}</td>
                                                         <td className="px-6 py-4 text-[13px] font-medium text-gray-900 max-w-[300px] truncate" title={item.topic}>{item.topic}</td>
                                                         <td className="px-6 py-4 text-[13px]">
-                                                            <span className={item.technician === 'Belum Ditugaskan' ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
-                                                                {item.technician === 'Belum Ditugaskan' ? 'Menunggu Teknisi' : item.technician}
+                                                            <span className={item.technician === t('complaint.status_unassigned') ? 'text-gray-400 italic font-medium' : 'text-gray-700 font-bold'}>
+                                                                {item.technician}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
@@ -740,7 +808,7 @@ export default function AdminHistory({ onNavigate }) {
                                                             {activeTab === 'Pengaduan' ? (
                                                                 <TicketStatusBadge status={item.status} rating={item.rating} />
                                                             ) : (
-                                                                <StatusBadge status={item.status} isRead={item.isRead} />
+                                                                <StatusBadge status={localizeStatus(item.rawStatus)} isRead={item.isRead} />
                                                             )}
                                                         </div>
                                                     </td>
@@ -752,12 +820,12 @@ export default function AdminHistory({ onNavigate }) {
                                                             className="flex items-center gap-2 px-4 py-2.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-[11px] font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
                                                         >
                                                             <Eye className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-                                                            <span>Detail</span>
+                                                            <span>{t('history.columns.action_detail', 'Detail')}</span>
                                                         </button>
                                                     </td>
                                                 )}
-                                                {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{item.trigger}</td>}
-                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-xs text-gray-500 max-w-md">{item.message}</td>}
+                                                {activeTab === 'Log Perangkat' && <td className="px-6 py-4">{localizeTrigger(item.trigger)}</td>}
+                                                {activeTab === 'Notifikasi & Alert' && <td className="px-6 py-4 text-xs text-gray-500 max-w-md">{item.messageKey ? t(item.messageKey, item.metadata) : item.rawMessage}</td>}
                                             </tr>
                                         ))
                                     ) : (
@@ -765,8 +833,8 @@ export default function AdminHistory({ onNavigate }) {
                                             <td colSpan="10" className="px-6 py-20 text-center">
                                                 <div className="flex flex-col items-center justify-center opacity-40">
                                                     <AlertCircle className="w-12 h-12 mb-4 text-gray-300" />
-                                                    <p className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Tidak ada data riwayat</p>
-                                                    <p className="text-[11px] font-bold text-gray-400 mt-2">Data untuk filter ini belum tersedia atau belum sinkron.</p>
+                                                    <p className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">{t('history.no_data')}</p>
+                                                    <p className="text-[11px] font-bold text-gray-400 mt-2">{t('history.no_data_desc', 'Data untuk filter ini belum tersedia atau belum sinkron.')}</p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -777,7 +845,7 @@ export default function AdminHistory({ onNavigate }) {
                         <div className="flex flex-col md:flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem] gap-6">
                             {/* Rows Per Page - Left */}
                             <div className="flex items-center gap-3 order-2 md:order-1">
-                                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows:</span>
+                                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">{t('history.rows_per_page', 'Rows')}</span>
                                 <div className="relative">
                                     <button 
                                         onClick={() => setShowRowsDropdown(!showRowsDropdown)} 
@@ -806,7 +874,11 @@ export default function AdminHistory({ onNavigate }) {
 
                             {/* Page Info - Center */}
                             <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
-                                <span className="md:hidden">rows </span>{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+                                {t('history.page_info', { 
+                                    current: totalItems > 0 ? startIndex + 1 : 0, 
+                                    last: Math.min(startIndex + rowsPerPage, totalItems), 
+                                    total: totalItems 
+                                })}
                             </div>
 
                             {/* Pagination Controls - Right */}
@@ -817,16 +889,14 @@ export default function AdminHistory({ onNavigate }) {
                                     className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                                 >
                                     <ChevronLeft className="w-4 h-4 md:hidden" />
-                                    <span className="hidden md:inline lg:hidden">Prev</span>
-                                    <span className="hidden lg:inline">Previous</span>
+                                    <span className="hidden md:inline">{t('history.previous')}</span>
                                 </button>
                                 <button
                                     disabled={currentPage >= totalPages}
                                     onClick={() => setCurrentPage(currentPage + 1)}
                                     className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                                 >
-                                    <span className="hidden lg:inline">Next</span>
-                                    <span className="hidden md:inline lg:hidden">Next</span>
+                                    <span className="hidden md:inline">{t('history.next')}</span>
                                     <ChevronRight className="w-4 h-4 md:hidden" />
                                 </button>
                             </div>
@@ -840,6 +910,8 @@ export default function AdminHistory({ onNavigate }) {
                     isOpen={isDetailModalOpen}
                     onClose={() => setIsDetailModalOpen(false)}
                     ticket={selectedTicket}
+                    role="admin"
+                    isHistoryView={true}
                 />
             )}
         </SuperAdminLayout>

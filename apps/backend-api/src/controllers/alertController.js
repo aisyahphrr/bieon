@@ -99,29 +99,26 @@ exports.seedAlerts = async (req, res) => {
         // 1. HOMEOWNER
         homeowners.forEach(ho => {
             alertsToInsert.push(
-                { owner: ho._id, category: 'Keamanan', room: 'Garasi Depan', message: 'Sensor mendeteksi pergerakan mencurigakan pada pukul 02:15 AM.', type: 'Bahaya', isRead: false, link: 'kendali' },
-                { owner: ho._id, category: 'Air Sanitasi', room: 'Tandon Utama', message: 'pH Air turun drastis ke level 5.5. Mohon periksa filter Anda.', type: 'Waspada', isRead: false, link: 'kendali' },
-                { owner: ho._id, category: 'Kenyamanan', room: 'Kamar Tidur Utama', message: 'Suhu ruangan melebihi 30°C, AC otomatis dinyalakan.', type: 'Info', isRead: true, link: 'kendali' },
-                { owner: ho._id, category: 'Energi', room: 'Semua Ruangan', message: 'Penggunaan listrik bulan ini sudah mencapai 90% dari batas bulanan Anda.', type: 'Warning', isRead: false, link: 'history-energi' },
-                { owner: ho._id, category: 'Sistem', room: 'Dapur', message: 'Jadwal otomatisasi (Lampu Taman) berhasil dieksekusi.', type: 'Success', isRead: true, link: 'kendali' }
+                { owner: ho._id, category: 'Keamanan', room: 'Garasi Depan', messageKey: 'notification.global.device_status_change', metadata: { deviceName: 'Pintu Garasi', status: 'Terbuka' }, message: 'Sensor mendeteksi pergerakan mencurigakan pada pukul 02:15 AM.', type: 'Bahaya', isRead: false, link: 'kendali' },
+                { owner: ho._id, category: 'Air Sanitasi', room: 'Tandon Utama', messageKey: 'notification.global.device_status_change', metadata: { deviceName: 'Filter Air', status: 'OFF' }, message: 'pH Air turun drastis ke level 5.5. Mohon periksa filter Anda.', type: 'Waspada', isRead: false, link: 'kendali' },
+                { owner: ho._id, category: 'Energi', room: 'Semua Ruangan', messageKey: 'notification.homeowner.budget_low_warning', metadata: { threshold: '90%', balance: '10%' }, message: 'Penggunaan listrik bulan ini sudah mencapai 90% dari batas bulanan Anda.', type: 'Warning', isRead: false, link: 'history-energi' },
+                { owner: ho._id, category: 'Pengaduan', messageKey: 'notification.homeowner.complaint_submitted', metadata: { topic: 'AC tidak dingin' }, message: 'Tiket pengaduan Anda berhasil dibuat.', type: 'Success', isRead: true, link: 'pengaduan' }
             );
         });
 
         // 2. TECHNICIAN
         technicians.forEach(tech => {
             alertsToInsert.push(
-                { owner: tech._id, category: 'Pengaduan', message: 'Peringatan: Tiket TCK-001 hampir melewati batas SLA (Overdue Respons).', type: 'Warning', isRead: false, link: 'pengaduan' },
-                { owner: tech._id, category: 'Sistem', message: 'Permintaan akses Data Log untuk BIEON ID-010 telah disetujui SuperAdmin.', type: 'Success', isRead: false, link: 'pengaduan' },
-                { owner: tech._id, category: 'Sistem', message: 'Jadwal Pemeliharaan Rutin untuk Area B dijadwalkan hari ini.', type: 'Info', isRead: true, link: 'pengaduan' }
+                { owner: tech._id, category: 'Pengaduan', messageKey: 'notification.technician.new_ticket_assigned', metadata: { ticketId: 'TCK-001' }, message: 'Peringatan: Tiket TCK-001 hampir melewati batas SLA.', type: 'Warning', isRead: false, link: 'pengaduan' },
+                { owner: tech._id, category: 'Sistem', messageKey: 'notification.technician.ticket_escalated', metadata: { ticketId: 'TCK-005' }, message: 'Tiket TCK-005 telah dieskalasi.', type: 'Success', isRead: false, link: 'pengaduan' }
             );
         });
 
         // 3. ADMIN / SUPERADMIN
         admins.forEach(admin => {
             alertsToInsert.push(
-                { owner: admin._id, category: 'Sistem', message: 'KRITIS: 3 Hub IoT di Perumahan BIEON Green offline secara bersamaan.', type: 'Danger', isRead: false, link: 'admin-dashboard' },
-                { owner: admin._id, category: 'Pengaduan', message: 'SLA Pelanggaran: Teknisi Budi gagal merespons tiket TCK-045 dalam 30 menit.', type: 'Warning', isRead: false, link: 'admin-complaint' },
-                { owner: admin._id, category: 'Sistem', message: 'Laporan Performa Teknisi Bulan April sudah siap untuk diunduh.', type: 'Success', isRead: true, link: 'admin-dashboard' }
+                { owner: admin._id, category: 'Sistem', messageKey: 'notification.admin.hub_offline', metadata: { hubId: 'HUB-99' }, message: 'KRITIS: Hub IoT offline.', type: 'Danger', isRead: false, link: 'admin-dashboard' },
+                { owner: admin._id, category: 'Pengaduan', messageKey: 'notification.admin.new_complaint', metadata: { senderName: 'Budi Santoso', bieonId: 'B-123', topic: 'Sensor Air' }, message: 'Ada pengaduan baru.', type: 'Warning', isRead: false, link: 'admin-complaint' }
             );
         });
 

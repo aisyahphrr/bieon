@@ -12,6 +12,8 @@ export function StatusBadge({ status, isRead = false }) {
   const config = {
     // SUCCESS / NORMAL (GREEN)
     success: { bg: 'bg-[#EAFDF3]', text: 'text-[#169456]', dot: 'bg-[#189F5A]' },
+    sukses: { bg: 'bg-[#EAFDF3]', text: 'text-[#169456]', dot: 'bg-[#189F5A]' },
+    berhasil: { bg: 'bg-[#EAFDF3]', text: 'text-[#169456]', dot: 'bg-[#189F5A]' },
     normal: { bg: 'bg-[#EAFDF3]', text: 'text-[#169456]', dot: 'bg-[#189F5A]' },
     aman: { bg: 'bg-[#EAFDF3]', text: 'text-[#169456]', dot: 'bg-[#189F5A]' },
     nyaman: { bg: 'bg-[#EAFDF3]', text: 'text-[#169456]', dot: 'bg-[#189F5A]' },

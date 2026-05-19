@@ -26,6 +26,7 @@ import {
     User,
     Cpu
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
@@ -35,6 +36,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export function HomeownerComplaint({ onNavigate }) {
+    const { t, i18n } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState(null);
@@ -147,7 +149,8 @@ export function HomeownerComplaint({ onNavigate }) {
                     originalId: safeId, // Save DB ID to hit PUT endpoints
                     id: safeId ? `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}` : 'TCK-000000',
                     description: item.desc || 'No Description',
-                    date: new Date(item.createdAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
+                    createdAt: item.createdAt,
+                    date: new Date(item.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                     technician: item.technician ? item.technician.fullName : 'Menunggu Teknisi',
                     status: item.status?.toLowerCase() || 'unassigned',
                     customer: item.homeowner?.fullName || 'Unknown User',
@@ -162,11 +165,11 @@ export function HomeownerComplaint({ onNavigate }) {
                         id: item.technician._id,
                         name: item.technician.fullName,
                         phone: item.technician.phoneNumber,
-                        targetDate: item.assignedAt ? new Date(new Date(item.assignedAt).getTime() + (48 * 60 * 60 * 1000)).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA'
+                        targetDate: item.assignedAt ? new Date(new Date(item.assignedAt).getTime() + (48 * 60 * 60 * 1000)).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : 'TBA'
                     } : null,
                     isEscalated: item.isEscalated || false,
                     completedAt: item.completedAt || null,
-                    updatedAt: item.updatedAt ? new Date(item.updatedAt).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') : '-',
+                    updatedAt: item.updatedAt ? new Date(item.updatedAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':') : '-',
                     duration: (item.status === 'selesai' && item.processStartedAt) 
                         ? (() => {
                             const end = item.completedAt ? new Date(item.completedAt) : new Date(item.updatedAt);
@@ -270,14 +273,21 @@ export function HomeownerComplaint({ onNavigate }) {
         // Header PDF
         doc.setFontSize(18);
         doc.setTextColor(15, 158, 120); // Teal BIEON
-        doc.text('Laporan Pengaduan BIEON - Riwayat Saya', 14, 22);
+        doc.text(t('history.export.detail_report_title', 'LAPORAN DETAIL PENGADUAN'), 14, 22);
         
         doc.setFontSize(11);
         doc.setTextColor(100);
-        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 14, 30);
+        doc.text(`${t('history.export.print_date_label', 'Dihasilkan Pada')}: ${new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`, 14, 30);
 
         // Definisi Kolom sesuai urutan tabel: ID, Tanggal, Topik, Perangkat, Teknisi, Status
-        const tableColumn = ["ID Tiket", "Tanggal", "Topik Kendala", "Perangkat", "Teknisi", "Status"];
+        const tableColumn = [
+            t('complaint.col_ticket_id', 'ID Tiket'), 
+            t('complaint.col_date_created', 'Tanggal'), 
+            t('complaint.col_problem_topic', 'Topik Kendala'), 
+            t('complaint.col_device_room', 'Perangkat'), 
+            t('complaint.col_technician', 'Teknisi'), 
+            t('complaint.col_status', 'Status')
+        ];
         const tableRows = [];
 
         // Isi Data dari State filteredComplaints (data yang sedang terfilter)
@@ -287,8 +297,8 @@ export function HomeownerComplaint({ onNavigate }) {
                 ticket.date,
                 ticket.topic,
                 ticket.device,
-                ticket.technician,
-                ticket.status.toUpperCase()
+                ticket.technician === 'Menunggu Teknisi' ? t('complaint.waiting_technician', 'Menunggu Teknisi') : ticket.technician,
+                formatStatusDisplay(ticket.status, 'homeowner').toUpperCase()
             ];
             tableRows.push(ticketData);
         });
@@ -305,7 +315,8 @@ export function HomeownerComplaint({ onNavigate }) {
         });
 
         // Download
-        doc.save(`BIEON_Riwayat_Pengaduan_${new Date().getTime()}.pdf`);
+        const fileName = i18n.language === 'en' ? `BIEON_Complaint_History_${new Date().getTime()}.pdf` : `BIEON_Riwayat_Pengaduan_${new Date().getTime()}.pdf`;
+        doc.save(fileName);
     };
 
     const handleFileChange = async (e) => {
@@ -377,9 +388,9 @@ export function HomeownerComplaint({ onNavigate }) {
             });
 
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Gagal mengajukan pengaduan');
+            if (!response.ok) throw new Error(result.message || t('complaint.form.error_submit', 'Gagal mengajukan pengaduan'));
 
-            setSubmitSuccess('Pengaduan berhasil diajukan! Teknisi akan segera memproses laporan Anda.');
+            setSubmitSuccess(t('complaint.form.success_submit', 'Pengaduan berhasil diajukan! Teknisi akan segera memproses laporan Anda.'));
             setFormData({ category: '', device: '', topic: '', description: '', hubId: '', bieonId: '', files: [] });
             setFormFiles([]);
             
@@ -455,14 +466,14 @@ export function HomeownerComplaint({ onNavigate }) {
                 {/* Title Section */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-teal-800">Pusat Pengaduan</h1>
-                        <p className="text-gray-500 mt-1">Lapor kendala pada perangkat BIEON Anda</p>
+                        <h1 className="text-3xl font-bold text-teal-800">{t('complaint.title', 'Pusat Pengaduan')}</h1>
+                        <p className="text-gray-500 mt-1">{t('complaint.subtitle', 'Lapor kendala pada perangkat BIEON Anda')}</p>
                     </div>
                     <button
                         onClick={() => setIsFormOpen(true)}
                         className="mt-4 md:mt-0 self-end md:self-auto flex items-center gap-2 px-6 py-3 bg-[#0F9E78] text-white rounded-xl font-bold hover:bg-[#0B8563] shadow-md transition-all"
                     >
-                        <span className="text-lg leading-none">+</span> Kirim Pengaduan
+                        <span className="text-lg leading-none">+</span> {t('complaint.send_complaint', 'Kirim Pengaduan')}
                     </button>
                 </div>
 
@@ -473,35 +484,35 @@ export function HomeownerComplaint({ onNavigate }) {
                         <div className="flex-1 flex flex-col">
                             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 shrink-0">
                                 <CheckCircle2 className="w-5 h-5 text-gray-600" />
-                                Alur Pengaduan
+                                {t('complaint.flow_title', 'Alur Pengaduan')}
                             </h3>
                             <div className="flex-1 flex flex-col justify-between space-y-4">
                                 <div className="flex items-start gap-4">
                                     <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">1</div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm">Buat Laporan</h4>
-                                        <p className="text-xs text-gray-500 mt-0.5">Isi formulir pengaduan dengan detail kendala dan pilih perangkat yang bermasalah</p>
+                                        <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_1_title', 'Buat Laporan')}</h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_1_desc', 'Isi formulir pengaduan dengan detail kendala dan pilih perangkat yang bermasalah')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
                                     <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">2</div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm">Respons Cepat</h4>
-                                        <p className="text-xs text-gray-500 mt-0.5">Laporan Anda akan langsung diterima. Teknisi kami akan merespons dalam waktu maksimal 15 menit.</p>
+                                        <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_2_title', 'Respons Cepat')}</h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_2_desc', 'Laporan Anda akan langsung diterima. Teknisi kami akan merespons dalam waktu maksimal 15 menit.')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
                                     <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">3</div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm">Proses Perbaikan</h4>
-                                        <p className="text-xs text-gray-500 mt-0.5">Teknisi melakukan perbaikan via remote atau kunjungan ke lokasi Anda (maksimal 2x24 jam)</p>
+                                        <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_3_title', 'Proses Perbaikan')}</h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_3_desc', 'Teknisi melakukan perbaikan via remote atau kunjungan ke lokasi Anda (maksimal 2x24 jam)')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
                                     <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">4</div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-sm">Konfirmasi Selesai</h4>
-                                        <p className="text-xs text-gray-500 mt-0.5">Jika kendala sudah teratasi, tekan tombol Selesaikan Tiket pada daftar di bawah untuk menutup laporan</p>
+                                        <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_4_title', 'Konfirmasi Selesai')}</h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_4_desc', 'Jika kendala sudah teratasi, tekan tombol Selesaikan Tiket pada daftar di bawah untuk menutup laporan')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -512,20 +523,20 @@ export function HomeownerComplaint({ onNavigate }) {
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 lg:col-span-1 flex flex-col h-full">
                         <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 shrink-0">
                             <MessageSquare className="w-5 h-5 text-gray-600" />
-                            FAQ
+                            {t('complaint.faq_title', 'FAQ')}
                         </h3>
                         <div className="flex-1 flex flex-col justify-between">
                             <div>
-                                <h4 className="font-bold text-sm text-gray-800">Berapa lama di proses?</h4>
-                                <p className="text-xs text-gray-500 mt-1">Rata-rata 1-2 hari kerja tergantung kategori</p>
+                                <h4 className="font-bold text-sm text-gray-800">{t('complaint.faq_1_q', 'Berapa lama di proses?')}</h4>
+                                <p className="text-xs text-gray-500 mt-1">{t('complaint.faq_1_a', 'Rata-rata 1-2 hari kerja tergantung kategori')}</p>
                             </div>
                             <div>
-                                <h4 className="font-bold text-sm text-gray-800">Apakah ada biaya pengaduan?</h4>
-                                <p className="text-xs text-gray-500 mt-1">Tidak, semua layanan pengaduan gratis jika masih bergaransi</p>
+                                <h4 className="font-bold text-sm text-gray-800">{t('complaint.faq_2_q', 'Apakah ada biaya pengaduan?')}</h4>
+                                <p className="text-xs text-gray-500 mt-1">{t('complaint.faq_2_a', 'Tidak, semua layanan pengaduan gratis jika masih bergaransi')}</p>
                             </div>
                             <div>
-                                <h4 className="font-bold text-sm text-gray-800">Cek status laporan?</h4>
-                                <p className="text-xs text-gray-500 mt-1">Status real-time ada di tabel di bawah</p>
+                                <h4 className="font-bold text-sm text-gray-800">{t('complaint.faq_3_q', 'Cek status laporan?')}</h4>
+                                <p className="text-xs text-gray-500 mt-1">{t('complaint.faq_3_a', 'Status real-time ada di tabel di bawah')}</p>
                             </div>
                         </div>
                     </div>
@@ -533,7 +544,7 @@ export function HomeownerComplaint({ onNavigate }) {
                     {/* Card 3: Kontak Darurat */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 lg:col-span-1 flex flex-col h-full">
                         <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 shrink-0">
-                            <Phone className="w-5 h-5 text-gray-600" /> Kontak Darurat
+                            <Phone className="w-5 h-5 text-gray-600" /> {t('complaint.contact_title', 'Kontak Darurat')}
                         </h3>
                         <div className="flex-1 flex flex-col justify-between">
                             <div className="flex items-center gap-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -553,15 +564,15 @@ export function HomeownerComplaint({ onNavigate }) {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 overflow-hidden">
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                         <div>
-                            <h2 className="text-lg font-bold text-gray-900">Riwayat Pengaduan Saya</h2>
-                            <p className="text-sm text-gray-500">Pantau status perbaikan perangkat Anda secara real-time. Jangan lupa untuk mengonfirmasi tiket yang sudah selesai diperbaiki oleh teknisi.</p>
+                            <h2 className="text-lg font-bold text-gray-900">{t('complaint.history_title', 'Riwayat Pengaduan Saya')}</h2>
+                            <p className="text-sm text-gray-500">{t('complaint.history_desc', 'Pantau status perbaikan perangkat Anda secara real-time. Jangan lupa untuk mengonfirmasi tiket yang sudah selesai diperbaiki oleh teknisi.')}</p>
                         </div>
                         <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
                             <div className="relative flex-1 sm:w-auto md:w-64 group">
                                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
                                 <input
                                     type="text"
-                                    placeholder="Search..."
+                                    placeholder={t('history.search', 'Cari...')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
@@ -576,7 +587,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         <div className="flex items-center gap-1.5 md:gap-2.5 overflow-hidden">
                                             <Filter className={`w-4 h-4 shrink-0 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
                                             <span className={`hidden sm:inline-block truncate ${selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}`}>
-                                                {selectedStatusFilter || 'Semua Status'}
+                                                {selectedStatusFilter ? t(`complaint.status_${selectedStatusFilter.toLowerCase().replace(/\s+/g, '_')}`, selectedStatusFilter) : t('complaint.status_all', 'Semua Status')}
                                             </span>
                                         </div>
                                         <ChevronDown className={`hidden sm:block w-4 h-4 shrink-0 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
@@ -586,7 +597,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusDropdown(false)}></div>
                                             <div className="absolute top-full right-0 sm:right-auto sm:left-0 mt-2 min-w-[220px] bg-white border border-gray-100 rounded-xl shadow-2xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
-                                                {['', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi Pelanggan', 'Selesai', 'Ditolak'].map((status) => (
+                                                {['', 'Baru', 'Menunggu Respons', 'Diproses', 'Menunggu Konfirmasi Pelanggan', 'Selesai', 'Ditolak'].map((status) => (
                                                     <button
                                                         key={status}
                                                         onClick={() => {
@@ -596,7 +607,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                         }}
                                                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedStatusFilter === status ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                     >
-                                                        {status || 'Semua Status'}
+                                                        {status ? t(`complaint.status_${status.toLowerCase().replace(/\s+/g, '_')}`, status) : t('complaint.status_all', 'Semua Status')}
                                                     </button>
                                                 ))}
                                             </div>
@@ -605,7 +616,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 </div>
                                 <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent">
                                     <Download className="w-4 h-4 shrink-0" />
-                                    <span className="hidden sm:inline-block">Export</span>
+                                    <span className="hidden sm:inline-block">{t('complaint.export', 'Export')}</span>
                                 </button>
                             </div>
                         </div>
@@ -616,24 +627,24 @@ export function HomeownerComplaint({ onNavigate }) {
                             <thead className="text-gray-500 border-b border-gray-100">
                                 <tr>
                                     <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('id')}>
-                                        <div className="flex items-center gap-1">ID Tiket {sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
+                                        <div className="flex items-center gap-1">{t('complaint.col_ticket_id', 'ID Tiket')} {sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
                                     <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('date')}>
-                                        <div className="flex items-center gap-1">Tanggal Dibuat {sortConfig.key === 'date' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
+                                        <div className="flex items-center gap-1">{t('complaint.col_date_created', 'Tanggal Dibuat')} {sortConfig.key === 'date' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
                                     <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('topic')}>
-                                        <div className="flex items-center gap-1">Topik Kendala {sortConfig.key === 'topic' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
+                                        <div className="flex items-center gap-1">{t('complaint.col_problem_topic', 'Topik Kendala')} {sortConfig.key === 'topic' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
                                     <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('device')}>
-                                        <div className="flex items-center gap-1">Perangkat & Ruangan {sortConfig.key === 'device' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
+                                        <div className="flex items-center gap-1">{t('complaint.col_device_room', 'Perangkat & Ruangan')} {sortConfig.key === 'device' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
                                     <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('technician')}>
-                                        <div className="flex items-center gap-1">Teknisi {sortConfig.key === 'technician' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
+                                        <div className="flex items-center gap-1">{t('complaint.col_technician', 'Teknisi')} {sortConfig.key === 'technician' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
                                     <th className="font-medium pb-4 pr-2 md:pr-4 cursor-pointer hover:text-gray-800" onClick={() => requestSort('status')}>
-                                        <div className="flex items-center gap-1">Status {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
+                                        <div className="flex items-center gap-1">{t('complaint.col_status', 'Status')} {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}</div>
                                     </th>
-                                    <th className="font-medium pb-4 text-center">Aksi</th>
+                                    <th className="font-medium pb-4 text-center">{t('complaint.col_action', 'Aksi')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -642,7 +653,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         <td colSpan={7} className="py-12 text-center text-gray-500">
                                             <div className="flex flex-col items-center justify-center space-y-2">
                                                 <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-                                                <span className="text-sm">Memuat data pengaduan...</span>
+                                                <span className="text-sm">{t('history.loading_data', 'Memuat data pengaduan...')}</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -655,10 +666,12 @@ export function HomeownerComplaint({ onNavigate }) {
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.date}</td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4 truncate max-w-[200px]" title={ticket.topic}>{ticket.topic}</td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.device}</td>
-                                            <td className={`py-3 md:py-4 pr-2 md:pr-4 ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'font-medium text-gray-900'}`}>{ticket.technician}</td>
+                                            <td className={`py-3 md:py-4 pr-2 md:pr-4 ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'font-medium text-gray-900'}`}>
+                                                {ticket.technician === 'Menunggu Teknisi' ? t('complaint.waiting_technician', 'Menunggu Teknisi') : ticket.technician}
+                                            </td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{getStatusBadge(ticket)}</td>
                                             <td className="py-3 md:py-4 text-center">
-                                                {getActionButtons('homeowner', ticket.status).map((btn, idx) => (
+                                                {getActionButtons('homeowner', ticket.status, 0, t).map((btn, idx) => (
                                                     <button
                                                         key={idx}
                                                         onClick={() => setSelectedTicket(ticket)}
@@ -674,7 +687,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={7} className="py-12 text-center text-gray-500">Tidak ada pengaduan yang ditemukan.</td>
+                                        <td colSpan={7} className="py-12 text-center text-gray-500">{t('complaint.no_complaint', 'Tidak ada pengaduan yang ditemukan.')}</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -708,15 +721,17 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 <User className="w-3.5 h-3.5 text-gray-400" />
                                             </div>
                                             <div className="text-xs">
-                                                <div className="text-[10px] text-gray-400 uppercase tracking-wider">Teknisi</div>
-                                                <div className={`font-medium ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'text-gray-900'}`}>{ticket.technician}</div>
+                                                <div className="text-[10px] text-gray-400 uppercase tracking-wider">{t('complaint.col_technician', 'Teknisi')}</div>
+                                                <div className={`font-medium ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'text-gray-900'}`}>
+                                                    {ticket.technician === 'Menunggu Teknisi' ? t('complaint.waiting_technician', 'Menunggu Teknisi') : ticket.technician}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <div>{getStatusBadge(ticket)}</div>
                                         <div className="flex gap-2">
-                                            {getActionButtons('homeowner', ticket.status).map((btn, idx) => (
+                                            {getActionButtons('homeowner', ticket.status, 0, t).map((btn, idx) => (
                                                 <button
                                                     key={idx}
                                                     onClick={() => setSelectedTicket(ticket)}
@@ -734,14 +749,14 @@ export function HomeownerComplaint({ onNavigate }) {
                         ) : (
                             <div className="py-12 text-center text-gray-500">
                                 <Search className="w-8 h-8 opacity-20 mx-auto mb-2" />
-                                Tidak ada pengaduan yang ditemukan.
+                                {t('complaint.no_complaint', 'Tidak ada pengaduan yang ditemukan.')}
                             </div>
                         )}
                     </div>
 
                     <div className="flex flex-row items-center justify-between mt-1 text-sm text-gray-500 pt-3 border-t border-gray-100 gap-2 sm:gap-4">
                         <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-500 font-medium">
-                            <span className="hidden sm:inline">Rows per page:</span>
+                            <span className="hidden sm:inline">{t('history.rows_per_page', 'Rows per page:')}</span>
                             <div className="relative">
                                 <button
                                     onClick={() => setShowRowsDropdown(!showRowsDropdown)}
@@ -773,7 +788,7 @@ export function HomeownerComplaint({ onNavigate }) {
                             </div>
                         </div>
                         <div className="text-xs sm:text-sm font-medium">
-                            {totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems} <span className="hidden sm:inline">items</span>
+                            {t('history.pagination_info', '{{start}} dari {{total}} item', { start: `${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + rowsPerPage, totalItems)}`, total: totalItems })}
                         </div>
                         <div className="flex items-center gap-1 sm:gap-2">
                             <button
@@ -782,7 +797,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600"
                             >
                                 <span className="sm:hidden">&lt;</span>
-                                <span className="hidden sm:inline">Previous</span>
+                                <span className="hidden sm:inline">{t('history.previous', 'Previous')}</span>
                             </button>
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -790,7 +805,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 className="px-2 sm:px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center font-bold text-gray-600"
                             >
                                 <span className="sm:hidden">&gt;</span>
-                                <span className="hidden sm:inline">Next</span>
+                                <span className="hidden sm:inline">{t('history.next', 'Next')}</span>
                             </button>
                         </div>
                     </div>
@@ -809,8 +824,8 @@ export function HomeownerComplaint({ onNavigate }) {
                                         <FileText className="w-7 h-7" />
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Buat Pengaduan Baru</h2>
-                                        <p className="text-gray-500 font-medium mt-1">Ceritakan kendala perangkat Anda, teknisi kami siap membantu.</p>
+                                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('complaint.new_complaint_title', 'Buat Pengaduan Baru')}</h2>
+                                        <p className="text-gray-500 font-medium mt-1">{t('complaint.new_complaint_desc', 'Ceritakan kendala perangkat Anda, teknisi kami siap membantu.')}</p>
                                     </div>
                                 </div>
                                 <button onClick={() => setIsFormOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400">
@@ -837,7 +852,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 {/* BIEON System Selection (Only if multiple) */}
                                 {userHubs.length > 1 && (
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2 italic">Pilih Sistem BIEON <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 italic">{t('complaint.select_bieon_system', 'Pilih Sistem BIEON')} <span className="text-red-500">*</span></label>
                                         <div className="flex flex-wrap gap-3">
                                             {userHubs.map(hub => (
                                                 <button
@@ -855,7 +870,7 @@ export function HomeownerComplaint({ onNavigate }) {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Kategori <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">{t('complaint.category', 'Kategori')} <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
@@ -863,7 +878,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showCategoryDropdown ? 'bg-white border-teal-500 ring-4 ring-teal-500/10' : 'hover:bg-gray-100'}`}
                                             >
                                                 <span className={formData.category ? 'text-gray-900' : 'text-gray-400'}>
-                                                    {formData.category || 'Pilih kategori pengaduan'}
+                                                    {formData.category ? t(`complaint.category_${formData.category.toLowerCase().replace(/\s+/g, '_')}`, formData.category) : t('complaint.select_category', 'Pilih kategori pengaduan')}
                                                 </span>
                                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
                                             </button>
@@ -879,7 +894,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                 : [];
                                                             const finalCategories = dbCategories.length > 0 
                                                                 ? [...dbCategories, 'Lainnya']
-                                                                : ['Energi', 'Keamanan', 'Kualitas Air', 'Lingkungan', 'Sistem', 'Lainnya'];
+                                                                : ['Energi', 'Keamanan', 'Kualitas Air', 'Lingkungan', 'Sistem', 'Sensor', 'Control Actuator System', 'Lainnya'];
                                                             
                                                             return finalCategories.map((cat) => (
                                                                 <button
@@ -891,7 +906,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                     }}
                                                                     className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                                 >
-                                                                    {cat}
+                                                                    {t(`complaint.category_${cat.toLowerCase().replace(/\s+/g, '_')}`, cat)}
                                                                 </button>
                                                             ));
                                                         })()}
@@ -902,7 +917,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-2">Ruangan & Perangkat <span className="text-red-500">*</span></label>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2">{t('complaint.room_device', 'Ruangan & Perangkat')} <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
@@ -910,7 +925,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showDeviceDropdown ? 'bg-white border-teal-500 ring-4 ring-teal-500/10' : 'hover:bg-gray-100'}`}
                                             >
                                                 <span className={formData.device ? 'text-gray-900' : 'text-gray-400'}>
-                                                    {formData.device || 'Ruangan & Perangkat'}
+                                                    {formData.device || t('complaint.room_device', 'Ruangan & Perangkat')}
                                                 </span>
                                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDeviceDropdown ? 'rotate-180' : ''}`} />
                                             </button>
@@ -928,7 +943,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                 });
                                                                 
                                                                 if (filtered.length === 0) {
-                                                                    return <div className="px-5 py-3 text-sm text-gray-400 italic">Tidak ada perangkat yang sesuai</div>;
+                                                                    return <div className="px-5 py-3 text-sm text-gray-400 italic">{t('complaint.no_device_match', 'Tidak ada perangkat yang sesuai')}</div>;
                                                                 }
 
                                                                 return filtered.map((dev) => {
@@ -954,7 +969,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                 });
                                                             })()
                                                         ) : (
-                                                            <div className="px-5 py-3 text-sm text-gray-400 italic">Gagal memuat data perangkat</div>
+                                                            <div className="px-5 py-3 text-sm text-gray-400 italic">{t('complaint.fail_load_device', 'Gagal memuat data perangkat')}</div>
                                                         )}
                                                         <button
                                                             type="button"
@@ -964,7 +979,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                             }}
                                                             className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === 'Perangkat Lainnya' ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-100 border-t border-gray-50'}`}
                                                         >
-                                                            + Perangkat Lainnya
+                                                            {t('complaint.other_device', '+ Perangkat Lainnya')}
                                                         </button>
                                                     </div>
                                                 </>
@@ -974,25 +989,25 @@ export function HomeownerComplaint({ onNavigate }) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Topik Kendala <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('complaint.problem_topic', 'Topik Kendala')} <span className="text-red-500">*</span></label>
                                     <input
                                         required
                                         type="text"
                                         value={formData.topic}
                                         onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-                                        placeholder="Contoh: Sensor pH air tidak terbaca di dashboard"
+                                        placeholder={t('complaint.problem_topic_placeholder', 'Contoh: Sensor pH air tidak terbaca di dashboard')}
                                         className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-teal-500 focus:outline-none font-medium transition-all placeholder:text-gray-400"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Deskripsi Detail <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">{t('complaint.detail_desc', 'Deskripsi Detail')} <span className="text-red-500">*</span></label>
                                     <textarea
                                         required
                                         rows={4}
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        placeholder="Jelaskan kronologi atau detail kendala yang Anda alami agar teknisi kami dapat menganalisis lebih cepat..."
+                                        placeholder={t('complaint.detail_desc_placeholder', 'Jelaskan kronologi atau detail kendala yang Anda alami agar teknisi kami dapat menganalisis lebih cepat...')}
                                         className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-teal-500 focus:outline-none font-medium transition-all resize-none placeholder:text-gray-400"
                                     />
                                 </div>
@@ -1010,9 +1025,9 @@ export function HomeownerComplaint({ onNavigate }) {
                                         />
                                         <div className="flex flex-col items-center pointer-events-none">
                                             <UploadCloud className="w-10 h-10 text-gray-400 mb-3" />
-                                            <p className="text-sm font-medium text-gray-500 mb-4">Unggah foto alat yang bermasalah atau screenshot dashboard (Maks. 5MB)</p>
+                                            <p className="text-sm font-medium text-gray-500 mb-4">{t('complaint.upload_desc', 'Unggah foto alat yang bermasalah atau screenshot dashboard (Maks. 5MB)')}</p>
                                             <button type="button" className="px-6 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 transition-colors pointer-events-auto">
-                                                Choose Files
+                                                {t('complaint.choose_files', 'Pilih File')}
                                             </button>
                                         </div>
 
@@ -1029,7 +1044,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                 removeFile(idx); 
                                                             }}
                                                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 transition-all z-30"
-                                                            title="Hapus foto"
+                                                            title={t('complaint.delete_photo', 'Hapus foto')}
                                                         >
                                                             <X className="w-4 h-4" />
                                                         </button>
@@ -1043,7 +1058,7 @@ export function HomeownerComplaint({ onNavigate }) {
 
                                 <div className="flex items-center gap-4 p-5 bg-white border border-gray-100 rounded-xl text-sm font-medium text-gray-500">
                                     <AlertCircle className="w-6 h-6 text-gray-400 shrink-0" />
-                                    <p>Pastikan deskripsi dan foto yang dilampirkan sudah sesuai agar teknisi dapat menangani kendala Anda lebih cepat.</p>
+                                    <p>{t('complaint.submit_note', 'Pastikan deskripsi dan foto yang dilampirkan sudah sesuai agar teknisi dapat menangani kendala Anda lebih cepat.')}</p>
                                 </div>
                             </form>
                         </div>
@@ -1056,7 +1071,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 onClick={() => setIsFormOpen(false)}
                                 className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50"
                             >
-                                Batal
+                                {t('dashboard.cancel', 'Batal')}
                             </button>
                             <button
                                 form="complaintForm"
@@ -1067,10 +1082,10 @@ export function HomeownerComplaint({ onNavigate }) {
                                 {isSubmitting ? (
                                     <>
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        Memproses...
+                                        {t('dashboard.sending', 'Memproses...')}
                                     </>
                                 ) : (
-                                    <>Kirim Pengaduan</>
+                                    <>{t('complaint.send_complaint', 'Kirim Pengaduan')}</>
                                 )}
                             </button>
                         </div>
@@ -1107,9 +1122,9 @@ export function HomeownerComplaint({ onNavigate }) {
                         </div>
 
                         <div className="pt-8 sm:pt-14 overflow-y-auto custom-scrollbar pr-2">
-                            <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 tracking-tight leading-tight">Konfirmasi & Beri Penilaian</h2>
+                            <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 tracking-tight leading-tight">{t('complaint.confirm_rating_title', 'Konfirmasi & Beri Penilaian')}</h2>
                             <p className="text-white/90 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed font-medium px-1 sm:px-2">
-                                Bagaimana hasil perbaikan dari teknisi kami? Penilaian Anda sangat membantu kami dalam menjaga kualitas layanan PT Matra.
+                                {t('complaint.confirm_rating_desc', 'Bagaimana hasil perbaikan dari teknisi kami? Penilaian Anda sangat membantu kami dalam menjaga kualitas layanan PT Matra.')}
                             </p>
 
                             <div className="flex justify-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
@@ -1132,15 +1147,15 @@ export function HomeownerComplaint({ onNavigate }) {
                             </div>
 
                             <p className="text-white/80 text-[10px] sm:text-xs mb-4 sm:mb-5 leading-relaxed px-2 sm:px-4 italic">
-                                "Penilaian Anda mencakup keseluruhan dari kecepatan respons, kecepatan perbaikan, komunikasi dan keramahan teknisi kami."
+                                {t('complaint.rating_note', '"Penilaian Anda mencakup keseluruhan dari kecepatan respons, kecepatan perbaikan, komunikasi dan keramahan teknisi kami."')}
                             </p>
 
                             <div className="text-left mb-4 sm:mb-6">
-                                <label className="block text-white text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ml-1">Tuliskan Ulasan Anda</label>
+                                <label className="block text-white text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ml-1">{t('complaint.write_review', 'Tuliskan Ulasan Anda')}</label>
                                 <textarea
                                     value={ratingReview}
                                     onChange={(e) => setRatingReview(e.target.value)}
-                                    placeholder="Contoh: Teknisi datang tepat waktu, masalah kipas exhaust sudah beres dan berfungsi normal."
+                                    placeholder={t('complaint.review_placeholder', 'Contoh: Teknisi datang tepat waktu, masalah kipas exhaust sudah beres dan berfungsi normal.')}
                                     className="w-full bg-transparent border border-white/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white placeholder-white/60 focus:outline-none focus:border-white resize-none h-20 sm:h-24 text-[11px] sm:text-xs transition-all"
                                 />
                             </div>
@@ -1150,7 +1165,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 disabled={ratingStars === 0}
                                 className={`w-40 sm:w-48 mx-auto py-3 sm:py-3.5 bg-white text-[#489C74] font-bold text-base sm:text-[17px] rounded-full transition-all shadow-xl block ${ratingStars === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl hover:-translate-y-0.5 active:scale-95'}`}
                             >
-                                Submit
+                                {t('profile.save_changes', 'Simpan')}
                             </button>
                         </div>
                     </div>

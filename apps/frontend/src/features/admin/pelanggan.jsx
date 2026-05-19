@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { SuperAdminLayout } from './SuperAdminLayout';
@@ -60,9 +61,23 @@ const formatDate = (iso) => {
     return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+// Helper: translate PLN Category to English if language is EN
+const translatePlnCategory = (label, i18n) => {
+    if (!label || i18n.language !== 'en') return label;
+    const l = label.toLowerCase();
+    if (l.includes('subsidi')) return label.replace(/subsidi/gi, 'Subsidized');
+    if (l.includes('rumah tangga')) return label.replace(/rumah tangga/gi, 'Residential');
+    if (l.includes('bisnis')) return label.replace(/bisnis/gi, 'Business');
+    if (l.includes('industri')) return label.replace(/industri/gi, 'Industrial');
+    if (l.includes('pemerintah')) return label.replace(/pemerintah/gi, 'Government');
+    if (l.includes('sosial')) return label.replace(/sosial/gi, 'Social');
+    return label;
+};
+
 // End of helpers
 
 export function ManajemenAkunPage({ onNavigate }) {
+    const { t, i18n } = useTranslation();
     const [activeTab, setActiveTab] = useState('accounts');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -274,16 +289,41 @@ export function ManajemenAkunPage({ onNavigate }) {
     };
 
     const handleDownloadPDF = (title, columns, data, filename) => {
-        const doc = new jsPDF();
-        doc.text(title, 14, 15);
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const isEn = i18n.language === 'en';
+        const primaryColor = [0, 155, 124]; // BIEON Teal
+        
+        // Header Branding
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(0, 0, 297, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text(title.toUpperCase(), 148.5, 20, { align: 'center' });
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(isEn ? `BIEON SMART GREEN LIVING - CUSTOMER AUDIT REPORT` : `BIEON SMART GREEN LIVING - LAPORAN AUDIT PELANGGAN`, 148.5, 30, { align: 'center' });
+
+        // Info bar
+        doc.setTextColor(100);
+        doc.setFontSize(9);
+        const printedAt = isEn ? `Printed at: ${new Date().toLocaleString('en-US')}` : `Dicetak pada: ${new Date().toLocaleString('id-ID')}`;
+        doc.text(printedAt, 14, 48);
 
         autoTable(doc, {
             head: [columns],
             body: data,
-            startY: 20,
+            startY: 52,
+            theme: 'striped',
+            headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontSize: 10, fontStyle: 'bold' },
+            bodyStyles: { fontSize: 9, cellPadding: 4 },
+            alternateRowStyles: { fillColor: [245, 248, 247] },
+            margin: { left: 14, right: 14 }
         });
 
-        doc.save(`${filename}.pdf`);
+        doc.save(`${filename}_${new Date().getTime()}.pdf`);
     };
 
     const handleEditHomeowner = async () => {
@@ -383,7 +423,7 @@ export function ManajemenAkunPage({ onNavigate }) {
     };
 
     return (
-        <SuperAdminLayout activeMenu="Homeowner" onNavigate={onNavigate} title="Manajemen Akun Homeowner">
+        <SuperAdminLayout activeMenu="Homeowner" onNavigate={onNavigate} title={t('admin_homeowner.table.title')}>
             <div className="space-y-8">
                 {successMessage && (
                     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
@@ -399,7 +439,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{totalHomeowners}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">Total Klien</p>
+                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.total_clients')}</p>
                             </div>
                         </div>
                     </div>
@@ -411,7 +451,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{activeHomeowners}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">Status Aktif</p>
+                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.active_status')}</p>
                             </div>
                         </div>
                     </div>
@@ -423,7 +463,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{warningHomeowners}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">Peringatan</p>
+                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.warnings')}</p>
                             </div>
                         </div>
                     </div>
@@ -435,7 +475,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{totalDevices}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">Total Node</p>
+                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.total_nodes')}</p>
                             </div>
                         </div>
                     </div>
@@ -446,15 +486,15 @@ export function ManajemenAkunPage({ onNavigate }) {
                     <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900 tracking-tight">Daftar Akun Homeowner</h2>
-                                <p className="text-sm font-medium text-gray-500 mt-1">Manajemen akun, monitoring konsumsi, dan kontrol akses klien BIEON</p>
+                                <h2 className="text-xl font-bold text-gray-900 tracking-tight">{t('admin_homeowner.table.title')}</h2>
+                                <p className="text-sm font-medium text-gray-500 mt-1">{t('admin_homeowner.table.desc')}</p>
                             </div>
                             <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full lg:w-auto">
                                 <div className="relative group col-span-2 lg:w-72">
                                     <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009b7c] transition-all" />
                                     <input
                                         type="text"
-                                        placeholder="Cari nama, email..."
+                                        placeholder={t('admin_homeowner.table.search_placeholder')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full pl-11 pr-5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm group-focus-within:bg-white"
@@ -469,7 +509,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     >
                                         <div className="flex items-center gap-2">
                                             <Filter className="w-4 h-4 text-emerald-500" />
-                                            <span className="capitalize">{filterStatus === 'all' ? 'Semua Status' : filterStatus}</span>
+                                            <span className="capitalize">{filterStatus === 'all' ? t('admin_homeowner.table.filter_all') : t(`admin_homeowner.table.status_${filterStatus}`)}</span>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -487,7 +527,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                         }}
                                                         className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${filterStatus === status ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50 hover:pl-6'}`}
                                                     >
-                                                        <span className="capitalize">{status === 'all' ? 'Semua Status' : status}</span>
+                                                        <span className="capitalize">{status === 'all' ? t('admin_homeowner.table.filter_all') : t(`admin_homeowner.table.status_${status}`)}</span>
                                                         {filterStatus === status && <CheckCircle className="w-4 h-4 text-emerald-600" />}
                                                     </button>
                                                 ))}
@@ -498,14 +538,21 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                                 <button
                                     onClick={() => handleDownloadPDF(
-                                        "Daftar Akun Homeowner",
-                                        ["ID", "Nama Lengkap", "Username", "Email", "Telepon", "Total Hub"],
+                                        t('admin_homeowner.table.title'),
+                                        [
+                                            "ID", 
+                                            t('admin_homeowner.form_modal.lbl_fullname'), 
+                                            t('admin_homeowner.form_modal.lbl_username'), 
+                                            t('admin_homeowner.form_modal.lbl_email'), 
+                                            t('admin_homeowner.form_modal.lbl_phone'), 
+                                            t('admin_homeowner.table.col_hub')
+                                        ],
                                         filteredHomeowners.map(h => [h._id, h.fullName, h.username || '-', h.email, h.phoneNumber || '-', h.totalHubs || 0]),
-                                        "Homeowner_Report"
+                                        i18n.language === 'en' ? "Customer_Report" : "Laporan_Pelanggan"
                                     )}
-                                    className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm flex items-center justify-center gap-2 group col-span-1"
+                                    className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm flex items-center justify-center gap-2 group col-span-1 relative z-10"
                                 >
-                                    <Download className="w-4 h-4" /> Download
+                                    <Download className="w-4 h-4" /> {t('admin_homeowner.table.btn_export')}
                                 </button>
 
                                 <button
@@ -521,9 +568,9 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         });
                                         setIsAddModalOpen(true);
                                     }}
-                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group col-span-1"
+                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group col-span-1 relative z-10"
                                 >
-                                    <Plus className="w-4 h-4" /> Tambah Klien
+                                    <Plus className="w-4 h-4" /> {t('admin_homeowner.table.btn_add_client')}
                                 </button>
 
                             </div>
@@ -547,17 +594,17 @@ export function ManajemenAkunPage({ onNavigate }) {
                         <div className="overflow-x-auto hidden md:block">
                             <table className="w-full text-left table-auto min-w-[900px]">
                                 <thead>
-                                    <tr className="bg-[#009b7c] text-white text-xs font-semibold uppercase tracking-wider">
-                                        <th className="px-6 py-4">Identitas</th>
-                                        <th className="px-6 py-4">Email & Kontak</th>
-                                        <th className="px-6 py-4">Hub</th>
-                                        <th className="px-6 py-4">Terdaftar</th>
-                                        <th className="px-6 py-4 text-center">Aksi</th>
+                                    <tr className="bg-[#009b7c] text-white text-[12px] font-black uppercase tracking-widest">
+                                        <th className="px-6 py-4">{t('admin_homeowner.table.col_identity')}</th>
+                                        <th className="px-6 py-4">{t('admin_homeowner.table.col_contact')}</th>
+                                        <th className="px-6 py-4">{t('admin_homeowner.table.col_hub')}</th>
+                                        <th className="px-6 py-4">{t('admin_homeowner.table.col_registered')}</th>
+                                        <th className="px-6 py-4 text-center">{t('admin_homeowner.table.col_action')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
                                     {filteredHomeowners.length === 0 ? (
-                                        <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm font-medium">Tidak ada data homeowner yang ditemukan.</td></tr>
+                                        <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm font-medium">{t('common.no_data', 'Tidak ada data yang ditemukan.')}</td></tr>
                                     ) : filteredHomeowners.map((ho) => (
                                         <tr key={ho._id} className="hover:bg-gray-50/50 transition-all group">
                                             <td className="px-6 py-5">
@@ -576,17 +623,17 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                       <p className="text-sm font-semibold text-gray-700">{ho.email}</p>
                                                       <p className="text-xs font-medium text-gray-500">{ho.phoneNumber || '-'}</p>
                                                       {ho.deletionRequest && (
-                                                          <div className={`mt-2 inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(ho.deletionRequest).tone)}`}>
-                                                              {getDeletionRequestStatusMeta(ho.deletionRequest).label}
+                                                          <div className={`mt-2 inline-flex px-2.5 py-1 rounded-lg text-[10px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(ho.deletionRequest, t).tone)}`}>
+                                                              {getDeletionRequestStatusMeta(ho.deletionRequest, t).label}
                                                           </div>
                                                       )}
                                                       {ho.deletionRequest && (
-                                                          <p className="text-[11px] font-medium text-amber-700">{getDeletionRequestStatusMeta(ho.deletionRequest).note}</p>
+                                                          <p className="text-[11px] font-medium text-amber-700">{getDeletionRequestStatusMeta(ho.deletionRequest, t).note}</p>
                                                       )}
                                                   </div>
                                               </td>
                                             <td className="px-6 py-5">
-                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">{ho.totalHubs || 0} Hub</span>
+                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">{t('admin_homeowner.table.hub_format', { count: ho.totalHubs || 0 })}</span>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <span className="text-sm font-semibold text-gray-600">{formatDate(ho.registrationDate)}</span>
@@ -650,30 +697,30 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 <p className="text-[11px] font-semibold text-[#009b7c]">@{ho.username || '-'}</p>
                                             </div>
                                         </div>
-                                          <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(ho.deletionRequest).tone)}`}>
+                                          <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(ho.deletionRequest, t).tone)}`}>
                                               <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                              {getDeletionRequestStatusMeta(ho.deletionRequest).label}
+                                              {getDeletionRequestStatusMeta(ho.deletionRequest, t).label}
                                           </span>
                                       </div>
 
                                       <div className="grid grid-cols-1 gap-2 text-xs">
                                           <div className="flex flex-col">
-                                              <span className="text-gray-500 font-medium mb-0.5">Email & Kontak</span>
+                                              <span className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.table.col_contact')}</span>
                                               <span className="font-semibold text-gray-900 truncate">{ho.email}</span>
                                               <span className="font-semibold text-gray-900 mt-0.5">{ho.phoneNumber || '-'}</span>
                                               {ho.deletionRequest && (
-                                                  <span className="mt-1 text-[11px] font-medium text-amber-700">{getDeletionRequestStatusMeta(ho.deletionRequest).note}</span>
+                                                  <span className="mt-1 text-[11px] font-medium text-amber-700">{getDeletionRequestStatusMeta(ho.deletionRequest, t).note}</span>
                                               )}
                                           </div>
                                       </div>
 
                                     <div className="grid grid-cols-2 gap-4 text-xs border-y border-gray-50 py-3">
                                         <div>
-                                            <span className="text-gray-500 font-medium block mb-1">Hub BIEON</span>
-                                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold border border-emerald-100">{ho.totalHubs || 0} Hub</span>
+                                            <span className="text-gray-500 font-medium block mb-1">{t('admin_homeowner.table.col_hub')}</span>
+                                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold border border-emerald-100">{t('admin_homeowner.table.hub_format', { count: ho.totalHubs || 0 })}</span>
                                         </div>
                                         <div>
-                                            <span className="text-gray-500 font-medium block mb-1">Terdaftar</span>
+                                            <span className="text-gray-500 font-medium block mb-1">{t('admin_homeowner.table.col_registered')}</span>
                                             <span className="font-semibold text-gray-900">{formatDate(ho.registrationDate)}</span>
                                         </div>
                                     </div>
@@ -731,8 +778,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <Plus className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight">Tambah Homeowner</h2>
-                                    <p className="text-white/80 text-xs font-medium mt-0.5">Pengaturan akun baru Sistem BIEON</p>
+                                    <h2 className="text-xl font-bold tracking-tight">{t('admin_homeowner.form_modal.title_add')}</h2>
+                                    <p className="text-white/80 text-xs font-medium mt-0.5">{t('admin_homeowner.form_modal.desc_add')}</p>
                                 </div>
                             </div>
                             <button onClick={() => setIsAddModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all">
@@ -743,22 +790,22 @@ export function ManajemenAkunPage({ onNavigate }) {
                         <div className="p-8 overflow-y-auto space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Username</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_username')}</label>
                                     <input 
                                         type="text" 
                                         value={formData.username}
                                         onChange={(e) => setFormData({...formData, username: e.target.value})}
-                                        placeholder="contoh: budi_bieon"
+                                        placeholder={t('admin_homeowner.form_modal.ph_username')}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Nama Lengkap</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_fullname')}</label>
                                     <input 
                                         type="text" 
                                         value={formData.fullName}
                                         onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                                        placeholder="Masukkan nama lengkap"
+                                        placeholder={t('admin_homeowner.form_modal.ph_fullname')}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
                                     />
                                 </div>
@@ -766,22 +813,22 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Email Klien</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_email')}</label>
                                     <input 
                                         type="email" 
                                         value={formData.email}
                                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                        placeholder="email@contoh.com"
+                                        placeholder={t('admin_homeowner.form_modal.ph_email')}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">No. Telepon</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_phone')}</label>
                                     <input 
                                         type="text" 
                                         value={formData.phone}
                                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                        placeholder="0812xxxx"
+                                        placeholder={t('admin_homeowner.form_modal.ph_phone')}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
                                     />
                                 </div>
@@ -789,17 +836,17 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Password</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_password')}</label>
                                     <input 
                                         type="password" 
                                         value={formData.password}
                                         onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                        placeholder="********"
+                                        placeholder={t('admin_homeowner.form_modal.ph_password')}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Status Akun</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_status')}</label>
                                     <div className="relative">
                                         <button
                                             type="button"
@@ -841,12 +888,12 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-700 ml-1">Alamat Domisili</label>
+                                <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_address')}</label>
                                 <textarea 
                                     rows="3" 
                                     value={formData.address}
                                     onChange={(e) => setFormData({...formData, address: e.target.value})}
-                                    placeholder="Masukkan alamat lengkap pelanggan"
+                                    placeholder={t('admin_homeowner.form_modal.ph_address')}
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm"
                                 ></textarea>
                             </div>
@@ -856,22 +903,22 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <ShieldCheck className="w-6 h-6 text-[#009b7c]" />
                                 </div>
                                 <div className="flex-1">
-                                    <h4 className="text-sm font-bold text-emerald-900 mb-0.5">Notifikasi Sistem</h4>
-                                    <p className="text-xs font-medium text-emerald-700 opacity-80">Email selamat datang & kredensial login akan dikirim otomatis.</p>
+                                    <h4 className="text-sm font-bold text-emerald-900 mb-0.5">{t('admin_homeowner.form_modal.notif_title')}</h4>
+                                    <p className="text-xs font-medium text-emerald-700 opacity-80">{t('admin_homeowner.form_modal.notif_desc')}</p>
                                 </div>
                                 <button
                                     onClick={() => setIsEmailPreviewOpen(true)}
                                     className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all font-semibold text-xs shadow-sm"
                                 >
-                                    Pratinjau Email
+                                    {t('admin_homeowner.form_modal.btn_preview')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-end gap-3">
-                            <button onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">Batal</button>
+                            <button onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">{t('admin_homeowner.form_modal.btn_cancel')}</button>
                             <button onClick={handleAddHomeowner} className="px-6 py-2.5 bg-[#009b7c] text-white rounded-xl font-semibold text-sm hover:bg-[#008268] transition-all shadow-md shadow-emerald-100 flex items-center gap-2 group">
-                                Simpan Data Klien
+                                {t('admin_homeowner.form_modal.btn_save_new')}
                                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                             </button>
                         </div>
@@ -881,15 +928,15 @@ export function ManajemenAkunPage({ onNavigate }) {
 
             {isEmailPreviewOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full flex flex-col overflow-hidden border border-white/20">
-                        <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Pratinjau Notifikasi Email</h2>
-                            <button onClick={() => setIsEmailPreviewOpen(false)} className="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center transition-all">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
+                        <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between shrink-0">
+                            <h2 className="text-lg font-bold text-gray-900 tracking-tight">{t('admin_homeowner.form_modal.btn_preview')}</h2>
+                            <button onClick={() => setIsEmailPreviewOpen(false)} className="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center transition-all shrink-0">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="p-8">
-                            <EmailApprovalTemplate type="welcome" data={{ fullName: 'Pengguna Baru BIEON', email: 'contoh@gmail.com', id: 'HO-007', username: 'pengguna.baru' }} />
+                        <div className="p-8 overflow-y-auto">
+                            <EmailApprovalTemplate type="welcome" data={{ fullName: 'Nama Lengkap Pelanggan', email: 'pelanggan@email.com', id: 'HO-007', username: 'pelanggan.bieon' }} />
                         </div>
                     </div>
                 </div>
@@ -908,8 +955,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                       <h2 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight">{selectedHomeowner.fullName}</h2>
                                       <p className="text-white/80 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{selectedHomeowner.email}</p>
                                       {selectedHomeowner.deletionRequest && (
-                                          <div className={`mt-3 inline-flex px-3 py-1.5 rounded-full text-[11px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).tone)}`}>
-                                              {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).label}
+                                          <div className={`mt-3 inline-flex px-3 py-1.5 rounded-full text-[11px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).tone)}`}>
+                                              {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).label}
                                           </div>
                                       )}
                                   </div>
@@ -932,7 +979,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center gap-2 text-sm font-bold transition-all backdrop-blur-sm border border-white/10"
                                 >
                                     <Edit3 className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Edit Data</span>
+                                    <span className="hidden sm:inline">{t('admin_homeowner.detail_modal.btn_edit')}</span>
                                 </button>
                                 <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all group shrink-0">
                                     <X className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
@@ -946,13 +993,13 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 onClick={() => setActiveDetailTab('info')}
                                 className={`py-4 text-sm font-semibold border-b-2 transition-all ${activeDetailTab === 'info' ? 'border-[#009b7c] text-[#009b7c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
-                                Informasi Pelanggan
+                                {t('admin_homeowner.detail_modal.tab_info')}
                             </button>
                             <button
                                 onClick={() => setActiveDetailTab('devices')}
                                 className={`py-4 text-sm font-semibold border-b-2 transition-all ${activeDetailTab === 'devices' ? 'border-[#009b7c] text-[#009b7c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
-                                Perangkat ({selectedHomeowner.totalHubs || 0})
+                                {t('admin_homeowner.detail_modal.tab_devices', { count: selectedHomeowner.totalHubs || 0 })}
                             </button>
                         </div>
 
@@ -961,42 +1008,42 @@ export function ManajemenAkunPage({ onNavigate }) {
                             {activeDetailTab === 'info' ? (
                                 <div className="space-y-6">
                                     <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
-                                        <Users className="w-6 h-6 text-[#009b7c]" /> Informasi Pelanggan
+                                        <Users className="w-6 h-6 text-[#009b7c]" /> {t('admin_homeowner.detail_modal.tab_info')}
                                     </h3>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         {/* Informasi Akun */}
                                         <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100/50">
-                                            <h4 className="font-bold text-gray-900 mb-6 text-lg">Informasi Akun</h4>
+                                            <h4 className="font-bold text-gray-900 mb-6 text-lg">{t('admin_homeowner.detail_modal.sec_account')}</h4>
                                             <div className="space-y-5">
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <Users className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">Username</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.form_modal.lbl_username')}</p>
                                                         <p className="font-bold text-gray-900">{selectedHomeowner.username}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <Mail className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                                                       <div>
-                                                          <p className="text-gray-500 font-medium mb-0.5">Email</p>
+                                                          <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.form_modal.lbl_email')}</p>
                                                           <p className="font-bold text-gray-900">{selectedHomeowner.email}</p>
                                                           {selectedHomeowner.deletionRequest && (
-                                                              <p className="mt-1 text-xs font-medium text-amber-700">{getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).note}</p>
+                                                              <p className="mt-1 text-xs font-medium text-amber-700">{getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).note}</p>
                                                           )}
                                                       </div>
                                                   </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <Phone className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">No. Telepon</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.form_modal.lbl_phone')}</p>
                                                         <p className="font-bold text-gray-900">{selectedHomeowner.phoneNumber || '-'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <MapPin className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">Alamat</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_address', t('admin_homeowner.form_modal.lbl_address'))}</p>
                                                         <p className="font-bold text-gray-900">{selectedHomeowner.address || '-'}</p>
                                                     </div>
                                                 </div>
@@ -1005,32 +1052,32 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                                         {/* Status & Aktivitas */}
                                         <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100/50">
-                                            <h4 className="font-bold text-gray-900 mb-6 text-lg">Status & Aktivitas</h4>
+                                            <h4 className="font-bold text-gray-900 mb-6 text-lg">{t('admin_homeowner.detail_modal.sec_status')}</h4>
                                             <div className="space-y-6">
                                                   <div className="flex items-center justify-between text-sm pb-4 border-b border-emerald-100/50">
-                                                      <p className="text-gray-500 font-medium">Status Sistem</p>
-                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).tone)}`}>
-                                                        {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest).label}
+                                                      <p className="text-gray-500 font-medium">{t('admin_homeowner.detail_modal.lbl_status_verified', 'Status Sistem')}</p>
+                                                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).tone)}`}>
+                                                        {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).label}
                                                     </span>
                                                   </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <TrendingUp className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">Tanggal Registrasi</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_reg_date')}</p>
                                                         <p className="font-bold text-gray-900">{formatDate(selectedHomeowner.registrationDate)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <Activity className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">ID BIEON</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_bieon_id')}</p>
                                                         <p className="font-bold text-gray-900">{selectedHomeowner.bieonId || '-'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
                                                     <UserCog className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                                                     <div>
-                                                        <p className="text-gray-500 font-medium mb-0.5">Sistem</p>
+                                                        <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_system')}</p>
                                                         <p className="font-bold text-gray-900">{selectedHomeowner.systemName || '-'}</p>
                                                     </div>
                                                 </div>
@@ -1041,27 +1088,27 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                                         {/* Statistik Perangkat */}
                                         <div className="bg-purple-50/50 p-6 rounded-3xl border border-purple-100/50">
-                                            <h4 className="font-bold text-gray-900 mb-4">Statistik Perangkat</h4>
+                                            <h4 className="font-bold text-gray-900 mb-4">{t('admin_homeowner.detail_modal.sec_stats')}</h4>
                                             <div className="space-y-3">
                                                 <div className="flex items-center gap-4 bg-white p-3.5 rounded-2xl shadow-sm border border-purple-50">
                                                     <Box className="w-6 h-6 text-purple-500 shrink-0" />
                                                     <div>
-                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Tarif PLN</p>
-                                                        <p className="text-lg font-bold text-gray-900 leading-none">{selectedHomeowner.plnTariff || '-'}</p>
+                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_tariff')}</p>
+                                                        <p className="text-lg font-bold text-gray-900 leading-none">{translatePlnCategory(selectedHomeowner.plnTariff, i18n) || '-'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4 bg-white p-3.5 rounded-2xl shadow-sm border border-purple-50">
                                                     <Cpu className="w-6 h-6 text-purple-500 shrink-0" />
                                                     <div>
-                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Total Hub</p>
+                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_total_hub')}</p>
                                                         <p className="text-lg font-bold text-gray-900 leading-none">{selectedHomeowner.totalHubs || 0}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-4 bg-white p-3.5 rounded-2xl shadow-sm border border-purple-50">
                                                     <Zap className="w-6 h-6 text-purple-500 shrink-0" />
                                                     <div>
-                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">Status Akun</p>
-                                                        <p className="text-lg font-bold text-gray-900 leading-none">Terverifikasi</p>
+                                                        <p className="text-[11px] text-gray-500 font-medium mb-0.5">{t('admin_homeowner.form_modal.lbl_status')}</p>
+                                                        <p className="text-lg font-bold text-gray-900 leading-none">{t('admin_homeowner.detail_modal.lbl_status_verified')}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1069,12 +1116,12 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                                         {/* Status Perangkat */}
                                         <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100/50 flex flex-col">
-                                            <h4 className="font-bold text-gray-900 mb-4">Ringkasan Sistem</h4>
+                                            <h4 className="font-bold text-gray-900 mb-4">{t('admin_homeowner.detail_modal.sec_summary')}</h4>
                                             <div className="space-y-3 flex-1 flex flex-col">
                                                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-blue-50">
                                                     <div className="flex items-center gap-2">
                                                         <CheckCircle className="w-5 h-5 text-[#10b981]" />
-                                                        <span className="text-sm font-semibold text-gray-700">Hardware Hub</span>
+                                                        <span className="text-sm font-semibold text-gray-700">{t('admin_homeowner.detail_modal.lbl_hardware')}</span>
                                                     </div>
                                                     <span className="text-xl font-bold text-[#10b981]">{selectedHomeowner.totalHubs || 0}</span>
                                                 </div>
@@ -1086,7 +1133,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     <span className="text-sm font-bold text-blue-500">{selectedHomeowner.bieonId || '-'}</span>
                                                 </div>
                                                 <div className="mt-auto pt-2 flex items-center justify-between px-2">
-                                                    <span className="text-sm font-semibold text-gray-500">Total Perangkat</span>
+                                                    <span className="text-sm font-semibold text-gray-500">{t('admin_homeowner.detail_modal.lbl_total_devices')}</span>
                                                     <span className="text-lg font-bold text-gray-900">{selectedHomeowner.totalHubs || 0}</span>
                                                 </div>
                                             </div>
@@ -1094,14 +1141,14 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                                         {/* Konsumsi Energi */}
                                         <div className="bg-orange-50/50 p-6 rounded-3xl border border-orange-100/50 flex flex-col">
-                                            <h4 className="font-bold text-gray-900 mb-4">Monitoring Energi</h4>
+                                            <h4 className="font-bold text-gray-900 mb-4">{t('admin_homeowner.detail_modal.sec_energy')}</h4>
                                             <div className="space-y-3 flex-1">
                                                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-50 relative overflow-hidden h-[90px] flex flex-col justify-center">
                                                     <Zap className="w-16 h-16 text-orange-50 absolute -right-2 -bottom-2" />
                                                     <div className="relative z-10">
                                                         <div className="flex items-center gap-1.5 text-orange-500 mb-1">
                                                             <Zap className="w-4 h-4" />
-                                                            <span className="text-xs font-semibold">Nama Sistem</span>
+                                                            <span className="text-xs font-semibold">{t('admin_homeowner.detail_modal.lbl_system_name')}</span>
                                                         </div>
                                                         <div className="flex items-end gap-1">
                                                             <span className="text-lg font-bold text-gray-900 truncate w-full">{selectedHomeowner.systemName || '-'}</span>
@@ -1112,10 +1159,10 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     <Box className="w-16 h-16 text-orange-50 absolute -right-2 -bottom-2 opacity-50" />
                                                     <div className="relative z-10">
                                                         <div className="flex items-center gap-1.5 text-orange-500 mb-1">
-                                                            <span className="text-xs font-semibold">Golongan Tarif PLN</span>
+                                                            <span className="text-xs font-semibold">{t('admin_homeowner.detail_modal.lbl_tariff_group')}</span>
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-xl font-bold text-gray-900">{selectedHomeowner.plnTariff || '-'}</span>
+                                                            <span className="text-xl font-bold text-gray-900">{translatePlnCategory(selectedHomeowner.plnTariff, i18n) || '-'}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1127,7 +1174,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <div className="space-y-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                            <Monitor className="w-6 h-6 text-[#009b7c]" /> Ekosistem Perangkat ({selectedHomeownerHubs.length} Hub, {selectedHomeownerDevices.length} Perangkat)
+                                            <Monitor className="w-6 h-6 text-[#009b7c]" /> {t('admin_homeowner.detail_modal.eco_title', { hub: selectedHomeownerHubs.length, device: selectedHomeownerDevices.length })}
                                         </h3>
                                     </div>
 
@@ -1135,7 +1182,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         {isLoadingHubs ? (
                                             <div className="py-12 flex flex-col items-center justify-center gap-3">
                                                 <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                                                <p className="text-sm font-medium text-gray-500 text-center">Sinkronisasi data perangkat...</p>
+                                                <p className="text-sm font-medium text-gray-500 text-center">{t('admin_homeowner.detail_modal.sync_data', 'Sinkronisasi data perangkat...')}</p>
                                             </div>
                                         ) : selectedHomeownerHubs.length > 0 ? (
                                             selectedHomeownerHubs.map((hub, idx) => {
@@ -1155,7 +1202,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                                     <div className="flex items-center gap-2 mt-0.5">
                                                                         <span className="text-xs text-gray-500 font-medium">BIEON ID: {hub.bieonId || '-'}</span>
                                                                         <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                                                                        <span className="text-xs text-gray-500 font-medium">{hubDevices.length} Perangkat Terhubung</span>
+                                                                        <span className="text-xs text-gray-500 font-medium">{hubDevices.length} {t('admin_homeowner.detail_modal.lbl_devices_connected', 'Perangkat Terhubung')}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -1187,7 +1234,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                             </div>
                                                         ) : (
                                                             <div className="p-8 text-center bg-white/50">
-                                                                <p className="text-xs font-medium text-gray-400 italic">Belum ada perangkat yang terpasang pada hub ini.</p>
+                                                                <p className="text-xs font-medium text-gray-400 italic">{t('admin_homeowner.detail_modal.no_devices_hub', 'Belum ada perangkat yang terpasang pada hub ini.')}</p>
                                                             </div>
                                                         )}
                                                     </div>
@@ -1198,8 +1245,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4">
                                                     <Cpu className="w-8 h-8 text-gray-300" />
                                                 </div>
-                                                <h4 className="text-lg font-bold text-gray-900">Belum Ada Perangkat</h4>
-                                                <p className="text-sm text-gray-500 max-w-xs mt-2">Klien ini belum memiliki Hub atau Perangkat BIEON yang terdaftar di sistem.</p>
+                                                <h4 className="text-lg font-bold text-gray-900">{t('admin_homeowner.detail_modal.empty_devices_title')}</h4>
+                                                <p className="text-sm text-gray-500 max-w-xs mt-2">{t('admin_homeowner.detail_modal.empty_devices_desc')}</p>
                                             </div>
                                         )}
                                     </div>
@@ -1219,8 +1266,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <Edit3 className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight">Edit Data Homeowner</h2>
-                                    <p className="text-white/80 text-xs font-medium mt-0.5">Perbarui informasi akun dan akses klien</p>
+                                    <h2 className="text-xl font-bold tracking-tight">{t('admin_homeowner.form_modal.title_edit')}</h2>
+                                    <p className="text-white/80 text-xs font-medium mt-0.5">{t('admin_homeowner.form_modal.desc_edit')}</p>
                                 </div>
                             </div>
                             <button onClick={() => setIsEditModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all">
@@ -1231,7 +1278,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         <div className="p-8 overflow-y-auto space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Username</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_username')}</label>
                                     <input 
                                         type="text" 
                                         value={formData.username}
@@ -1240,7 +1287,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Nama Lengkap</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_fullname')}</label>
                                     <input 
                                         type="text" 
                                         value={formData.fullName}
@@ -1252,7 +1299,7 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Email Klien</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_email')}</label>
                                     <input 
                                         type="email" 
                                         value={formData.email}
@@ -1261,7 +1308,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">No. Telepon</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_phone')}</label>
                                     <input 
                                         type="text" 
                                         value={formData.phone}
@@ -1273,17 +1320,17 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Ganti Password (Opsional)</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_password_opt')}</label>
                                     <input 
                                         type="password" 
                                         value={formData.password}
                                         onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                        placeholder="Kosongkan jika tidak diganti"
+                                        placeholder={t('admin_homeowner.form_modal.ph_password')}
                                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">Status Akun</label>
+                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_status')}</label>
                                     <div className="relative">
                                         <button
                                             type="button"
@@ -1292,7 +1339,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         >
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                                                <span className="capitalize">{formData.status}</span>
+                                                <span className="capitalize">{t(`admin_homeowner.table.status_${formData.status}`)}</span>
                                             </div>
                                             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
                                         </button>
@@ -1312,7 +1359,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                         >
                                                             <div className="flex items-center gap-2">
                                                                 <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-emerald-500' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                                                                <span className="capitalize">{st}</span>
+                                                                <span className="capitalize">{t(`admin_homeowner.table.status_${st}`)}</span>
                                                             </div>
                                                             {formData.status === st && <CheckCircle className="w-4 h-4 text-blue-600" />}
                                                         </button>
@@ -1325,20 +1372,21 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-700 ml-1">Alamat Domisili</label>
+                                <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_address')}</label>
                                 <textarea 
                                     rows="3" 
                                     value={formData.address}
                                     onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                    placeholder={t('admin_homeowner.form_modal.ph_address')}
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
                                 ></textarea>
                             </div>
                         </div>
 
                         <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-end gap-3">
-                            <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">Batal</button>
+                            <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">{t('admin_homeowner.form_modal.btn_cancel')}</button>
                             <button onClick={handleEditHomeowner} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-100 flex items-center gap-2 group">
-                                Simpan Perubahan
+                                {t('admin_homeowner.form_modal.btn_save_edit')}
                                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                             </button>
                         </div>
@@ -1351,7 +1399,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                     <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
                         <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Trash2 className="w-6 h-6" /> Hapus Pelanggan
+                                <Trash2 className="w-6 h-6" /> {t('admin_homeowner.delete_modal.title')}
                             </h2>
                             <button onClick={() => setIsDeleteModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all">
                                 <X className="w-5 h-5" />
@@ -1359,7 +1407,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                         <div className="p-8 space-y-6 flex-1 overflow-y-auto">
                               <div className="bg-red-50/50 p-5 rounded-2xl">
-                                  <p className="text-sm font-medium text-gray-600 mb-2">Anda akan menghapus pelanggan:</p>
+                                  <p className="text-sm font-medium text-gray-600 mb-2">{t('admin_homeowner.delete_modal.desc_start')}</p>
                                   <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedHomeowner.fullName}</h3>
                                   <p className="text-sm text-gray-500">{selectedHomeowner.email}</p>
                                   {selectedHomeowner.deletionRequest?.status === 'pending' && (
@@ -1369,29 +1417,29 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                             <div className="bg-red-50 border border-red-100 p-5 rounded-2xl">
                                 <h4 className="flex items-center gap-2 text-sm font-bold text-red-600 mb-3">
-                                    <XCircle className="w-5 h-5" /> Peringatan!
+                                    <XCircle className="w-5 h-5" /> {t('admin_homeowner.delete_modal.warn_title')}
                                 </h4>
                                 <ul className="list-disc list-inside space-y-2 text-xs font-medium text-red-700/80 ml-1">
-                                    <li>Setelah disetujui Project Owner, proses penghapusan bersifat final dan tidak dapat dibatalkan</li>
-                                    <li>Semua data akan hilang secara permanen dan tidak dapat dipulihkan</li>
-                                    <li>Sistem tidak menyimpan cadangan (backup) untuk data yang telah dihapus</li>
-                                    <li>Akses pengguna akan ditutup sepenuhnya tanpa pengecualian</li>
+                                    <li>{t('admin_homeowner.delete_modal.warn_point_1')}</li>
+                                    <li>{t('admin_homeowner.delete_modal.warn_point_2')}</li>
+                                    <li>{t('admin_homeowner.delete_modal.warn_point_3')}</li>
+                                    <li>{t('admin_homeowner.delete_modal.warn_point_4')}</li>
                                 </ul>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-900">Alasan Penghapusan <span className="text-red-500">*</span></label>
+                                <label className="text-sm font-bold text-gray-900">{t('admin_homeowner.delete_modal.lbl_reason')} <span className="text-red-500">*</span></label>
                                 <textarea
                                     rows="3"
                                     value={deleteReason}
                                     onChange={(e) => setDeleteReason(e.target.value)}
-                                    placeholder="Masukkan alasan mengapa akun ini perlu dihapus..."
+                                    placeholder={t('admin_homeowner.delete_modal.ph_reason')}
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all shadow-sm"
                                 ></textarea>
                             </div>
 
                             <p className="text-[11px] font-medium text-gray-500">
-                                * Form ini akan dikirimkan ke Project Owner untuk persetujuan dan akan disimpan dalam trash management.
+                                {t('admin_homeowner.delete_modal.help_text')}
                             </p>
                         </div>
 
@@ -1400,14 +1448,14 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 onClick={() => setIsDeleteModalOpen(false)}
                                 className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
                             >
-                                Batal
+                                {t('admin_homeowner.form_modal.btn_cancel')}
                             </button>
                             <button
                                 onClick={confirmDeleteHomeowner}
                                 disabled={!deleteReason.trim()}
                                 className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all shadow-sm ${!deleteReason.trim() ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#dc2626] text-white hover:bg-red-700 shadow-lg shadow-red-200'}`}
                             >
-                                Ya, Hapus
+                                {t('admin_homeowner.delete_modal.btn_confirm')}
                             </button>
                         </div>
                     </div>

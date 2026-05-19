@@ -1,7 +1,7 @@
-export const getDeletionRequestStatusMeta = (request) => {
+export const getDeletionRequestStatusMeta = (request, t) => {
     if (!request) {
         return {
-            label: 'Aktif',
+            label: t ? t('admin_homeowner.deletion_request.status_active') : 'Aktif',
             tone: 'success',
             note: '',
         };
@@ -9,25 +9,25 @@ export const getDeletionRequestStatusMeta = (request) => {
 
     if (request.status === 'pending') {
         return {
-            label: 'Menunggu Persetujuan',
+            label: t ? t('admin_homeowner.deletion_request.status_pending') : 'Menunggu Persetujuan',
             tone: 'warning',
-            note: 'Menunggu keputusan Project Owner.',
+            note: t ? t('admin_homeowner.deletion_request.note_pending') : 'Menunggu keputusan Project Owner.',
         };
     }
 
     if (request.status === 'rejected') {
         return {
-            label: 'Aktif',
+            label: t ? t('admin_homeowner.deletion_request.status_active') : 'Aktif',
             tone: 'success',
-            note: request.decisionNote || 'Permintaan penghapusan ditolak. Akun masih aktif.',
+            note: request.decisionNote || (t ? t('admin_homeowner.deletion_request.note_rejected') : 'Permintaan penghapusan ditolak. Akun masih aktif.'),
         };
     }
 
     if (request.status === 'approved') {
         return {
-            label: 'Disetujui',
+            label: t ? t('admin_homeowner.deletion_request.status_approved') : 'Disetujui',
             tone: 'neutral',
-            note: request.decisionNote || 'Permintaan penghapusan disetujui.',
+            note: request.decisionNote || (t ? t('admin_homeowner.deletion_request.note_approved') : 'Permintaan penghapusan disetujui.'),
         };
     }
 

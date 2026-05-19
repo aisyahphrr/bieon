@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import SLATimer from './SLATimer';
 
 /**
@@ -12,12 +13,13 @@ import SLATimer from './SLATimer';
  *  - processStartedAt: ISO date
  */
 export function TicketStatusBadge({ status, rating, assignedAt, processStartedAt, isEscalated, role }) {
+  const { t } = useTranslation();
   const s = status?.toLowerCase();
 
   const getStyles = () => {
     switch (s) {
       case 'unassigned':
-        return { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400', label: 'Baru' };
+        return { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400', label: role === 'homeowner' ? t('complaint.status_baru', 'Baru') : t('complaint.status_unassigned', 'Belum Ditugaskan') };
       
       case 'menunggu respons':
       case 'overdue respons':
@@ -25,7 +27,7 @@ export function TicketStatusBadge({ status, rating, assignedAt, processStartedAt
           bg: 'bg-amber-50', 
           text: (s === 'overdue respons' && role !== 'homeowner') ? 'text-red-600' : 'text-amber-600', 
           dot: (s === 'overdue respons' && role !== 'homeowner') ? 'bg-red-500' : 'bg-amber-500', 
-          label: (s === 'overdue respons' && role !== 'homeowner') ? 'Overdue Respons' : 'Menunggu Respons',
+          label: (s === 'overdue respons' && role !== 'homeowner') ? t('complaint.status_overdue_respons', 'Overdue Respons') : t('complaint.status_menunggu_respons', 'Menunggu Respons'),
           timerStart: assignedAt
         };
 
@@ -35,18 +37,18 @@ export function TicketStatusBadge({ status, rating, assignedAt, processStartedAt
           bg: 'bg-blue-50', 
           text: (s === 'overdue perbaikan' && role !== 'homeowner') ? 'text-red-600' : 'text-blue-600', 
           dot: (s === 'overdue perbaikan' && role !== 'homeowner') ? 'bg-red-500' : 'bg-blue-500', 
-          label: (s === 'overdue perbaikan' && role !== 'homeowner') ? 'Overdue Perbaikan' : 'Diproses',
+          label: (s === 'overdue perbaikan' && role !== 'homeowner') ? t('complaint.status_overdue_perbaikan', 'Overdue Perbaikan') : t('complaint.status_diproses', 'Diproses'),
           timerStart: processStartedAt
         };
 
       case 'menunggu konfirmasi pelanggan':
-        return { bg: 'bg-indigo-50', text: 'text-indigo-600', dot: 'bg-indigo-600', label: 'Menunggu Konfirmasi Pelanggan' };
+        return { bg: 'bg-indigo-50', text: 'text-indigo-600', dot: 'bg-indigo-600', label: t('complaint.status_menunggu_konfirmasi_pelanggan', 'Menunggu Konfirmasi Pelanggan') };
 
       case 'selesai':
-        return { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-600', label: 'Selesai' };
+        return { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-600', label: t('complaint.status_selesai', 'Selesai') };
 
       case 'ditolak':
-        return { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500', label: 'Ditolak' };
+        return { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500', label: t('complaint.status_ditolak', 'Ditolak') };
 
       default:
         return { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400', label: status };

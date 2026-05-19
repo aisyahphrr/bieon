@@ -20,11 +20,14 @@ import {
   AlertTriangle,
   Hourglass,
   ArrowLeft,
-  Database
+  Database,
+  Globe
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import NotificationPopup from '../../components/NotificationPopup';
 
 export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Super Admin Dashboard" }) {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
@@ -56,12 +59,12 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   }, []);
 
   const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, id: 'admin', path: '/admin', activePaths: ['/admin'] },
-    { name: 'Homeowner', icon: Users, id: 'admin-pelanggan', path: '/admin-pelanggan', activePaths: ['/admin-pelanggan', '/admin-client-detail'] },
-    { name: 'Teknisi', icon: User, id: 'admin-teknisi', path: '/admin-teknisi', activePaths: ['/admin-teknisi'] },
-    { name: 'Pengaduan', icon: MessageSquare, id: 'admin-complaint', path: '/admin-complaint', activePaths: ['/admin-complaint'] },
-    { name: 'PLN Listrik', icon: Zap, id: 'admin-tariff', path: '/admin-tariff', activePaths: ['/admin-tariff'] },
-    { name: 'Riwayat', icon: History, id: 'admin-history', path: '/admin-history', activePaths: ['/admin-history'] },
+    { name: t('admin_nav.dashboard'), icon: LayoutDashboard, id: 'admin', path: '/admin', activePaths: ['/admin'] },
+    { name: t('admin_nav.homeowner'), icon: Users, id: 'admin-pelanggan', path: '/admin-pelanggan', activePaths: ['/admin-pelanggan', '/admin-client-detail'] },
+    { name: t('admin_nav.technician'), icon: User, id: 'admin-teknisi', path: '/admin-teknisi', activePaths: ['/admin-teknisi'] },
+    { name: t('admin_nav.complaint'), icon: MessageSquare, id: 'admin-complaint', path: '/admin-complaint', activePaths: ['/admin-complaint'] },
+    { name: t('admin_nav.tariff'), icon: Zap, id: 'admin-tariff', path: '/admin-tariff', activePaths: ['/admin-tariff'] },
+    { name: t('admin_nav.history'), icon: History, id: 'admin-history', path: '/admin-history', activePaths: ['/admin-history'] },
   ];
 
   const resolvePath = (target) => {
@@ -169,7 +172,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
             className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center'} py-3 rounded-2xl hover:bg-white/10 text-white/70 transition-all group font-medium`}
           >
             <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 group-hover:text-red-300" />
-            {(sidebarExpanded || isMobileMenuOpen) && <span className="ml-4 text-sm group-hover:text-red-300 whitespace-nowrap">Logout</span>}
+            {(sidebarExpanded || isMobileMenuOpen) && <span className="ml-4 text-sm group-hover:text-red-300 whitespace-nowrap">{t('admin_nav.logout')}</span>}
           </button>
         </div>
       </aside>
@@ -190,6 +193,20 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
             </div>
 
             <div className="flex items-center gap-3 sm:gap-5 shrink-0">
+              {/* Language Toggle */}
+              <button
+                onClick={() => {
+                  const newLang = i18n.language === 'id' ? 'en' : 'id';
+                  i18n.changeLanguage(newLang);
+                  localStorage.setItem('bieon_language', newLang);
+                }}
+                className="hidden sm:flex items-center justify-center px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5 font-bold text-xs gap-2"
+                title="Toggle Language"
+              >
+                <Globe className="w-4 h-4 text-white/90 group-hover:text-white" />
+                <span className="uppercase text-white/90 group-hover:text-white">{i18n.language}</span>
+              </button>
+
               <div className="relative z-50">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -214,8 +231,8 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                     <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left hidden md:block">
-                    <div className="text-sm font-bold text-white leading-none mb-1">Hi, Admin!</div>
-                    <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest leading-none">Super Admin</div>
+                    <div className="text-sm font-bold text-white leading-none mb-1">{t('admin_nav.greeting')}</div>
+                    <div className="text-[10px] text-white/70 font-bold uppercase tracking-widest leading-none">{t('admin_nav.role_display')}</div>
                   </div>
                 </div>
               </div>

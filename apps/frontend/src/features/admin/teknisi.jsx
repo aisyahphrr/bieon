@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import { getDeletionRequestBadgeClass, getDeletionRequestStatusMeta } from './deletionRequestUi';
 import {
@@ -73,20 +74,20 @@ const parseApiResponse = async (response) => {
     }
 };
 
-const formatLocationAge = (capturedAt) => {
-    if (!capturedAt) return 'Belum pernah dibagikan';
+const formatLocationAge = (capturedAt, t) => {
+    if (!capturedAt) return t('admin_technician.map_modal.location_not_shared');
 
     const diffMs = Date.now() - new Date(capturedAt).getTime();
     const diffMinutes = Math.max(Math.round(diffMs / 60000), 0);
 
-    if (diffMinutes < 1) return 'Baru saja';
-    if (diffMinutes < 60) return `${diffMinutes} menit lalu`;
+    if (diffMinutes < 1) return t('admin_technician.map_modal.location_just_now');
+    if (diffMinutes < 60) return t('admin_technician.map_modal.location_minutes_ago', { count: diffMinutes });
 
     const diffHours = Math.round(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} jam lalu`;
+    if (diffHours < 24) return t('admin_technician.map_modal.location_hours_ago', { count: diffHours });
 
     const diffDays = Math.round(diffHours / 24);
-    return `${diffDays} hari lalu`;
+    return t('admin_technician.map_modal.location_days_ago', { count: diffDays });
 };
 
 const loadLeafletAssets = async () => {
@@ -133,6 +134,7 @@ function TechnicianLiveMap({
     isLoading,
     emptyMessage,
 }) {
+    const { t } = useTranslation();
     const containerRef = useRef(null);
     const mapRef = useRef(null);
     const layerGroupRef = useRef(null);
@@ -254,7 +256,7 @@ function TechnicianLiveMap({
             {isLoading && (
                 <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-[500]">
                     <div className="px-4 py-3 rounded-2xl bg-white shadow-lg text-sm font-semibold text-gray-700">
-                        Memuat lokasi teknisi...
+                        {t('admin_technician.map_modal.loading_tech_locations')}
                     </div>
                 </div>
             )}
@@ -293,6 +295,7 @@ const resolveWorkAreaLocation = (workArea, fallbackLocation) => {
 };
 
 export function ManajemenTeknisiPage({ onNavigate }) {
+    const { t } = useTranslation();
     const [technicians, setTechnicians] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -778,7 +781,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     };
 
     return (
-        <SuperAdminLayout activeMenu="Teknisi" onNavigate={handleNavigate} title="Manajemen Teknisi">
+        <SuperAdminLayout activeMenu="Teknisi" onNavigate={handleNavigate} title={t('admin_technician.table.title', 'Manajemen Teknisi')}>
             <div className="space-y-8">
                 {formError && (
                     <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -800,7 +803,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{totalTechnicians}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">Total Teknisi</p>
+                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.total_tech', 'Total Teknisi')}</p>
                             </div>
                         </div>
                     </div>
@@ -812,7 +815,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{activeTechnicians}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">Teknisi Aktif</p>
+                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.active_tech', 'Teknisi Aktif')}</p>
                             </div>
                         </div>
                     </div>
@@ -824,7 +827,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{totalClients}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">Total Pelanggan Ditangani</p>
+                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.total_clients', 'Total Pelanggan Ditangani')}</p>
                             </div>
                         </div>
                     </div>
@@ -836,7 +839,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             </div>
                             <div className="text-right">
                                 <span className="text-4xl font-bold">{avgClientsPerTech}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">Rata-rata Pelanggan/Teknisi</p>
+                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.avg_clients_per_tech', 'Rata-rata Pelanggan/Teknisi')}</p>
                             </div>
                         </div>
                     </div>
@@ -847,7 +850,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     <div className="p-8 border-b border-gray-50 bg-gray-50/30">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-800">Daftar Teknisi</h2>
+                                <h2 className="text-xl font-bold text-gray-800">{t('admin_technician.table.title')}</h2>
                             </div>
                             <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full lg:w-auto">
                                 <div className="col-span-2 flex items-center gap-2">
@@ -855,7 +858,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-all" />
                                         <input
                                             type="text"
-                                            placeholder="Cari teknisi..."
+                                            placeholder={t('admin_technician.table.search_placeholder', 'Cari teknisi...')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm group-focus-within:bg-white"
@@ -870,7 +873,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         >
                                             <Filter className="w-[18px] md:w-4 h-[18px] md:h-4 text-gray-500 md:text-gray-400 md:absolute md:left-4 md:top-1/2 md:-translate-y-1/2" />
                                             <span className="hidden md:inline-block">
-                                                {filterStatus === 'all' ? 'Semua Status' : filterStatus === 'aktif' ? 'Aktif' : 'Nonaktif'}
+                                                {filterStatus === 'all' ? t('admin_technician.table.filter_all', 'Semua Status') : filterStatus === 'aktif' ? t('admin_technician.table.filter_active', 'Aktif') : t('admin_technician.table.filter_inactive', 'Nonaktif')}
                                             </span>
                                             <ChevronDown className={`w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 hidden md:block transition-transform duration-200 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
 
@@ -888,9 +891,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 ></div>
                                                 <div className="absolute right-0 top-[calc(100%+8px)] w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-40 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                                     {[
-                                                        { id: 'all', label: 'Semua Status' },
-                                                        { id: 'aktif', label: 'Aktif' },
-                                                        { id: 'nonaktif', label: 'Nonaktif' }
+                                                        { id: 'all', label: t('admin_technician.table.filter_all', 'Semua Status') },
+                                                        { id: 'aktif', label: t('admin_technician.table.filter_active', 'Aktif') },
+                                                        { id: 'nonaktif', label: t('admin_technician.table.filter_inactive', 'Nonaktif') }
                                                     ].map((item) => (
                                                         <button
                                                             key={item.id}
@@ -916,7 +919,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         className="px-4 md:px-5 py-2.5 bg-[#1d4ed8] text-white rounded-xl text-xs md:text-sm font-semibold hover:bg-blue-800 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-blue-100"
                                     >
                                         <MapIcon className="w-4 h-4 shrink-0" />
-                                        <span className="truncate">Lihat Peta</span>
+                                        <span className="truncate">{t('admin_technician.table.btn_view_map', 'Lihat Peta')}</span>
                                     </button>
 
                                     <button
@@ -924,7 +927,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         className="px-4 md:px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-xs md:text-sm font-semibold hover:bg-[#008268] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-emerald-100"
                                     >
                                         <Plus className="w-4 h-4 shrink-0 transition-transform group-hover:rotate-90" />
-                                        <span className="truncate">Tambah Teknisi</span>
+                                        <span className="truncate">{t('admin_technician.table.btn_add_tech', 'Tambah Teknisi')}</span>
                                     </button>
                                 </div>
                             </div>
@@ -939,14 +942,14 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         {/* Desktop Table View */}
                         <table className="w-full text-left table-auto hidden md:table">
                             <thead>
-                                <tr className="bg-[#009b7c] text-white text-sm font-semibold text-left">
-                                    <th className="px-8 py-4 rounded-tl-xl">ID Teknisi</th>
-                                    <th className="px-8 py-4">Nama Teknisi</th>
-                                    <th className="px-8 py-4">Lokasi Wilayah</th>
-                                    <th className="px-8 py-4">Nomor Kontak</th>
-                                    <th className="px-8 py-4 text-center">Jumlah Pelanggan</th>
-                                    <th className="px-8 py-4">Status</th>
-                                    <th className="px-8 py-4 text-center rounded-tr-xl">Aksi</th>
+                                <tr className="bg-[#009b7c] text-white text-[12px] font-black uppercase tracking-widest text-left">
+                                    <th className="px-8 py-4 rounded-tl-xl">{t('admin_technician.table.col_id', 'ID Teknisi')}</th>
+                                    <th className="px-8 py-4">{t('admin_technician.table.col_name', 'Nama Teknisi')}</th>
+                                    <th className="px-8 py-4">{t('admin_technician.table.col_region', 'Lokasi Wilayah')}</th>
+                                    <th className="px-8 py-4">{t('admin_technician.table.col_contact', 'Nomor Kontak')}</th>
+                                    <th className="px-8 py-4 text-center">{t('admin_technician.table.col_client_count', 'Jumlah Pelanggan')}</th>
+                                    <th className="px-8 py-4">{t('admin_technician.table.col_status', 'Status')}</th>
+                                    <th className="px-8 py-4 text-center rounded-tr-xl">{t('admin_technician.table.col_action', 'Aksi')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -974,7 +977,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         </td>
                                         <td className="px-8 py-6 text-center">
                                             <span className="px-4 py-1.5 bg-purple-100 text-purple-600 rounded-full text-xs font-bold whitespace-nowrap">
-                                                {tech.clientsCount} Pelanggan
+                                                {t('admin_technician.table.client_format', { count: tech.clientsCount })}
                                             </span>
                                         </td>
                                         <td className="px-8 py-6">
@@ -984,7 +987,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 return (
                                                     <span className={`px-2 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
-                                                        {isDefaultStatus ? `${tech.status.charAt(0).toUpperCase()}${tech.status.slice(1)}` : deletionMeta.label}
+                                                        {isDefaultStatus ? (tech.status === 'aktif' ? t('admin_technician.table.filter_active') : t('admin_technician.table.filter_inactive')) : deletionMeta.label}
                                                     </span>
                                                 );
                                             })()}
@@ -1001,7 +1004,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <button
                                                     onClick={() => handleEditTechnician(tech)}
                                                     className="p-2 bg-emerald-50 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg transition-all"
-                                                    title="Edit Data"
+                                                    title={t('admin_technician.form_modal.title_edit')}
                                                 >
                                                     <Edit3 className="w-4 h-4" />
                                                 </button>
@@ -1044,7 +1047,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             return (
                                                 <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
-                                                    {isDefaultStatus ? `${tech.status.charAt(0).toUpperCase()}${tech.status.slice(1)}` : deletionMeta.label}
+                                                    {isDefaultStatus ? (tech.status === 'aktif' ? t('admin_technician.table.filter_active') : t('admin_technician.table.filter_inactive')) : deletionMeta.label}
                                                 </span>
                                             );
                                         })()}
@@ -1069,15 +1072,15 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <span className="font-semibold text-gray-700">{tech.phone}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs">
-                                            <span className="font-semibold text-gray-500 w-16">Klien:</span>
-                                            <span className="font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-md">{tech.clientsCount} Pelanggan</span>
+                                            <span className="font-semibold text-gray-500 w-16">{t('admin_technician.detail_modal.col_bieon_count').split(' ')[1]}:</span>
+                                            <span className="font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-md">{t('admin_technician.table.client_format', { count: tech.clientsCount })}</span>
                                         </div>
                                     </div>
 
                                     <div className="p-3 border-t border-gray-50 flex items-center justify-between gap-2">
-                                        <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">Detail</button>
-                                        <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-xl hover:bg-emerald-100 transition-all text-center">Edit</button>
-                                        <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-cyan-50 text-cyan-600 font-bold text-xs rounded-xl hover:bg-cyan-100 transition-all text-center">Peta</button>
+                                        <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">{t('admin_technician.table.col_action')}</button>
+                                        <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-xl hover:bg-emerald-100 transition-all text-center">{t('admin_technician.form_modal.btn_save').split(' ')[0]}</button>
+                                        <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-cyan-50 text-cyan-600 font-bold text-xs rounded-xl hover:bg-cyan-100 transition-all text-center">{t('admin_technician.table.btn_view_map').split(' ')[1]}</button>
                                         <button onClick={() => handleDeleteTechnician(tech)} className="w-[45px] flex items-center justify-center py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all shrink-0">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -1095,7 +1098,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     <div className="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
                         <div className="px-6 py-5 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Plus className="w-6 h-6" /> Tambah Teknisi Baru
+                                <Plus className="w-6 h-6" /> {t('admin_technician.form_modal.title_add')}
                             </h2>
                             <button onClick={() => setIsAddModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
                                 <X className="w-5 h-5 text-white" />
@@ -1109,44 +1112,44 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                                         <Mail className="w-4 h-4" />
                                     </div>
-                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Akun & Kontak</h3>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_account')}</h3>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Nama Teknisi <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_name')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="name"
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             type="text"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
-                                            placeholder="Budi Santoso"
+                                            placeholder={t('admin_technician.form_modal.ph_name')}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Email <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_email')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="email"
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             type="email"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
-                                            placeholder="budi.santoso@bieon.id"
+                                            placeholder={t('admin_technician.form_modal.ph_email')}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Nomor Telepon <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_phone')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             type="text"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
-                                            placeholder="+62 812-3456-7890"
+                                            placeholder={t('admin_technician.form_modal.ph_phone')}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Password <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_password')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="password"
                                             value={formData.password}
@@ -1157,14 +1160,14 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Alamat <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_address')} <span className="text-red-500">*</span></label>
                                         <textarea
                                             name="address"
                                             value={formData.address}
                                             onChange={handleInputChange}
                                             rows="2"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
-                                            placeholder="Jl. Sudirman No. 45, Jakarta Pusat"
+                                            placeholder={t('admin_technician.form_modal.ph_address')}
                                         ></textarea>
                                     </div>
                                 </div>
@@ -1176,33 +1179,33 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                                         <Briefcase className="w-4 h-4" />
                                     </div>
-                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Informasi Profesional</h3>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_professional')}</h3>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Posisi <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_position')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="position"
                                             value={formData.position}
                                             onChange={handleInputChange}
                                             type="text"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
-                                            placeholder="Senior Technician"
+                                            placeholder={t('admin_technician.form_modal.ph_position')}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Pengalaman (Tahun) <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_experience')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="experience"
                                             value={formData.experience}
                                             onChange={handleInputChange}
                                             type="number"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
-                                            placeholder="5"
+                                            placeholder={t('admin_technician.form_modal.ph_experience')}
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Spesialisasi (Pilih yang sesuai) <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_specialization')} <span className="text-red-500">*</span></label>
                                         <div className="flex flex-wrap gap-2">
                                             {SPECIFICATION_OPTIONS.map(spec => {
                                                 const isSelected = formData.specializations.includes(spec);
@@ -1224,7 +1227,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         </div>
                                     </div>
                                     <div className="space-y-2 relative">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_work_region')} <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
@@ -1232,7 +1235,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
                                             >
                                                 <span className={formData.workArea ? 'text-gray-800 font-semibold' : 'text-gray-400'}>
-                                                    {formData.workArea || 'Pilih Kota'}
+                                                    {formData.workArea ? t(`admin_technician.form_modal.opt_city_${formData.workArea === 'Lainnya' ? 'other' : formData.workArea.toLowerCase()}`, formData.workArea) : t('admin_technician.form_modal.lbl_select_city')}
                                                 </span>
                                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
                                             </button>
@@ -1241,27 +1244,30 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <>
                                                     <div className="fixed inset-0 z-[700]" onClick={() => setIsWorkAreaDropdownOpen(false)}></div>
                                                     <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
-                                                        {Object.keys(CITY_AREAS).map(city => (
-                                                            <button
-                                                                key={city}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    handleCityChange({ target: { value: city } });
-                                                                    setIsWorkAreaDropdownOpen(false);
-                                                                }}
-                                                                className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
-                                                            >
-                                                                {city}
-                                                                {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
-                                                            </button>
-                                                        ))}
+                                                        {Object.keys(CITY_AREAS).map(city => {
+                                                            const cityKey = city === 'Lainnya' ? 'opt_city_other' : `opt_city_${city.toLowerCase()}`;
+                                                            return (
+                                                                <button
+                                                                    key={city}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        handleCityChange({ target: { value: city } });
+                                                                        setIsWorkAreaDropdownOpen(false);
+                                                                    }}
+                                                                    className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                                >
+                                                                    {t(`admin_technician.form_modal.${cityKey}`, city)}
+                                                                    {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </>
                                             )}
                                         </div>
                                     </div>
                                     <div className="space-y-2 relative">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_status')} <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
@@ -1271,7 +1277,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <div className="flex items-center gap-2">
                                                     <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                                                     <span className="text-gray-800 font-semibold uppercase tracking-wider">
-                                                        {formData.status}
+                                                        {formData.status === 'aktif' ? t('admin_technician.form_modal.status_active') : t('admin_technician.form_modal.status_inactive')}
                                                     </span>
                                                 </div>
                                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
@@ -1282,8 +1288,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                     <div className="fixed inset-0 z-[700]" onClick={() => setIsStatusDropdownOpen(false)}></div>
                                                     <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
                                                         {[
-                                                            { id: 'aktif', label: 'Aktif', color: 'bg-emerald-500' },
-                                                            { id: 'nonaktif', label: 'Nonaktif', color: 'bg-red-500' }
+                                                            { id: 'aktif', label: t('admin_technician.form_modal.status_active'), color: 'bg-emerald-500' },
+                                                            { id: 'nonaktif', label: t('admin_technician.form_modal.status_inactive'), color: 'bg-red-500' }
                                                         ].map(item => (
                                                             <button
                                                                 key={item.id}
@@ -1308,7 +1314,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
                                         <label className="text-xs font-bold text-gray-500 uppercase">
-                                            Area Coverage Detail (Pilih Wilayah di {formData.workArea || 'Kota Selected'}) <span className="text-red-500">*</span>
+                                            {t('admin_technician.form_modal.lbl_area_coverage', { city: formData.workArea || 'Kota Selected' })} <span className="text-red-500">*</span>
                                         </label>
                                         <div className="flex flex-wrap gap-2">
                                             {formData.workArea ? (
@@ -1345,29 +1351,32 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                                         <Clock className="w-4 h-4" />
                                     </div>
-                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Jadwal Kerja</h3>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_schedule')}</h3>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                                    {Object.entries(formData.workSchedule).map(([day, hours]) => (
-                                        <div key={day} className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase">{day}</label>
-                                            <input
-                                                type="text"
-                                                value={hours}
-                                                onChange={(e) => handleScheduleChange(day, e.target.value)}
-                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium"
-                                                placeholder="08:00 - 17:00"
-                                            />
-                                        </div>
-                                    ))}
+                                    {Object.entries(formData.workSchedule).map(([day, hours]) => {
+                                        const dayKey = `day_${day.toLowerCase().replace('senin', 'monday').replace('selasa', 'tuesday').replace('rabu', 'wednesday').replace('kamis', 'thursday').replace('jumat', 'friday').replace('sabtu', 'saturday').replace('minggu', 'sunday')}`;
+                                        return (
+                                            <div key={day} className="space-y-1.5">
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase">{t(`admin_technician.form_modal.${dayKey}`, day)}</label>
+                                                <input
+                                                    type="text"
+                                                    value={hours}
+                                                    onChange={(e) => handleScheduleChange(day, e.target.value)}
+                                                    className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium"
+                                                    placeholder="08:00 - 17:00"
+                                                />
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4 pt-4 shrink-0">
-                                <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
+                                <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">{t('admin_technician.form_modal.btn_cancel')}</button>
                                 <button onClick={handleAddTechnician} disabled={isSubmitting} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                    {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                                    {isSubmitting ? t('admin_technician.form_modal.btn_save').split(' ')[0] + '...' : t('admin_technician.form_modal.btn_save')}
                                 </button>
                             </div>
                         </div>
@@ -1411,7 +1420,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                                             <Mail className="w-4 h-4" />
                                         </div>
-                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Kontak & Alamat</h3>
+                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.detail_modal.sec_contact')}</h3>
                                     </div>
                                     <div className="space-y-4">
                                         <div className="flex items-start gap-3">
@@ -1427,14 +1436,14 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <div className="flex items-start gap-3">
                                             <Phone className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Nomor Kontak</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.lbl_phone')}</p>
                                                 <p className="text-sm font-semibold text-gray-800">{selectedTechnician.phone}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3">
                                             <MapPin className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Alamat</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.lbl_address')}</p>
                                                 <p className="text-sm font-semibold text-gray-800 leading-relaxed">{selectedTechnician.address}</p>
                                             </div>
                                         </div>
@@ -1447,20 +1456,20 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                                             <Briefcase className="w-4 h-4" />
                                         </div>
-                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Keahlian & Karir</h3>
+                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.detail_modal.sec_skills')}</h3>
                                     </div>
                                     <div className="space-y-4">
                                         <div className="flex items-start gap-3">
                                             <Award className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Posisi & Pengalaman</p>
-                                                <p className="text-sm font-semibold text-gray-800">{selectedTechnician.position || 'Technician'} • {selectedTechnician.experience || 0} Tahun</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.sec_skills')}</p>
+                                                <p className="text-sm font-semibold text-gray-800">{t('admin_technician.detail_modal.format_position', { position: selectedTechnician.position || 'Technician', years: selectedTechnician.experience || 0 })}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3">
                                             <Zap className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Spesialisasi</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.lbl_specialization')}</p>
                                                 <div className="flex flex-wrap gap-1 mt-1">
                                                     {(selectedTechnician.specializations || []).map((s, i) => (
                                                         <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold">{s}</span>
@@ -1471,7 +1480,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <div className="flex items-start gap-3">
                                             <MapIcon className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
                                             <div>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase">Area Coverage</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.lbl_coverage')}</p>
                                                 <div className="flex flex-wrap gap-1 mt-1">
                                                     {(selectedTechnician.coverageAreas || []).map((a, i) => (
                                                         <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold">{a}</span>
@@ -1488,15 +1497,18 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                                             <Clock className="w-4 h-4" />
                                         </div>
-                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Jadwal Mingguan</h3>
+                                        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.detail_modal.sec_schedule')}</h3>
                                     </div>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                        {Object.entries(selectedTechnician.workSchedule || {}).map(([day, hours]) => (
-                                            <div key={day} className="flex flex-col">
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase">{day}</span>
-                                                <span className={`text-[11px] font-bold ${hours === 'Off' ? 'text-red-400' : 'text-gray-700'}`}>{hours}</span>
-                                            </div>
-                                        ))}
+                                        {Object.entries(selectedTechnician.workSchedule || {}).map(([day, hours]) => {
+                                            const dayKey = `day_${day.toLowerCase().replace('senin', 'monday').replace('selasa', 'tuesday').replace('rabu', 'wednesday').replace('kamis', 'thursday').replace('jumat', 'friday').replace('sabtu', 'saturday').replace('minggu', 'sunday')}`;
+                                            return (
+                                                <div key={day} className="flex flex-col">
+                                                    <span className="text-[9px] font-bold text-gray-400 uppercase">{t(`admin_technician.form_modal.${dayKey}`, day)}</span>
+                                                    <span className={`text-[11px] font-bold ${hours === 'Off' ? 'text-red-400' : 'text-gray-700'}`}>{hours}</span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -1504,7 +1516,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             {/* Table Pelanggan section */}
                             <div>
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                                    <h3 className="text-lg font-bold text-gray-800">Daftar Pelanggan yang Ditangani</h3>
+                                    <h3 className="text-lg font-bold text-gray-800">{t('admin_technician.detail_modal.sec_clients')}</h3>
                                     <button
                                         onClick={() => {
                                             setIsAddClientModalOpen(true);
@@ -1513,19 +1525,19 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         className="px-4 py-2 bg-[#009b7c] text-white rounded-lg text-sm font-semibold hover:bg-[#008268] transition-all flex items-center justify-center gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
-                                        Tambah Pelanggan
+                                        {t('admin_technician.detail_modal.btn_add_client')}
                                     </button>
                                 </div>
                                 <div className="overflow-hidden rounded-xl md:border border-gray-200">
                                     {/* Desktop Table */}
                                     <table className="w-full text-left table-auto bg-white hidden md:table">
-                                        <thead>
-                                            <tr className="bg-[#009b7c] text-white text-sm font-semibold">
-                                                <th className="px-6 py-4">Nama Pelanggan</th>
-                                                <th className="px-6 py-4">Lokasi</th>
-                                                <th className="px-6 py-4">Jumlah BIEON</th>
-                                                <th className="px-6 py-4">Jumlah Device</th>
-                                                <th className="px-6 py-4">Status Sistem</th>
+                                        <thead className="bg-gray-50 text-gray-500 text-[12px] font-black uppercase tracking-widest">
+                                            <tr>
+                                                <th className="px-6 py-4">{t('admin_technician.detail_modal.col_client_name')}</th>
+                                                <th className="px-6 py-4">{t('admin_technician.detail_modal.col_location')}</th>
+                                                <th className="px-6 py-4">{t('admin_technician.detail_modal.col_bieon_count')}</th>
+                                                <th className="px-6 py-4">{t('admin_technician.detail_modal.col_device_count')}</th>
+                                                <th className="px-6 py-4">{t('admin_technician.detail_modal.col_sys_status')}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -1559,7 +1571,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             ) : (
                                                 <tr>
                                                     <td colSpan="5" className="px-6 py-8 text-center text-gray-500 text-sm italic">
-                                                        Tidak ada pelanggan yang ditangani saat ini.
+                                                        {t('admin_technician.detail_modal.empty_clients')}
                                                     </td>
                                                 </tr>
                                             )}
@@ -1599,7 +1611,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             ))
                                         ) : (
                                             <div className="py-6 text-center text-gray-500 text-sm italic bg-white rounded-xl border border-gray-100">
-                                                Tidak ada pelanggan yang ditangani saat ini.
+                                                {t('admin_technician.detail_modal.empty_clients')}
                                             </div>
                                         )}
                                     </div>
@@ -1622,8 +1634,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <MapIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                 </div>
                                 <div className="mt-0.5 md:mt-0">
-                                    <h2 className="text-lg md:text-xl font-bold leading-tight">Peta Lokasi Teknisi Real-Time</h2>
-                                    <p className="text-[11px] md:text-xs font-medium text-blue-100 mt-1 md:mt-1.5 leading-snug">Super admin dapat melihat persebaran teknisi dari koordinat aktual perangkat teknisi</p>
+                                    <h2 className="text-lg md:text-xl font-bold leading-tight">{t('admin_technician.map_modal.title')}</h2>
+                                    <p className="text-[11px] md:text-xs font-medium text-blue-100 mt-1 md:mt-1.5 leading-snug">{t('admin_technician.map_modal.desc')}</p>
                                 </div>
                             </div>
                             <button onClick={() => setIsMapModalOpen(false)} className="absolute right-4 top-4 md:static md:w-10 md:h-10 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all shrink-0">
@@ -1661,7 +1673,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         <div className="flex items-center gap-2">
                                             <UserCog className="w-4 h-4 text-blue-500" />
                                             <span>
-                                                {mapFilterTech === 'all' ? 'Semua Teknisi' : (mapTechnicians.find(t => t.id === mapFilterTech)?.name || 'Pilih Teknisi')}
+                                                {mapFilterTech === 'all' ? t('admin_technician.map_modal.ctrl_all') : (mapTechnicians.find(t => t.id === mapFilterTech)?.name || 'Pilih Teknisi')}
                                             </span>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isMapTechDropdownOpen ? 'rotate-180' : ''}`} />
@@ -1679,7 +1691,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                     }}
                                                     className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${mapFilterTech === 'all' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}`}
                                                 >
-                                                    <span>Semua Teknisi</span>
+                                                    <span>{t('admin_technician.map_modal.ctrl_all')}</span>
                                                     {mapFilterTech === 'all' && <CheckCircle className="w-4 h-4 text-blue-600" />}
                                                 </button>
                                                 <div className="h-px bg-gray-50 my-1"></div>
@@ -1709,7 +1721,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                                 <div className="flex items-center gap-4 shrink-0 snap-end">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Legend:</span>
+                                        <span className="text-sm font-bold text-gray-700 whitespace-nowrap">{t('admin_technician.map_modal.ctrl_legend')}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         {visibleMapTechnicians.slice(0, 6).map((tech) => (
@@ -1733,21 +1745,21 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     selectedTechnicianId={selectedMapTechnician?.id || null}
                                     onSelectTechnician={setSelectedMapTechnicianId}
                                     isLoading={isLoadingMap}
-                                    emptyMessage="Belum ada pin wilayah teknisi yang tersedia. Lengkapi workArea teknisi agar pin tampil stabil di peta."
+                                    emptyMessage={t('admin_technician.map_modal.empty_map')}
                                 />
 
                                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 overflow-y-auto">
                                     <div className="flex items-center justify-between gap-3 mb-4">
                                         <div>
-                                            <h3 className="text-sm font-bold text-gray-900">Status Lokasi Teknisi</h3>
-                                            <p className="text-xs text-gray-500 mt-1">Pin peta dikunci ke wilayah kerja teknisi, sedangkan lokasi live tetap ditampilkan sebagai informasi pendukung.</p>
+                                            <h3 className="text-sm font-bold text-gray-900">{t('admin_technician.map_modal.sidebar_title')}</h3>
+                                            <p className="text-xs text-gray-500 mt-1">{t('admin_technician.map_modal.sidebar_desc')}</p>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={fetchMapLocations}
                                             className="px-3 py-2 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-all"
                                         >
-                                            Refresh
+                                            {t('admin_technician.map_modal.btn_refresh')}
                                         </button>
                                     </div>
 
@@ -1764,16 +1776,16 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <p className="text-sm font-bold text-gray-900">{selectedMapTechnician.name}</p>
                                             </div>
                                             <div className="space-y-1.5 text-xs text-gray-600">
-                                                <p>ID: <span className="font-semibold text-gray-800">{selectedMapTechnician.id}</span></p>
-                                                <p>Wilayah: <span className="font-semibold text-gray-800">{selectedMapTechnician.workArea || '-'}</span></p>
-                                                <p>Pin Peta: <span className="font-semibold text-gray-800">{selectedMapTechnician.mapLocation?.label || '-'}</span></p>
-                                                <p>Status: <span className="font-semibold text-gray-800">{selectedMapTechnician.status}</span></p>
-                                                <p>Pelanggan: <span className="font-semibold text-gray-800">{selectedMapTechnician.clientsCount}</span></p>
+                                                <p>{t('admin_technician.map_modal.lbl_id')} <span className="font-semibold text-gray-800">{selectedMapTechnician.id}</span></p>
+                                                <p>{t('admin_technician.map_modal.lbl_region')} <span className="font-semibold text-gray-800">{selectedMapTechnician.workArea || '-'}</span></p>
+                                                <p>{t('admin_technician.map_modal.lbl_pin')} <span className="font-semibold text-gray-800">{selectedMapTechnician.mapLocation?.label || '-'}</span></p>
+                                                <p>{t('admin_technician.map_modal.lbl_status')} <span className="font-semibold text-gray-800">{selectedMapTechnician.status === 'aktif' ? t('admin_technician.table.filter_active') : t('admin_technician.table.filter_inactive')}</span></p>
+                                                <p>{t('admin_technician.map_modal.lbl_clients')} <span className="font-semibold text-gray-800">{selectedMapTechnician.clientsCount}</span></p>
                                                 {selectedMapTechnician.currentLocation && (
                                                     <>
-                                                        <p>Koordinat Live: <span className="font-semibold text-gray-800">{selectedMapTechnician.currentLocation.lat.toFixed(6)}, {selectedMapTechnician.currentLocation.lng.toFixed(6)}</span></p>
-                                                        <p>Update Live: <span className="font-semibold text-gray-800">{formatLocationAge(selectedMapTechnician.currentLocation.capturedAt)}</span></p>
-                                                        <p>Akurasi: <span className="font-semibold text-gray-800">{selectedMapTechnician.currentLocation.accuracy != null ? `${Math.round(selectedMapTechnician.currentLocation.accuracy)} m` : '-'}</span></p>
+                                                        <p>{t('admin_technician.map_modal.lbl_coord_live')} <span className="font-semibold text-gray-800">{selectedMapTechnician.currentLocation.lat.toFixed(6)}, {selectedMapTechnician.currentLocation.lng.toFixed(6)}</span></p>
+                                                        <p>{t('admin_technician.map_modal.lbl_update_live')} <span className="font-semibold text-gray-800">{formatLocationAge(selectedMapTechnician.currentLocation.capturedAt, t)}</span></p>
+                                                        <p>{t('admin_technician.map_modal.lbl_accuracy')} <span className="font-semibold text-gray-800">{selectedMapTechnician.currentLocation.accuracy != null ? `${Math.round(selectedMapTechnician.currentLocation.accuracy)} m` : '-'}</span></p>
                                                     </>
                                                 )}
                                             </div>
@@ -1794,20 +1806,20 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tech.color }}></span>
                                                             <p className="text-sm font-bold text-gray-900">{tech.name}</p>
                                                         </div>
-                                                        <p className="mt-1 text-xs text-gray-500">{tech.id} • {tech.workArea || 'Tanpa wilayah'}</p>
+                                                        <p className="mt-1 text-xs text-gray-500">{tech.id} • {tech.workArea || t('admin_technician.map_modal.no_region')}</p>
                                                     </div>
                                                     <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${tech.currentLocation ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
-                                                        {tech.currentLocation ? 'Live tersedia' : 'Pin wilayah'}
+                                                        {tech.currentLocation ? t('admin_technician.map_modal.live_available') : t('admin_technician.map_modal.pin_region')}
                                                     </span>
                                                 </div>
                                                 {tech.currentLocation ? (
                                                     <div className="mt-2 text-xs text-gray-600">
-                                                        <p>Pin tetap: {tech.mapLocation?.label || tech.workArea || 'Area teknisi'}</p>
-                                                        <p className="mt-1">Live terakhir: {tech.currentLocation.lat.toFixed(5)}, {tech.currentLocation.lng.toFixed(5)}</p>
-                                                        <p className="mt-1">Diperbarui {formatLocationAge(tech.currentLocation.capturedAt)}</p>
+                                                        <p>{t('admin_technician.map_modal.pin_fixed')} {tech.mapLocation?.label || tech.workArea || t('admin_technician.map_modal.pin_region')}</p>
+                                                        <p className="mt-1">{t('admin_technician.map_modal.live_last')} {tech.currentLocation.lat.toFixed(5)}, {tech.currentLocation.lng.toFixed(5)}</p>
+                                                        <p className="mt-1">{t('admin_technician.map_modal.updated')} {formatLocationAge(tech.currentLocation.capturedAt, t)}</p>
                                                     </div>
                                                 ) : (
-                                                    <p className="mt-2 text-xs text-gray-500">Pin peta dikunci ke wilayah kerja `{tech.mapLocation?.label || tech.workArea || 'Area teknisi'}`.</p>
+                                                    <p className="mt-2 text-xs text-gray-500">{t('admin_technician.map_modal.help_pin_locked', { location: tech.mapLocation?.label || tech.workArea || t('admin_technician.map_modal.pin_region') })}</p>
                                                 )}
                                             </button>
                                         ))}
@@ -1825,8 +1837,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
                         <div className="p-6 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
                             <div>
-                                <h2 className="text-xl font-bold">Pilih Pelanggan</h2>
-                                <p className="text-xs font-medium text-teal-50 opacity-90 mt-1">Tambahkan pelanggan ke delegasi tugas teknisi</p>
+                                <h2 className="text-xl font-bold">{t('admin_technician.detail_modal.btn_add_client')}</h2>
+                                <p className="text-xs font-medium text-teal-50 opacity-90 mt-1">{t('admin_technician.detail_modal.desc_add_client', 'Tambahkan pelanggan ke delegasi tugas teknisi')}</p>
                             </div>
                             <button onClick={() => setIsAddClientModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
                                 <X className="w-5 h-5 text-white" />
@@ -1834,13 +1846,13 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         </div>
 
                         <div className="p-6 overflow-y-auto space-y-4 flex-1">
-                            <p className="text-sm font-bold text-gray-700">Pilih dari pelanggan yang tersedia (Homeowner):</p>
+                            <p className="text-sm font-bold text-gray-700">{t('admin_technician.detail_modal.lbl_available_clients', 'Pilih dari pelanggan yang tersedia (Homeowner):')}</p>
 
                             <div className="space-y-3">
                                 {isLoadingClients ? (
-                                    <div className="text-center py-6 text-gray-500 text-sm">Memuat pelanggan yang tersedia...</div>
+                                    <div className="text-center py-6 text-gray-500 text-sm">{t('admin_technician.detail_modal.loading_clients', 'Memuat pelanggan yang tersedia...')}</div>
                                 ) : availableClients.length === 0 ? (
-                                    <div className="text-center py-6 text-gray-500 text-sm italic">Tidak ada pelanggan (Homeowner) yang belum ditugaskan.</div>
+                                    <div className="text-center py-6 text-gray-500 text-sm italic">{t('admin_technician.detail_modal.empty_available_clients', 'Tidak ada pelanggan (Homeowner) yang belum ditugaskan.')}</div>
                                 ) : availableClients.map((pelanggan, idx) => (
                                     <label key={idx} className="flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer transition-all">
                                         <input 
@@ -1851,20 +1863,18 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                         <div className="flex-1">
                                             <p className="font-bold text-gray-800 text-sm">{pelanggan.fullName}</p>
-                                            <p className="text-xs text-gray-500 mt-1">{pelanggan.email} • {pelanggan.address || 'Alamat tidak tersedia'}</p>
+                                            <p className="text-xs text-gray-500 mt-1">{pelanggan.email} • {pelanggan.address || t('admin_technician.map_modal.no_region')}</p>
                                         </div>
-                                        <span className="px-2 py-1 bg-yellow-50 text-yellow-600 rounded-md text-[10px] font-bold uppercase">Tersedia</span>
+                                        <span className="px-2 py-1 bg-yellow-50 text-yellow-600 rounded-md text-[10px] font-bold uppercase">{t('admin_technician.detail_modal.status_available')}</span>
                                     </label>
                                 ))}
                             </div>
-                        </div>
-
-                        <div className="p-6 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-gray-50">
+                        </div>                         <div className="p-6 border-t border-gray-100 flex justify-end gap-3 shrink-0 bg-gray-50">
                             <button
                                 onClick={() => setIsAddClientModalOpen(false)}
                                 className="px-6 py-2.5 text-sm font-bold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all bg-white"
                             >
-                                Batal
+                                {t('admin_technician.form_modal.btn_cancel')}
                             </button>
                             <button
                                 onClick={handleAssignClients}
@@ -1872,7 +1882,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 className="px-6 py-2.5 text-sm font-bold text-white bg-[#009b7c] rounded-xl hover:bg-[#008268] transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Save className="w-4 h-4" />
-                                {isSubmitting ? 'Menyimpan...' : 'Simpan Penugasan'}
+                                {isSubmitting ? t('admin_technician.form_modal.btn_save').split(' ')[0] + '...' : t('admin_technician.detail_modal.btn_save_assign', 'Simpan Penugasan')}
                             </button>
                         </div>
                     </div>
@@ -1885,7 +1895,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     <div className="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
                         <div className="px-6 py-5 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Edit3 className="w-6 h-6" /> Edit Data Teknisi
+                                <Edit3 className="w-6 h-6" /> {t('admin_technician.form_modal.title_edit')}
                             </h2>
                             <button onClick={() => setIsEditModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
                                 <X className="w-5 h-5 text-white" />
@@ -1899,11 +1909,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                                         <Mail className="w-4 h-4" />
                                     </div>
-                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Akun & Kontak</h3>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_account')}</h3>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase">Nama Teknisi</label>
+                                        <label className="text-xs font-bold text-gray-400 uppercase">{t('admin_technician.form_modal.lbl_name')}</label>
                                         <input
                                             name="name"
                                             value={formData.name}
@@ -1914,7 +1924,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
+                                        <label className="text-xs font-bold text-gray-400 uppercase">{t('admin_technician.form_modal.lbl_email')}</label>
                                         <input
                                             name="email"
                                             value={formData.email}
@@ -1925,7 +1935,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase">Nomor Telepon</label>
+                                        <label className="text-xs font-bold text-gray-400 uppercase">{t('admin_technician.form_modal.lbl_phone')}</label>
                                         <input
                                             name="phone"
                                             value={formData.phone}
@@ -1936,7 +1946,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase">Password</label>
+                                        <label className="text-xs font-bold text-gray-400 uppercase">{t('admin_technician.form_modal.lbl_password')}</label>
                                         <input
                                             name="password"
                                             value="••••••••"
@@ -1946,7 +1956,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase">Alamat</label>
+                                        <label className="text-xs font-bold text-gray-400 uppercase">{t('admin_technician.form_modal.lbl_address')}</label>
                                         <textarea
                                             name="address"
                                             value={formData.address}
@@ -1965,11 +1975,11 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                                         <Briefcase className="w-4 h-4" />
                                     </div>
-                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Informasi Profesional</h3>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_professional')}</h3>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Posisi <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_position')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="position"
                                             value={formData.position}
@@ -1980,7 +1990,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Pengalaman (Tahun) <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_experience')} <span className="text-red-500">*</span></label>
                                         <input
                                             name="experience"
                                             value={formData.experience}
@@ -1991,7 +2001,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Spesialisasi (Pilih yang sesuai) <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_specialization')} <span className="text-red-500">*</span></label>
                                         <div className="flex flex-wrap gap-2">
                                             {SPECIFICATION_OPTIONS.map(spec => {
                                                 const isSelected = formData.specializations.includes(spec);
@@ -2013,7 +2023,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                         </div>
                                     </div>
                                     <div className="space-y-2 relative">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Wilayah Kerja Standar <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_work_region')} <span className="text-red-500">*</span></label>
                                         <div className="relative group">
                                             <button
                                                 type="button"
@@ -2021,7 +2031,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
                                             >
                                                 <span className={formData.workArea ? 'text-gray-800 font-semibold' : 'text-gray-400'}>
-                                                    {formData.workArea || 'Pilih Kota'}
+                                                    {formData.workArea ? t(`admin_technician.form_modal.opt_city_${formData.workArea === 'Lainnya' ? 'other' : formData.workArea.toLowerCase()}`, formData.workArea) : t('admin_technician.form_modal.lbl_select_city')}
                                                 </span>
                                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
                                             </button>
@@ -2030,27 +2040,30 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <>
                                                     <div className="fixed inset-0 z-[700]" onClick={() => setIsWorkAreaDropdownOpen(false)}></div>
                                                     <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
-                                                        {Object.keys(CITY_AREAS).map(city => (
-                                                            <button
-                                                                key={city}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    handleCityChange({ target: { value: city } });
-                                                                    setIsWorkAreaDropdownOpen(false);
-                                                                }}
-                                                                className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
-                                                            >
-                                                                {city}
-                                                                {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
-                                                            </button>
-                                                        ))}
+                                                        {Object.keys(CITY_AREAS).map(city => {
+                                                            const cityKey = city === 'Lainnya' ? 'opt_city_other' : `opt_city_${city.toLowerCase()}`;
+                                                            return (
+                                                                <button
+                                                                    key={city}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        handleCityChange({ target: { value: city } });
+                                                                        setIsWorkAreaDropdownOpen(false);
+                                                                    }}
+                                                                    className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                                >
+                                                                    {t(`admin_technician.form_modal.${cityKey}`, city)}
+                                                                    {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </>
                                             )}
                                         </div>
                                     </div>
                                     <div className="space-y-2 relative">
-                                        <label className="text-xs font-bold text-gray-500 uppercase">Status Teknisi <span className="text-red-500">*</span></label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">{t('admin_technician.form_modal.lbl_status')} <span className="text-red-500">*</span></label>
                                         <div className="relative">
                                             <button
                                                 type="button"
@@ -2060,7 +2073,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <div className="flex items-center gap-2">
                                                     <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                                                     <span className="text-gray-800 font-semibold uppercase tracking-wider">
-                                                        {formData.status}
+                                                        {formData.status === 'aktif' ? t('admin_technician.form_modal.status_active') : t('admin_technician.form_modal.status_inactive')}
                                                     </span>
                                                 </div>
                                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
@@ -2097,7 +2110,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
                                     <div className="sm:col-span-2 space-y-3">
                                         <label className="text-xs font-bold text-gray-500 uppercase">
-                                            Area Coverage Detail (Pilih Wilayah di {formData.workArea || 'Kota Selected'}) <span className="text-red-500">*</span>
+                                            {t('admin_technician.form_modal.lbl_area_coverage', { city: formData.workArea || 'Selected City' })} <span className="text-red-500">*</span>
                                         </label>
                                         <div className="flex flex-wrap gap-2">
                                             {formData.workArea ? (
@@ -2134,29 +2147,32 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
                                         <Clock className="w-4 h-4" />
                                     </div>
-                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Jadwal Kerja</h3>
+                                    <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_schedule')}</h3>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                                    {Object.entries(formData.workSchedule).map(([day, hours]) => (
-                                        <div key={day} className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase">{day}</label>
-                                            <input
-                                                type="text"
-                                                value={hours}
-                                                onChange={(e) => handleScheduleChange(day, e.target.value)}
-                                                className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium"
-                                                placeholder="08:00 - 17:00"
-                                            />
-                                        </div>
-                                    ))}
+                                    {Object.entries(formData.workSchedule).map(([day, hours]) => {
+                                        const dayKey = `day_${day.toLowerCase().replace('senin', 'monday').replace('selasa', 'tuesday').replace('rabu', 'wednesday').replace('kamis', 'thursday').replace('jumat', 'friday').replace('sabtu', 'saturday').replace('minggu', 'sunday')}`;
+                                        return (
+                                            <div key={day} className="space-y-1.5">
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase">{t(`admin_technician.form_modal.${dayKey}`, day)}</label>
+                                                <input
+                                                    type="text"
+                                                    value={hours}
+                                                    onChange={(e) => handleScheduleChange(day, e.target.value)}
+                                                    className="w-full px-2 py-1.5 bg-white border border-gray-100 rounded-lg text-[11px] focus:outline-none focus:border-purple-500 transition-all font-medium"
+                                                    placeholder="08:00 - 17:00"
+                                                />
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-4 pt-4 shrink-0">
-                                <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">Batal</button>
+                                <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">{t('admin_technician.form_modal.btn_cancel')}</button>
                                 <button onClick={handleSaveEdit} disabled={isSubmitting} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
-                                    {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+                                    {isSubmitting ? t('admin_technician.form_modal.btn_save').split(' ')[0] + '...' : t('admin_technician.form_modal.btn_save')}
                                 </button>
                             </div>
                         </div>
@@ -2170,7 +2186,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
                         <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Trash2 className="w-6 h-6" /> Hapus Teknisi
+                                <Trash2 className="w-6 h-6" /> {t('admin_technician.delete_modal.title')}
                             </h2>
                             <button onClick={() => setIsDeleteModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all">
                                 <X className="w-5 h-5" />
@@ -2178,7 +2194,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         </div>
                         <div className="p-8 space-y-6 overflow-y-auto">
                             <div className="bg-red-50/50 p-5 rounded-2xl">
-                                <p className="text-sm font-medium text-gray-600 mb-2">Anda akan menghapus teknisi/karyawan:</p>
+                                <p className="text-sm font-medium text-gray-600 mb-2">{t('admin_technician.delete_modal.desc')}</p>
                                 <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedTechnician.name}</h3>
                                 <p className="text-sm text-gray-500">ID: {selectedTechnician.id} • {selectedTechnician.email}</p>
                                 {selectedTechnician.deletionRequest?.status === 'pending' && (
@@ -2188,29 +2204,29 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                             <div className="bg-red-50 border border-red-100 p-5 rounded-2xl">
                                 <h4 className="flex items-center gap-2 text-sm font-bold text-red-600 mb-3">
-                                    <AlertCircle className="w-5 h-5" /> Peringatan!
+                                    <AlertCircle className="w-5 h-5" /> {t('admin_technician.delete_modal.warning_title')}
                                 </h4>
                                 <ul className="list-disc list-outside space-y-2 text-xs font-medium text-red-700/80 ml-4">
-                                    <li>Setelah disetujui Project Owner, proses penghapusan bersifat final dan tidak dapat dibatalkan</li>
-                                    <li>Seluruh jadwal delegasi pelanggan teknisi ini akan dialokasikan menjadi "Unassigned"</li>
-                                    <li>Riwayat pekerjaan teknisi tetap disimpan secara historis dengan label "(Dihapus)"</li>
-                                    <li>Akses teknisi ke aplikasi mobile BIEON akan ditutup sepenuhnya</li>
+                                    <li>{t('admin_technician.delete_modal.warning_1')}</li>
+                                    <li>{t('admin_technician.delete_modal.warning_2')}</li>
+                                    <li>{t('admin_technician.delete_modal.warning_3')}</li>
+                                    <li>{t('admin_technician.delete_modal.warning_4')}</li>
                                 </ul>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-900">Alasan Penghapusan <span className="text-red-500">*</span></label>
+                                <label className="text-sm font-bold text-gray-900">{t('admin_technician.delete_modal.lbl_reason')} <span className="text-red-500">*</span></label>
                                 <textarea
                                     rows="3"
                                     value={deleteReason}
                                     onChange={(e) => setDeleteReason(e.target.value)}
-                                    placeholder="Masukkan alasan mengapa akun teknisi ini perlu dihapus..."
+                                    placeholder={t('admin_technician.delete_modal.placeholder_reason')}
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all shadow-sm"
                                 ></textarea>
                             </div>
 
                             <p className="text-[11px] font-medium text-gray-500">
-                                * Form ini akan dikirimkan ke Project Owner untuk persetujuan dan akan disimpan dalam laporan mutasi.
+                                {t('admin_technician.delete_modal.help_text')}
                             </p>
                         </div>
 
@@ -2219,7 +2235,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 onClick={() => setIsDeleteModalOpen(false)}
                                 className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm"
                             >
-                                Batal
+                                {t('admin_technician.form_modal.btn_cancel')}
                             </button>
                             <button
                                 onClick={confirmDeleteTechnician}
@@ -2229,7 +2245,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     : 'bg-[#fca5a5] cursor-not-allowed shadow-none opacity-80'
                                     }`}
                             >
-                                {isSubmitting ? 'Menghapus...' : 'Ya, Hapus Teknisi'}
+                                {isSubmitting ? t('admin_technician.delete_modal.btn_submit').split(' ')[2] + '...' : t('admin_technician.delete_modal.btn_submit')}
                             </button>
                         </div>
                     </div>

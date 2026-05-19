@@ -41,17 +41,25 @@ exports.createComplaint = async (req, res) => {
             owner: userId,
             category: 'Pengaduan',
             title: 'Pengaduan Terkirim',
+            messageKey: 'notification.homeowner.complaint_submitted',
+            metadata: { topic },
             message: `Tiket pengaduan "${topic}" Anda berhasil dibuat. Mohon tunggu respon admin.`,
             type: 'Info',
             link: 'pengaduan'
         });
 
-        // 2. Notif untuk Semua Admin (Cari yang mengandung kata 'admin' secara case-insensitive)
+        // 2. Notif untuk Semua Admin
         const admins = await User.find({ role: { $regex: /admin/i } });
         const adminAlerts = admins.map(admin => ({
             owner: admin._id,
             category: 'Pengaduan',
             title: 'Tiket Pengaduan Baru',
+            messageKey: 'notification.admin.new_complaint',
+            metadata: { 
+                senderName: sender?.fullName || 'User',
+                bieonId: req.body.bieonId || 'BIEON ID',
+                topic 
+            },
             message: `Ada pengaduan baru dari ${sender?.fullName || 'User'}. Hub: ${req.body.bieonId || 'BIEON ID'}. Topik: ${topic}`,
             type: 'Warning',
             link: 'admin-complaint'
@@ -325,6 +333,8 @@ exports.updateComplaintStatus = async (req, res) => {
                 owner: complaint.homeowner,
                 category: 'Pengaduan',
                 title: 'Perbaikan Selesai',
+                messageKey: 'notification.homeowner.ticket_completed',
+                metadata: { topic: complaint.topic },
                 message: `Teknisi telah menyelesaikan perbaikan tiket "${complaint.topic}". Silakan konfirmasi dan beri penilaian.`,
                 type: 'Success',
                 link: 'pengaduan'
@@ -351,6 +361,11 @@ exports.updateComplaintStatus = async (req, res) => {
                     owner: complaint.technician,
                     category: 'Pengaduan',
                     title: 'Pekerjaan Selesai',
+                    messageKey: 'notification.technician.ticket_finished',
+                    metadata: { 
+                        topic: complaint.topic, 
+                        stars: rating?.stars || 0 
+                    },
                     message: `Tiket "${complaint.topic}" telah selesai. Anda mendapat rating ${rating?.stars || 0}★.`,
                     type: 'Success',
                     link: 'pengaduan'
@@ -363,6 +378,12 @@ exports.updateComplaintStatus = async (req, res) => {
                 owner: admin._id,
                 category: 'Pengaduan',
                 title: 'Tiket Selesai (Feedback)',
+                messageKey: 'notification.admin.ticket_feedback',
+                metadata: { 
+                    topic: complaint.topic, 
+                    stars: rating?.stars || 0,
+                    review: rating?.review || '-'
+                },
                 message: `Tiket "${complaint.topic}" selesai. Rating: ${rating?.stars || 0}★. Ulasan: ${rating?.review || '-'}`,
                 type: 'Info',
                 link: 'admin-complaint'
@@ -383,6 +404,11 @@ exports.updateComplaintStatus = async (req, res) => {
                     owner: complaint.homeowner,
                     category: 'Pengaduan',
                     title: 'Pengaduan Ditolak',
+                    messageKey: 'notification.homeowner.ticket_rejected',
+                    metadata: { 
+                        topic: complaint.topic,
+                        reason: note || 'Tidak disebutkan.'
+                    },
                     message: `Maaf, pengaduan "${complaint.topic}" Anda ditolak. Alasan: ${note || 'Tidak disebutkan.'}`,
                     type: 'Danger',
                     link: 'pengaduan'
@@ -397,6 +423,8 @@ exports.updateComplaintStatus = async (req, res) => {
                     owner: admin._id,
                     category: 'Pengaduan',
                     title: 'Tiket Dibatalkan',
+                    messageKey: 'notification.admin.ticket_cancelled',
+                    metadata: { topic: complaint.topic },
                     message: `Tiket "${complaint.topic}" telah dibatalkan oleh pelanggan.`,
                     type: 'Info',
                     link: 'admin-complaint'
@@ -409,6 +437,8 @@ exports.updateComplaintStatus = async (req, res) => {
                         owner: complaint.technician,
                         category: 'Pengaduan',
                         title: 'Tiket Dibatalkan',
+                        messageKey: 'notification.technician.ticket_cancelled',
+                        metadata: { topic: complaint.topic },
                         message: `Tiket "${complaint.topic}" yang Anda tangani telah dibatalkan oleh pelanggan.`,
                         type: 'Warning',
                         link: 'pengaduan'
@@ -601,6 +631,8 @@ exports.assignTechnician = async (req, res) => {
                 owner: technicianId,
                 category: 'Pengaduan',
                 title: 'Tugas Perbaikan Baru',
+                messageKey: 'notification.technician.new_ticket_assigned',
+                metadata: { ticketId: complaint.topic }, // Menggunakan topic sebagai identitas di notif
                 message: `Anda ditugaskan untuk menangani pengaduan: "${complaint.topic}". Segera cek detail tugas.`,
                 type: 'Info',
                 link: 'pengaduan'
@@ -619,8 +651,13 @@ exports.assignTechnician = async (req, res) => {
                 owner: complaint.homeowner,
                 category: 'Pengaduan',
                 title: 'Teknisi Ditugaskan',
-                message: `Teknisi ${newTech.fullName} telah ditugaskan untuk menangani pengaduan Anda.`,
-                type: 'Success',
+                messageKey: 'notification.homeowner.ticket_assigned',
+                metadata: { 
+                    topic: complaint.topic,
+                    technicianName: newTech.fullName 
+                },
+                message: `Tiket pengaduan "${complaint.topic}" Anda telah ditugaskan ke teknisi ${newTech.fullName}.`,
+                type: 'Info',
                 link: 'pengaduan'
             });
         }

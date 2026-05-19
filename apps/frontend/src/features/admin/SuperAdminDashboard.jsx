@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
@@ -49,18 +50,13 @@ import {
   Cell
 } from 'recharts';
 
-const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-const createMonthlyChartData = (values = []) => MONTH_LABELS.map((name, index) => ({
-  name,
-  value: values?.[index] || 0,
-}));
 
-const createCustomerStatusLabel = (status) => {
+const createCustomerStatusLabel = (status, t) => {
   const s = status?.toLowerCase() || 'aktif';
-  if (s === 'nonaktif') return 'Nonaktif';
-  if (s === 'warning') return 'Perhatian';
-  return 'Aktif';
+  if (s === 'nonaktif') return t('admin_dashboard.metrics.inactive');
+  if (s === 'warning') return t('admin_dashboard.metrics.warning');
+  return t('admin_dashboard.metrics.active');
 };
 
 // Refined Custom 3D Bar Component to match user's image exactly
@@ -117,6 +113,20 @@ const ThreeDBar = (props) => {
 import { SuperAdminLayout } from './SuperAdminLayout';
 
 export default function SuperAdminDashboard({ onNavigate }) {
+  const { t, i18n } = useTranslation();
+
+  // Dynamic month labels based on current language
+  const MONTH_LABELS = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      return new Intl.DateTimeFormat(i18n.language, { month: 'short' }).format(new Date(2024, i, 1));
+    });
+  }, [i18n.language]);
+
+  const createMonthlyChartData = (values = []) => MONTH_LABELS.map((name, index) => ({
+    name,
+    value: values?.[index] || 0,
+  }));
+
   // Dashboard metrics states
   const [metrics, setMetrics] = useState({
     totalHubs: 0,
@@ -142,7 +152,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
   // Other states
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Semua Status');
+  const [statusFilter, setStatusFilter] = useState('all'); // Store key instead of string
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showPlnModal, setShowPlnModal] = useState(false);
   const [plnTariff, setPlnTariff] = useState(1445);
@@ -223,7 +233,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
           name: homeowner.fullName,
           username: homeowner.username || '-',
           email: homeowner.email,
-          status: createCustomerStatusLabel(homeowner.status),
+          rawStatus: homeowner.status?.toLowerCase() || 'aktif',
+          status: createCustomerStatusLabel(homeowner.status, t),
           bieonId: homeowner.bieonId || '-',
           totalHubs: homeowner.totalHubs || 0,
           devices: homeowner.totalDevices || 0,
@@ -324,7 +335,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
     autoTable(doc, {
       head: [columns],
       body: data,
-      foot: isNumericData ? [['TOTAL KESELURUHAN', total]] : null,
+      foot: isNumericData ? [[t('admin_dashboard.export.footer_total'), total]] : null,
       startY: 25,
       styles: { fontSize: 9 },
       headStyles: { fillStyle: 'f', fillColor: [0, 155, 124], textColor: 255 },
@@ -363,13 +374,22 @@ export default function SuperAdminDashboard({ onNavigate }) {
     return acc;
   }, {});
 
-  const filteredCustomers = homeowners.filter(cust => {
-    const matchesSearch = cust.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cust.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cust.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'Semua Status' || cust.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredCustomers = useMemo(() => {
+    return homeowners.filter(cust => {
+      const matchesSearch =
+        cust.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cust.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cust.bieonId.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'aktif' && cust.rawStatus === 'aktif') ||
+        (statusFilter === 'warning' && cust.rawStatus === 'warning') ||
+        (statusFilter === 'nonaktif' && cust.rawStatus === 'nonaktif');
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [homeowners, searchQuery, statusFilter]);
 
   const totalItems = filteredCustomers.length;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
@@ -404,21 +424,21 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
                   {homeownersLoading ? '-' : totalHomeownersCount}
                 </h3>
-                <p className="text-white/90 text-sm font-medium">Total Pelanggan</p>
+                <p className="text-white/90 text-sm font-medium">{t('admin_dashboard.metrics.total_customers')}</p>
               </div>
             </div>
             <div className="mt-4">
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 grid grid-cols-3 gap-2">
                 <div className="text-center border-r border-white/10 last:border-0">
-                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">Aktif</p>
+                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">{t('admin_dashboard.metrics.active')}</p>
                   <p className="text-sm font-black text-white">{homeownersLoading ? '-' : activeHomeownersCount}</p>
                 </div>
                 <div className="text-center border-r border-white/10 last:border-0">
-                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">Perhatian</p>
+                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">{t('admin_dashboard.metrics.warning')}</p>
                   <p className="text-sm font-black text-yellow-300">{homeownersLoading ? '-' : warningHomeownersCount}</p>
                 </div>
                 <div className="text-center last:border-0">
-                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">Nonaktif</p>
+                  <p className="text-[10px] font-bold text-white/60 uppercase tracking-tighter mb-0.5">{t('admin_dashboard.metrics.inactive')}</p>
                   <p className="text-sm font-black text-red-300">{homeownersLoading ? '-' : inactiveHomeownersCount}</p>
                 </div>
               </div>
@@ -434,13 +454,13 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
                   {metricsLoading ? '-' : metrics.totalHubs}
                 </h3>
-                <p className="text-white/90 text-sm font-medium">BIEON Nodes</p>
+                <p className="text-white/90 text-sm font-medium">{t('admin_dashboard.metrics.bieon_nodes')}</p>
               </div>
             </div>
             <div className="mt-4">
               <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl inline-flex items-center gap-2 text-xs font-medium">
                 {metrics.hubTrend >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {metrics.hubTrend >= 0 ? '+' : ''}{metrics.hubTrend}% dari bulan lalu
+                {metrics.hubTrend >= 0 ? '+' : ''}{t('admin_dashboard.metrics.trend_monthly', { percent: metrics.hubTrend })}
               </div>
             </div>
           </div>
@@ -454,13 +474,13 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
                   {metricsLoading ? '-' : metrics.totalDevices}
                 </h3>
-                <p className="text-white/90 text-sm font-medium">Smart Devices</p>
+                <p className="text-white/90 text-sm font-medium">{t('admin_dashboard.metrics.smart_devices')}</p>
               </div>
             </div>
             <div className="mt-4">
               <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl inline-flex items-center gap-2 text-xs font-medium">
                 {metrics.deviceTrend >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {metrics.deviceTrend >= 0 ? '+' : ''}{metrics.deviceTrend}% dari bulan lalu
+                {metrics.deviceTrend >= 0 ? '+' : ''}{t('admin_dashboard.metrics.trend_monthly', { percent: metrics.deviceTrend })}
               </div>
             </div>
           </div>
@@ -474,12 +494,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2 ml-4">
                   {metricsLoading ? '-' : metrics.totalComplaints}
                 </h3>
-                <p className="text-white/90 text-sm font-medium">Total Pengaduan</p>
+                <p className="text-white/90 text-sm font-medium">{t('admin_dashboard.metrics.total_complaints')}</p>
               </div>
             </div>
             <div className="mt-4">
               <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-xl inline-flex items-center gap-2 text-xs font-medium text-white">
-                <AlertCircle className="w-4 h-4" /> {metricsLoading ? '-' : metrics.pendingComplaints} sistem butuh perhatian
+                <AlertCircle className="w-4 h-4" /> {t('admin_dashboard.metrics.pending_alert', { count: metricsLoading ? '-' : metrics.pendingComplaints })}
               </div>
             </div>
           </div>
@@ -495,9 +515,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-white rounded-full animate-pulse"></span>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Live</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('admin_dashboard.metrics.live_status')}</p>
                 <div className="flex items-center gap-1 text-emerald-500 font-bold text-xs justify-end">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> Online
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div> {t('admin_dashboard.metrics.online')}
                 </div>
               </div>
             </div>
@@ -506,10 +526,10 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <h3 className="text-4xl font-black text-gray-900 tracking-tight">
                 {metricsLoading ? '-' : metrics.activeTechnicians || 0}
               </h3>
-              <p className="text-sm font-bold text-gray-500 mt-1">Teknisi Aktif</p>
+              <p className="text-sm font-bold text-gray-500 mt-1">{t('admin_dashboard.metrics.active_technicians')}</p>
               <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-xl w-fit">
                 <TrendingUp className="w-3 h-3 text-emerald-500" />
-                {metricsLoading ? '-' : `TOTAL ${metrics.totalTechnicians || 0}`}
+                {metricsLoading ? '-' : t('admin_dashboard.metrics.total_count', { count: metrics.totalTechnicians || 0 })}
               </div>
             </div>
 
@@ -517,7 +537,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
               onClick={() => onNavigate && onNavigate('admin-teknisi')}
               className="mt-8 w-full py-3 bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 font-bold rounded-2xl text-xs transition-all border border-transparent hover:border-emerald-100 flex items-center justify-center gap-2"
             >
-              Manajemen Teknisi <ChevronRight className="w-4 h-4" />
+              {t('admin_dashboard.metrics.btn_manage_tech')} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -529,12 +549,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <Zap className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-gray-900">Sistem Tarif PLN</h3>
+                  <h3 className="text-2xl font-black text-gray-900">{t('admin_dashboard.tariff_summary.title')}</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <p className="text-sm font-medium text-gray-500">Monitoring kategori golongan listrik</p>
+                    <p className="text-sm font-medium text-gray-500">{t('admin_dashboard.tariff_summary.subtitle')}</p>
                     {plnSummary?.latestUpdate && (
                       <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100">
-                        <CheckCircle className="w-3 h-3" /> Updated: {plnSummary.latestUpdate.date}
+                        <CheckCircle className="w-3 h-3" /> {t('admin_dashboard.tariff_summary.updated', { date: plnSummary.latestUpdate.date })}
                       </span>
                     )}
                   </div>
@@ -544,7 +564,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-1 rounded-2xl shadow-xl">
                 <div className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-xl border border-white/10 flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest leading-none mb-1">Total Kategori</p>
+                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest leading-none mb-1">{t('admin_dashboard.tariff_summary.total_categories')}</p>
                     <p className="text-2xl font-black text-white leading-none">
                       {plnCategoriesLoading ? '-' : plnCategories.length}
                     </p>
@@ -559,14 +579,19 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
               {PLN_SEGMENT_ORDER.map((seg) => (
-                <div key={seg} className="relative group/item">
-                  <div className="h-full flex flex-col bg-gray-50/50 hover:bg-white border border-gray-100 hover:border-orange-200 rounded-2xl p-5 transition-all hover:shadow-md">
+                <div key={seg} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col min-h-[160px]">
+                  <div className="flex-1">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 line-clamp-2 min-h-[2.5em]">
-                      {seg}
+                      {seg === 'Subsidi Rumah Tangga' ? t('admin_dashboard.pln_segments.subsidy') :
+                        seg === 'Rumah Tangga' ? t('admin_dashboard.pln_segments.residential') :
+                          seg === 'Bisnis' ? t('admin_dashboard.pln_segments.business') :
+                            seg === 'Industri' ? t('admin_dashboard.pln_segments.industrial') :
+                              seg === 'Pemerintah & PJU' ? t('admin_dashboard.pln_segments.government') :
+                                seg === 'Pelayanan Sosial' ? t('admin_dashboard.pln_segments.social') : seg}
                     </p>
                     <div className="flex items-baseline gap-1 mt-auto">
                       <span className="text-2xl font-black text-gray-800">{plnSegmentCounts[seg] || 0}</span>
-                      <span className="text-[10px] font-bold text-gray-400">GOLONGAN</span>
+                      <span className="text-[10px] font-bold text-gray-400">{t('admin_dashboard.tariff_summary.group_suffix', { count: '' })}</span>
                     </div>
                   </div>
                 </div>
@@ -578,7 +603,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 onClick={() => setShowPlnCategoriesModal(true)}
                 className="px-6 py-4 bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-2xl text-sm flex items-center justify-center gap-3 transition-all border border-gray-200 hover:border-gray-300"
               >
-                <Eye className="w-5 h-5 text-gray-400" /> Lihat Struktur Golongan
+                <Eye className="w-5 h-5 text-gray-400" /> {t('admin_dashboard.tariff_summary.btn_view_structure')}
               </button>
               <button
                 onClick={() => onNavigate && onNavigate('admin-tariff')}
@@ -587,11 +612,11 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-2">
                     <Settings className="w-5 h-5" />
-                    <span>Kelola Tarif & Golongan</span>
+                    <span>{t('admin_dashboard.tariff_summary.btn_manage_tariff')}</span>
                   </div>
                   {plnSummary?.latestUpdate && (
                     <span className="text-[9px] opacity-70 font-medium mt-0.5">
-                      Terakhir: {plnSummary.latestUpdate.category} (Rp {plnSummary.latestUpdate.tariff})
+                      {t('admin_dashboard.tariff_summary.last_update', { type: plnSummary.latestUpdate.category, price: `Rp ${plnSummary.latestUpdate.tariff}` })}
                     </span>
                   )}
                 </div>
@@ -610,14 +635,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <Box className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Jumlah Instalasi BIEON</h3>
-                  <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
+                  <h3 className="text-xl font-bold text-gray-800">{t('admin_dashboard.charts.bieon_installation_title')}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{t('admin_dashboard.charts.bieon_installation_sub')}</p>
                 </div>
               </div>
               <button
                 type="button"
                 title="Export PDF"
-                onClick={() => handleDownloadPDF("Laporan Instalasi BIEON", ["Bulan", "Jumlah"], metrics.monthlyInstalasi.map((v, i) => [MONTH_LABELS[i], v]), "Instalasi_BIEON")}
+                onClick={() => handleDownloadPDF(t('admin_dashboard.charts.bieon_installation_title'), [t('admin_dashboard.export.col_month'), t('admin_dashboard.export.col_amount')], metrics.monthlyInstalasi.map((v, i) => [MONTH_LABELS[i], v]), t('admin_dashboard.export.filename_installation'))}
                 className="p-3 bg-white border border-emerald-100 text-[#009b7c] hover:bg-emerald-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
                 <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -650,14 +675,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <Activity className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Jumlah Hub Node</h3>
-                  <p className="text-sm text-gray-600 mt-1">Per bulan dalam 1 tahun</p>
+                  <h3 className="text-xl font-bold text-gray-800">{t('admin_dashboard.charts.hub_node_title')}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{t('admin_dashboard.charts.hub_node_sub')}</p>
                 </div>
               </div>
               <button
                 type="button"
                 title="Export PDF"
-                onClick={() => handleDownloadPDF("Laporan Hub Node BIEON", ["Bulan", "Jumlah"], metrics.monthlyHubs.map((v, i) => [MONTH_LABELS[i], v]), "Hub_Node_BIEON")}
+                onClick={() => handleDownloadPDF(t('admin_dashboard.charts.hub_node_title'), [t('admin_dashboard.export.col_month'), t('admin_dashboard.export.col_amount')], metrics.monthlyHubs.map((v, i) => [MONTH_LABELS[i], v]), t('admin_dashboard.export.filename_hub'))}
                 className="p-3 bg-white border border-teal-100 text-teal-600 hover:bg-teal-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
                 <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -690,14 +715,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <Monitor className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Jumlah Smart Device</h3>
-                  <p className="text-sm text-gray-600 mt-1">per bulan dalam 1 tahun</p>
+                  <h3 className="text-xl font-bold text-gray-800">{t('admin_dashboard.charts.smart_device_title')}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{t('admin_dashboard.charts.smart_device_sub')}</p>
                 </div>
               </div>
               <button
                 type="button"
                 title="Export PDF"
-                onClick={() => handleDownloadPDF("Laporan Smart Device BIEON", ["Bulan", "Jumlah"], metrics.monthlyDevices.map((v, i) => [MONTH_LABELS[i], v]), "Smart_Device_BIEON")}
+                onClick={() => handleDownloadPDF(t('admin_dashboard.charts.smart_device_title'), [t('admin_dashboard.export.col_month'), t('admin_dashboard.export.col_amount')], metrics.monthlyDevices.map((v, i) => [MONTH_LABELS[i], v]), t('admin_dashboard.export.filename_device'))}
                 className="p-3 bg-white border border-blue-100 text-blue-600 hover:bg-blue-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
                 <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -734,14 +759,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Jumlah Pelanggan</h3>
-                  <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
+                  <h3 className="text-xl font-bold text-gray-800">{t('admin_dashboard.charts.customer_growth_title')}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{t('admin_dashboard.charts.customer_growth_sub')}</p>
                 </div>
               </div>
               <button
                 type="button"
                 title="Export PDF"
-                onClick={() => handleDownloadPDF("Laporan Pertumbuhan Pelanggan", ["Bulan", "Jumlah"], metrics.monthlyPelanggan.map((v, i) => [MONTH_LABELS[i], v]), "Data_Pelanggan")}
+                onClick={() => handleDownloadPDF(t('admin_dashboard.charts.customer_growth_title'), [t('admin_dashboard.export.col_month'), t('admin_dashboard.export.col_amount')], metrics.monthlyPelanggan.map((v, i) => [MONTH_LABELS[i], v]), t('admin_dashboard.export.filename_customer'))}
                 className="p-3 bg-white border border-purple-100 text-purple-600 hover:bg-purple-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
                 <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -774,14 +799,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <User className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Jumlah Teknisi</h3>
-                  <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
+                  <h3 className="text-xl font-bold text-gray-800">{t('admin_dashboard.charts.tech_growth_title')}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{t('admin_dashboard.charts.tech_growth_sub')}</p>
                 </div>
               </div>
               <button
                 type="button"
                 title="Export PDF"
-                onClick={() => handleDownloadPDF("Laporan Penambahan Teknisi", ["Bulan", "Jumlah"], metrics.monthlyTechnicians.map((v, i) => [MONTH_LABELS[i], v]), "Data_Teknisi")}
+                onClick={() => handleDownloadPDF(t('admin_dashboard.charts.tech_growth_title'), [t('admin_dashboard.export.col_month'), t('admin_dashboard.export.col_amount')], metrics.monthlyTechnicians.map((v, i) => [MONTH_LABELS[i], v]), t('admin_dashboard.export.filename_tech'))}
                 className="p-3 bg-white border border-orange-100 text-orange-600 hover:bg-orange-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
                 <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -814,14 +839,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Jumlah Pengaduan Pelanggan</h3>
-                  <p className="text-sm text-gray-600 mt-1">Laporan per bulan</p>
+                  <h3 className="text-xl font-bold text-gray-800">{t('admin_dashboard.charts.complaint_growth_title')}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{t('admin_dashboard.charts.complaint_growth_sub')}</p>
                 </div>
               </div>
               <button
                 type="button"
                 title="Export PDF"
-                onClick={() => handleDownloadPDF("Laporan Pengaduan Pelanggan", ["Bulan", "Jumlah"], metrics.monthlyComplaints.map((v, i) => [MONTH_LABELS[i], v]), "Data_Pengaduan")}
+                onClick={() => handleDownloadPDF(t('admin_dashboard.charts.complaint_growth_title'), [t('admin_dashboard.export.col_month'), t('admin_dashboard.export.col_amount')], metrics.monthlyComplaints.map((v, i) => [MONTH_LABELS[i], v]), t('admin_dashboard.export.filename_complaint'))}
                 className="p-3 bg-white border border-red-100 text-red-600 hover:bg-red-50 rounded-2xl transition-all shadow-sm hover:shadow-md group active:scale-95"
               >
                 <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -849,7 +874,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
         <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 md:p-10 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-xl font-bold text-gray-800 tracking-tight">Daftar Pelanggan Terdaftar</h2>
+            <h2 className="text-xl font-bold text-gray-800 tracking-tight">{t('admin_dashboard.table.title')}</h2>
             <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative group col-span-2 md:w-64">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#009b7c] transition-colors" />
@@ -857,7 +882,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari pelanggan..."
+                  placeholder={t('admin_dashboard.table.search_placeholder')}
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#009b7c] focus:bg-white text-xs transition-all"
                 />
               </div>
@@ -868,7 +893,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 >
                   <div className="flex items-center gap-2">
                     <Filter className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#009b7c]" />
-                    <span>{statusFilter}</span>
+                    <span>
+                      {statusFilter === 'all' ? t('admin_dashboard.table.filter_all') :
+                        statusFilter === 'aktif' ? t('admin_dashboard.table.filter_active') :
+                          statusFilter === 'warning' ? t('admin_dashboard.table.filter_warning') :
+                            t('admin_dashboard.table.filter_inactive')}
+                    </span>
                   </div>
                   <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-300 ${showStatusDropdown ? 'rotate-180' : ''}`} />
                 </button>
@@ -877,20 +907,25 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowStatusDropdown(false)}></div>
                     <div className="absolute top-full left-0 mt-2 w-full min-w-[180px] bg-white rounded-2xl shadow-2xl border border-gray-50 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      {['Semua Status', 'Aktif', 'Warning', 'Nonaktif'].map((status) => (
+                      {[
+                        { key: 'all', label: t('admin_dashboard.table.filter_all') },
+                        { key: 'aktif', label: t('admin_dashboard.table.filter_active') },
+                        { key: 'warning', label: t('admin_dashboard.table.filter_warning') },
+                        { key: 'nonaktif', label: t('admin_dashboard.table.filter_inactive') }
+                      ].map((status) => (
                         <button
-                          key={status}
+                          key={status.key}
                           onClick={() => {
-                            setStatusFilter(status);
+                            setStatusFilter(status.key);
                             setShowStatusDropdown(false);
                           }}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${statusFilter === status
+                          className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${statusFilter === status.key
                             ? 'bg-[#009b7c] text-white shadow-lg shadow-emerald-100'
                             : 'text-gray-600 hover:bg-gray-50'
                             }`}
                         >
-                          {status}
-                          {statusFilter === status && <CheckCircle className="w-3.5 h-3.5" />}
+                          {status.label}
+                          {statusFilter === status.key && <CheckCircle className="w-3.5 h-3.5" />}
                         </button>
                       ))}
                     </div>
@@ -899,14 +934,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
               </div>
               <button
                 onClick={() => handleDownloadPDF(
-                  "Daftar Pelanggan Terdaftar BIEON",
-                  ["User ID", "Nama", "Username", "Email", "Status", "BIEON", "Devices", "Teknisi"],
+                  t('admin_dashboard.export.title_table'),
+                  [t('admin_dashboard.export.col_userid'), t('admin_dashboard.export.col_name'), t('admin_dashboard.export.col_username'), t('admin_dashboard.export.col_email'), t('admin_dashboard.export.col_status'), t('admin_dashboard.export.col_bieon'), t('admin_dashboard.export.col_devices'), t('admin_dashboard.export.col_technician')],
                   filteredCustomers.map(c => [c.id, c.name, c.username, c.email, c.status, c.bieonId, c.devices, c.technician]),
-                  "Daftar_Pelanggan"
+                  t('admin_dashboard.export.filename_table')
                 )}
                 className="flex items-center justify-center col-span-1 gap-2 px-6 py-3 bg-gradient-to-r from-[#009b7c] to-[#00c698] text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-100 hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 uppercase tracking-widest"
               >
-                <Download className="w-4 h-4" /> Export
+                <Download className="w-4 h-4" /> {t('admin_dashboard.table.btn_export')}
               </button>
             </div>
           </div>
@@ -915,12 +950,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
             <table className="w-full text-left min-w-[900px]">
               <thead className="bg-gray-50/80 text-gray-500">
                 <tr>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-left w-[25%]">Pelanggan</th>
-                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[15%]">ID BIEON</th>
-                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[15%]">Status Sistem</th>
-                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[15%]">Nodes / Devices</th>
-                  <th className="px-4 py-5 text-[10px] font-black uppercase tracking-widest text-left w-[20%]">Teknisi PJ</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-center w-[10%]">Aksi</th>
+                  <th className="px-8 py-5 text-[12px] font-black uppercase tracking-widest text-left w-[25%]">{t('admin_dashboard.table.col_customer')}</th>
+                  <th className="px-4 py-5 text-[12px] font-black uppercase tracking-widest text-center w-[15%]">{t('admin_dashboard.table.col_bieon_id')}</th>
+                  <th className="px-4 py-5 text-[12px] font-black uppercase tracking-widest text-center w-[15%]">{t('admin_dashboard.table.col_status')}</th>
+                  <th className="px-4 py-5 text-[12px] font-black uppercase tracking-widest text-center w-[15%]">{t('admin_dashboard.table.col_nodes_devices')}</th>
+                  <th className="px-4 py-5 text-[12px] font-black uppercase tracking-widest text-left w-[20%]">{t('admin_dashboard.table.col_tech')}</th>
+                  <th className="px-8 py-5 text-[12px] font-black uppercase tracking-widest text-center w-[10%]">{t('admin_dashboard.table.col_action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -945,17 +980,17 @@ export default function SuperAdminDashboard({ onNavigate }) {
                       </td>
                       <td className="px-4 py-5">
                         <div className="flex justify-center">
-                          <div className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black tracking-tight ${cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981] border border-[#10b981]/20' :
-                            cust.status === 'Perhatian' ? 'bg-[#FFF9E6] text-[#f59e0b] border border-[#f59e0b]/20' :
+                          <div className={`inline-flex items-center px-3 py-1.5 rounded-xl text-[10px] font-black tracking-tight ${cust.rawStatus === 'aktif' ? 'bg-[#EAFDF5] text-[#10b981] border border-[#10b981]/20' :
+                            cust.rawStatus === 'warning' ? 'bg-[#FFF9E6] text-[#f59e0b] border border-[#f59e0b]/20' :
                               'bg-[#FEF2F2] text-[#ef4444] border border-[#ef4444]/20'
                             }`}>
                             <span className="w-1.5 h-1.5 rounded-full mr-2 bg-current animate-pulse"></span>
-                            {cust.status === 'Perhatian' ? 'PERHATIAN' : cust.status.toUpperCase()}
+                            {cust.status.toUpperCase()}
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-5 text-center">
-                        <span className="text-xs font-black text-gray-900">{cust.totalHubs} Hub / {cust.devices} Dev</span>
+                        <span className="text-xs font-black text-gray-900">{t('admin_dashboard.table.val_format', { hub: cust.totalHubs, dev: cust.devices })}</span>
                       </td>
                       <td className="px-4 py-5">
                         <div className="flex flex-col gap-1">
@@ -969,11 +1004,11 @@ export default function SuperAdminDashboard({ onNavigate }) {
                             <div className="relative group/team inline-block w-fit">
                               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[9px] font-black tracking-tighter border border-blue-100 cursor-help transition-all hover:bg-blue-100">
                                 <Users className="w-2.5 h-2.5" />
-                                <span>+ {cust.fieldTeam.length} TIM LAPANGAN</span>
+                                <span>+ {cust.fieldTeam.length} {t('admin_dashboard.modals.sec_field_team').toUpperCase().replace(':', '')}</span>
                               </div>
                               {/* Tooltip on Hover */}
                               <div className="absolute bottom-full left-0 mb-2 w-max max-w-[200px] bg-gray-900 text-white text-[9px] p-2 rounded-lg opacity-0 invisible group-hover/team:opacity-100 group-hover/team:visible transition-all z-50 shadow-xl pointer-events-none">
-                                <p className="font-black border-b border-white/10 pb-1 mb-1 text-blue-400 uppercase tracking-widest">Tim Penanganan Aktif:</p>
+                                <p className="font-black border-b border-white/10 pb-1 mb-1 text-blue-400 uppercase tracking-widest">{t('admin_dashboard.modals.sec_field_team')}</p>
                                 <div className="space-y-1">
                                   {cust.fieldTeam.map((name, i) => (
                                     <div key={i} className="flex items-center gap-1.5">
@@ -1008,7 +1043,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 ) : (
                   <tr>
                     <td colSpan="8" className="px-6 py-12 text-center text-gray-500 text-sm font-medium">
-                      Tidak ada pelanggan yang cocok dengan pencarian Anda.
+                      {t('admin_dashboard.table.empty_msg')}
                     </td>
                   </tr>
                 )}
@@ -1026,8 +1061,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
                       <h3 className="text-sm font-bold text-gray-900">{cust.name}</h3>
                       <p className="text-xs text-gray-500">{cust.username}</p>
                     </div>
-                    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${cust.status === 'Aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
-                      cust.status === 'Warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
+                    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${cust.rawStatus === 'aktif' ? 'bg-[#EAFDF5] text-[#10b981]' :
+                      cust.rawStatus === 'warning' ? 'bg-[#FFF9E6] text-[#f59e0b]' :
                         'bg-[#FEF2F2] text-[#ef4444]'
                       }`}>
                       <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
@@ -1037,19 +1072,19 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
                   <div className="grid grid-cols-2 gap-4 text-xs border-y border-gray-50 py-3">
                     <div>
-                      <p className="text-gray-500 mb-0.5">User ID</p>
+                      <p className="text-gray-500 mb-0.5">{t('admin_dashboard.export.col_userid')}</p>
                       <p className="font-semibold text-gray-900">{cust.id}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 mb-0.5">ID BIEON / Email</p>
+                      <p className="text-gray-500 mb-0.5">{t('admin_dashboard.table.col_bieon_id')} / Email</p>
                       <p className="font-semibold text-gray-900 truncate">{cust.bieonId} • {cust.email}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 mb-0.5">Nodes / Devices</p>
-                      <p className="font-semibold text-gray-900">{cust.totalHubs} Hub / {cust.devices} Dev</p>
+                      <p className="text-gray-500 mb-0.5">{t('admin_dashboard.table.col_nodes_devices')}</p>
+                      <p className="font-semibold text-gray-900">{t('admin_dashboard.table.val_format', { hub: cust.totalHubs, dev: cust.devices })}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 mb-0.5">Teknisi PJ</p>
+                      <p className="text-gray-500 mb-0.5">{t('admin_dashboard.table.col_tech')}</p>
                       <p className="font-semibold text-gray-900 truncate">{cust.technician}</p>
                     </div>
                   </div>
@@ -1065,13 +1100,13 @@ export default function SuperAdminDashboard({ onNavigate }) {
                     }}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all"
                   >
-                    <Eye className="w-4 h-4" /> Detail Pelanggan
+                    <Eye className="w-4 h-4" /> {t('admin_homeowner.table.btn_detail', 'Detail Pelanggan')}
                   </button>
                 </div>
               ))
             ) : (
               <div className="px-6 py-12 text-center text-gray-500 text-sm font-medium">
-                Tidak ada pelanggan yang cocok dengan pencarian Anda.
+                {t('admin_dashboard.table.empty_msg')}
               </div>
             )}
           </div>
@@ -1079,7 +1114,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           <div className="p-6 md:p-8 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-100">
             {/* Rows Per Page - Left */}
             <div className="flex items-center gap-3 order-2 md:order-1">
-              <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Rows:</span>
+              <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">{t('admin_dashboard.table.rows_per_page')}</span>
               <div className="relative">
                 <button
                   onClick={() => setShowRowsDropdown(!showRowsDropdown)}
@@ -1108,7 +1143,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
             {/* Page Info - Center */}
             <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
-              <span className="md:hidden">rows </span>{totalItems > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + rowsPerPage, totalItems)} of {totalItems}<span className="hidden sm:inline"> items</span>
+              <span className="md:hidden">rows </span>{totalItems > 0 ? t('admin_dashboard.table.pagination_info', { start: startIndex + 1, end: Math.min(startIndex + rowsPerPage, totalItems), total: totalItems }) : 0}
             </div>
 
             {/* Pagination Controls - Right */}
@@ -1116,19 +1151,19 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(currentPage - 1)}
-                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-black text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
               >
                 <ChevronLeft className="w-4 h-4 md:hidden" />
-                <span className="hidden md:inline lg:hidden">Prev</span>
-                <span className="hidden lg:inline">Previous</span>
+                <span className="hidden md:inline lg:hidden">{t('history.previous', 'Sebelumnya')}</span>
+                <span className="hidden lg:inline">{t('history.previous', 'Sebelumnya')}</span>
               </button>
               <button
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(currentPage + 1)}
-                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
+                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-black text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
               >
-                <span className="hidden lg:inline">Next</span>
-                <span className="hidden md:inline lg:hidden">Next</span>
+                <span className="hidden lg:inline">{t('history.next', 'Selanjutnya')}</span>
+                <span className="hidden md:inline lg:hidden">{t('history.next', 'Selanjutnya')}</span>
                 <ChevronRight className="w-4 h-4 md:hidden" />
               </button>
             </div>
@@ -1154,8 +1189,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold tracking-tight">Update Tarif PLN</h2>
-                  <p className="text-white/80 font-medium text-xs mt-1">Konfigurasi Parameter Sistem</p>
+                  <h2 className="text-2xl font-bold tracking-tight">{t('admin_dashboard.modals.update_tariff_title')}</h2>
+                  <p className="text-white/80 font-medium text-xs mt-1">{t('admin_dashboard.modals.update_tariff_desc')}</p>
                 </div>
               </div>
             </div>
@@ -1163,15 +1198,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
             {/* Modal Body */}
             <div className="p-8 space-y-7">
               <div className="space-y-3">
-                <label className="text-sm font-semibold text-gray-700 ml-1">Tarif Saat Ini</label>
+                <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_dashboard.modals.lbl_current')}</label>
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex items-baseline gap-3 shadow-sm">
                   <div className="text-4xl font-bold text-gray-900 leading-none">Rp {plnTariff}</div>
-                  <p className="text-sm text-gray-500 font-medium">per kilowatt hour (kWh)</p>
+                  <p className="text-sm text-gray-500 font-medium">{t('admin_dashboard.modals.lbl_per_kwh')}</p>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-semibold text-gray-700 ml-1">Tarif Baru <span className="text-red-500">*</span></label>
+                <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_dashboard.modals.lbl_new')} <span className="text-red-500">*</span></label>
                 <div className="relative group">
                   <span className="absolute left-6 top-1/2 -translate-y-1/2 font-bold text-gray-400 text-xl group-focus-within:text-orange-500 transition-colors">Rp</span>
                   <input
@@ -1185,7 +1220,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <div className="flex items-start gap-2 px-1 pt-1">
                   <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                    Tarif ini akan diterapkan secara global untuk perhitungan estimasi biaya energi pada seluruh dashboard pelanggan.
+                    {t('admin_dashboard.modals.help_tariff')}
                   </p>
                 </div>
               </div>
@@ -1195,14 +1230,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   onClick={() => setShowPlnModal(false)}
                   className="w-full sm:flex-1 py-3.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all"
                 >
-                  Batal
+                  {t('admin_homeowner.form_modal.btn_cancel')}
                 </button>
                 <button
                   onClick={handleUpdateTariff}
                   className="w-full sm:flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-lg shadow-orange-100 hover:shadow-orange-200 transition-all flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5 flex-shrink-0" />
-                  <span className="whitespace-nowrap">Simpan Perubahan</span>
+                  <span className="whitespace-nowrap">{t('admin_dashboard.modals.btn_save')}</span>
                 </button>
               </div>
             </div>
@@ -1227,36 +1262,46 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   <Filter className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold tracking-tight">Daftar Golongan PLN</h2>
+                  <h2 className="text-2xl font-bold tracking-tight">{t('admin_dashboard.modals.cat_list_title')}</h2>
                   <p className="text-white/80 font-medium text-xs mt-1">
                     {plnCategoriesLoading
-                      ? 'Memuat...'
-                      : `${plnCategories.length} kategori tersedia`}
+                      ? '...'
+                      : t('admin_dashboard.modals.cat_list_count', { count: plnCategories.length })}
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="p-8 max-h-[70vh] overflow-y-auto modal-custom-scrollbar">
-              {PLN_SEGMENT_ORDER.filter((seg) => plnCategoriesGrouped[seg]?.length).map((seg) => (
-                <div key={seg} className="mb-6">
-                  <div className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-3">
-                    {seg} ({plnCategoriesGrouped[seg].length})
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {plnCategoriesGrouped[seg].map((cat) => (
-                      <div key={cat.key || cat.label} className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-                        <div className="text-sm font-extrabold text-gray-800 leading-snug">
-                          {cat.label}
+              {PLN_SEGMENT_ORDER.filter((seg) => plnCategoriesGrouped[seg]?.length).map((seg) => {
+                const localizedSeg =
+                  seg === 'Subsidi Rumah Tangga' ? t('admin_dashboard.pln_segments.subsidy') :
+                    seg === 'Rumah Tangga' ? t('admin_dashboard.pln_segments.residential') :
+                      seg === 'Bisnis' ? t('admin_dashboard.pln_segments.business') :
+                        seg === 'Industri' ? t('admin_dashboard.pln_segments.industrial') :
+                          seg === 'Pemerintah & PJU' ? t('admin_dashboard.pln_segments.government') :
+                            seg === 'Pelayanan Sosial' ? t('admin_dashboard.pln_segments.social') : seg;
+
+                return (
+                  <div key={seg} className="mb-6">
+                    <div className="text-[11px] font-black text-gray-500 uppercase tracking-widest mb-3">
+                      {localizedSeg} ({plnCategoriesGrouped[seg].length})
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {plnCategoriesGrouped[seg].map((cat) => (
+                        <div key={cat.key || cat.label} className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                          <div className="text-sm font-extrabold text-gray-800 leading-snug">
+                            {cat.label}
+                          </div>
+                          <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            {localizedSeg || t('admin_dashboard.pln_segments.others')}
+                          </div>
                         </div>
-                        <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                          {cat.segment || 'Lainnya'}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {Object.keys(plnCategoriesGrouped).filter((seg) => !PLN_SEGMENT_ORDER.includes(seg)).map((seg) => (
                 <div key={seg} className="mb-6">
@@ -1270,7 +1315,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                           {cat.label}
                         </div>
                         <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                          {cat.segment || 'Lainnya'}
+                          {seg || t('admin_dashboard.pln_segments.others')}
                         </div>
                       </div>
                     ))}
@@ -1284,7 +1329,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 onClick={() => setShowPlnCategoriesModal(false)}
                 className="px-5 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all"
               >
-                Tutup
+                {t('admin_dashboard.modals.btn_close')}
               </button>
             </div>
           </div>

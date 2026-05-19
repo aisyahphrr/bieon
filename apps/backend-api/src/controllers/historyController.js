@@ -291,7 +291,7 @@ exports.getEnergySummary = async (req, res) => {
         const logsYear = await EnergyLog.find(queryYearly);
 
         const monthlyData = Array(12).fill(0).map((_, i) => ({ 
-            month: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'][i],
+            month: ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'][i],
             kwh: 0, 
             cost: 0 
         }));
