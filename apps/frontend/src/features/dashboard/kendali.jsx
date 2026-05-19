@@ -139,28 +139,61 @@ export function DeviceControlPage({ onNavigate }) {
   const [activeConfigTarget, setActiveConfigTarget] = useState(null);
   const [isRemoteDetailView, setIsRemoteDetailView] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [scanAttempted, setScanAttempted] = useState(false);
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
+  const [discardingDevices, setDiscardingDevices] = useState({}); // { deviceId: seconds }
+
+  // Efek Hitung Mundur untuk Pembuangan Perangkat
+  useEffect(() => {
+    const timers = Object.keys(discardingDevices);
+    if (timers.length === 0) return;
+
+    const interval = setInterval(() => {
+      setDiscardingDevices(prev => {
+        const next = { ...prev };
+        let hasChanges = false;
+
+        for (const id in next) {
+          if (next[id] <= 1) {
+            // Timer habis, eksekusi pembuangan
+            setJoinedDevicesPool(p => p.filter(pId => pId !== id));
+            setDiscoveredDevices(d => d.filter(dev => dev.id !== id));
+            delete next[id];
+            hasChanges = true;
+          } else {
+            next[id] -= 1;
+            hasChanges = true;
+          }
+        }
+        return hasChanges ? next : prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [discardingDevices]);
+
 
   const toggleJoinDevice = (deviceId) => {
-    setJoinedDevicesPool(prev => {
-      if (prev.includes(deviceId)) {
-        return prev.filter(id => id !== deviceId);
-      }
-      return [...prev, deviceId];
-    });
+    if (joinedDevicesPool.includes(deviceId)) {
+      setJoinedDevicesPool(prev => prev.filter(id => id !== deviceId));
+      setDiscoveredDevices(prev => prev.filter(dev => dev.id !== deviceId));
+    } else {
+      setJoinedDevicesPool(prev => [...prev, deviceId]);
+    }
   };
 
   const handleStartDiscovery = () => {
     setIsScanning(true);
+    setScanAttempted(true);
     setDiscoveredDevices([]);
-    
+
     // Simulasi Perangkat 1: Sonoff TH (Setelah 2.5 detik)
     setTimeout(() => {
-      setDiscoveredDevices(prev => [...prev, { 
-        id: "SNZB_02DR2", 
-        name: "Sonoff Airguard TH SNZB-0", 
-        type: "Sensor TH", 
+      setDiscoveredDevices(prev => [...prev, {
+        id: "SNZB_02DR2",
+        name: "Sonoff Airguard TH SNZB-0",
+        type: "Sensor TH",
         category: "sensor",
         status: "Ready to Pair"
       }]);
@@ -168,10 +201,10 @@ export function DeviceControlPage({ onNavigate }) {
 
     // Simulasi Perangkat 2: Sonoff Smart Plug (Setelah 6 detik)
     setTimeout(() => {
-      setDiscoveredDevices(prev => [...prev, { 
-        id: "S60ZBTPF", 
-        name: "Sonoff Zigbee Smart Plug S", 
-        type: "Smart Plug", 
+      setDiscoveredDevices(prev => [...prev, {
+        id: "S60ZBTPF",
+        name: "Sonoff Zigbee Smart Plug S",
+        type: "Smart Plug",
         category: "smart-plug",
         status: "Identified"
       }]);
@@ -179,10 +212,10 @@ export function DeviceControlPage({ onNavigate }) {
 
     // Simulasi Perangkat 3: Bieon Bluecheck (Setelah 9 detik)
     setTimeout(() => {
-      setDiscoveredDevices(prev => [...prev, { 
-        id: "BLCK04WQS", 
-        name: "Bieon Bluecheck Water Quality", 
-        type: "Analog Sensor", 
+      setDiscoveredDevices(prev => [...prev, {
+        id: "BLCK04WQS",
+        name: "Bieon Bluecheck Water Quality",
+        type: "Analog Sensor",
         category: "sensor",
         status: "Connected"
       }]);
@@ -582,11 +615,24 @@ export function DeviceControlPage({ onNavigate }) {
 
   const fetchRegisteredProducts = async () => {
     try {
-      const res = await fetch('/api/products/list');
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/products/list', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await res.json();
-      setRegisteredProducts(data);
+
+      // Safety Check: Pastikan data adalah array supaya tidak bikin blank putih
+      if (Array.isArray(data)) {
+        setRegisteredProducts(data);
+      } else {
+        console.error("Data produk bukan array:", data);
+        setRegisteredProducts([]);
+      }
     } catch (err) {
       console.error("Error fetching products:", err);
+      setRegisteredProducts([]);
     }
   };
   const handleRegisterProduct = async (e, targetStep = "select-category") => {
@@ -931,6 +977,89 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
 
+  const handleQuickSave = async (dev) => {
+    if (!currentBieon || !selectedHub) return;
+
+    try {
+      const token = localStorage.getItem('token');
+
+      // Mapping Spesifik berdasarkan instruksi Boss
+      const isAirguard = dev.id.includes("SNZB-02DR2") || dev.id.includes("SNZB_02DR2");
+      const isSmartPlug = dev.id.includes("S60BTPF") || dev.id.includes("S60ZBTPF");
+      const isBluecheck = dev.id.toLowerCase().includes("bluecheck") || dev.name.toLowerCase().includes("bluecheck");
+
+      let category = isSmartPlug ? "control" : "sensor";
+      let aspect = "kenyamanan";
+      if (isAirguard) aspect = "kenyamanan";
+      else if (isSmartPlug) aspect = "smart-plug";
+      else if (isBluecheck) aspect = "kualitasAir";
+
+      const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(category, dev.type, "manual", aspect);
+
+      const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
+      const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
+
+      const deviceData = {
+        name: dev.name,
+        productId: dev.id,
+        deviceType: backendType,
+        category: backendCategory,
+        location: "Ruangan Utama",
+        notes: "Quick Saved",
+        hubId: selectedHub.id || selectedHub._id,
+        bieonId: currentBieon.bieonId,
+        ownerId: targetOwnerId,
+        controlMode: backendControl,
+        environmentAspect: backendAspect,
+        sensorParams: null,
+        scheduleSettings: null,
+        sensorData: category === "sensor" ? generateMockSensorData(dev.type) : null,
+        onlyRegister: true, // TAMBAHKAN INI: Agar cuma masuk ke list "Perangkat Terdaftar"
+      };
+
+      const response = await fetch('/api/kendaliperangkat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(deviceData)
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || data.message || 'Gagal menyimpan perangkat');
+
+      // Update local state (Hanya jika device benar-benar dibuat, untuk Quick Register biasanya cuma product)
+      if (data.device) {
+        const savedDevice = { ...data.device, id: data.device._id };
+        const updatedHubs = currentBieon.hubs.map((hub) => {
+          if (hub.id === selectedHub.id) {
+            return { ...hub, devices: [...hub.devices, savedDevice] };
+          }
+          return hub;
+        });
+
+        const updatedBieon = { ...currentBieon, hubs: updatedHubs };
+        setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
+        setCurrentBieon(updatedBieon);
+      }
+
+      // Hapus dari pool Scanning & Temuan
+      setJoinedDevicesPool(prev => prev.filter(id => id !== dev.id));
+      setDiscoveredDevices(prev => prev.filter(d => d.id !== dev.id));
+
+      alert(data.message || `Berhasil! ${dev.name} telah terdaftar.`);
+
+      // Refresh produk terdaftar dulu biar sinkron
+      await fetchRegisteredProducts();
+      setStep("select-category"); // Diarahkan ke Perangkat Terdaftar
+
+    } catch (error) {
+      console.error('Quick Save Error:', error);
+      alert(`Gagal simpan: ${error.message}`);
+    }
+  };
+
   const handleSaveDevice = async () => {
     if (!currentBieon || !selectedHub) return;
 
@@ -1004,6 +1133,11 @@ export function DeviceControlPage({ onNavigate }) {
       const updatedBieon = { ...currentBieon, hubs: updatedHubs };
       setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
       setCurrentBieon(updatedBieon);
+
+      // REMOVE FROM POOL: Jika ini perangkat baru, hapus dari antrean terpilih setelah sukses simpan
+      if (!editingId) {
+        setJoinedDevicesPool(prev => prev.filter(id => id !== (selectedProduct?.productId || selectedProduct?.id)));
+      }
 
       resetForm();
       setIsEditingDevice(null);
@@ -1258,7 +1392,7 @@ export function DeviceControlPage({ onNavigate }) {
     setDeviceForm({
       name: device.name,
       location: device.location,
-      notes: device.notes || ""
+      notes: (device.notes === "Quick Saved" || device.thresholds?.notes === "Quick Saved") ? "" : (device.notes || device.thresholds?.notes || "")
     });
 
     // Populate Remote Target
@@ -1459,7 +1593,10 @@ export function DeviceControlPage({ onNavigate }) {
       });
     }
 
-    // 3. Filter berdasarkan Pencarian (Nama / ID)
+    // 3. Sembunyikan perangkat yang belum diatur (Quick Saved)
+    devices = devices.filter((device) => device.notes !== "Quick Saved" && device.thresholds?.notes !== "Quick Saved");
+
+    // 4. Filter berdasarkan Pencarian (Nama / ID)
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       devices = devices.filter((device) =>
@@ -1928,6 +2065,11 @@ export function DeviceControlPage({ onNavigate }) {
                                     </span>
                                   </div>
                                   <p className="text-xs text-gray-400 mt-1 hidden sm:block">ID: {device.id} • Installed: {new Date(device.installedDate).toLocaleDateString("id-ID")}</p>
+                                  {(device.notes || device.thresholds?.notes) && (
+                                    <p className="text-[10px] text-emerald-600 font-medium mt-1 bg-emerald-50 px-2 py-0.5 rounded-md w-fit border border-emerald-100 italic">
+                                      "{device.notes || device.thresholds.notes}"
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-1">
@@ -2403,9 +2545,9 @@ export function DeviceControlPage({ onNavigate }) {
                                     <p className="text-xs  text-gray-500 mb-1">Last Activity</p>
                                     <p className="text-sm text-gray-900 ">{new Date(device.lastActivity).toLocaleString("id-ID", { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
                                   </div>
-                                  <div className="col-span-2">
-                                    <p className="text-xs  text-gray-500 mb-1">Catatan</p>
-                                    <p className="text-sm text-gray-900 ">{device.notes || "-"}</p>
+                                  <div className="col-span-2 mt-2 p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                    <p className="text-xs text-gray-500 mb-1">Keterangan Tambahan</p>
+                                    <p className="text-sm text-gray-700 italic">"{device.notes || device.thresholds?.notes || "-"}"</p>
                                   </div>
                                 </div>
 
@@ -2490,11 +2632,11 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full p-8 sm:p-10 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-black text-gray-900">Buka Open Join</h2>
-                    <button onClick={() => setStep("add-device-choice")} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                    <button onClick={() => { setStep("add-device-choice"); setScanAttempted(false); }} className="p-2 hover:bg-gray-100 rounded-full transition-all">
                       <X className="w-5 h-5 text-gray-400" />
                     </button>
                   </div>
-                  
+
                   <p className="text-sm text-gray-500 mb-8 leading-relaxed">
                     Pilih hub yang ingin dibuka jendela join-nya. Instruksi akan diteruskan dari web ke backend, lalu ke ESP B dan ESP A.
                   </p>
@@ -2523,13 +2665,13 @@ export function DeviceControlPage({ onNavigate }) {
 
                     {/* FOOTER BUTTONS */}
                     <div className="flex items-center gap-3 pt-2">
-                      <button 
-                        onClick={() => setStep("add-device-choice")}
+                      <button
+                        onClick={() => { setStep("add-device-choice"); setScanAttempted(false); }}
                         className="flex-1 py-4 px-6 border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
                       >
                         Kembali
                       </button>
-                      <button 
+                      <button
                         onClick={handleStartDiscovery}
                         disabled={isScanning}
                         className="flex-[1.5] py-4 px-6 bg-[#009b7c] hover:bg-[#007b62] rounded-2xl text-sm font-bold text-white shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -2548,12 +2690,12 @@ export function DeviceControlPage({ onNavigate }) {
                     {/* CONNECTED DEVICES SECTION */}
                     <div className="pt-4 border-t border-gray-100">
                       <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-4">Perangkat yang Terhubung Saat Open Join</p>
-                      
+
                       <div className="space-y-3">
-                        {discoveredDevices.length === 0 && !isScanning && (
+                        {discoveredDevices.length === 0 && !isScanning && !scanAttempted && (
                           <div className="flex flex-col items-center justify-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
                             <p className="text-sm text-gray-400 italic">Menunggu perangkat bergabung...</p>
-                            <p className="text-[10px] text-gray-300 mt-2">Perangkat yang berhasil join akan muncul di sini</p>
+                            <p className="text-[10px] text-gray-300 mt-2 text-center px-6">Perangkat yang berhasil join akan muncul di sini</p>
                           </div>
                         )}
 
@@ -2570,8 +2712,30 @@ export function DeviceControlPage({ onNavigate }) {
                         )}
 
                         <div className="grid gap-3">
-                          {discoveredDevices.map((dev) => {
-                            const isJoined = joinedDevicesPool.includes(dev.id);
+                          {(() => {
+                            // Ambil perangkat dari scan live
+                            const fromScan = discoveredDevices.filter(dev => {
+                              const isAlreadyInDb = currentBieon?.hubs.some(hub =>
+                                hub.devices.some(d => d.modelId === dev.id || d.productId === dev.id)
+                              );
+                              return !isAlreadyInDb;
+                            });
+
+                            // Ambil perangkat "Quick Saved" dari database
+                            const quickSaved = currentBieon?.hubs.flatMap(h => h.devices)
+                              .filter(d => d.notes === "Quick Saved")
+                              .map(d => ({
+                                id: d.productId || d.modelId || d.id,
+                                name: d.name,
+                                type: d.deviceType,
+                                status: "Belum Dikonfigurasi",
+                                isFromDb: true,
+                                originalDevice: d
+                              })) || [];
+
+                            return [...fromScan, ...quickSaved];
+                          })().map((dev) => {
+                            const isJoined = joinedDevicesPool.includes(dev.id) || dev.isFromDb;
                             return (
                               <div
                                 key={dev.id}
@@ -2595,61 +2759,232 @@ export function DeviceControlPage({ onNavigate }) {
                                     </div>
                                   </div>
                                 </div>
-                                <button
-                                  onClick={() => toggleJoinDevice(dev.id)}
-                                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
-                                    isJoined 
-                                    ? 'bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white' 
-                                    : 'bg-gray-50 text-gray-400 hover:bg-emerald-500 hover:text-white'
-                                  }`}
-                                >
-                                  {isJoined ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  {dev.isFromDb ? (
+                                    <button
+                                      onClick={() => handleEditDevice(dev.originalDevice)}
+                                      className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-bold rounded-xl hover:bg-emerald-700 transition-all uppercase tracking-wider shadow-sm"
+                                    >
+                                      Atur Sekarang
+                                    </button>
+                                  ) : (
+                                    <>
+                                      {/* TOMBOL + (JOIN) */}
+                                      <button
+                                        onClick={() => !isJoined && discardingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
+                                        disabled={isJoined || discardingDevices[dev.id] !== undefined}
+                                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isJoined
+                                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100 cursor-default'
+                                          : discardingDevices[dev.id] !== undefined
+                                            ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
+                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-100'
+                                          }`}
+                                        title={isJoined ? "Sudah masuk antrean" : discardingDevices[dev.id] !== undefined ? "Tidak bisa menambah saat proses hapus" : "Tambahkan ke antrean"}
+                                      >
+                                        {isJoined ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                      </button>
+
+                                      {/* TOMBOL - (DISCARD) WITH CIRCULAR TIMER */}
+                                      <div className="relative w-10 h-10 flex items-center justify-center">
+                                        <button
+                                          onClick={() => {
+                                            if (discardingDevices[dev.id] === undefined) {
+                                              setDiscardingDevices(prev => ({ ...prev, [dev.id]: 50 }));
+                                            }
+                                          }}
+                                          disabled={discardingDevices[dev.id] !== undefined}
+                                          className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${discardingDevices[dev.id] !== undefined
+                                            ? 'bg-transparent border-transparent'
+                                            : 'bg-pink-50 text-pink-500 hover:bg-pink-500 hover:text-white border-pink-100'
+                                            }`}
+                                        >
+                                          {discardingDevices[dev.id] !== undefined ? (
+                                            <>
+                                              {/* CIRCULAR PROGRESS SVG */}
+                                              <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                                <circle
+                                                  cx="20"
+                                                  cy="20"
+                                                  r="18"
+                                                  stroke="currentColor"
+                                                  strokeWidth="3.5"
+                                                  fill="transparent"
+                                                  className="text-pink-100"
+                                                />
+                                                <circle
+                                                  cx="20"
+                                                  cy="20"
+                                                  r="18"
+                                                  stroke="currentColor"
+                                                  strokeWidth="3.5"
+                                                  fill="transparent"
+                                                  strokeDasharray={113.1}
+                                                  strokeDashoffset={113.1 - (discardingDevices[dev.id] / 50) * 113.1}
+                                                  strokeLinecap="round"
+                                                  className="text-pink-500 transition-all duration-1000 ease-linear"
+                                                />
+                                              </svg>
+                                              <span className="relative z-10 text-[10px] font-black text-pink-600">
+                                                {discardingDevices[dev.id]}
+                                              </span>
+                                            </>
+                                          ) : (
+                                            <Minus className="w-5 h-5" />
+                                          )}
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
                         </div>
                       </div>
 
-                      {/* ACTION BOX: POOL ACTIONS [NEW] */}
-                      {joinedDevicesPool.length > 0 && (
+                      {/* ACTION BOX: POOL ACTIONS [NEW REFINED] */}
+                      {joinedDevicesPool.length === 0 ? (
+                        !isScanning && scanAttempted && discoveredDevices.length === 0 ? (
+                          <div className="mt-8 p-10 border-2 border-dashed border-orange-200 rounded-[2rem] flex flex-col items-center justify-center text-center bg-orange-50/30 animate-in fade-in zoom-in-95 duration-500">
+                            <div className="w-16 h-16 bg-orange-100 rounded-2xl shadow-sm flex items-center justify-center mb-4">
+                              <AlertCircle className="w-8 h-8 text-orange-600" />
+                            </div>
+                            <h4 className="text-sm font-bold text-orange-800">Perangkat tidak ditemukan</h4>
+                            <p className="text-[10px] text-orange-600 max-w-[220px] mt-2 italic leading-relaxed">
+                              Oops! BIEON tidak menemukan perangkat baru. Pastikan perangkat dalam mode pairing.
+                            </p>
+                            <button
+                              onClick={handleStartDiscovery}
+                              className="mt-5 px-8 py-3 bg-orange-600 text-white text-xs font-bold rounded-2xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 active:scale-95 flex items-center gap-2"
+                            >
+                              <Activity className="w-3 h-3" />
+                              Coba Scan Lagi
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="mt-8 p-10 border-2 border-dashed border-gray-100 rounded-[2rem] flex flex-col items-center justify-center text-center bg-gray-50/50 animate-in fade-in zoom-in-95 duration-500">
+                            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 animate-pulse">
+                              <Radio className="w-8 h-8 text-[#009b7c]/40" />
+                            </div>
+                            <h4 className="text-sm font-bold text-gray-500">{isScanning ? "Mencari Perangkat..." : "Menunggu Perangkat..."}</h4>
+                            <p className="text-[10px] text-gray-400 max-w-[200px] mt-1 italic leading-relaxed">
+                              {isScanning ? "Mohon tunggu, BIEON sedang mendeteksi perangkat di sekitar." : "Aktifkan mode pairing pada perangkat Anda agar terdeteksi oleh Hub."}
+                            </p>
+                          </div>
+                        )
+                      ) : (
                         <div className="mt-8 p-6 bg-[#009b7c] rounded-[2rem] shadow-xl shadow-emerald-100 animate-in zoom-in-95 duration-300">
-                          <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center gap-3 text-white">
                               <div className="bg-white/20 p-2 rounded-xl">
                                 <CheckCircle className="w-5 h-5" />
                               </div>
                               <div>
-                                <h4 className="text-sm font-bold">{joinedDevicesPool.length} Perangkat Berhasil Dijoinkan</h4>
-                                <p className="text-[10px] text-white/70">Pilih langkah selanjutnya untuk perangkat ini</p>
+                                <h4 className="text-sm font-bold">{joinedDevicesPool.length} Perangkat Terpilih</h4>
+                                <p className="text-[10px] text-white/70">Kelola masing-masing atau simpan sekaligus</p>
                               </div>
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <button 
-                              onClick={() => {
-                                alert("Menyimpan ke daftar perangkat unassigned...");
-                                setStep("add-device-choice");
-                                setJoinedDevicesPool([]);
-                                setIsScanning(false);
-                              }}
-                              className="py-3 px-4 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all border border-white/20"
-                            >
-                              Simpan Dulu
-                            </button>
-                            <button 
-                              onClick={() => {
-                                alert("Melanjutkan ke konfigurasi ruangan & parameter...");
-                                // Logic untuk lanjut konfigurasi bisa ditambahkan di sini
-                              }}
-                              className="py-3 px-4 bg-white text-[#009b7c] hover:bg-emerald-50 text-xs font-bold rounded-xl transition-all shadow-lg"
-                            >
-                              Lanjut Konfigurasi
-                            </button>
+
+                          {/* SCROLLABLE DEVICE LIST INSIDE GREEN BOX */}
+                          <div className="space-y-2 mb-6 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                            {joinedDevicesPool.map((deviceId) => {
+                              const dev = discoveredDevices.find(d => d.id === deviceId);
+                              if (!dev) return null;
+                              return (
+                                <div key={deviceId} className="flex items-center justify-between bg-white/10 p-3 rounded-2xl border border-white/10 group/item hover:bg-white/20 transition-all">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                                      {dev.type.includes("Sensor") ? <Info className="w-4 h-4 text-white" /> : <Cpu className="w-4 h-4 text-white" />}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-white">{dev.name}</p>
+                                      <p className="text-[9px] text-white/60 uppercase font-black">{dev.type}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleQuickSave(dev)}
+                                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-lg transition-all border border-white/20"
+                                    >
+                                      Simpan
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        // Cari produk yang cocok di registeredProducts
+                                        let product = registeredProducts.find(p => deviceId.startsWith(p.productId));
+
+                                        // Mapping Spesifik berdasarkan instruksi Boss
+                                        const isAirguard = deviceId.includes("SNZB-02DR2") || deviceId.includes("SNZB_02DR2");
+                                        const isSmartPlug = deviceId.includes("S60BTPF") || deviceId.includes("S60ZBTPF");
+                                        const isBluecheck = deviceId.toLowerCase().includes("bluecheck") || dev.name.toLowerCase().includes("bluecheck");
+
+                                        // Jika tidak ada di registeredProducts, buat objek produk otomatis
+                                        if (!product) {
+                                          let category = "sensor";
+                                          let aspect = "";
+
+                                          if (isAirguard) {
+                                            category = "sensor";
+                                            aspect = "kenyamanan";
+                                          } else if (isBluecheck) {
+                                            category = "sensor";
+                                            aspect = "air";
+                                          } else if (isSmartPlug) {
+                                            category = "control";
+                                            aspect = "smart-plug"; // Pakai ENUM yang valid di backend
+                                          } else {
+                                            category = dev.type.toLowerCase().includes("sensor") ? "sensor" : "control";
+                                            if (category === "sensor") {
+                                              if (dev.type.includes("TH")) aspect = "kenyamanan";
+                                              else if (dev.type.includes("Water")) aspect = "air";
+                                              else aspect = "keamanan";
+                                            } else {
+                                              aspect = dev.type.toLowerCase().includes("plug") ? "smart-plug" : "smart-switch";
+                                            }
+                                          }
+
+                                          product = {
+                                            productId: deviceId, // Pakai ID lengkap biar UNIK di database
+                                            productName: dev.name,
+                                            category: category,
+                                            aspect: aspect
+                                          };
+                                        }
+
+                                        setSelectedProduct(product);
+                                        setSelectedCategory(product.category);
+                                        setSelectedDeviceType(product.productName);
+                                        setDeviceForm(prev => ({
+                                          ...prev,
+                                          name: product.productName,
+                                          customId: deviceId
+                                        }));
+
+                                        // Set Active Aspect for Config Step
+                                        if (isBluecheck || (product.category === "sensor" && product.aspect === "air")) {
+                                          setActiveSensorAspect("kualitasAir");
+                                        } else if (isAirguard || (product.category === "sensor" && product.aspect === "kenyamanan")) {
+                                          setActiveSensorAspect("kenyamanan");
+                                        } else if (product.category === "sensor" && product.aspect === "keamanan") {
+                                          setActiveSensorAspect("keamanan");
+                                        }
+
+                                        setStep("add-device-form");
+                                      }}
+                                      className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-[#009b7c] text-[10px] font-bold rounded-lg transition-all shadow-sm"
+                                    >
+                                      Atur
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
+
                         </div>
                       )}
-                      
+
                       <div className="mt-6 flex items-start gap-2">
                         <span className="text-yellow-500 text-xs">✨</span>
                         <p className="text-[10px] text-gray-400 italic leading-relaxed">
@@ -2807,6 +3142,45 @@ export function DeviceControlPage({ onNavigate }) {
                       className="w-full pl-14 pr-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-[1.5rem] focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-emerald-50 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-400 placeholder:font-normal shadow-sm"
                     />
                   </div>
+
+                  {/* NEW: Quick Saved Devices Section (Devices in Hub but not configured) */}
+                  {(() => {
+                    const quickSaved = currentBieon?.hubs.flatMap(h => h.devices)
+                      .filter(d => d.notes === "Quick Saved") || [];
+
+                    if (quickSaved.length === 0) return null;
+
+                    return (
+                      <div className="mb-10 bg-emerald-50/50 border-2 border-emerald-100 rounded-[2rem] p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                            <Plus className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">Siap Dikonfigurasi</h3>
+                            <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Perangkat yang baru saja tersambung</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {quickSaved.map((dev) => (
+                            <div key={dev.id} className="flex items-center justify-between p-4 bg-white border border-emerald-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-gray-900 truncate">{dev.name}</p>
+                                <p className="text-[10px] text-gray-400">ID: {dev.id}</p>
+                              </div>
+                              <button
+                                onClick={() => handleEditDevice(dev)}
+                                className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-bold rounded-xl hover:bg-emerald-700 transition-all uppercase tracking-wider"
+                              >
+                                Atur Sekarang
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Kolom Sensor */}
                     <div className="bg-[#f0fdf4] border-2 border-[#bbf7d0] rounded-[2rem] p-5">
@@ -3398,39 +3772,53 @@ export function DeviceControlPage({ onNavigate }) {
                         type="text"
                         value={deviceForm.name}
                         onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })}
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none text-gray-900 font-bold"
                         placeholder="Contoh: AC Ruang Tamu"
-                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none "
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Keterangan</label>
+                      <textarea
+                        value={deviceForm.notes}
+                        onChange={(e) => setDeviceForm({ ...deviceForm, notes: e.target.value })}
+                        placeholder="Tambahkan catatan untuk perangkat ini..."
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none min-h-[100px] resize-none"
                       />
                     </div>
                     {!(selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && (
-                      <div>
-                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Lokasi (Ruangan)</label>
-                        {!showNewRoomInput ? (
-                          <div className="relative">
-                            <select
-                              value={deviceForm.location}
-                              onChange={(e) => e.target.value === "__new__" ? setShowNewRoomInput(true) : setDeviceForm({ ...deviceForm, location: e.target.value })}
-                              className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none  appearance-none"
-                            >
-                              <option value="">-- Pilih Ruangan --</option>
-                              {rooms.map((room) => <option key={room} value={room}>{room}</option>)}
-                              <option value="__new__">+ Buat Ruangan Baru</option>
-                            </select>
-                            <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          </div>
-                        ) : (
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              value={newRoomInput}
-                              onChange={(e) => setNewRoomInput(e.target.value)}
-                              placeholder="Nama Ruangan..."
-                              className="flex-1 p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none "
-                            />
-                            <button onClick={handleAddRoom} className="p-4 bg-[#009b7c] text-white rounded-2xl  shadow-lg"><Check className="w-6 h-6" /></button>
-                            <button onClick={() => setShowNewRoomInput(false)} className="p-4 bg-gray-100 text-gray-400 rounded-2xl"><X className="w-6 h-6" /></button>
-                          </div>
-                        )}
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Lokasi (Ruangan)</label>
+                          {!showNewRoomInput ? (
+                            <div className="relative">
+                              <select
+                                value={deviceForm.location}
+                                onChange={(e) => e.target.value === "__new__" ? setShowNewRoomInput(true) : setDeviceForm({ ...deviceForm, location: e.target.value })}
+                                className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none  appearance-none"
+                              >
+                                <option value="">-- Pilih Ruangan --</option>
+                                {rooms.map((room) => <option key={room} value={room}>{room}</option>)}
+                                <option value="__new__">+ Buat Ruangan Baru</option>
+                              </select>
+                              <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={newRoomInput}
+                                onChange={(e) => setNewRoomInput(e.target.value)}
+                                placeholder="Nama Ruangan..."
+                                className="flex-1 p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none "
+                              />
+                              <button onClick={handleAddRoom} className="p-4 bg-[#009b7c] text-white rounded-2xl  shadow-lg"><Check className="w-6 h-6" /></button>
+                              <button onClick={() => setShowNewRoomInput(false)} className="p-4 bg-gray-100 text-gray-400 rounded-2xl"><X className="w-6 h-6" /></button>
+                            </div>
+                          )}
+                        </div>
+
+
                       </div>
                     )}
                   </div>
@@ -4262,6 +4650,7 @@ export function DeviceControlPage({ onNavigate }) {
                       Kembali
                     </button>
                     <button
+                      id="actual-save-trigger"
                       onClick={((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && isRemoteDetailView) ? () => { setIsRemoteDetailView(false); setActiveSensorAspect(null); } : handleSaveDevice}
                       className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl  shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                     >

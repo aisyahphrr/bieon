@@ -61,21 +61,83 @@ exports.createDevice = async (req, res) => {
         }
         
         const user = await User.findById(ownerId);
-        const hub = await Hub.findById(hubId);
+        
+        let hub;
+        try {
+            // Coba cari pake ID asli dulu
+            hub = await Hub.findById(hubId);
+        } catch (err) {
+            // Kalau gagal (bukan format ObjectId), cari pake bieonId atau nama
+            hub = await Hub.findOne({ 
+                $or: [{ bieonId: hubId }, { name: hubId }] 
+            });
+        }
+
+        if (!hub) {
+            return res.status(404).json({ message: 'Hub tidak ditemukan. Pastikan Hub ID valid.' });
+        }
 
         // --- VALIDASI KEPEMILIKAN BARANG (Anti-Maling) ---
-        const RegisteredProduct = require('../models/RegisteredProduct');
         const prodId = req.body.productId || deviceType;
-        const myProduct = await RegisteredProduct.findOne({ 
+        let myProduct = await RegisteredProduct.findOne({ 
             productId: prodId, 
             owner: ownerId,
             isUsed: false 
         });
 
         if (!myProduct) {
-            return res.status(403).json({ 
-                message: 'Barang tidak ditemukan di daftar registrasi Anda atau sudah digunakan di hub lain.' 
+            // [JALUR VVIP] Cek apakah ini barang Whitelist (Bieon Original) yang sedang di-Open Join
+            const whitelistMatch = await DeviceWhitelist.findOne({
+                $or: [
+                    { device_id: prodId }, 
+                    { model_id: prodId },
+                    { device_ieee: device_ieee || req.body.ieee }
+                ]
             });
+
+            if (whitelistMatch) {
+                // AUTO-REGISTER: Daftarkan/Update otomatis ke user jika barang whitelist
+                let regCategory = String(category).toLowerCase();
+                if (regCategory.includes('control')) regCategory = 'control';
+                else if (regCategory.includes('sensor')) regCategory = 'sensor';
+
+                const targetAspect = (function() {
+                    const a = String(req.body.aspect || req.body.environmentAspect || '').toLowerCase();
+                    if (a.includes('air')) return 'air';
+                    if (a.includes('nyaman')) return 'kenyamanan';
+                    if (a.includes('aman')) return 'keamanan';
+                    if (a.includes('plug')) return 'smart-plug';
+                    return regCategory === 'sensor' ? 'kenyamanan' : 'none';
+                })();
+
+                myProduct = await RegisteredProduct.findOneAndUpdate(
+                    { productId: prodId }, // Cari berdasarkan ID unik barang
+                    { 
+                        $set: {
+                            productName: name || whitelistMatch.device_id,
+                            category: regCategory,
+                            aspect: targetAspect,
+                            owner: ownerId,
+                            isUsed: false
+                        }
+                    },
+                    { upsert: true, new: true } // Kalau gak ada bikin baru, kalau ada update
+                );
+                
+                console.log(`[AUTO-REG] Whitelisted device ${prodId} successfully processed for user ${ownerId}`);
+
+                // JIKA HANYA DAFTAR (Quick Save), STOP DI SINI!
+                if (req.body.onlyRegister) {
+                    return res.status(201).json({ 
+                        message: 'Perangkat berhasil terdaftar! Silakan atur di menu Perangkat Terdaftar.', 
+                        product: myProduct 
+                    });
+                }
+            } else {
+                return res.status(403).json({ 
+                    message: 'Barang tidak ditemukan di daftar registrasi Anda atau bukan barang original Bieon.' 
+                });
+            }
         }
 
         // --- NEW: AUTO LOOKUP IEEE FROM WHITELIST ---
@@ -109,7 +171,7 @@ exports.createDevice = async (req, res) => {
             location: finalLocation,
             notes,
             hubId,
-            category,
+            category: category, // KendaliPerangkat mau APA ADANYA (Sensor / Control Actuator System)
             type: deviceType,
             status: 'Active',
             lifecycleState: 'PROVISIONED',
@@ -143,12 +205,25 @@ exports.createDevice = async (req, res) => {
             if (hub) {
                 const formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
                 const userTenantId = user?.tenantId || "tenant_001";
-                
-                // 1. Collective Device Map Publish (Command to Hardware)
+                const capturedIeee = device_ieee || req.body.ieee || "0000000000000000";
+                const mqttTopic = `bieon/devices/${formattedHubId}/${capturedIeee}/config`;
+
+                // 1. Individual Device Config (Direct Publish)
+                if (req.mqttClient && typeof req.mqttClient.publish === 'function') {
+                    req.mqttClient.publish(mqttTopic, JSON.stringify({
+                        action: "config",
+                        data: newDevice
+                    }));
+                    console.log(`[MQTT] Published individual config to ${mqttTopic}`);
+                } else {
+                    console.warn(`[MQTT] Client not found on request, skipping individual publish for ${mqttTopic}`);
+                }
+
+                // 2. Collective Device Map Publish (Command to Hardware)
                 // PENTING: Filter berdasarkan OWNER dan BIEON_ID agar tidak campur aduk!
                 const allUserDevices = await KendaliPerangkat.find({ 
                     owner: ownerId, 
-                    bieonId: newDevice.bieonId, // Tambahkan filter ini!
+                    bieonId: newDevice.bieonId,
                     status: 'Active' 
                 });
                 const configTopic = `tenant/${userTenantId}/bieon/${newDevice.bieonId}/config/device-map`;

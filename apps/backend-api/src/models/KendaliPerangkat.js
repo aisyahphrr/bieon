@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const kendaliPerangkatSchema = new mongoose.Schema({
     name: { type: String, required: true },
     location: { type: String, required: true },
+    notes: { type: String },
     hubId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub', required: true },
     category: { 
         type: String, 
@@ -35,7 +36,6 @@ const kendaliPerangkatSchema = new mongoose.Schema({
         turbidity: { type: Number },
         tds: { type: Number },
         temperature: { type: Number },
-        notes: { type: String },
         // Kenyamanan
         humidity: { type: Number },
         // Keamanan
