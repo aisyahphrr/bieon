@@ -228,8 +228,8 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   key={id}
                   onClick={() => navigate(`/${id}`)}
                   className={`font-semibold pb-1 border-b-2 transition-all ${currentPage === id
-                      ? 'text-teal-700 border-teal-700 cursor-default'
-                      : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
+                    ? 'text-teal-700 border-teal-700 cursor-default'
+                    : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
                     }`}
                 >
                   {t(labelKey)}
@@ -269,10 +269,10 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                     <Bell className="w-5 h-5 text-gray-600" />
                     {hasUnread && <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
                   </button>
-                  <NotificationPopup 
-                    isOpen={showNotif} 
-                    onClose={() => setShowNotif(false)} 
-                    role="homeowner" 
+                  <NotificationPopup
+                    isOpen={showNotif}
+                    onClose={() => setShowNotif(false)}
+                    role="homeowner"
                     onNavigate={handleNotificationNavigate}
                     onUnreadChange={setHasUnread}
                   />

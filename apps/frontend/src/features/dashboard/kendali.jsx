@@ -38,7 +38,8 @@ import {
   Pencil,
   CheckCircle,
   Info,
-  Minus
+  Minus,
+  WifiOff
 } from "lucide-react";
 import { EditHubNodePage } from "./edithub";
 import NotificationPopup from "../../components/NotificationPopup";
@@ -140,6 +141,7 @@ export function DeviceControlPage({ onNavigate }) {
   const [isRemoteDetailView, setIsRemoteDetailView] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanAttempted, setScanAttempted] = useState(false);
+  const [scanTimer, setScanTimer] = useState(0);
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
   const [discardingDevices, setDiscardingDevices] = useState({}); // { deviceId: seconds }
@@ -173,6 +175,18 @@ export function DeviceControlPage({ onNavigate }) {
     return () => clearInterval(interval);
   }, [discardingDevices]);
 
+  // Efek Hitung Mundur untuk Scanning Open Join
+  useEffect(() => {
+    let interval;
+    if (isScanning && scanTimer > 0) {
+      interval = setInterval(() => {
+        setScanTimer(prev => prev - 1);
+      }, 1000);
+    } else if (scanTimer === 0 && isScanning) {
+      setIsScanning(false);
+    }
+    return () => clearInterval(interval);
+  }, [isScanning, scanTimer]);
 
   const toggleJoinDevice = (deviceId) => {
     if (joinedDevicesPool.includes(deviceId)) {
@@ -183,48 +197,69 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
 
+  const isDeviceAlreadyRegisteredOrConfigured = (deviceId) => {
+    // Periksa di daftar produk terdaftar
+    const inRegistered = registeredProducts.some(p => p.productId && (p.productId.includes(deviceId) || deviceId.includes(p.productId)));
+    if (inRegistered) return true;
+
+    // Periksa di perangkat yang sudah dikonfigurasi (masuk ke hub)
+    if (currentBieon && currentBieon.hubs) {
+      for (const hub of currentBieon.hubs) {
+        if (hub.devices && hub.devices.some(d => {
+          const checkId = d.productId || d.modelId || d.id;
+          return checkId && (checkId.includes(deviceId) || deviceId.includes(checkId));
+        })) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const handleStartDiscovery = () => {
     setIsScanning(true);
     setScanAttempted(true);
     setDiscoveredDevices([]);
+    setScanTimer(30);
 
     // Simulasi Perangkat 1: Sonoff TH (Setelah 2.5 detik)
     setTimeout(() => {
-      setDiscoveredDevices(prev => [...prev, {
-        id: "SNZB_02DR2",
-        name: "Sonoff Airguard TH SNZB-0",
-        type: "Sensor TH",
-        category: "sensor",
-        status: "Ready to Pair"
-      }]);
+      if (!isDeviceAlreadyRegisteredOrConfigured("SNZB_02DR2")) {
+        setDiscoveredDevices(prev => [...prev, {
+          id: "SNZB_02DR2",
+          name: "Sonoff Airguard TH SNZB-0",
+          type: "Sensor TH",
+          category: "sensor",
+          status: "Ready to Pair"
+        }]);
+      }
     }, 2500);
 
     // Simulasi Perangkat 2: Sonoff Smart Plug (Setelah 6 detik)
     setTimeout(() => {
-      setDiscoveredDevices(prev => [...prev, {
-        id: "S60ZBTPF",
-        name: "Sonoff Zigbee Smart Plug S",
-        type: "Smart Plug",
-        category: "smart-plug",
-        status: "Identified"
-      }]);
+      if (!isDeviceAlreadyRegisteredOrConfigured("S60ZBTPF")) {
+        setDiscoveredDevices(prev => [...prev, {
+          id: "S60ZBTPF",
+          name: "Sonoff Zigbee Smart Plug S",
+          type: "Smart Plug",
+          category: "smart-plug",
+          status: "Identified"
+        }]);
+      }
     }, 6000);
 
     // Simulasi Perangkat 3: Bieon Bluecheck (Setelah 9 detik)
     setTimeout(() => {
-      setDiscoveredDevices(prev => [...prev, {
-        id: "BLCK04WQS",
-        name: "Bieon Bluecheck Water Quality",
-        type: "Analog Sensor",
-        category: "sensor",
-        status: "Connected"
-      }]);
+      if (!isDeviceAlreadyRegisteredOrConfigured("BLCK04WQS")) {
+        setDiscoveredDevices(prev => [...prev, {
+          id: "BLCK04WQS",
+          name: "Bieon Bluecheck Water Quality",
+          type: "Analog Sensor",
+          category: "sensor",
+          status: "Connected"
+        }]);
+      }
     }, 9000);
-
-    // Berhenti scanning setelah 30 detik
-    setTimeout(() => {
-      setIsScanning(false);
-    }, 30000);
   };
 
   const DEVICE_BRANDS = {
@@ -777,11 +812,11 @@ export function DeviceControlPage({ onNavigate }) {
       let aspect = null;
       let newConfig = JSON.parse(JSON.stringify(sensorConfig));
 
-      // Normalisasi deteksi (mendukung "Sensor X" atau hanya "X" dari backend)
-      const isAir = selectedDeviceType.includes("Kualitas Air") || selectedProduct?.aspect === "air";
-      const isComfort = selectedDeviceType.includes("Kenyamanan") || selectedDeviceType.includes("Humidity") || selectedProduct?.aspect === "kenyamanan";
-      const isSecurity = selectedDeviceType.includes("Keamanan") || selectedDeviceType.includes("Motion") || selectedProduct?.aspect === "keamanan";
-      const isDoor = selectedDeviceType.includes("Door");
+      const nameLower = (deviceForm.name || "").toLowerCase();
+      const isAir = selectedDeviceType.includes("Kualitas Air") || selectedProduct?.aspect === "air" || nameLower.includes("water") || nameLower.includes("bluecheck");
+      const isComfort = selectedDeviceType.includes("Kenyamanan") || selectedDeviceType.includes("Humidity") || selectedProduct?.aspect === "kenyamanan" || nameLower.includes("sonoff") || nameLower.includes("th snzb");
+      const isSecurity = selectedDeviceType.includes("Keamanan") || selectedDeviceType.includes("Motion") || selectedProduct?.aspect === "keamanan" || nameLower.includes("motion");
+      const isDoor = selectedDeviceType.includes("Door") || nameLower.includes("door");
 
       if (isAir) {
         aspect = "kualitasAir";
@@ -1026,7 +1061,15 @@ export function DeviceControlPage({ onNavigate }) {
         body: JSON.stringify(deviceData)
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      console.log("Raw response:", text);
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error(`Invalid JSON response (Status: ${response.status}): ${text.substring(0, 50)}`);
+      }
+
       if (!response.ok) throw new Error(data.error || data.message || 'Gagal menyimpan perangkat');
 
       // Update local state (Hanya jika device benar-benar dibuat, untuk Quick Register biasanya cuma product)
@@ -1052,7 +1095,8 @@ export function DeviceControlPage({ onNavigate }) {
 
       // Refresh produk terdaftar dulu biar sinkron
       await fetchRegisteredProducts();
-      setStep("select-category"); // Diarahkan ke Perangkat Terdaftar
+      // Jangan setStep("select-category") di sini agar modal Open Join tidak tertutup
+      // biarkan user tetap di modal Open Join untuk mengelola perangkat lainnya
 
     } catch (error) {
       console.error('Quick Save Error:', error);
@@ -1441,7 +1485,18 @@ export function DeviceControlPage({ onNavigate }) {
     setSelectedCategory(mappedCategory);
     setIsEditingDevice(device.id);
 
-    const actualDeviceType = device.type || device.deviceType || "";
+    let actualDeviceType = device.type || device.deviceType || "";
+    const devNameLower = (device.name || "").toLowerCase();
+
+    // Auto-correct device type based on name if it's a sensor
+    if (mappedCategory === "sensor") {
+      if (devNameLower.includes("water") || devNameLower.includes("bluecheck")) {
+        actualDeviceType = "Sensor Kualitas Air";
+      } else if (devNameLower.includes("sonoff") || devNameLower.includes("th snzb") || devNameLower.includes("kenyamanan") || devNameLower.includes("airguard")) {
+        actualDeviceType = "Sensor Kenyamanan";
+      }
+    }
+
     // Normalize type for modal options
     const normalizedType = actualDeviceType.toLowerCase().includes('remote') ? 'remote' :
       actualDeviceType.toLowerCase().includes('switch') ? 'smart-switch' :
@@ -1640,7 +1695,7 @@ export function DeviceControlPage({ onNavigate }) {
       <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-40">
-            <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <div className="w-16 h-16 border-4 border-bieon-eco border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-gray-500 ">Memuat data sistem BIEON...</p>
           </div>
         ) : (
@@ -1663,7 +1718,7 @@ export function DeviceControlPage({ onNavigate }) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Settings className="w-5 h-5 text-emerald-600" />
+                    <Settings className="w-5 h-5 text-bieon-eco" />
                     <h3 className="font-bold text-gray-900 text-lg">Kendali Perangkat</h3>
                   </div>
                   <p className="text-sm text-gray-500">Kelola smart devices dengan sistem BIEON</p>
@@ -1680,7 +1735,7 @@ export function DeviceControlPage({ onNavigate }) {
                   {userProfile?.role === 'Homeowner' && (
                     <button
                       onClick={handleGenerateToken}
-                      className="px-5 py-2.5 bg-white border-2 border-emerald-100 text-emerald-600 rounded-2xl  hover:bg-emerald-50 transition-all shadow-sm flex items-center gap-2"
+                      className="px-5 py-2.5 bg-white border-2 border-bieon-eco/20 text-bieon-eco rounded-2xl  hover:bg-bieon-eco/5 transition-all shadow-sm flex items-center gap-2"
                     >
                       <Radio className="w-5 h-5" />
                       <span>Akses Teknisi</span>
@@ -1694,8 +1749,8 @@ export function DeviceControlPage({ onNavigate }) {
               <div>
                 {bieonSystems.length === 0 ? (
                   <div className="text-center py-20">
-                    <div className="w-24 h-24 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                      <Home className="w-12 h-12 text-emerald-600" />
+                    <div className="w-24 h-24 bg-gradient-to-br from-bieon-eco/20 to-bieon-sense/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                      <Home className="w-12 h-12 text-bieon-eco" />
                     </div>
                     <h2 className="text-2xl  text-gray-900 mb-3">Belum Ada Sistem BIEON</h2>
                     <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -1704,7 +1759,7 @@ export function DeviceControlPage({ onNavigate }) {
                     {!isTechnicianMode && (
                       <button
                         onClick={() => setStep("input-id")}
-                        className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl  shadow-lg hover:shadow-xl transition-all"
+                        className="px-8 py-4 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl  shadow-lg hover:shadow-xl transition-all"
                       >
                         <Plus className="w-5 h-5 inline mr-2" />
                         Tambah BIEON Pertama
@@ -1717,7 +1772,7 @@ export function DeviceControlPage({ onNavigate }) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
                       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                          <div className="w-12 h-12 bg-gradient-to-br from-bieon-eco to-bieon-sense rounded-xl flex items-center justify-center">
                             <Home className="w-6 h-6 text-white" />
                           </div>
                           <div>
@@ -1773,7 +1828,7 @@ export function DeviceControlPage({ onNavigate }) {
                         {!isTechnicianMode && (
                           <button
                             onClick={() => setStep("input-id")}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#009b7c] text-white rounded-lg  hover:bg-emerald-700 transition-all shadow-md active:scale-95"
+                            className="flex items-center gap-2 px-4 py-2 bg-bieon-eco text-white rounded-lg  hover:bg-bieon-eco/90 transition-all shadow-md active:scale-95"
                           >
                             <Plus className="w-4 h-4" />
                             Tambah BIEON
@@ -1784,7 +1839,7 @@ export function DeviceControlPage({ onNavigate }) {
                         {bieonSystems.map((bieon) => (
                           <div
                             key={bieon.id}
-                            className="border-2 border-gray-200 rounded-xl p-6 hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer"
+                            className="border-2 border-gray-200 rounded-xl p-6 hover:border-bieon-eco hover:shadow-lg transition-all cursor-pointer"
                             onClick={() => {
                               setCurrentBieon(bieon);
                               setSelectedRoom("all");
@@ -1793,7 +1848,7 @@ export function DeviceControlPage({ onNavigate }) {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                                <div className="w-16 h-16 bg-gradient-to-br from-bieon-eco to-bieon-sense rounded-xl flex items-center justify-center">
                                   <Home className="w-8 h-8 text-white" />
                                 </div>
                                 <div>
@@ -1845,7 +1900,7 @@ export function DeviceControlPage({ onNavigate }) {
                         value={bieonIdInput}
                         onChange={(e) => setBieonIdInput(e.target.value)}
                         placeholder="Contoh: BIEON-001"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bieon-eco"
                       />
                       <p className="text-xs text-gray-500 mt-2">
                         Demo: Coba BIEON-001, BIEON-002, BIEON-003, atau BIEON-004
@@ -1863,7 +1918,7 @@ export function DeviceControlPage({ onNavigate }) {
                       </button>
                       <button
                         onClick={handleSubmitBieonId}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl  shadow-lg hover:shadow-xl transition-all"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl  shadow-lg hover:shadow-xl transition-all"
                       >
                         Submit
                       </button>
@@ -1883,7 +1938,7 @@ export function DeviceControlPage({ onNavigate }) {
                       <p className="text-sm text-gray-600 mt-1">ID: {currentBieon.bieonId}</p>
                       <div className="flex items-center gap-4 mt-3">
                         <div className="flex items-center gap-2">
-                          <Wifi className="w-4 h-4 text-emerald-600" />
+                          <Wifi className="w-4 h-4 text-bieon-eco" />
                           <span className="text-sm font-semibold text-gray-700">{currentBieon.totalHubs} Hub Nodes</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1895,7 +1950,7 @@ export function DeviceControlPage({ onNavigate }) {
                     {!isTechnicianMode && (
                       <button
                         onClick={handleAddHub}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition-all self-start"
+                        className="flex items-center gap-2 px-4 py-2 bg-bieon-eco text-white rounded-lg font-bold hover:bg-bieon-eco/90 transition-all self-start"
                       >
                         <Plus className="w-4 h-4" />
                         Add Hub
@@ -1907,11 +1962,11 @@ export function DeviceControlPage({ onNavigate }) {
                     {currentBieon.hubs.map((hub) => (
                       <div
                         key={hub.id}
-                        className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-4 sm:p-6 hover:shadow-xl transition-all text-left flex flex-col justify-between"
+                        className="bg-gradient-to-br from-bieon-eco/5 to-bieon-sense/5 border-2 border-bieon-eco/30 rounded-xl p-4 sm:p-6 hover:shadow-xl transition-all text-left flex flex-col justify-between"
                       >
                         <div>
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                            <div className="w-12 h-12 bg-gradient-to-br from-bieon-eco to-bieon-sense rounded-lg flex items-center justify-center">
                               <Wifi className="w-6 h-6 text-white" />
                             </div>
                             <div>
@@ -1926,7 +1981,7 @@ export function DeviceControlPage({ onNavigate }) {
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-gray-600 font-semibold">Status:</span>
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${hub.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${hub.status === "active" ? "bg-bieon-eco/10 text-bieon-eco/90" : "bg-gray-100 text-gray-600"}`}>
                                 {hub.status}
                               </span>
                             </div>
@@ -1934,7 +1989,7 @@ export function DeviceControlPage({ onNavigate }) {
                         </div>
                         <button
                           onClick={() => handleSelectHub(hub)}
-                          className="mt-6 w-full py-2.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2 shadow-sm"
+                          className="mt-6 w-full py-2.5 bg-bieon-eco text-white font-bold rounded-lg hover:bg-bieon-eco/90 transition-colors flex justify-center items-center gap-2 shadow-sm"
                         >
                           <Plus className="w-4 h-4" /> Add Device
                         </button>
@@ -1948,7 +2003,7 @@ export function DeviceControlPage({ onNavigate }) {
                   <div className="flex flex-wrap gap-3 mb-6">
                     <button
                       onClick={() => setSelectedRoom("all")}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${selectedRoom === "all" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${selectedRoom === "all" ? "bg-gradient-to-r from-bieon-eco to-bieon-sense text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                     >
                       Semua Ruangan ({currentBieon?.hubs.flatMap(h => h.devices).length || 0})
                     </button>
@@ -1959,7 +2014,7 @@ export function DeviceControlPage({ onNavigate }) {
                         <button
                           key={room}
                           onClick={() => setSelectedRoom(room)}
-                          className={`px-4 py-2 rounded-lg transition-all font-semibold ${selectedRoom === room ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                          className={`px-4 py-2 rounded-lg transition-all font-semibold ${selectedRoom === room ? "bg-gradient-to-r from-bieon-eco to-bieon-sense text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                         >
                           {room} ({deviceCount})
                         </button>
@@ -1978,13 +2033,13 @@ export function DeviceControlPage({ onNavigate }) {
                     <div className="flex flex-col sm:flex-row items-center gap-3">
                       {/* Search Bar */}
                       <div className="relative w-full sm:w-64 group">
-                        <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-emerald-500 transition-colors" />
+                        <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-bieon-eco transition-colors" />
                         <input
                           type="text"
                           placeholder="Cari perangkat..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-sm"
+                          className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco focus:bg-white transition-all shadow-sm"
                         />
                       </div>
 
@@ -1992,19 +2047,19 @@ export function DeviceControlPage({ onNavigate }) {
                       <div className="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
                         <button
                           onClick={() => setActiveFilterCategory("all")}
-                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "all" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "all" ? "bg-white text-bieon-eco shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                         >
                           Semua
                         </button>
                         <button
                           onClick={() => setActiveFilterCategory("sensor")}
-                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "sensor" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "sensor" ? "bg-white text-bieon-eco shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                         >
                           Sensor
                         </button>
                         <button
                           onClick={() => setActiveFilterCategory("control")}
-                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "control" ? "bg-white text-emerald-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                          className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "control" ? "bg-white text-bieon-eco shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                         >
                           Aktuator
                         </button>
@@ -2017,7 +2072,7 @@ export function DeviceControlPage({ onNavigate }) {
                       .filter(d => d.category?.toLowerCase() === "sensor" && d.currentValues?.temperature !== undefined)
                       .slice(0, 3) // Ambil maksimal 3 sensor suhu saja
                       .map((sensor) => (
-                        <div key={sensor.id} className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm flex items-center justify-between">
+                        <div key={sensor.id} className="bg-white p-4 rounded-xl border border-bieon-eco/20 shadow-sm flex items-center justify-between">
                           <div>
                             <p className="text-xs text-gray-400 font-bold uppercase">{sensor.name}</p>
                             <p className="text-xl font-black text-gray-900">{sensor.currentValues.temperature}°C</p>
@@ -2048,25 +2103,25 @@ export function DeviceControlPage({ onNavigate }) {
                           <div
                             key={device.id}
                             id={`device-${device.id}`}
-                            className={`border border-gray-200 rounded-xl p-4 sm:p-5 transition-all ${expandedDevice === device.id ? "shadow-md bg-white ring-2 ring-emerald-500" : "hover:shadow-md bg-white"}`}
+                            className={`border border-gray-200 rounded-xl p-4 sm:p-5 transition-all ${expandedDevice === device.id ? "shadow-md bg-white ring-2 ring-bieon-eco" : "hover:shadow-md bg-white"}`}
                           >
                             {/* Slim Header - Always visible */}
                             <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}>
                               <div className="flex items-start gap-3">
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActuallyOn ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-emerald-950"}`}>
-                                  <Power className={`w-5 h-5 sm:w-6 sm:h-6 ${isActuallyOn ? "text-white" : "text-emerald-700"}`} />
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActuallyOn ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-gray-900"}`}>
+                                  <Power className={`w-5 h-5 sm:w-6 sm:h-6 ${isActuallyOn ? "text-white" : "text-bieon-eco/90"}`} />
                                 </div>
                                 <div className="min-w-0">
                                   <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">{device.name}</h3>
                                   <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1">
                                     <span className="text-xs sm:text-sm font-semibold text-gray-600">{device.deviceType} • {device.location}</span>
-                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${isActuallyOn ? "bg-emerald-100 text-emerald-700 shadow-sm border border-emerald-200" : "bg-gray-800 text-gray-300 border border-gray-700"}`}>
+                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${isActuallyOn ? "bg-bieon-eco/10 text-bieon-eco/90 shadow-sm border border-bieon-eco/30" : "bg-gray-800 text-gray-300 border border-gray-700"}`}>
                                       {isActuallyOn ? "ON / ACTIVE" : "OFF / STANDBY"}
                                     </span>
                                   </div>
                                   <p className="text-xs text-gray-400 mt-1 hidden sm:block">ID: {device.id} • Installed: {new Date(device.installedDate).toLocaleDateString("id-ID")}</p>
                                   {(device.notes || device.thresholds?.notes) && (
-                                    <p className="text-[10px] text-emerald-600 font-medium mt-1 bg-emerald-50 px-2 py-0.5 rounded-md w-fit border border-emerald-100 italic">
+                                    <p className="text-[10px] text-bieon-eco font-medium mt-1 bg-bieon-eco/5 px-2 py-0.5 rounded-md w-fit border border-bieon-eco/20 italic">
                                       "{device.notes || device.thresholds.notes}"
                                     </p>
                                   )}
@@ -2078,10 +2133,10 @@ export function DeviceControlPage({ onNavigate }) {
                                     e.stopPropagation();
                                     togglePinDevice(device.id);
                                   }}
-                                  className={`p-2 rounded-lg transition-all ${device.isPinned ? "text-emerald-600 bg-emerald-50" : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"}`}
+                                  className={`p-2 rounded-lg transition-all ${device.isPinned ? "text-bieon-eco bg-bieon-eco/5" : "text-gray-300 hover:text-gray-500 hover:bg-gray-50"}`}
                                   title={device.isPinned ? "Lepas Sematan" : "Sematkan di Atas"}
                                 >
-                                  {device.isPinned ? <Pin className="w-5 h-5 fill-emerald-600" /> : <PinOff className="w-5 h-5" />}
+                                  {device.isPinned ? <Pin className="w-5 h-5 fill-bieon-eco" /> : <PinOff className="w-5 h-5" />}
                                 </button>
                                 <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                                   {expandedDevice === device.id ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
@@ -2096,7 +2151,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 {/* NEW: HASIL MONITORING REAL-TIME SECTION */}
                                 {(device.category?.toLowerCase() === 'sensor' || device.type?.toLowerCase() === 'sensor') && (
                                   <div className="mb-8">
-                                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
+                                    <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                       {/* Temperature Card */}
                                       <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm">
@@ -2127,9 +2182,9 @@ export function DeviceControlPage({ onNavigate }) {
                                       </div>
 
                                       {/* Battery/Signal (Optional) */}
-                                      <div className="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-2xl border border-emerald-100 shadow-sm col-span-2 sm:col-span-1">
+                                      <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm col-span-2 sm:col-span-1">
                                         <div className="flex items-center gap-2 mb-2">
-                                          <Zap className="w-4 h-4 text-emerald-500" />
+                                          <Zap className="w-4 h-4 text-bieon-eco" />
                                           <span className="text-xs font-bold text-gray-500">Baterai Alat</span>
                                         </div>
                                         <div className="flex items-baseline gap-1">
@@ -2148,7 +2203,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="mb-6">
                                     <div className="flex items-center gap-3 mb-4">
                                       <p className="text-sm  text-gray-700 flex items-center gap-2">
-                                        Mode: <span className={`${(device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? "text-emerald-600 bg-emerald-50" : (device.controlMethod === "Manual" || device.controlMethod === "manual" ? "text-blue-600 bg-blue-50" : (device.controlMethod ? "text-purple-600 bg-purple-50" : "text-gray-500 bg-gray-100"))}  px-2 py-0.5 rounded capitalize`}>
+                                        Mode: <span className={`${(device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? "text-bieon-eco bg-bieon-eco/5" : (device.controlMethod === "Manual" || device.controlMethod === "manual" ? "text-blue-600 bg-blue-50" : (device.controlMethod ? "text-purple-600 bg-purple-50" : "text-gray-500 bg-gray-100"))}  px-2 py-0.5 rounded capitalize`}>
                                           {device.controlMethod === "Manual" || device.controlMethod === "manual" ? "Mode Manual" : (device.controlMethod ? ((device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? "Parameter Sensor" : "Jadwal Otomatis") : "-")}
                                         </span>
                                       </p>
@@ -2267,7 +2322,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                       const currentPower = device.controls?.[`${target.type}_power`] || 0;
                                                       updateDeviceControl(device.id, `${target.type}_power`, currentPower === 1 ? 0 : 1);
                                                     }}
-                                                    className={`p-2.5 rounded-xl transition-all active:scale-90 ${device.controls?.[`${target.type}_power`] === 1 ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-gray-50 text-gray-300 border border-gray-100"}`}
+                                                    className={`p-2.5 rounded-xl transition-all active:scale-90 ${device.controls?.[`${target.type}_power`] === 1 ? "bg-bieon-eco/5 text-bieon-eco border border-bieon-eco/20" : "bg-gray-50 text-gray-300 border border-gray-100"}`}
                                                   >
                                                     <Power className="w-4 h-4" />
                                                   </button>
@@ -2326,16 +2381,16 @@ export function DeviceControlPage({ onNavigate }) {
                                                       </div>
                                                     )}
                                                     {(target.type.toLowerCase().includes("kipas") || target.type.toLowerCase().includes("fan")) && (
-                                                      <div className="flex flex-col gap-3 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50">
+                                                      <div className="flex flex-col gap-3 bg-bieon-eco/5 p-3 rounded-2xl border border-bieon-eco/10">
                                                         <div className="flex items-center justify-between px-2">
-                                                          <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Fan Speed</span>
+                                                          <span className="text-[10px] font-black text-bieon-eco uppercase tracking-widest">Fan Speed</span>
                                                           <input
                                                             type="number"
                                                             min="1"
                                                             max="3"
                                                             value={device.controls?.[`${target.type}_speed`] || 1}
                                                             onChange={(e) => updateDeviceControl(device.id, `${target.type}_speed`, parseInt(e.target.value) || 1)}
-                                                            className="w-6 text-[10px] font-black text-emerald-600 bg-emerald-50 rounded text-center focus:outline-none border border-emerald-100"
+                                                            className="w-6 text-[10px] font-black text-bieon-eco bg-bieon-eco/5 rounded text-center focus:outline-none border border-bieon-eco/20"
                                                           />
                                                         </div>
                                                         <div className="flex gap-2">
@@ -2343,7 +2398,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                             <button
                                                               key={speed}
                                                               onClick={() => updateDeviceControl(device.id, `${target.type}_speed`, speed)}
-                                                              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${device.controls?.[`${target.type}_speed`] === speed ? "bg-emerald-500 text-white shadow-lg shadow-emerald-100" : "bg-white border-2 border-emerald-50 border-emerald-100 text-emerald-300 hover:border-emerald-300"}`}
+                                                              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${device.controls?.[`${target.type}_speed`] === speed ? "bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20" : "bg-white border-2 border-bieon-eco/10 border-bieon-eco/20 text-bieon-eco/60 hover:border-bieon-eco/50"}`}
                                                             >
                                                               {speed}
                                                             </button>
@@ -2475,7 +2530,7 @@ export function DeviceControlPage({ onNavigate }) {
                                       }
 
                                       return (
-                                        <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2 shadow-sm transition-all ${isAbnormal ? 'bg-red-600 border-red-700 text-white animate-pulse' : 'bg-emerald-600 border-emerald-700 text-white'}`}>
+                                        <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2 shadow-sm transition-all ${isAbnormal ? 'bg-red-600 border-red-700 text-white animate-pulse' : 'bg-bieon-eco border-bieon-eco/80 text-white'}`}>
                                           <StatusIcon className="w-5 h-5" />
                                           <span className="text-sm  tracking-tight whitespace-nowrap">
                                             STATUS: {isAbnormal ? statusTextAbnormal : statusTextNormal}
@@ -2514,7 +2569,7 @@ export function DeviceControlPage({ onNavigate }) {
                                     )}
                                     {device.currentValues.tds !== undefined && device.sensorParams?.tds?.enabled && (
                                       <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.tds) > parseFloat(device.sensorParams.tds.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
-                                        <Wind className="w-4 h-4 text-teal-600" />
+                                        <Wind className="w-4 h-4 text-bieon-sense" />
                                         <span className="text-sm">TDS: {device.currentValues.tds} ppm</span>
                                       </div>
                                     )}
@@ -2564,16 +2619,16 @@ export function DeviceControlPage({ onNavigate }) {
                                   {!isTechnicianMode && (
                                     <button
                                       onClick={() => handleEditDevice(device)}
-                                      className="flex-1 px-6 py-2.5 bg-emerald-600 text-white rounded-lg  hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                                      className="flex-1 px-6 py-2.5 bg-bieon-eco text-white rounded-lg  hover:bg-bieon-eco/90 transition-colors flex items-center justify-center gap-2 shadow-sm"
                                     >
                                       <Settings className="w-4 h-4" />
                                       Settings
                                     </button>
                                   )}
                                   {isTechnicianMode && (
-                                    <div className="w-full p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
-                                      <ShieldAlert className="w-5 h-5 text-emerald-600" />
-                                      <p className="text-xs  text-emerald-800">Mode Akses Terbatas: Anda hanya diperbolehkan melihat status perangkat.</p>
+                                    <div className="w-full p-4 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 flex items-center gap-3">
+                                      <ShieldAlert className="w-5 h-5 text-bieon-eco" />
+                                      <p className="text-xs  text-gray-700">Mode Akses Terbatas: Anda hanya diperbolehkan melihat status perangkat.</p>
                                     </div>
                                   )}
                                 </div>
@@ -2596,8 +2651,8 @@ export function DeviceControlPage({ onNavigate }) {
                       <X className="w-6 h-6 text-gray-500" />
                     </button>
                   </div>
-                  <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                    <Cpu className="w-10 h-10 text-[#009b7c]" />
+                  <div className="w-20 h-20 bg-bieon-eco/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <Cpu className="w-10 h-10 text-bieon-eco" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">Manajemen Perangkat</h2>
                   <p className="text-sm text-gray-600 mb-8">Apa yang ingin Anda lakukan untuk Hub {selectedHub?.name}?</p>
@@ -2605,9 +2660,9 @@ export function DeviceControlPage({ onNavigate }) {
                   <div className="grid gap-4">
                     <button
                       onClick={() => setStep("open-join")}
-                      className="group p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-[#009b7c] hover:shadow-xl transition-all text-left"
+                      className="group p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-bieon-eco hover:shadow-xl transition-all text-left"
                     >
-                      <h4 className="font-normal text-gray-900 group-hover:text-[#009b7c]">Akses "Open Join"</h4>
+                      <h4 className="font-normal text-gray-900 group-hover:text-bieon-eco">Akses "Open Join"</h4>
                       <p className="text-xs text-gray-500">Kirim Instruksi open join ke hub melalui backend, mqtt dan esp B</p>
                     </button>
 
@@ -2647,7 +2702,7 @@ export function DeviceControlPage({ onNavigate }) {
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Hub Target</p>
                       <div className="bg-gray-50 border border-gray-100 p-5 rounded-3xl flex items-center gap-4">
                         <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
-                          <Cpu className="w-6 h-6 text-[#009b7c]" />
+                          <Cpu className="w-6 h-6 text-bieon-eco" />
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900">{selectedHub?.name || "Hub Node"}</h4>
@@ -2657,8 +2712,8 @@ export function DeviceControlPage({ onNavigate }) {
                     </div>
 
                     {/* INFO BOX GREEN */}
-                    <div className="bg-emerald-50 border border-emerald-100 p-5 rounded-3xl">
-                      <p className="text-xs text-emerald-800 leading-relaxed font-medium">
+                    <div className="bg-bieon-eco/5 border border-bieon-eco/20 p-5 rounded-3xl">
+                      <p className="text-xs text-gray-700 leading-relaxed font-medium">
                         Open join akan aktif selama 30 detik. Saat device berhasil join dan teridentifikasi, backend akan membuat device map otomatis.
                       </p>
                     </div>
@@ -2674,11 +2729,17 @@ export function DeviceControlPage({ onNavigate }) {
                       <button
                         onClick={handleStartDiscovery}
                         disabled={isScanning}
-                        className="flex-[1.5] py-4 px-6 bg-[#009b7c] hover:bg-[#007b62] rounded-2xl text-sm font-bold text-white shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-[1.5] py-4 px-6 bg-bieon-eco hover:bg-bieon-eco/90 rounded-2xl text-sm font-bold text-white shadow-lg shadow-bieon-eco/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isScanning ? (
                           <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="relative w-5 h-5 flex items-center justify-center">
+                              <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-white/30" />
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" fill="transparent" strokeDasharray={50.26} strokeDashoffset={50.26 - (scanTimer / 30) * 50.26} strokeLinecap="round" className="text-white transition-all duration-1000 ease-linear" />
+                              </svg>
+                              <span className="relative z-10 text-[8px] font-black">{scanTimer}</span>
+                            </div>
                             Scanning...
                           </>
                         ) : (
@@ -2689,95 +2750,191 @@ export function DeviceControlPage({ onNavigate }) {
 
                     {/* CONNECTED DEVICES SECTION */}
                     <div className="pt-4 border-t border-gray-100">
-                      <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-4">Perangkat yang Terhubung Saat Open Join</p>
+                      <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-4">Perangkat Terdaftar Anda</p>
 
-                      <div className="space-y-3">
-                        {discoveredDevices.length === 0 && !isScanning && !scanAttempted && (
-                          <div className="flex flex-col items-center justify-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
-                            <p className="text-sm text-gray-400 italic">Menunggu perangkat bergabung...</p>
-                            <p className="text-[10px] text-gray-300 mt-2 text-center px-6">Perangkat yang berhasil join akan muncul di sini</p>
-                          </div>
-                        )}
+                      {(() => {
+                        // Ambil perangkat dari scan live
+                        const fromScan = (discoveredDevices || []).filter(dev => {
+                          const isAlreadyInDb = (currentBieon?.hubs || []).some(hub =>
+                            (hub?.devices || []).some(d => d?.modelId === dev?.id || d?.productId === dev?.id)
+                          );
+                          return !isAlreadyInDb;
+                        });
 
-                        {isScanning && discoveredDevices.length === 0 && (
-                          <div className="flex flex-col items-center justify-center py-10 bg-emerald-50/30 rounded-3xl border border-dashed border-emerald-200 animate-pulse">
-                            <div className="relative w-12 h-12 mb-3">
-                              <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping" />
-                              <div className="relative bg-white p-3 rounded-full shadow-sm">
-                                <Wifi className="w-6 h-6 text-emerald-500" />
+                        // Ambil perangkat "Quick Saved" dari database
+                        const quickSaved = (currentBieon?.hubs || []).flatMap(h => h?.devices || [])
+                          .filter(d => d?.notes === "Quick Saved")
+                          .map(d => ({
+                            id: d?.productId || d?.modelId || d?.id,
+                            dbId: d?._id || d?.id,
+                            name: d?.name,
+                            type: d?.type || d?.deviceType || "",
+                            status: "Belum Dikonfigurasi",
+                            isFromDb: true,
+                            originalDevice: d
+                          })) || [];
+
+                        // Ambil perangkat "Registered" yang belum terpakai dari database
+                        const registeredUnused = registeredProducts
+                          .filter(p => !p.isUsed)
+                          .map(p => ({
+                            id: p.productId,
+                            dbId: p?._id || p?.id,
+                            name: p.productName,
+                            type: p.category === 'sensor' ? (p.aspect === 'air' ? 'Sensor Kualitas Air' : p.aspect === 'kenyamanan' ? 'Sensor Kenyamanan' : p.aspect === 'keamanan' ? 'Sensor Keamanan' : 'Sensor') : 'Control',
+                            status: "Belum Dikonfigurasi",
+                            isFromDb: true,
+                            isFromRegistered: true,
+                            originalProduct: p
+                          })) || [];
+
+                        return (
+                          <div className="space-y-3">
+                            {fromScan.length === 0 && !isScanning && !scanAttempted && (
+                              <div className="flex flex-col items-center justify-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
+                                <p className="text-sm text-gray-400 italic">Menunggu perangkat bergabung...</p>
+                                <p className="text-[10px] text-gray-300 mt-2 text-center px-6">Klik tombol Buka Open Join untuk mulai mendeteksi perangkat baru.</p>
                               </div>
-                            </div>
-                            <p className="text-sm text-emerald-600 font-medium">Sedang mencari perangkat...</p>
-                          </div>
-                        )}
+                            )}
 
-                        <div className="grid gap-3">
-                          {(() => {
-                            // Ambil perangkat dari scan live
-                            const fromScan = discoveredDevices.filter(dev => {
-                              const isAlreadyInDb = currentBieon?.hubs.some(hub =>
-                                hub.devices.some(d => d.modelId === dev.id || d.productId === dev.id)
-                              );
-                              return !isAlreadyInDb;
-                            });
-
-                            // Ambil perangkat "Quick Saved" dari database
-                            const quickSaved = currentBieon?.hubs.flatMap(h => h.devices)
-                              .filter(d => d.notes === "Quick Saved")
-                              .map(d => ({
-                                id: d.productId || d.modelId || d.id,
-                                name: d.name,
-                                type: d.deviceType,
-                                status: "Belum Dikonfigurasi",
-                                isFromDb: true,
-                                originalDevice: d
-                              })) || [];
-
-                            return [...fromScan, ...quickSaved];
-                          })().map((dev) => {
-                            const isJoined = joinedDevicesPool.includes(dev.id) || dev.isFromDb;
-                            return (
-                              <div
-                                key={dev.id}
-                                className={`w-full flex items-center justify-between p-4 bg-white border ${isJoined ? 'border-emerald-500 shadow-md ring-1 ring-emerald-500/20' : 'border-gray-100'} rounded-2xl transition-all group animate-in fade-in slide-in-from-bottom-4 duration-500`}
-                              >
-                                <div className="flex items-center gap-4">
-                                  <div className={`w-10 h-10 ${isJoined ? 'bg-emerald-500' : 'bg-emerald-50'} rounded-xl flex items-center justify-center transition-colors`}>
-                                    {dev.type.includes("Sensor") ? (
-                                      <Info className={`w-5 h-5 ${isJoined ? 'text-white' : 'text-emerald-600'}`} />
-                                    ) : (
-                                      <Cpu className={`w-5 h-5 ${isJoined ? 'text-white' : 'text-emerald-600'}`} />
-                                    )}
-                                  </div>
-                                  <div className="text-left">
-                                    <h5 className="text-sm font-bold text-gray-900">{dev.name}</h5>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[9px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-md font-bold uppercase tracking-wider">{dev.type}</span>
-                                      <span className={`text-[10px] ${isJoined ? 'text-emerald-600 font-bold' : 'text-emerald-500 font-medium'}`}>
-                                        ● {isJoined ? 'Joined & Ready' : dev.status}
-                                      </span>
-                                    </div>
+                            {isScanning && fromScan.length === 0 && (
+                              <div className="flex flex-col items-center justify-center py-10 bg-bieon-eco/5/30 rounded-3xl border border-dashed border-bieon-eco/30 animate-pulse">
+                                <div className="relative w-12 h-12 mb-3">
+                                  <div className="absolute inset-0 bg-bieon-eco/20 rounded-full animate-ping" />
+                                  <div className="relative bg-white p-3 rounded-full shadow-sm flex items-center justify-center">
+                                    <span className="font-bold text-bieon-eco">{scanTimer}</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  {dev.isFromDb ? (
-                                    <button
-                                      onClick={() => handleEditDevice(dev.originalDevice)}
-                                      className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-bold rounded-xl hover:bg-emerald-700 transition-all uppercase tracking-wider shadow-sm"
-                                    >
-                                      Atur Sekarang
-                                    </button>
-                                  ) : (
+                                <p className="text-sm text-bieon-eco font-medium">Sedang mencari perangkat...</p>
+                              </div>
+                            )}
+
+                            {!isScanning && scanAttempted && fromScan.length === 0 && joinedDevicesPool.length === 0 && (
+                              <div className="flex flex-col items-center justify-center py-10 bg-orange-50/50 rounded-3xl border border-dashed border-orange-200">
+                                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                                  <WifiOff className="w-6 h-6 text-orange-500" />
+                                </div>
+                                <h4 className="text-sm font-bold text-orange-600">Perangkat Tidak Ditemukan</h4>
+                                <p className="text-[10px] text-orange-500 mt-2 text-center px-6 leading-relaxed">
+                                  Tidak ada perangkat baru yang terdeteksi. Perangkat yang sudah ada di Perangkat Terdaftar atau Hub tidak akan dimunculkan lagi.
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="grid gap-3">
+                              {[...fromScan, ...quickSaved, ...registeredUnused].map((dev) => {
+                                const isJoined = joinedDevicesPool.includes(dev.id) || dev.isFromDb;
+                                const isSensor = (dev.type || "").toLowerCase().includes("sensor") || 
+                                                 registeredProducts.find(p => p.productId === dev.id)?.category === 'sensor';
+                                
+                                return (
+                                  <div
+                                    key={dev.id}
+                                    className={`w-full flex items-center justify-between p-3 bg-white border ${
+                                      isJoined ? 'border-bieon-eco shadow-md ring-1 ring-bieon-eco/20' : 'border-gray-100'
+                                    } ${
+                                      isSensor ? 'hover:bg-[#f0fdf4] hover:border-bieon-eco/20' : 'hover:bg-blue-50/50 hover:border-blue-200'
+                                    } rounded-2xl transition-all group animate-in fade-in slide-in-from-bottom-4 duration-500`}
+                                  >
+                                    <div className="min-w-0 pr-3 flex-1 text-left">
+                                      <div className="flex items-center gap-2 mb-0.5">
+                                        <p className="text-xs font-bold text-gray-900 truncate">{dev.name}</p>
+                                        {(() => {
+                                          const registeredMatch = registeredProducts.find(p => p.productId === dev.id || p.productId === dev.originalDevice?.productId || p.productId === dev.originalProduct?.productId);
+                                          const aspect = registeredMatch?.aspect || dev.originalDevice?.aspect || dev.originalProduct?.aspect;
+                                          
+                                          let aspectLabel = aspect;
+                                          if (!aspectLabel) {
+                                            const nameLower = (dev.name || "").toLowerCase();
+                                            const typeLower = (dev.type || "").toLowerCase();
+                                            const isControl = nameLower.includes("plug") || nameLower.includes("control") || typeLower.includes("control") || typeLower.includes("plug") ||
+                                                              (registeredMatch && registeredMatch.category === 'control') || dev.originalProduct?.category === 'control';
+                                            if (isControl) {
+                                              aspectLabel = "controll";
+                                            } else if (typeLower.includes("air") || typeLower.includes("water") || typeLower.includes("bluecheck")) {
+                                              aspectLabel = "air";
+                                            } else if (typeLower.includes("kenyamanan") || typeLower.includes("comfort") || typeLower.includes("airguard")) {
+                                              aspectLabel = "kenyamanan";
+                                            } else if (typeLower.includes("keamanan") || typeLower.includes("security")) {
+                                              aspectLabel = "keamanan";
+                                            }
+                                          }
+                                          
+                                          if (!aspectLabel) return null;
+                                          return (
+                                            <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
+                                              aspectLabel === 'kenyamanan' ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' : 
+                                              aspectLabel === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
+                                              aspectLabel === 'controll' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
+                                              'text-orange-500 border-orange-100 bg-orange-50'
+                                            }`}>
+                                              {aspectLabel}
+                                            </span>
+                                          );
+                                        })()}
+                                      </div>
+                                      <p className="text-[9px] text-gray-400 font-medium">ID: {dev.id}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {dev.isFromDb ? (
+                                        <>
+                                          <button
+                                            onClick={() => {
+                                              if (dev.isFromRegistered) {
+                                                const p = dev.originalProduct;
+                                                setSelectedCategory(p.category);
+                                                setSelectedProduct(p);
+                                                setSelectedDeviceType(p.productName);
+                                                if (p.aspect === 'air') {
+                                                  setSelectedDeviceType("Sensor Kualitas Air");
+                                                  setActiveSensorAspect("kualitasAir");
+                                                } else if (p.aspect === 'kenyamanan') {
+                                                  setSelectedDeviceType("Sensor Kenyamanan");
+                                                  setActiveSensorAspect("kenyamanan");
+                                                } else if (p.aspect === 'keamanan') {
+                                                  setSelectedDeviceType("Sensor Keamanan");
+                                                  setActiveSensorAspect("keamanan");
+                                                } else {
+                                                  setActiveSensorAspect(null);
+                                                }
+                                                setDeviceForm({ name: p.productName, location: "", notes: "" });
+                                                setStep("add-device-form");
+                                              } else {
+                                                handleEditDevice(dev.originalDevice);
+                                              }
+                                            }}
+                                            className={`px-3 py-2 ${
+                                              isSensor ? 'bg-bieon-eco hover:bg-bieon-eco/90 shadow-bieon-eco/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                                            } text-white text-[9px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap shadow-sm`}
+                                          >
+                                            Atur Sekarang
+                                          </button>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (dev.isFromRegistered) {
+                                                handleDeleteRegisteredProduct(dev.id);
+                                              } else {
+                                                deleteDevice(dev.dbId || dev.id);
+                                              }
+                                            }}
+                                            className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                            title="Hapus Produk"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </>
+                                      ) : (
                                     <>
                                       {/* TOMBOL + (JOIN) */}
                                       <button
                                         onClick={() => !isJoined && discardingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
                                         disabled={isJoined || discardingDevices[dev.id] !== undefined}
                                         className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isJoined
-                                          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100 cursor-default'
+                                          ? 'bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20 cursor-default'
                                           : discardingDevices[dev.id] !== undefined
                                             ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
-                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-100'
+                                            : 'bg-bieon-eco/5 text-bieon-eco hover:bg-bieon-eco hover:text-white border border-bieon-eco/20'
                                           }`}
                                         title={isJoined ? "Sudah masuk antrean" : discardingDevices[dev.id] !== undefined ? "Tidak bisa menambah saat proses hapus" : "Tambahkan ke antrean"}
                                       >
@@ -2841,39 +2998,12 @@ export function DeviceControlPage({ onNavigate }) {
                           })}
                         </div>
                       </div>
+                    );
+                  })()}
 
-                      {/* ACTION BOX: POOL ACTIONS [NEW REFINED] */}
-                      {joinedDevicesPool.length === 0 ? (
-                        !isScanning && scanAttempted && discoveredDevices.length === 0 ? (
-                          <div className="mt-8 p-10 border-2 border-dashed border-orange-200 rounded-[2rem] flex flex-col items-center justify-center text-center bg-orange-50/30 animate-in fade-in zoom-in-95 duration-500">
-                            <div className="w-16 h-16 bg-orange-100 rounded-2xl shadow-sm flex items-center justify-center mb-4">
-                              <AlertCircle className="w-8 h-8 text-orange-600" />
-                            </div>
-                            <h4 className="text-sm font-bold text-orange-800">Perangkat tidak ditemukan</h4>
-                            <p className="text-[10px] text-orange-600 max-w-[220px] mt-2 italic leading-relaxed">
-                              Oops! BIEON tidak menemukan perangkat baru. Pastikan perangkat dalam mode pairing.
-                            </p>
-                            <button
-                              onClick={handleStartDiscovery}
-                              className="mt-5 px-8 py-3 bg-orange-600 text-white text-xs font-bold rounded-2xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 active:scale-95 flex items-center gap-2"
-                            >
-                              <Activity className="w-3 h-3" />
-                              Coba Scan Lagi
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="mt-8 p-10 border-2 border-dashed border-gray-100 rounded-[2rem] flex flex-col items-center justify-center text-center bg-gray-50/50 animate-in fade-in zoom-in-95 duration-500">
-                            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 animate-pulse">
-                              <Radio className="w-8 h-8 text-[#009b7c]/40" />
-                            </div>
-                            <h4 className="text-sm font-bold text-gray-500">{isScanning ? "Mencari Perangkat..." : "Menunggu Perangkat..."}</h4>
-                            <p className="text-[10px] text-gray-400 max-w-[200px] mt-1 italic leading-relaxed">
-                              {isScanning ? "Mohon tunggu, BIEON sedang mendeteksi perangkat di sekitar." : "Aktifkan mode pairing pada perangkat Anda agar terdeteksi oleh Hub."}
-                            </p>
-                          </div>
-                        )
-                      ) : (
-                        <div className="mt-8 p-6 bg-[#009b7c] rounded-[2rem] shadow-xl shadow-emerald-100 animate-in zoom-in-95 duration-300">
+                  {/* ACTION BOX: POOL ACTIONS [NEW REFINED] */}
+                      {joinedDevicesPool.length === 0 ? null : (
+                        <div className="mt-8 p-6 bg-bieon-eco rounded-[2rem] shadow-xl shadow-bieon-eco/20 animate-in zoom-in-95 duration-300">
                           <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center gap-3 text-white">
                               <div className="bg-white/20 p-2 rounded-xl">
@@ -2972,7 +3102,7 @@ export function DeviceControlPage({ onNavigate }) {
 
                                         setStep("add-device-form");
                                       }}
-                                      className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-[#009b7c] text-[10px] font-bold rounded-lg transition-all shadow-sm"
+                                      className="px-3 py-1.5 bg-white hover:bg-bieon-eco/5 text-bieon-eco text-[10px] font-bold rounded-lg transition-all shadow-sm"
                                     >
                                       Atur
                                     </button>
@@ -3016,7 +3146,7 @@ export function DeviceControlPage({ onNavigate }) {
                         type="text"
                         value={productRegForm.id}
                         onChange={(e) => setProductRegForm({ ...productRegForm, id: e.target.value })}
-                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold"
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold"
                         placeholder="Ketik atau pilih ID (Contoh: SNZB...)"
                       />
                       <datalist id="device-ids">
@@ -3031,7 +3161,7 @@ export function DeviceControlPage({ onNavigate }) {
                         <button
                           type="button"
                           onClick={() => setProductRegForm({ ...productRegForm, category: 'sensor' })}
-                          className={`p-4 rounded-2xl border-2 transition-all text-base font-bold flex items-center justify-center gap-2 ${productRegForm.category === 'sensor' ? 'bg-emerald-50 border-emerald-500 text-emerald-600 shadow-md shadow-emerald-50' : 'bg-gray-50 border-gray-100 text-gray-400'}`}
+                          className={`p-4 rounded-2xl border-2 transition-all text-base font-bold flex items-center justify-center gap-2 ${productRegForm.category === 'sensor' ? 'bg-bieon-eco/5 border-bieon-eco text-bieon-eco shadow-md shadow-bieon-eco/10' : 'bg-gray-50 border-gray-100 text-gray-400'}`}
                         >
                           <Activity className="w-5 h-5" />
                           Sensor
@@ -3069,7 +3199,7 @@ export function DeviceControlPage({ onNavigate }) {
                         <select
                           value={productRegForm.aspect}
                           onChange={(e) => setProductRegForm({ ...productRegForm, aspect: e.target.value })}
-                          className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold text-gray-700"
+                          className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold text-gray-700"
                         >
                           <option value="">-- Pilih Kategori --</option>
                           <option value="kenyamanan">Kenyamanan</option>
@@ -3086,7 +3216,7 @@ export function DeviceControlPage({ onNavigate }) {
                         type="text"
                         value={productRegForm.name}
                         onChange={(e) => setProductRegForm({ ...productRegForm, name: e.target.value })}
-                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold"
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold"
                         placeholder="Contoh: SNZB-02D"
                       />
                     </div>
@@ -3101,7 +3231,7 @@ export function DeviceControlPage({ onNavigate }) {
                       <button
                         type="submit"
                         onClick={(e) => handleRegisterProduct(e, "add-device-form")}
-                        className="flex-1 py-3.5 bg-[#009b7c] text-white rounded-xl font-bold text-base shadow-lg shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        className="flex-1 py-3.5 bg-bieon-eco text-white rounded-xl font-bold text-base shadow-lg shadow-bieon-eco/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                       >
                         Registrasi & Lanjut
                       </button>
@@ -3132,193 +3262,258 @@ export function DeviceControlPage({ onNavigate }) {
 
                   <div className="relative mb-8 group">
                     <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                      <Search className="w-5 h-5 text-gray-400 group-focus-within:text-[#009b7c] transition-colors" />
+                      <Search className="w-5 h-5 text-gray-400 group-focus-within:text-bieon-eco transition-colors" />
                     </div>
                     <input
                       type="text"
                       value={productSearchQuery}
                       onChange={(e) => setProductSearchQuery(e.target.value)}
                       placeholder="Cari perangkat berdasarkan nama atau ID..."
-                      className="w-full pl-14 pr-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-[1.5rem] focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-emerald-50 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-400 placeholder:font-normal shadow-sm"
+                      className="w-full pl-14 pr-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-[1.5rem] focus:bg-white focus:border-bieon-eco focus:ring-4 focus:ring-bieon-eco/10 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-400 placeholder:font-normal shadow-sm"
                     />
                   </div>
 
-                  {/* NEW: Quick Saved Devices Section (Devices in Hub but not configured) */}
+                  {/* NEW: Devices rendering logic */}
                   {(() => {
-                    const quickSaved = currentBieon?.hubs.flatMap(h => h.devices)
-                      .filter(d => d.notes === "Quick Saved") || [];
+                    const quickSaved = (currentBieon?.hubs || []).flatMap(h => h?.devices || []).filter(d => d?.notes === "Quick Saved") || [];
+                    const sq = productSearchQuery.toLowerCase();
+                    const quickSavedSensors = quickSaved.filter(d =>
+                      (d?.category?.toLowerCase() === 'sensor' || (d?.type || "").toLowerCase().includes("sensor") || (d?.name || "").toLowerCase().includes("airguard") || (d?.name || "").toLowerCase().includes("bluecheck")) &&
+                      ((d?.name || "").toLowerCase().includes(sq) || (d?.id || "").toLowerCase().includes(sq))
+                    );
+                    const quickSavedControls = quickSaved.filter(d =>
+                      (d?.category?.toLowerCase() === 'control' || (d?.type || "").toLowerCase().includes("plug") || (d?.name || "").toLowerCase().includes("plug")) &&
+                      ((d?.name || "").toLowerCase().includes(sq) || (d?.id || "").toLowerCase().includes(sq))
+                    );
 
-                    if (quickSaved.length === 0) return null;
+                    const filteredSensorProducts = registeredProducts.filter(p => p.category === 'sensor' && !p.isUsed && (p.productName.toLowerCase().includes(productSearchQuery.toLowerCase()) || p.productId.toLowerCase().includes(productSearchQuery.toLowerCase())));
+                    const filteredControlProducts = registeredProducts.filter(p => p.category === 'control' && !p.isUsed && (p.productName.toLowerCase().includes(productSearchQuery.toLowerCase()) || p.productId.toLowerCase().includes(productSearchQuery.toLowerCase())));
 
                     return (
-                      <div className="mb-10 bg-emerald-50/50 border-2 border-emerald-100 rounded-[2rem] p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
-                            <Plus className="w-5 h-5" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Kolom Sensor */}
+                        <div className="bg-[#f0fdf4] border-2 border-[#bbf7d0] rounded-[2rem] p-5">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-bieon-eco rounded-2xl flex items-center justify-center text-white shadow-lg shadow-bieon-eco/30">
+                              <Activity className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900">Sensor</h3>
+                              <p className="text-[9px] font-bold text-bieon-eco uppercase tracking-widest">Monitoring System</p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900">Siap Dikonfigurasi</h3>
-                            <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Perangkat yang baru saja tersambung</p>
+
+                          <div className="bg-white rounded-3xl border border-bieon-eco/20 overflow-hidden shadow-sm">
+                            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar p-2">
+                              {/* Quick Saved Sensors */}
+                              {quickSavedSensors.map((dev) => (
+                                <div key={dev.id} className="flex items-center justify-between p-3 mb-2 bg-white hover:bg-[#f0fdf4] border border-gray-100 hover:border-bieon-eco/20 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                                  <div className="min-w-0 pr-3 flex-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <p className="text-xs font-bold text-gray-900 truncate">{dev.name}</p>
+                                      {(() => {
+                                        const registeredMatch = registeredProducts.find(p => p.productId === dev.id || p.productId === dev.originalDevice?.productId);
+                                        const aspect = registeredMatch?.aspect || dev.originalDevice?.aspect || 'Sensor';
+                                        return (
+                                          <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${aspect === 'kenyamanan' ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' : aspect === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' : 'text-orange-500 border-orange-100 bg-orange-50'}`}>
+                                            {aspect}
+                                          </span>
+                                        );
+                                      })()}
+                                    </div>
+                                    <p className="text-[9px] text-gray-400 font-medium">ID: {dev.id}</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleEditDevice(dev)}
+                                      className="px-3 py-2 bg-bieon-eco text-white text-[9px] font-bold rounded-xl hover:bg-bieon-eco/90 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-bieon-eco/20"
+                                    >
+                                      Atur Sekarang
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteDevice(dev.id);
+                                      }}
+                                      className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                      title="Hapus Produk"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {/* Separator if both exist */}
+                              {quickSavedSensors.length > 0 && filteredSensorProducts.length > 0 && (
+                                <div className="w-full h-px bg-gray-100 my-3"></div>
+                              )}
+
+                              {/* Registered Products (Not Configured) */}
+                              {filteredSensorProducts.length > 0 ? (
+                                filteredSensorProducts.map((product, idx, filteredArr) => (
+                                  <div key={product.productId} className="flex items-center justify-between p-3 mb-2 bg-white hover:bg-[#f0fdf4] border border-gray-100 hover:border-bieon-eco/20 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                                    <div className="min-w-0 pr-3 flex-1">
+                                      <div className="flex items-center gap-2 mb-0.5">
+                                        <p className="text-xs font-bold text-gray-900 truncate">{product.productName}</p>
+                                        <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${product.aspect === 'kenyamanan' ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' : product.aspect === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' : 'text-orange-500 border-orange-100 bg-orange-50'}`}>
+                                          {product.aspect || 'Sensor'}
+                                        </span>
+                                      </div>
+                                      <p className="text-[9px] text-gray-400 font-medium">ID: {product.productId}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => {
+                                          setSelectedCategory("sensor");
+                                          setSelectedProduct(product);
+                                          setSelectedDeviceType(product.productName);
+                                          if (product.aspect === 'air') {
+                                            setSelectedDeviceType("Sensor Kualitas Air");
+                                            setActiveSensorAspect("kualitasAir");
+                                          } else if (product.aspect === 'kenyamanan') {
+                                            setSelectedDeviceType("Sensor Kenyamanan");
+                                            setActiveSensorAspect("kenyamanan");
+                                          } else if (product.aspect === 'keamanan') {
+                                            setSelectedDeviceType("Sensor Keamanan");
+                                            setActiveSensorAspect("keamanan");
+                                          } else {
+                                            setActiveSensorAspect(null);
+                                          }
+                                          setDeviceForm({ name: product.productName, location: "", notes: "" });
+                                          setStep("add-device-form");
+                                          setProductSearchQuery("");
+                                        }}
+                                        className="px-3 py-2 bg-bieon-eco text-white text-[9px] font-bold rounded-xl hover:bg-bieon-eco/90 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-bieon-eco/20"
+                                      >
+                                        Atur Sekarang
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteRegisteredProduct(product.productId);
+                                        }}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                        title="Hapus Produk"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (quickSavedSensors.length === 0 && (
+                                <div className="py-12 text-center">
+                                  <p className="text-xs font-medium text-gray-400">Belum ada sensor terdaftar</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {quickSaved.map((dev) => (
-                            <div key={dev.id} className="flex items-center justify-between p-4 bg-white border border-emerald-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
-                              <div className="min-w-0">
-                                <p className="text-sm font-bold text-gray-900 truncate">{dev.name}</p>
-                                <p className="text-[10px] text-gray-400">ID: {dev.id}</p>
-                              </div>
-                              <button
-                                onClick={() => handleEditDevice(dev)}
-                                className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-bold rounded-xl hover:bg-emerald-700 transition-all uppercase tracking-wider"
-                              >
-                                Atur Sekarang
-                              </button>
+
+                        {/* Kolom Control */}
+                        <div className="bg-[#eff6ff] border-2 border-[#bfdbfe] rounded-[2rem] p-5">
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                              <Cpu className="w-6 h-6" />
                             </div>
-                          ))}
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900">Control</h3>
+                              <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Actuator System</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-white rounded-3xl border border-blue-100 overflow-hidden shadow-sm">
+                            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar p-2">
+                              {/* Quick Saved Controls */}
+                              {quickSavedControls.map((dev) => (
+                                <div key={dev.id} className="flex items-center justify-between p-3 mb-2 bg-white hover:bg-blue-50/50 border border-gray-100 hover:border-blue-200 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                                  <div className="min-w-0 pr-3 flex-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <p className="text-xs font-bold text-gray-900 truncate">{dev.name}</p>
+                                      <span className="text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border text-blue-500 border-blue-100 bg-blue-50">
+                                        controll
+                                      </span>
+                                    </div>
+                                    <p className="text-[9px] text-gray-400 font-medium">ID: {dev.id}</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleEditDevice(dev)}
+                                      className="px-3 py-2 bg-blue-600 text-white text-[9px] font-bold rounded-xl hover:bg-blue-700 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-blue-600/20"
+                                    >
+                                      Atur Sekarang
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteDevice(dev.id);
+                                      }}
+                                      className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                      title="Hapus Produk"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {/* Separator if both exist */}
+                              {quickSavedControls.length > 0 && filteredControlProducts.length > 0 && (
+                                <div className="w-full h-px bg-gray-100 my-3"></div>
+                              )}
+
+                              {/* Registered Products (Not Configured) */}
+                              {filteredControlProducts.length > 0 ? (
+                                filteredControlProducts.map((product, idx, filteredArr) => (
+                                  <div key={product.productId} className="flex items-center justify-between p-3 mb-2 bg-white hover:bg-blue-50/50 border border-gray-100 hover:border-blue-200 rounded-2xl shadow-sm hover:shadow-md transition-all group">
+                                    <div className="min-w-0 pr-3 flex-1">
+                                      <div className="flex items-center gap-2 mb-0.5">
+                                        <p className="text-xs font-bold text-gray-900 truncate">{product.productName}</p>
+                                        <span className="text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border text-blue-500 border-blue-100 bg-blue-50">
+                                          controll
+                                        </span>
+                                      </div>
+                                      <p className="text-[9px] text-gray-400 font-medium">ID: {product.productId}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => {
+                                          setSelectedCategory("control");
+                                          setSelectedProduct(product);
+                                          setSelectedDeviceType(product.productName);
+                                          setActiveSensorAspect(null);
+                                          setDeviceForm({ name: product.productName, location: "", notes: "" });
+                                          setStep("add-device-form");
+                                          setProductSearchQuery("");
+                                        }}
+                                        className="px-3 py-2 bg-blue-600 text-white text-[9px] font-bold rounded-xl hover:bg-blue-700 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-blue-600/20"
+                                      >
+                                        Atur Sekarang
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteRegisteredProduct(product.productId);
+                                        }}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                        title="Hapus Produk"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (quickSavedControls.length === 0 && (
+                                <div className="py-12 text-center">
+                                  <p className="text-xs font-medium text-gray-400">Belum ada control terdaftar</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
                   })()}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Kolom Sensor */}
-                    <div className="bg-[#f0fdf4] border-2 border-[#bbf7d0] rounded-[2rem] p-5">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
-                          <Activity className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">Sensor</h3>
-                          <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Monitoring System</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-white rounded-3xl border border-emerald-100 overflow-hidden shadow-sm">
-                        <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
-                          {registeredProducts.filter(p => p.category === 'sensor' && !p.isUsed && (p.productName.toLowerCase().includes(productSearchQuery.toLowerCase()) || p.productId.toLowerCase().includes(productSearchQuery.toLowerCase()))).length > 0 ? (
-                            registeredProducts.filter(p => p.category === 'sensor' && !p.isUsed && (p.productName.toLowerCase().includes(productSearchQuery.toLowerCase()) || p.productId.toLowerCase().includes(productSearchQuery.toLowerCase()))).map((product, idx, filteredArr) => (
-                              <div
-                                key={product.productId}
-                                className={`w-full flex items-center group transition-all hover:bg-emerald-50/50 ${idx !== filteredArr.length - 1 ? 'border-b border-gray-50' : ''}`}
-                              >
-                                <button
-                                  onClick={() => {
-                                    setSelectedCategory("sensor");
-                                    setSelectedProduct(product);
-                                    setSelectedDeviceType(product.productName);
-                                    if (product.aspect === 'air') {
-                                      setSelectedDeviceType("Sensor Kualitas Air");
-                                      setActiveSensorAspect("kualitasAir");
-                                    } else if (product.aspect === 'kenyamanan') {
-                                      setSelectedDeviceType("Sensor Kenyamanan");
-                                      setActiveSensorAspect("kenyamanan");
-                                    } else if (product.aspect === 'keamanan') {
-                                      setSelectedDeviceType("Sensor Keamanan");
-                                      setActiveSensorAspect("keamanan");
-                                    } else {
-                                      setActiveSensorAspect(null);
-                                    }
-                                    setDeviceForm({ name: product.productName, location: "", notes: "" });
-                                    setStep("add-device-form");
-                                    setProductSearchQuery("");
-                                  }}
-                                  className="flex-1 pl-5 pr-2 py-4 flex flex-col items-start text-left"
-                                >
-                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <span className="font-bold text-gray-900 text-sm">{product.productName}</span>
-                                    <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${product.aspect === 'kenyamanan' ? 'text-emerald-500 border-emerald-100 bg-emerald-50' :
-                                      product.aspect === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' :
-                                        'text-orange-500 border-orange-100 bg-orange-50'
-                                      }`}>
-                                      {product.aspect || 'Sensor'}
-                                    </span>
-                                  </div>
-                                  <span className="text-[10px] text-gray-400 font-medium">ID: {product.productId}</span>
-                                </button>
-                                <div className="flex items-center gap-1 pr-3">
-                                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-emerald-500 transition-all" />
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteRegisteredProduct(product.productId);
-                                    }}
-                                    className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                    title="Hapus Produk"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="py-12 text-center">
-                              <p className="text-xs font-medium text-gray-400">Belum ada sensor terdaftar</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Kolom Control */}
-                    <div className="bg-[#eff6ff] border-2 border-[#bfdbfe] rounded-[2rem] p-5">
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                          <Cpu className="w-6 h-6" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">Control</h3>
-                          <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Actuator System</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-white rounded-3xl border border-blue-100 overflow-hidden shadow-sm">
-                        <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
-                          {registeredProducts.filter(p => p.category === 'control' && !p.isUsed && (p.productName.toLowerCase().includes(productSearchQuery.toLowerCase()) || p.productId.toLowerCase().includes(productSearchQuery.toLowerCase()))).length > 0 ? (
-                            registeredProducts.filter(p => p.category === 'control' && !p.isUsed && (p.productName.toLowerCase().includes(productSearchQuery.toLowerCase()) || p.productId.toLowerCase().includes(productSearchQuery.toLowerCase()))).map((product, idx, filteredArr) => (
-                              <div
-                                key={product.productId}
-                                className={`w-full flex items-center group transition-all hover:bg-blue-50/50 ${idx !== filteredArr.length - 1 ? 'border-b border-gray-50' : ''}`}
-                              >
-                                <button
-                                  onClick={() => {
-                                    setSelectedCategory("control");
-                                    setSelectedProduct(product);
-                                    setSelectedDeviceType(product.productName);
-                                    setActiveSensorAspect(null);
-                                    setDeviceForm({ name: product.productName, location: "", notes: "" });
-                                    setStep("add-device-form");
-                                    setProductSearchQuery("");
-                                  }}
-                                  className="flex-1 pl-5 pr-2 py-4 flex flex-col items-start text-left"
-                                >
-                                  <span className="font-bold text-gray-900 text-sm">{product.productName}</span>
-                                  <span className="text-[10px] text-gray-400 font-medium">ID: {product.productId}</span>
-                                </button>
-                                <div className="flex items-center gap-1 pr-3">
-                                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-all" />
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteRegisteredProduct(product.productId);
-                                    }}
-                                    className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                    title="Hapus Produk"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="py-12 text-center">
-                              <p className="text-xs font-medium text-gray-400">Belum ada control terdaftar</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -3347,10 +3542,10 @@ export function DeviceControlPage({ onNavigate }) {
                           setDeviceForm({ name: deviceType, location: "", notes: "" });
                           setStep("add-device-form");
                         }}
-                        className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-emerald-500 hover:shadow-lg transition-all text-left flex items-center justify-between group"
+                        className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-bieon-eco hover:shadow-lg transition-all text-left flex items-center justify-between group"
                       >
                         <span className=" text-gray-900">{deviceType}</span>
-                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-600" />
+                        <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-bieon-eco" />
                       </button>
                     ))}
                   </div>
@@ -3364,7 +3559,7 @@ export function DeviceControlPage({ onNavigate }) {
                   <div className="flex items-center justify-between mb-8">
                     <div>
                       <h2 className="text-3xl font-bold text-gray-900 leading-tight">{isEditingDevice ? "Edit Informasi" : "Informasi Perangkat"}</h2>
-                      <p className="text-sm text-gray-500 mt-1">Lengkapi detail untuk: <span className="font-bold text-[#009b7c]">{selectedDeviceType}</span></p>
+                      <p className="text-sm text-gray-500 mt-1">Lengkapi detail untuk: <span className="font-bold text-bieon-eco">{selectedDeviceType}</span></p>
                     </div>
                     <button
                       onClick={() => {
@@ -3400,7 +3595,8 @@ export function DeviceControlPage({ onNavigate }) {
                           <select
                             value={selectedDeviceType}
                             onChange={(e) => setSelectedDeviceType(e.target.value)}
-                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold text-gray-700"
+                            disabled
+                            className="w-full p-4 bg-gray-100 border-2 border-gray-100 rounded-2xl outline-none font-bold text-gray-500 cursor-not-allowed"
                           >
                             {selectedCategory === "sensor" ? (
                               <>
@@ -3428,7 +3624,7 @@ export function DeviceControlPage({ onNavigate }) {
                             type="text"
                             value={deviceForm.customId !== undefined ? deviceForm.customId : isEditingDevice}
                             onChange={(e) => setDeviceForm({ ...deviceForm, customId: e.target.value })}
-                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none text-gray-700 font-mono text-sm"
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none text-gray-700 font-mono text-sm"
                           />
                         </div>
                         <div>
@@ -3439,7 +3635,7 @@ export function DeviceControlPage({ onNavigate }) {
                               const hub = currentBieon.hubs.find(h => h.id === e.target.value);
                               setSelectedHub(hub);
                             }}
-                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none font-bold text-gray-700"
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold text-gray-700"
                           >
                             {currentBieon?.hubs.map((h) => (
                               <option key={h.id} value={h.id}>{h.name}</option>
@@ -3512,7 +3708,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         <span className="truncate block">{remoteCustomNames[type] || type}</span>
                                         {pairingStates[type] === 'pairing' && <span className="text-[8px] text-blue-500 animate-pulse">Pairing...</span>}
                                         {pairingStates[type] === 'out_of_range' && <span className="text-[8px] text-red-500 font-bold flex items-center gap-1"><AlertCircle className="w-2 h-2" /> Out of Range</span>}
-                                        {pairingStates[type] === 'connected' && <span className="text-[8px] text-emerald-500 font-bold">Connected</span>}
+                                        {pairingStates[type] === 'connected' && <span className="text-[8px] text-bieon-eco font-bold">Connected</span>}
                                       </div>
                                     )}
                                   </div>
@@ -3532,7 +3728,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         </button>
                                         {pairingStates[type] === 'connected' ? (
                                           <div className="flex items-center gap-1">
-                                            <Check className="w-4 h-4 text-emerald-500" />
+                                            <Check className="w-4 h-4 text-bieon-eco" />
                                           </div>
                                         ) : pairingStates[type] === 'out_of_range' ? (
                                           <button
@@ -3682,7 +3878,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         <span className="truncate block">{remoteCustomNames[type] || type}</span>
                                         {pairingStates[type] === 'pairing' && <span className="text-[8px] text-blue-500 animate-pulse">Pairing...</span>}
                                         {pairingStates[type] === 'out_of_range' && <span className="text-[8px] text-red-500 font-bold">Out of Range</span>}
-                                        {pairingStates[type] === 'connected' && <span className="text-[8px] text-emerald-500 font-bold">Connected</span>}
+                                        {pairingStates[type] === 'connected' && <span className="text-[8px] text-bieon-eco font-bold">Connected</span>}
                                       </div>
                                     )}
                                   </div>
@@ -3704,7 +3900,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         )}
                                       </div>
                                     )}
-                                    {remoteTargets.includes(type) && pairingStates[type] === 'connected' && <Check className="w-4 h-4 text-emerald-500" />}
+                                    {remoteTargets.includes(type) && pairingStates[type] === 'connected' && <Check className="w-4 h-4 text-bieon-eco" />}
                                   </div>
                                 </div>
                               </button>
@@ -3738,7 +3934,7 @@ export function DeviceControlPage({ onNavigate }) {
                           {/* Success Toast */}
                           {pairingSuccessInfo && (
                             <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-500">
-                              <div className="bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-emerald-400">
+                              <div className="bg-bieon-eco text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-bieon-eco/70">
                                 <div className="bg-white/20 p-1.5 rounded-full">
                                   <Check className="w-5 h-5" />
                                 </div>
@@ -3767,12 +3963,13 @@ export function DeviceControlPage({ onNavigate }) {
                     )}
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Nama Perangkat</label>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Nama Perangkat <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={deviceForm.name}
                         onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })}
-                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none text-gray-900 font-bold"
+                        disabled={Boolean(isEditingDevice || selectedProduct)}
+                        className={`w-full p-4 border-2 border-gray-100 rounded-2xl outline-none font-bold ${(isEditingDevice || selectedProduct) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-50 focus:border-bieon-eco text-gray-900'}`}
                         placeholder="Contoh: AC Ruang Tamu"
                       />
                     </div>
@@ -3783,19 +3980,19 @@ export function DeviceControlPage({ onNavigate }) {
                         value={deviceForm.notes}
                         onChange={(e) => setDeviceForm({ ...deviceForm, notes: e.target.value })}
                         placeholder="Tambahkan catatan untuk perangkat ini..."
-                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none min-h-[100px] resize-none"
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none min-h-[100px] resize-none"
                       />
                     </div>
                     {!(selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && (
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Lokasi (Ruangan)</label>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Lokasi (Ruangan) <span className="text-red-500">*</span></label>
                           {!showNewRoomInput ? (
                             <div className="relative">
                               <select
                                 value={deviceForm.location}
                                 onChange={(e) => e.target.value === "__new__" ? setShowNewRoomInput(true) : setDeviceForm({ ...deviceForm, location: e.target.value })}
-                                className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none  appearance-none"
+                                className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none  appearance-none"
                               >
                                 <option value="">-- Pilih Ruangan --</option>
                                 {rooms.map((room) => <option key={room} value={room}>{room}</option>)}
@@ -3810,9 +4007,9 @@ export function DeviceControlPage({ onNavigate }) {
                                 value={newRoomInput}
                                 onChange={(e) => setNewRoomInput(e.target.value)}
                                 placeholder="Nama Ruangan..."
-                                className="flex-1 p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-[#009b7c] outline-none "
+                                className="flex-1 p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none "
                               />
-                              <button onClick={handleAddRoom} className="p-4 bg-[#009b7c] text-white rounded-2xl  shadow-lg"><Check className="w-6 h-6" /></button>
+                              <button onClick={handleAddRoom} className="p-4 bg-bieon-eco text-white rounded-2xl  shadow-lg"><Check className="w-6 h-6" /></button>
                               <button onClick={() => setShowNewRoomInput(false)} className="p-4 bg-gray-100 text-gray-400 rounded-2xl"><X className="w-6 h-6" /></button>
                             </div>
                           )}
@@ -3824,29 +4021,44 @@ export function DeviceControlPage({ onNavigate }) {
                   </div>
 
                   <div className="flex gap-4 pt-6">
-                    {(selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) ? (
-                      <>
-                        <button
-                          onClick={() => handleDirectSave()}
-                          className="flex-1 py-4 bg-white border-2 border-[#009b7c] text-[#009b7c] rounded-2xl font-bold transition-all hover:bg-emerald-50 active:scale-[0.98]"
-                        >
-                          Simpan
-                        </button>
-                        <button
-                          onClick={handleSubmitDeviceForm}
-                          className="flex-[1.5] py-4 bg-[#009b7c] text-white rounded-2xl font-bold shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                        >
-                          Lanjut ke Mode Otomatis
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={handleSubmitDeviceForm}
-                        className="flex-1 py-4 bg-[#009b7c] text-white rounded-2xl font-bold shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        {selectedCategory === "sensor" ? "Lanjut ke Parameter" : "Lanjut ke Mode Otomatis"}
-                      </button>
-                    )}
+                    {(() => {
+                      const isRemoteType = (selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote'));
+                      const isValidLocation = Boolean(deviceForm.location && rooms.includes(deviceForm.location));
+                      const isFormValid = isRemoteType
+                        ? (deviceForm.name && remoteTargets.length > 0 && !remoteTargets.some(t => !remoteRooms[t]))
+                        : (deviceForm.name && isValidLocation);
+
+                      if (isRemoteType) {
+                        return (
+                          <>
+                            <button
+                              onClick={() => handleDirectSave()}
+                              disabled={!isFormValid}
+                              className={`flex-1 py-4 border-2 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-white border-bieon-eco text-bieon-eco hover:bg-bieon-eco/5 active:scale-[0.98]' : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'}`}
+                            >
+                              Simpan
+                            </button>
+                            <button
+                              onClick={handleSubmitDeviceForm}
+                              disabled={!isFormValid}
+                              className={`flex-[1.5] py-4 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-bieon-eco text-white shadow-xl shadow-bieon-eco/20 hover:scale-[1.02] active:scale-[0.98]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                            >
+                              Lanjut ke Mode Otomatis
+                            </button>
+                          </>
+                        );
+                      } else {
+                        return (
+                          <button
+                            onClick={handleSubmitDeviceForm}
+                            disabled={!isFormValid}
+                            className={`flex-1 py-4 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-bieon-eco text-white shadow-xl shadow-bieon-eco/20 hover:scale-[1.02] active:scale-[0.98]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                          >
+                            {selectedCategory === "sensor" ? "Lanjut ke Parameter" : "Lanjut ke Mode Otomatis"}
+                          </button>
+                        );
+                      }
+                    })()}
                   </div>
                 </div>
               </div>
@@ -3883,9 +4095,9 @@ export function DeviceControlPage({ onNavigate }) {
                                     setActiveConfigTarget(target);
                                     setIsRemoteDetailView(false);
                                   }}
-                                  className={`px-4 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-2 ${isActive ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-100 bg-gray-50 text-gray-500 hover:border-emerald-200"}`}
+                                  className={`px-4 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-2 ${isActive ? "border-bieon-eco bg-bieon-eco/5 text-bieon-eco/90" : "border-gray-100 bg-gray-50 text-gray-500 hover:border-bieon-eco/30"}`}
                                 >
-                                  <div className={`w-2 h-2 rounded-full ${config.mode === 'manual' ? 'bg-gray-300' : 'bg-emerald-500 animate-pulse'}`} />
+                                  <div className={`w-2 h-2 rounded-full ${config.mode === 'manual' ? 'bg-gray-300' : 'bg-bieon-eco animate-pulse'}`} />
                                   <div className="flex flex-col items-start">
                                     <span className="text-xs font-bold">{remoteCustomNames[target] || target} {remoteBrands[target] && <span className="text-[10px] font-normal opacity-70">({remoteBrands[target]})</span>}</span>
                                     <span className="text-[9px] text-gray-500 font-medium">
@@ -3911,9 +4123,9 @@ export function DeviceControlPage({ onNavigate }) {
                                       setTargetConfigs(prev => ({ ...prev, [target]: { ...config, mode: config.mode === 'sensor' ? 'manual' : 'sensor' } }));
                                       if (config.mode !== 'sensor') setIsRemoteDetailView(true);
                                     }}
-                                    className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'sensor' ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
+                                    className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'sensor' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
                                   >
-                                    <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" />
+                                    <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                                     <div className="text-center sm:text-left">
                                       <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3>
                                       <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Kondisi Lingkungan</p>
@@ -3925,9 +4137,9 @@ export function DeviceControlPage({ onNavigate }) {
                                       setTargetConfigs(prev => ({ ...prev, [target]: { ...config, mode: config.mode === 'schedule' ? 'manual' : 'schedule' } }));
                                       if (config.mode !== 'schedule') setIsRemoteDetailView(true);
                                     }}
-                                    className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'schedule' ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
+                                    className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'schedule' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
                                   >
-                                    <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" />
+                                    <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                                     <div className="text-center sm:text-left">
                                       <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3>
                                       <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Waktu</p>
@@ -3938,8 +4150,8 @@ export function DeviceControlPage({ onNavigate }) {
                                 {/* ASPECT SELECTOR (Only if sensor is selected) */}
                                 {config.mode === 'sensor' && (
                                   <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
-                                    <div className="px-4 py-3 bg-emerald-50 rounded-xl border border-emerald-100 mb-2">
-                                      <p className="text-xs text-emerald-800 flex items-center gap-2">
+                                    <div className="px-4 py-3 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 mb-2">
+                                      <p className="text-xs text-gray-700 flex items-center gap-2">
                                         <Activity className="w-4 h-4" /> Pilih Aspek untuk Dikonfigurasi
                                       </p>
                                     </div>
@@ -3951,10 +4163,10 @@ export function DeviceControlPage({ onNavigate }) {
                                           setTargetConfigs(prev => ({ ...prev, [target]: { ...config, aspect: "kenyamanan" } }));
                                           setActiveSensorAspect("kenyamanan");
                                         }}
-                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'kenyamanan' ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-500 hover:bg-emerald-50"}`}
+                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'kenyamanan' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco hover:bg-bieon-eco/5"}`}
                                       >
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kenyamanan' ? "bg-emerald-200" : "bg-emerald-100"}`}>
-                                          <Activity className="w-6 h-6 text-emerald-600" />
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kenyamanan' ? "bg-bieon-eco/30" : "bg-bieon-eco/10"}`}>
+                                          <Activity className="w-6 h-6 text-bieon-eco" />
                                         </div>
                                         <h4 className="text-sm text-gray-900 mb-1 leading-tight">Kenyamanan</h4>
                                         <p className="text-[10px] text-gray-500">Suhu & Lembap</p>
@@ -4002,9 +4214,9 @@ export function DeviceControlPage({ onNavigate }) {
                         <div className="grid grid-cols-2 gap-4 mb-6">
                           <button
                             onClick={() => setConfigMode("sensor")}
-                            className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "sensor" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
+                            className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "sensor" ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
                           >
-                            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" />
+                            <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                             <div className="text-center sm:text-left">
                               <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3>
                               <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Kondisi Lingkungan</p>
@@ -4012,9 +4224,9 @@ export function DeviceControlPage({ onNavigate }) {
                           </button>
                           <button
                             onClick={() => setConfigMode("schedule")}
-                            className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "schedule" ? "border-emerald-500 bg-emerald-50" : "border-gray-200 hover:border-emerald-300"}`}
+                            className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${configMode === "schedule" ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
                           >
-                            <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600 hidden sm:block" />
+                            <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                             <div className="text-center sm:text-left">
                               <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3>
                               <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Waktu</p>
@@ -4036,8 +4248,8 @@ export function DeviceControlPage({ onNavigate }) {
                         <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
                           {!activeSensorAspect ? (
                             <div className="space-y-4">
-                              <div className="px-4 py-3 bg-emerald-50 rounded-xl border border-emerald-100 mb-6">
-                                <p className="text-sm  text-emerald-800 flex items-center gap-2">
+                              <div className="px-4 py-3 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 mb-6">
+                                <p className="text-sm  text-gray-700 flex items-center gap-2">
                                   <Activity className="w-4 h-4" /> Pilih Aspek untuk Dikonfigurasi
                                 </p>
                               </div>
@@ -4046,10 +4258,10 @@ export function DeviceControlPage({ onNavigate }) {
                                 {/* ASPEK KENYAMANAN */}
                                 <button
                                   onClick={() => setActiveSensorAspect("kenyamanan")}
-                                  className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-2xl hover:border-emerald-500 hover:bg-emerald-50 transition-all group text-center"
+                                  className="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-2xl hover:border-bieon-eco hover:bg-bieon-eco/5 transition-all group text-center"
                                 >
-                                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                                    <Activity className="w-6 h-6 text-emerald-600" />
+                                  <div className="w-12 h-12 bg-bieon-eco/10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                    <Activity className="w-6 h-6 text-bieon-eco" />
                                   </div>
                                   <h4 className="text-sm  text-gray-900 mb-1 leading-tight">Kenyamanan</h4>
                                   <p className="text-[10px] text-gray-500">Suhu & Lembap</p>
@@ -4085,7 +4297,7 @@ export function DeviceControlPage({ onNavigate }) {
                               {selectedCategory !== "sensor" && (
                                 <button
                                   onClick={() => setActiveSensorAspect(null)}
-                                  className="flex items-center gap-2 text-emerald-600  hover:text-emerald-700 transition-colors group mb-2"
+                                  className="flex items-center gap-2 text-bieon-eco  hover:text-bieon-eco/90 transition-colors group mb-2"
                                 >
                                   <ChevronRight className="w-5 h-5 rotate-180" />
                                   Kembali Pilih Aspek
@@ -4095,8 +4307,8 @@ export function DeviceControlPage({ onNavigate }) {
                               {/* ASPEK KENYAMANAN */}
                               {activeSensorAspect === "kenyamanan" && (
                                 <div className="space-y-4">
-                                  <div className="px-4 py-2 bg-emerald-50 rounded-lg border border-emerald-100">
-                                    <p className="text-sm  text-emerald-800 flex items-center gap-2">
+                                  <div className="px-4 py-2 bg-bieon-eco/5 rounded-lg border border-bieon-eco/20">
+                                    <p className="text-sm  text-gray-700 flex items-center gap-2">
                                       <Activity className="w-4 h-4" /> Aspek Kenyamanan
                                     </p>
                                   </div>
@@ -4118,7 +4330,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           temperature: { ...sensorConfig.temperature, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                     {sensorConfig.temperature.enabled && (
@@ -4182,7 +4394,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           humidity: { ...sensorConfig.humidity, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                     {sensorConfig.humidity.enabled && (
@@ -4257,7 +4469,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           motion: { ...sensorConfig.motion, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                   </div>
@@ -4279,7 +4491,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           door: { ...sensorConfig.door, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                   </div>
@@ -4314,7 +4526,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           ph: { ...sensorConfig.ph, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                     {sensorConfig.ph.enabled && (
@@ -4378,7 +4590,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           turbidity: { ...sensorConfig.turbidity, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                     {sensorConfig.turbidity.enabled && (
@@ -4428,7 +4640,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="border-2 border-gray-200 rounded-xl p-5">
                                     <div className="flex items-center justify-between mb-4">
                                       <div className="flex items-center gap-3">
-                                        <Wind className="w-6 h-6 text-teal-600" />
+                                        <Wind className="w-6 h-6 text-bieon-sense" />
                                         <div>
                                           <h4 className="font-bold text-gray-900">TDS (Total Dissolved Solids)</h4>
                                           <p className="text-xs text-gray-500">Status "Tidak Layak" jika TDS air terlalu tinggi</p>
@@ -4441,7 +4653,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           tds: { ...sensorConfig.tds, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                     {sensorConfig.tds.enabled && (
@@ -4504,7 +4716,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           ...sensorConfig,
                                           waterTemp: { ...sensorConfig.waterTemp, enabled: e.target.checked }
                                         })}
-                                        className="w-5 h-5 text-emerald-600 rounded"
+                                        className="w-5 h-5 text-bieon-eco rounded"
                                       />
                                     </div>
                                     {sensorConfig.waterTemp.enabled && (
@@ -4569,11 +4781,11 @@ export function DeviceControlPage({ onNavigate }) {
                               if (isRemote && schedule.target !== currentTarget) return null;
 
                               return (
-                                <div key={index} className="border-2 border-gray-200 rounded-xl p-5 bg-white shadow-sm hover:border-emerald-200 transition-all">
+                                <div key={index} className="border-2 border-gray-200 rounded-xl p-5 bg-white shadow-sm hover:border-bieon-eco/30 transition-all">
                                   <div className="flex items-center justify-between mb-5">
                                     <div className="flex items-center gap-2">
-                                      <Calendar className="w-5 h-5 text-emerald-600" />
-                                      <h4 className=" text-gray-900">Jadwal #{index + 1} {isRemote && <span className="text-xs font-normal text-emerald-500">({schedule.target})</span>}</h4>
+                                      <Calendar className="w-5 h-5 text-bieon-eco" />
+                                      <h4 className=" text-gray-900">Jadwal #{index + 1} {isRemote && <span className="text-xs font-normal text-bieon-eco">({schedule.target})</span>}</h4>
                                     </div>
                                     <button
                                       onClick={() => removeSchedule(index)}
@@ -4591,7 +4803,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           type="time"
                                           value={schedule.startTime}
                                           onChange={(e) => updateSchedule(index, "startTime", e.target.value)}
-                                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bieon-eco focus:border-transparent transition-all"
                                         />
                                       </div>
                                       <div>
@@ -4600,7 +4812,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           type="time"
                                           value={schedule.endTime}
                                           onChange={(e) => updateSchedule(index, "endTime", e.target.value)}
-                                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bieon-eco focus:border-transparent transition-all"
                                         />
                                       </div>
                                     </div>
@@ -4618,7 +4830,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               updateSchedule(index, "days", days);
                                             }}
                                             className={`px-3 py-1.5 rounded-lg text-xs  transition-all ${schedule.days.includes(day)
-                                              ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+                                              ? "bg-bieon-eco text-white shadow-md shadow-bieon-eco/30"
                                               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                               }`}
                                           >
@@ -4634,7 +4846,7 @@ export function DeviceControlPage({ onNavigate }) {
                           })()}
                           <button
                             onClick={addSchedule}
-                            className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-600 rounded-xl  hover:border-emerald-500 hover:text-emerald-600"
+                            className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-600 rounded-xl  hover:border-bieon-eco hover:text-bieon-eco"
                           >
                             + Tambah Jadwal
                           </button>
@@ -4652,7 +4864,7 @@ export function DeviceControlPage({ onNavigate }) {
                     <button
                       id="actual-save-trigger"
                       onClick={((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && isRemoteDetailView) ? () => { setIsRemoteDetailView(false); setActiveSensorAspect(null); } : handleSaveDevice}
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl  shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl  shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                     >
                       <Save className="w-5 h-5" />
                       {((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && isRemoteDetailView) ? "Selesai Atur Perangkat" : "Simpan Konfigurasi"}
@@ -4668,7 +4880,7 @@ export function DeviceControlPage({ onNavigate }) {
       {showTokenModal && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-[200] p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="bg-emerald-600 p-6 text-center text-white relative">
+            <div className="bg-bieon-eco p-6 text-center text-white relative">
               <button
                 onClick={() => setShowTokenModal(false)}
                 className="absolute top-4 right-4 p-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
@@ -4678,19 +4890,19 @@ export function DeviceControlPage({ onNavigate }) {
               <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/30">
                 <Radio className="w-8 h-8 text-white animate-pulse" />
               </div>
-              <h3 className="text-xl ">Token Akses Teknisi</h3>
-              <p className="text-emerald-100 text-xs mt-1">Berikan kode ini kepada teknisi Anda</p>
+              <h3 className="text-xl font-black text-white">Token Akses Teknisi</h3>
+              <p className="text-white/80 text-xs mt-1">Berikan kode ini kepada teknisi Anda</p>
             </div>
             <div className="p-8 text-center">
               <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl py-6 mb-6">
-                <span className="text-[3rem]  tracking-[0.5rem] text-emerald-600 font-mono">
+                <span className="text-[3rem]  tracking-[0.5rem] text-bieon-eco font-mono">
                   {generatedToken}
                 </span>
               </div>
               <div className="flex items-start gap-3 text-left bg-amber-50 p-4 rounded-xl border border-amber-100 mb-6">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-800 leading-relaxed ">
-                  Token ini bersifat **sekali pakai** dengan masa aktif **5 menit**. Setelah digunakan, akses konfigurasi teknisi berlaku selama **30 menit** dan akan *logout otomatis* jika waktu habis.
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  Token ini bersifat <strong className="font-extrabold text-amber-950">sekali pakai</strong> dengan masa aktif <strong className="font-extrabold text-amber-950">5 menit</strong>. Setelah digunakan, akses konfigurasi teknisi berlaku selama <strong className="font-extrabold text-amber-950">30 menit</strong> dan akan <em className="italic">logout otomatis</em> jika waktu habis.
                 </p>
               </div>
               <button

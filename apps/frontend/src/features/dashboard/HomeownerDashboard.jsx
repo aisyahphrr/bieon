@@ -259,10 +259,10 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
   const { t, i18n } = useTranslation();
   if (!isOpen) return null;
 
-  const data = chartType === 'daily' 
-    ? (energySummary?.dailyData || []) 
+  const data = chartType === 'daily'
+    ? (energySummary?.dailyData || [])
     : (energySummary?.monthlyData || []);
-    
+
   const title = chartType === 'daily' ? t('dashboard.energy_daily', 'Data Energi Harian (Hari Berjalan)') : t('dashboard.energy_monthly', 'Data Energi Bulanan (1 Tahun Terakhir)');
 
   const totalKwh = data.reduce((acc, curr) => acc + (curr.kwh || 0), 0);
@@ -271,9 +271,9 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const tableColumn = [
-      chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan'), 
-      t('dashboard.consumption', 'Konsumsi (kWh)'), 
-      chartType === 'daily' ? t('dashboard.power', 'Daya (Watt)') : '', 
+      chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan'),
+      t('dashboard.consumption', 'Konsumsi (kWh)'),
+      chartType === 'daily' ? t('dashboard.power', 'Daya (Watt)') : '',
       t('dashboard.cost', 'Biaya (Rp)')
     ].filter(Boolean);
     const tableRows = [];
@@ -315,9 +315,9 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
 
   const handleExportCSV = () => {
     const headers = [
-      chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan'), 
-      t('dashboard.consumption', 'Konsumsi (kWh)'), 
-      chartType === 'daily' ? t('dashboard.power', 'Daya (Watt)') : '', 
+      chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan'),
+      t('dashboard.consumption', 'Konsumsi (kWh)'),
+      chartType === 'daily' ? t('dashboard.power', 'Daya (Watt)') : '',
       t('dashboard.cost', 'Biaya (Rp)')
     ].filter(Boolean).join(',');
     const rows = data.map(item => {
@@ -463,9 +463,9 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 
     try {
       const token = localStorage.getItem('token');
-      const headers = { 
+      const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
+        'Authorization': `Bearer ${token}`
       };
 
       if (!isNaN(parsedLimit) && parsedLimit !== limit) {
@@ -525,11 +525,10 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 
         <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
           {/* Status Section */}
-          <div className={`border rounded-2xl p-5 flex flex-col gap-3 mb-8 transition-colors ${
-            isOverBudget ? 'bg-red-50 border-red-100' : 
-            isWaspada ? 'bg-amber-50 border-amber-100' : 
-            'bg-emerald-50 border-emerald-100'
-          }`}>
+          <div className={`border rounded-2xl p-5 flex flex-col gap-3 mb-8 transition-colors ${isOverBudget ? 'bg-red-50 border-red-100' :
+              isWaspada ? 'bg-amber-50 border-amber-100' :
+                'bg-emerald-50 border-emerald-100'
+            }`}>
             <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
               <span>{t('dashboard.budget_this_month', 'Anggaran Bulan Ini:')}</span>
               <span className="font-semibold text-gray-900">Rp {deposit.toLocaleString('id-ID')}</span>
@@ -538,23 +537,21 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               <span>{t('dashboard.used_this_month', 'Terpakai Bulan Ini:')}</span>
               <span className="font-semibold text-gray-900">Rp {totalTerpakai.toLocaleString('id-ID')}</span>
             </div>
-            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${
-              isOverBudget ? 'border-red-200' : 
-              isWaspada ? 'border-amber-200' : 
-              'border-emerald-200'
-            }`}>
+            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${isOverBudget ? 'border-red-200' :
+                isWaspada ? 'border-amber-200' :
+                  'border-emerald-200'
+              }`}>
               <span className={isOverBudget ? 'text-red-800' : isWaspada ? 'text-amber-800' : 'text-emerald-800'}>{t('dashboard.remaining_budget', 'Sisa Anggaran:')}</span>
               <span className={`text-xl font-bold ${isOverBudget ? 'text-red-600' : isWaspada ? 'text-amber-600' : 'text-emerald-600'}`}>Rp {Math.max(0, sisaAnggaran).toLocaleString('id-ID')}</span>
             </div>
-            <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold tracking-wide ${
-              isOverBudget ? 'bg-red-100 text-red-700' : 
-              isWaspada ? 'bg-amber-100 text-amber-700' : 
-              'bg-emerald-100 text-emerald-700'
-            }`}>
+            <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold tracking-wide ${isOverBudget ? 'bg-red-100 text-red-700' :
+                isWaspada ? 'bg-amber-100 text-amber-700' :
+                  'bg-emerald-100 text-emerald-700'
+              }`}>
               <span>{t('dashboard.status', 'Status:')}</span>
               <span className="flex items-center gap-1">
                 {isOverBudget ? <AlertTriangle className="w-3.5 h-3.5" /> : isWaspada ? <Zap className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                                {isOverBudget ? t('dashboard.status_over_budget', 'Melebihi Anggaran') : isWaspada ? t('dashboard.status_budget_warning', 'Waspada') : t('dashboard.status_budget_safe', 'Aman')}
+                {isOverBudget ? t('dashboard.status_over_budget', 'Melebihi Anggaran') : isWaspada ? t('dashboard.status_budget_warning', 'Waspada') : t('dashboard.status_budget_safe', 'Aman')}
               </span>
             </div>
           </div>
@@ -571,7 +568,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
                     className={`py-2.5 rounded-xl text-xs font-semibold transition-all border ${inputLimit === val.toString()
                       ? 'border-amber-500 bg-amber-50 text-amber-700'
                       : 'border-gray-100 bg-white text-gray-500 hover:border-amber-200'
-                    }`}
+                      }`}
                   >
                     Rp {val.toLocaleString('id-ID')}
                   </button>
@@ -608,8 +605,8 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
               type="submit"
               disabled={submitted}
               className={`w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-[2px] transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2
-                ${submitted 
-                  ? 'bg-emerald-500 text-white shadow-emerald-200' 
+                ${submitted
+                  ? 'bg-emerald-500 text-white shadow-emerald-200'
                   : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-xl'
                 }`}
             >
@@ -654,75 +651,75 @@ export function HomeownerDashboard() {
   const [realNotifications, setRealNotifications] = useState([]);
   const [realActivities, setRealActivities] = useState([]);
   const [energySummary, setEnergySummary] = useState(null);
-  
+
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
-      
+
       // 1. Fetch Devices (for devices count per room)
       const userId = localStorage.getItem('userId');
       if (userId) {
         const resDevices = await fetch(`/api/kendaliperangkat/my-devices`, { headers });
         if (resDevices.ok) setRealDevices(await resDevices.json());
       }
-      
+
       // 2. Fetch Notifications
       const resAlerts = await fetch('/api/alerts', { headers });
       if (resAlerts.ok) {
-          const data = await resAlerts.json();
-          const mappedAlerts = (data.data || []).map(alert => {
-            let iconType = Bell;
-            let typeStr = 'info';
-            
-            const category = alert.category || '';
-            const msg = (alert.message || '').toLowerCase();
-            const type = alert.type || '';
+        const data = await resAlerts.json();
+        const mappedAlerts = (data.data || []).map(alert => {
+          let iconType = Bell;
+          let typeStr = 'info';
 
-            if (category === 'Keamanan' || type === 'Danger' || type === 'Bahaya') {
-              iconType = Lock;
-              typeStr = 'danger';
-            } else if (category === 'Energi' || type === 'Warning' || type === 'Waspada') {
-              iconType = Zap;
-              typeStr = 'warning';
-            } else if (type === 'Success' || type === 'Berhasil' || msg.includes('berhasil') || msg.includes('selesai')) {
-              iconType = CheckCircle2;
-              typeStr = 'success';
-            } else if (category === 'Air Sanitasi' || category === 'Kualitas Air') {
-              iconType = Droplets;
-              typeStr = 'info';
-            }
+          const category = alert.category || '';
+          const msg = (alert.message || '').toLowerCase();
+          const type = alert.type || '';
 
-            return {
-              id: alert._id,
-              type: typeStr,
-              title: alert.title,
-              category: alert.category,
-              messageKey: alert.messageKey,
-              metadata: alert.metadata,
-              message: alert.message,
-              date: alert.date || alert.createdAt,
-              icon: iconType,
-              link: alert.link
-            };
-          });
-          setRealNotifications(mappedAlerts);
+          if (category === 'Keamanan' || type === 'Danger' || type === 'Bahaya') {
+            iconType = Lock;
+            typeStr = 'danger';
+          } else if (category === 'Energi' || type === 'Warning' || type === 'Waspada') {
+            iconType = Zap;
+            typeStr = 'warning';
+          } else if (type === 'Success' || type === 'Berhasil' || msg.includes('berhasil') || msg.includes('selesai')) {
+            iconType = CheckCircle2;
+            typeStr = 'success';
+          } else if (category === 'Air Sanitasi' || category === 'Kualitas Air') {
+            iconType = Droplets;
+            typeStr = 'info';
+          }
+
+          return {
+            id: alert._id,
+            type: typeStr,
+            title: alert.title,
+            category: alert.category,
+            messageKey: alert.messageKey,
+            metadata: alert.metadata,
+            message: alert.message,
+            date: alert.date || alert.createdAt,
+            icon: iconType,
+            link: alert.link
+          };
+        });
+        setRealNotifications(mappedAlerts);
       }
 
       // 3. Fetch Energy Summary
       const resEnergy = await fetch('/api/history/energy-summary', { headers });
       if (resEnergy.ok) {
-          const data = await resEnergy.json();
-          setEnergySummary(data.data);
-          if (data.data.tokenBalance !== undefined) setDepositBalance(data.data.tokenBalance);
-          if (data.data.tokenThreshold !== undefined) setWarningLimit(data.data.tokenThreshold);
+        const data = await resEnergy.json();
+        setEnergySummary(data.data);
+        if (data.data.tokenBalance !== undefined) setDepositBalance(data.data.tokenBalance);
+        if (data.data.tokenThreshold !== undefined) setWarningLimit(data.data.tokenThreshold);
       }
 
       // 4. Fetch Activities
       const resActivities = await fetch('/api/history/activity', { headers });
       if (resActivities.ok) {
-          const data = await resActivities.json();
-          setRealActivities(data.data || []);
+        const data = await resActivities.json();
+        setRealActivities(data.data || []);
       }
     } catch (err) {
       console.error("Gagal fetch data dashboard real:", err);
@@ -731,7 +728,7 @@ export function HomeownerDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-    const dashboardInterval = setInterval(fetchDashboardData, 10000); 
+    const dashboardInterval = setInterval(fetchDashboardData, 10000);
     return () => clearInterval(dashboardInterval);
   }, []);
 
@@ -819,7 +816,7 @@ export function HomeownerDashboard() {
     // Jika benar-benar kosong (user baru), tampilkan state kosong yang rapi
     rooms = [{ id: 'all', name: t('dashboard.all_rooms'), devices: 0 }];
   }
-  
+
   let currentDevices = [];
   if (realDevices && realDevices.length > 0) {
     if (selectedRoom === 'all') {
@@ -858,7 +855,7 @@ export function HomeownerDashboard() {
   const dailyData = energySummary?.dailyData || [];
   const monthlyData = energySummary?.monthlyData || [];
   const notifications = realNotifications;
-  
+
   const getLocalizedAction = (action) => {
     if (!action) return action;
     const lower = action.toLowerCase();
@@ -879,12 +876,12 @@ export function HomeownerDashboard() {
     const statusStr = String(act.status || '').toUpperCase();
     const icon = (statusStr === 'ON' || statusStr === '1') ? Power : Zap;
     const color = (statusStr === 'ON' || statusStr === '1') ? 'emerald' : 'gray';
-    
+
     return {
       device: act.deviceName || act.actuator || 'Perangkat',
       action: act.action || ((statusStr === 'ON' || statusStr === '1') ? 'ON' : 'OFF'),
       trigger: act.trigger || 'Manual',
-      time: act.timestamp ? new Date(act.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
+      time: act.timestamp ? new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
       icon,
       color
     };
@@ -1280,11 +1277,11 @@ export function HomeownerDashboard() {
                     {chartType === 'daily' ? t('dashboard.avg_hourly') : t('dashboard.avg_monthly')}
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
-                    {chartType === 'daily' 
-                      ? (energySummary?.avgHourly || 0) 
-                      : (energySummary?.monthlyData?.length > 0 
-                          ? (energySummary.monthlyData.reduce((acc, m) => acc + m.kwh, 0) / energySummary.monthlyData.length).toFixed(1) 
-                          : 0)
+                    {chartType === 'daily'
+                      ? (energySummary?.avgHourly || 0)
+                      : (energySummary?.monthlyData?.length > 0
+                        ? (energySummary.monthlyData.reduce((acc, m) => acc + m.kwh, 0) / energySummary.monthlyData.length).toFixed(1)
+                        : 0)
                     } <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
                   </div>
                 </div>
@@ -1296,7 +1293,7 @@ export function HomeownerDashboard() {
                   </div>
                   <div className="text-2xl sm:text-3xl font-bold text-[#00a67d] flex items-baseline justify-center gap-1">
                     <span className="text-sm sm:text-base font-semibold opacity-60">Rp</span> {
-                      chartType === 'daily' 
+                      chartType === 'daily'
                         ? (energySummary?.totalCost?.toLocaleString('id-ID') || '0')
                         : (energySummary?.monthlyData?.reduce((acc, m) => acc + (m.cost || 0), 0).toLocaleString('id-ID') || '0')
                     }
@@ -1436,132 +1433,132 @@ export function HomeownerDashboard() {
               </div>
               <div className="relative">
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar transition-all">
-                {notifications.map((notif) => {
-                  const Icon = notif.icon;
-                  return (
-                    <div
-                      key={notif.id}
-                      onClick={() => {
-                        if (notif.link === 'pengaduan') navigate('/pengaduan');
-                        else if (notif.link === 'kendali') {
-                          if (notif.metadata?.deviceId) {
-                             sessionStorage.setItem('pendingHighlight', notif.metadata.deviceId);
-                          }
-                          navigate('/kendali');
-                        }
-                        else if (notif.link === 'dashboard' || notif.link === 'history-energi') {
-                          const target = notif.metadata?.scrollTarget || 'section-energi';
-                          sessionStorage.setItem('pendingScroll', target);
-                          navigate('/dashboard');
-                          
-                          setTimeout(() => {
-                            const element = document.getElementById(target);
-                            if (element) {
-                              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                              sessionStorage.removeItem('pendingScroll');
+                  {notifications.map((notif) => {
+                    const Icon = notif.icon;
+                    return (
+                      <div
+                        key={notif.id}
+                        onClick={() => {
+                          if (notif.link === 'pengaduan') navigate('/pengaduan');
+                          else if (notif.link === 'kendali') {
+                            if (notif.metadata?.deviceId) {
+                              sessionStorage.setItem('pendingHighlight', notif.metadata.deviceId);
                             }
-                          }, 100);
-                          
-                          if (notif.link === 'history-energi') setShowDataModal(true);
-                        }
-                      }}
-                      className={`p-3 sm:p-4 rounded-xl border border-gray-100 bg-white/40 hover:bg-gray-50/60 transition-all border-l-4 cursor-pointer active:scale-[0.98] ${notif.type === 'danger'
-                        ? 'border-l-red-400/70'
-                        : notif.type === 'warning'
-                          ? 'border-l-amber-400/70'
-                          : notif.type === 'security'
-                            ? 'border-l-purple-400/70'
-                            : notif.type === 'success'
-                              ? 'border-l-emerald-400/70'
-                              : 'border-l-blue-400/70'
-                        }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${notif.type === 'danger' ? 'bg-red-50/50' : notif.type === 'warning' ? 'bg-amber-50/50' : notif.type === 'security' ? 'bg-purple-50/50' : 'bg-blue-50/50'
-                          }`}>
-                          <Icon className={`w-4 h-4 ${notif.type === 'danger' ? 'text-red-500/80' : notif.type === 'warning' ? 'text-amber-500/80' : notif.type === 'security' ? 'text-purple-500/80' : notif.type === 'success' ? 'text-emerald-500/80' : 'text-blue-500/80'
-                            }`} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-                            {(() => {
-                              const titleStr = (notif.title || "").toLowerCase();
-                              const msgStr = (notif.message || "").toLowerCase();
-                              let smartType = null;
-                              if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
-                                smartType = notif.type.toUpperCase();
-                              } else {
-                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
-                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
-                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
-                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
-                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
-                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
-                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
-                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
-                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
-                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
-                              }
-                              const dynamicTitle = smartType && t(`notifications.dynamic.${smartType}.title`, { defaultValue: '' });
-                              return dynamicTitle || getLocalizedTitle(notif.title, notif.category);
-                            })()}
-                          </div>
-                          <div className="text-sm text-gray-800 leading-relaxed">
-                            {(() => {
-                              const titleStr = (notif.title || "").toLowerCase();
-                              const msgStr = (notif.message || "").toLowerCase();
-                              let smartType = null;
-                              if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
-                                smartType = notif.type.toUpperCase();
-                              } else {
-                                // Detection Logic (Check Title first, then Message)
-                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
-                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
-                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
-                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
-                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
-                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
-                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
-                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
-                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
-                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
-                              }
-                              
-                              const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
-                              const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
+                            navigate('/kendali');
+                          }
+                          else if (notif.link === 'dashboard' || notif.link === 'history-energi') {
+                            const target = notif.metadata?.scrollTarget || 'section-energi';
+                            sessionStorage.setItem('pendingScroll', target);
+                            navigate('/dashboard');
 
-                              if (smartType && dynamicBody !== '___MISSING___') {
-                                // Regex to find ticket ID in quotes or 8-char alphanumeric
-                                const ticketMatch = notif.message.match(/"([^"]+)"/) || notif.message.match(/\b[a-z0-9]{8}\b/);
-                                const extractedTicket = notif.metadata?.ticketId || notif.metadata?.ticket || notif.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
-                                
-                                return t(dynamicBodyKey, { 
-                                   ...notif.metadata,
-                                   ticket: extractedTicket,
-                                   technician: notif.metadata?.technicianName || notif.metadata?.technician || notif.metadata?.senderName || '',
-                                   topic: notif.metadata?.topic || '',
-                                   name: notif.metadata?.senderName || notif.metadata?.name || '',
-                                   hubId: notif.metadata?.hubId || '',
-                                   deviceName: notif.metadata?.deviceName || '',
-                                   status: notif.metadata?.status || '',
-                                   location: notif.metadata?.location || '',
-                                   percent: notif.metadata?.percent || ''
-                                });
+                            setTimeout(() => {
+                              const element = document.getElementById(target);
+                              if (element) {
+                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                sessionStorage.removeItem('pendingScroll');
                               }
-                              return notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : notif.message;
-                            })()}
+                            }, 100);
+
+                            if (notif.link === 'history-energi') setShowDataModal(true);
+                          }
+                        }}
+                        className={`p-3 sm:p-4 rounded-xl border border-gray-100 bg-white/40 hover:bg-gray-50/60 transition-all border-l-4 cursor-pointer active:scale-[0.98] ${notif.type === 'danger'
+                          ? 'border-l-red-400/70'
+                          : notif.type === 'warning'
+                            ? 'border-l-amber-400/70'
+                            : notif.type === 'security'
+                              ? 'border-l-purple-400/70'
+                              : notif.type === 'success'
+                                ? 'border-l-emerald-400/70'
+                                : 'border-l-blue-400/70'
+                          }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${notif.type === 'danger' ? 'bg-red-50/50' : notif.type === 'warning' ? 'bg-amber-50/50' : notif.type === 'security' ? 'bg-purple-50/50' : 'bg-blue-50/50'
+                            }`}>
+                            <Icon className={`w-4 h-4 ${notif.type === 'danger' ? 'text-red-500/80' : notif.type === 'warning' ? 'text-amber-500/80' : notif.type === 'security' ? 'text-purple-500/80' : notif.type === 'success' ? 'text-emerald-500/80' : 'text-blue-500/80'
+                              }`} />
                           </div>
-                          <div className="text-[10px] text-gray-400 mt-1.5 font-medium">
-                            {notif.date ? new Date(notif.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : t('notification.ui.just_now')}
+                          <div className="flex-1">
+                            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                              {(() => {
+                                const titleStr = (notif.title || "").toLowerCase();
+                                const msgStr = (notif.message || "").toLowerCase();
+                                let smartType = null;
+                                if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
+                                  smartType = notif.type.toUpperCase();
+                                } else {
+                                  if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+                                  else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+                                  else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+                                  else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+                                  else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+                                  else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+                                  else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+                                  else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+                                  else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+                                  else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+                                }
+                                const dynamicTitle = smartType && t(`notifications.dynamic.${smartType}.title`, { defaultValue: '' });
+                                return dynamicTitle || getLocalizedTitle(notif.title, notif.category);
+                              })()}
+                            </div>
+                            <div className="text-sm text-gray-800 leading-relaxed">
+                              {(() => {
+                                const titleStr = (notif.title || "").toLowerCase();
+                                const msgStr = (notif.message || "").toLowerCase();
+                                let smartType = null;
+                                if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
+                                  smartType = notif.type.toUpperCase();
+                                } else {
+                                  // Detection Logic (Check Title first, then Message)
+                                  if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+                                  else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+                                  else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+                                  else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+                                  else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+                                  else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+                                  else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+                                  else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+                                  else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+                                  else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+                                }
+
+                                const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
+                                const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
+
+                                if (smartType && dynamicBody !== '___MISSING___') {
+                                  // Regex to find ticket ID in quotes or 8-char alphanumeric
+                                  const ticketMatch = notif.message.match(/"([^"]+)"/) || notif.message.match(/\b[a-z0-9]{8}\b/);
+                                  const extractedTicket = notif.metadata?.ticketId || notif.metadata?.ticket || notif.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
+
+                                  return t(dynamicBodyKey, {
+                                    ...notif.metadata,
+                                    ticket: extractedTicket,
+                                    technician: notif.metadata?.technicianName || notif.metadata?.technician || notif.metadata?.senderName || '',
+                                    topic: notif.metadata?.topic || '',
+                                    name: notif.metadata?.senderName || notif.metadata?.name || '',
+                                    hubId: notif.metadata?.hubId || '',
+                                    deviceName: notif.metadata?.deviceName || '',
+                                    status: notif.metadata?.status || '',
+                                    location: notif.metadata?.location || '',
+                                    percent: notif.metadata?.percent || ''
+                                  });
+                                }
+                                return notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : notif.message;
+                              })()}
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-1.5 font-medium">
+                              {notif.date ? new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t('notification.ui.just_now')}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
             <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-6">
               <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -1590,10 +1587,10 @@ export function HomeownerDashboard() {
           </div>
         </div>
 
-        <NotificationPopup 
-          isOpen={showNotifications} 
-          onClose={() => setShowNotifications(false)} 
-          role="homeowner" 
+        <NotificationPopup
+          isOpen={showNotifications}
+          onClose={() => setShowNotifications(false)}
+          role="homeowner"
         />
         <DataModal isOpen={showDataModal} onClose={() => setShowDataModal(false)} chartType={chartType} energySummary={energySummary} />
         <WarningLimitModal isOpen={showWarningModal} onClose={() => setShowWarningModal(false)} limit={warningLimit} setLimit={setWarningLimit} deposit={depositBalance} setDeposit={setDepositBalance} onRefresh={fetchDashboardData} energySummary={energySummary} />
