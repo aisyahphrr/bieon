@@ -53,6 +53,13 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
   const [userProfile, setUserProfile] = useState(null);
   const [hasUnread, setHasUnread] = useState(false);
 
+  const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('bieon_language', lang);
+  };
+
   useEffect(() => {
     // Fetch user profile
     const fetchProfile = async () => {
@@ -239,18 +246,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
             {/* Actions */}
             <div className="flex items-center gap-3 lg:gap-4 shrink-0">
-              {/* Language Toggle for Testing */}
-              <button
-                onClick={() => {
-                  const newLang = i18n.language === 'id' ? 'en' : 'id';
-                  i18n.changeLanguage(newLang);
-                  localStorage.setItem('bieon_language', newLang);
-                }}
-                className="hidden sm:flex items-center justify-center p-2 rounded-lg font-bold text-sm bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors border border-teal-200"
-                title="Toggle Language"
-              >
-                {i18n.language === 'id' ? 'ID' : 'EN'}
-              </button>
+
 
               {!isTechnicianMode && (
                 <button
@@ -278,6 +274,32 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   />
                 </div>
               )}
+
+              {/* Premium Language Pill Toggle */}
+              <div className="flex items-center bg-teal-50/60 p-0.5 rounded-xl border border-teal-100/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
+                <button
+                  onClick={() => handleLanguageChange('id')}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'id'
+                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
+                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                  }`}
+                  title="Bahasa Indonesia"
+                >
+                  ID
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'en'
+                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
+                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                  }`}
+                  title="English"
+                >
+                  EN
+                </button>
+              </div>
 
               {/* Profile Button (Direct to Popup) */}
               <div className="relative">

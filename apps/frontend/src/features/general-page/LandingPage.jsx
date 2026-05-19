@@ -20,7 +20,8 @@ import {
   Wrench,
   Boxes,
   Bell,
-  Cloud
+  Cloud,
+  Rocket
 } from 'lucide-react';
 
 const StatCard = ({ icon: Icon, target, label, suffix = "+", colorClass = "text-emerald-500" }) => {
@@ -187,11 +188,11 @@ const LandingPage = () => {
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
             <div className="mb-8">
-              <div className="text-5xl lg:text-6xl font-black tracking-tighter mb-4">
+              <div className="text-6xl lg:text-8xl font-black tracking-tighter mb-4">
                 <span className="text-[#059b27]">ECO</span><span className="text-[#129cc0]">SENSE</span>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                Smart Living <br className="hidden lg:block"/>
+              <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-[1.2]">
+                Smart Living <br className="hidden lg:block" />
                 Monitoring System
               </h1>
             </div>
@@ -235,12 +236,12 @@ const LandingPage = () => {
 
           {/* Right Floating Dashboard Image */}
           <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:flex items-center justify-center mt-12 lg:mt-24">
-            
+
             <div className="relative z-20 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-700 ease-out">
-              <img 
-                src="/11BIEON ECO SENSE.png" 
-                alt="BIEON Eco Sense Dashboard" 
-                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
+              <img
+                src="/11BIEON ECO SENSE.png"
+                alt="BIEON Eco Sense Dashboard"
+                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
               />
             </div>
 
@@ -250,77 +251,84 @@ const LandingPage = () => {
         </section>
 
         {/* Section Problem */}
-        <section className="bg-[#f8fafc] py-20 border-y border-slate-100 relative overflow-hidden">
+        <section className="bg-[#f8fafc] py-16 lg:py-24 border-y border-slate-100 relative overflow-hidden min-h-screen lg:min-h-[90vh] flex items-center">
           <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
             <div className="absolute top-[-20%] left-[-10%] w-[40%] h-[100%] bg-emerald-50 blur-[100px] rounded-full"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[100%] bg-teal-50 blur-[100px] rounded-full"></div>
           </div>
 
           <div className="w-full max-w-[1440px] mx-auto px-6 relative z-10">
-            
-            {/* Top Title Section */}
-            <Reveal className="w-full text-center lg:text-left mb-12">
-              <p className="text-[#009b7c] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">PROBLEM</p>
-              <h2 className="text-3xl lg:text-4xl font-black text-slate-800 leading-tight">Masih Mengandalkan Data Manual?</h2>
-            </Reveal>
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
 
-            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-              {/* Left Content: Stacked Points */}
-              <Reveal className="flex-1 w-full">
-                <div className="flex flex-col gap-6 md:gap-8">
+              {/* Left Content: Title + Grid Points */}
+              <div className="flex-1 w-full">
+
+                {/* Title Section moved inside Left Content */}
+                <Reveal className="w-full text-center lg:text-left mb-10">
+                  <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+                    PROBLEM
+                  </div>
+                  <h2 className="text-3xl lg:text-4xl font-black text-slate-900 leading-tight tracking-tight max-w-2xl mx-auto lg:mx-0">
+                    Masih Mengandalkan <br className="hidden sm:inline" />
+                    Data Manual?
+                  </h2>
+                </Reveal>
+
+                {/* 2x2 Grid of Points */}
+                <Reveal className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                   {/* 1. Tidak Real Time */}
-                  <Reveal delay="0.1s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
-                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/1tidakrealtime.png" alt="Tidak Real Time" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <Reveal delay="0.1s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/1tidakrealtime.png" alt="Tidak Real Time" className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
-                    <div className="text-center sm:text-left pt-1">
-                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Tidak Real Time</h4>
-                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Data seringkali terlambat dan tidak akurat.</p>
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Tidak Real Time</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Data seringkali terlambat dan tidak akurat.</p>
                     </div>
                   </Reveal>
 
                   {/* 2. Sulit Monitoring */}
-                  <Reveal delay="0.2s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
-                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/2sulitmonitoring.png" alt="Sulit Monitoring" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <Reveal delay="0.2s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/2sulitmonitoring.png" alt="Sulit Monitoring" className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
-                    <div className="text-center sm:text-left pt-1">
-                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Sulit Monitoring</h4>
-                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Pemantauan manual memakan waktu.</p>
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Sulit Monitoring</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Pemantauan manual memakan waktu.</p>
                     </div>
                   </Reveal>
 
                   {/* 3. Keputusan Lambat */}
-                  <Reveal delay="0.3s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
-                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/3keputusanlambat.png" alt="Keputusan Lambat" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <Reveal delay="0.3s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/3keputusanlambat.png" alt="Keputusan Lambat" className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
-                    <div className="text-center sm:text-left pt-1">
-                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Keputusan Lambat</h4>
-                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Keterlambatan aksi saat kondisi kritis.</p>
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Keputusan Lambat</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Keterlambatan aksi saat kondisi kritis.</p>
                     </div>
                   </Reveal>
 
                   {/* 4. Potensi Pemborosan */}
-                  <Reveal delay="0.4s" className="flex flex-col sm:flex-row items-center sm:items-start gap-5 p-5 md:p-6 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
-                    <div className="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/4potensipemborosan.png" alt="Potensi Pemborosan" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <Reveal delay="0.4s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                      <img src="/4potensipemborosan.png" alt="Potensi Pemborosan" className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
-                    <div className="text-center sm:text-left pt-1">
-                      <h4 className="text-lg font-extrabold text-slate-800 mb-2">Potensi Pemborosan</h4>
-                      <p className="text-[15px] text-slate-500 font-medium leading-relaxed">Kerugian biaya karena inefisiensi.</p>
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Potensi Pemborosan</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Kerugian biaya karena inefisiensi.</p>
                     </div>
                   </Reveal>
-                </div>
-              </Reveal>
+                </Reveal>
+              </div>
 
               {/* Right Content: The Stressed Man Image */}
               <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 mt-12 lg:mt-0">
                 <div className="relative z-20 rounded-3xl overflow-hidden shadow-2xl border-4 border-white transform hover:-translate-y-2 transition-all duration-700 ease-out">
-                  <img 
-                    src="/problem_illustration.png" 
-                    alt="Mengandalkan Data Manual" 
-                    className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
+                  <img
+                    src="/problem_illustration.png"
+                    alt="Mengandalkan Data Manual"
+                    className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
                   />
                 </div>
                 {/* Background Glow */}
@@ -335,69 +343,41 @@ const LandingPage = () => {
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
               <p className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">SOLUTION</p>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-12" style={{ fontFamily: "'Poppins', sans-serif" }}>ONE PLATFORM. TOTAL MONITORING</h2>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">ONE PLATFORM. TOTAL MONITORING</h2>
             </Reveal>
 
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
               {/* 1. Energi */}
               <Reveal delay="0.1s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/5ENERGY.png" alt="Energi" className="w-full h-full object-cover rounded-2xl transition-all" />
+                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/5ENERGY.png" alt="Energi" className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Energi</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Energi</span>
               </Reveal>
 
               {/* 2. Air */}
               <Reveal delay="0.2s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/6AIR.png" alt="Air" className="w-full h-full object-cover rounded-2xl transition-all" />
+                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/6AIR.png" alt="Air" className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Air</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Air</span>
               </Reveal>
 
               {/* 3. Lingkungan */}
               <Reveal delay="0.3s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/7LINGKUNGAN.png" alt="Lingkungan" className="w-full h-full object-cover rounded-2xl transition-all" />
+                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/7LINGKUNGAN.png" alt="Lingkungan" className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Lingkungan</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Lingkungan</span>
               </Reveal>
 
               {/* 4. Keamanan */}
               <Reveal delay="0.4s" className="flex flex-col items-center group">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                  <img src="/8PROTEKSI.png" alt="Keamanan" className="w-full h-full object-cover rounded-2xl transition-all" />
+                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/8PROTEKSI.png" alt="Keamanan" className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">Keamanan</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Keamanan</span>
               </Reveal>
-            </div>
-          </div>
-        </section>
-
-        {/* Section Statistik Animasi */}
-        <section className="bg-[#050B0F] py-20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5"></div>
-
-          <div className="w-full max-w-[1440px] mx-auto px-6 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 justify-items-center">
-              <StatCard
-                icon={Users}
-                target={500}
-                label="Homeowner"
-                colorClass="text-emerald-400"
-              />
-              <StatCard
-                icon={Boxes}
-                target={1000}
-                label="BIEON Device"
-                colorClass="text-cyan-400"
-              />
-              <StatCard
-                icon={Wrench}
-                target={50}
-                label="Teknisi Handal"
-                colorClass="text-teal-400"
-              />
             </div>
           </div>
         </section>
@@ -405,11 +385,11 @@ const LandingPage = () => {
         {/* Features / Bento Grid Platform Section */}
         <section id="features" className="py-10 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto">
           <div className="text-center mb-8 max-w-2xl mx-auto">
-            <div className="inline-flex py-1 px-3 rounded-full bg-[#009b7c]/10 text-[#009b7c] font-bold text-[11px] uppercase tracking-widest mb-4">
+            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
               Platform Features
             </div>
             <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 mb-6 drop-shadow-sm">
-              Features
+              FITUR
             </h2>
           </div>
 
@@ -482,13 +462,53 @@ const LandingPage = () => {
           </div>
         </section>
 
+        {/* Dampak Section */}
+        <section id="dampak" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
+          <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
+            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+              Platform Benefit
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
+              DAMPAK
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            {/* Impact Card 1 */}
+            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/5 30BIAYA.png" alt="- 30% Biaya" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
+            {/* Impact Card 2 */}
+            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/6EFISIENSI.png" alt="+ 50% Efisiensi" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
+            {/* Impact Card 3 */}
+            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/7SUSTAINBILITY.png" alt="Sustainability Ready" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
+          </div>
+        </section>
+
         {/* Products Line Section */}
         <section id="products" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
-          <div className="text-center mb-8 max-w-2xl mx-auto pt-10">
-            <div className="inline-flex py-1 px-3 rounded-full bg-blue-500/10 text-blue-600 font-bold text-[11px] uppercase tracking-widest mb-4">
+          <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
+            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
               Our Products
             </div>
-            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mb-6 drop-shadow-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
               Products Line
             </h2>
           </div>
@@ -562,86 +582,162 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* About Solutions Section */}
-        <section id="about" className="py-12 relative bg-slate-900 border-t border-slate-800">
-          {/* Dark background styling */}
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-900/20 to-transparent pointer-events-none"></div>
 
-          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16">
-            <div className="flex flex-col lg:flex-row gap-16 items-center">
+        {/* Customer Kami Section */}
+        <section className="bg-[#f8fafc] py-16 border-t border-slate-100 relative overflow-hidden">
+          <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
+            <Reveal>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">Customer Kami</h2>
+            </Reveal>
 
-              <Reveal animation="animate-slide-in-right" className="flex-1 w-full text-center lg:text-left">
-                <div className="inline-flex py-1 px-3 rounded-full bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.3)] text-emerald-400 font-bold text-[11px] uppercase tracking-widest mb-6">
-                  About BIEON
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8 lg:gap-12 items-start mt-8">
+              {/* 1. Home Owner */}
+              <Reveal delay="0.1s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/13HOME OWNER.png" alt="Home Owner" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <h2 className="text-3xl lg:text-4xl font-extrabold text-white mb-6">
-                  BIEON System
-                </h2>
-                <p className="text-slate-400 text-[15px] leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
-                  BIEON hadir sebagai solusi Smart Green Living terpadu berbasis web. Kami memadukan pemantauan kualitas lingkungan, efisiensi konsumsi energi, dan kendali perangkat pintar untuk mendukung gaya hidup yang lebih sehat dan berkelanjutan.
-                </p>
-
-                <h3 className="text-xl font-bold text-white mb-4 mt-8 flex items-center justify-center lg:justify-start gap-3">
-                  <div className="w-8 h-8 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400 shrink-0">
-                    <CheckCircle2 size={16} />
-                  </div>
-                  Kolaborasi Industri & Akademisi
-                </h3>
-                <p className="text-slate-400 text-[15px] leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
-                  Sistem BIEON lahir dari kolaborasi inovatif antara <strong>PT Matra Kreasi Mandiri</strong> sebagai mitra industri dan project owner, bersama <strong>BPJS</strong> —tim pengembang dari mahasiswa Teknologi Rekayasa Komputer, Sekolah Vokasi IPB University.
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Home Owner</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Solusi monitoring cerdas untuk membantu rumah lebih efisien, nyaman, dan berkelanjutan melalui pemantauan energi, air, dan lingkungan secara real-time.
                 </p>
               </Reveal>
 
-              {/* Futuristic diagram mockup */}
-              <Reveal animation="animate-slide-in-right" delay="0.2s" className="flex-1 w-full">
-                <div className="relative mx-auto max-w-sm">
-                  <div className="absolute inset-0 bg-emerald-500 rounded-full blur-[100px] opacity-20"></div>
+              {/* 2. Business */}
+              <Reveal delay="0.2s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/14BUSINESS.png" alt="Business" className="w-full h-full object-cover rounded-2xl transition-all" />
+                </div>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Business</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Membantu bisnis memantau operasional, efisiensi sumber daya, dan kualitas lingkungan untuk mendukung produktivitas dan pengambilan keputusan berbasis data.
+                </p>
+              </Reveal>
 
-                  {/* Diagram Container */}
-                  <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-3xl p-6 relative shadow-2xl">
+              {/* 3. Industry */}
+              <Reveal delay="0.3s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/15INDUSTRY.png" alt="Industry" className="w-full h-full object-cover rounded-2xl transition-all" />
+                </div>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Industry</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Sistem monitoring terintegrasi untuk industri dalam meningkatkan efisiensi, kontrol operasional, keamanan, dan sustainability secara lebih optimal.
+                </p>
+              </Reveal>
 
-                    <div className="flex items-center gap-4 bg-slate-900/80 p-4 border border-slate-700/50 rounded-2xl relative mb-4">
-                      <Cpu className="text-amber-400" size={28} />
-                      <div>
-                        <h4 className="text-slate-200 font-bold text-sm">BIEON Hub Node</h4>
-                        <p className="text-slate-500 text-xs">Edge Processing Unit</p>
-                      </div>
-                      <div className="absolute right-4 w-2 h-2 rounded-full bg-amber-400 animate-ping"></div>
+              {/* 4. Government */}
+              <Reveal delay="0.4s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/16GOVERNMENT.png" alt="Government" className="w-full h-full object-cover rounded-2xl transition-all" />
+                </div>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Government</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Mendukung pemerintah dalam pengelolaan data lingkungan, infrastruktur, dan utilitas publik melalui sistem monitoring cerdas yang terhubung dan real-time.
+                </p>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works Section */}
+        <section className="bg-white py-20 lg:py-28 border-t border-slate-100">
+          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16">
+            <Reveal className="text-center mb-12 max-w-2xl mx-auto">
+              <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+                HOW IT WORKS
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
+                Bagaimana Sistem Ini Bekerja
+              </h2>
+            </Reveal>
+
+            <Reveal>
+              <img
+                src="/14BIEON.png"
+                alt="Alur Kerja Sistem EcoSense: Sensor → Cloud → Dashboard → Insight"
+                className="w-full max-w-5xl mx-auto h-auto object-contain"
+              />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* CTA Section - Mulai Transformasi */}
+        <section className="relative py-20 lg:py-28 overflow-hidden bg-gradient-to-br from-[#f0fdf9] via-white to-[#e0f7f1]">
+          {/* Subtle ambient blurs */}
+          <div className="absolute top-[-15%] right-[-10%] w-[45%] h-[70%] bg-emerald-100/40 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[50%] bg-teal-50/50 rounded-full blur-[100px] pointer-events-none"></div>
+
+          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 relative z-10">
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+
+              {/* Left Content */}
+              <Reveal className="flex-1 w-full text-center lg:text-left">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.15] mb-6">
+                  MULAI<br />
+                  TRANSFORMASI<br />
+                  SISTEM ANDA<br />
+                  SAAT INI!
+                </h2>
+                <p className="text-base lg:text-lg text-slate-500 font-medium leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
+                  Tingkatkan efisiensi, kurangi biaya,<br className="hidden sm:inline" />
+                  dan ciptakan masa depan yang lebih cerdas<br className="hidden sm:inline" />
+                  dengan EcoSense.
+                </p>
+
+                {/* 4 Benefit Icons */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6 mb-10 max-w-lg mx-auto lg:mx-0">
+                  <Reveal delay="0.1s" className="flex flex-col items-center group">
+                    <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                      <img src="/9EFISIENSI MENINGKAT.png" alt="Efisiensi Meningkat" className="w-full h-full object-cover rounded-2xl" />
                     </div>
-
-                    <div className="flex justify-center my-2 text-slate-600">
-                      <Activity size={20} className="animate-pulse" />
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Efisiensi<br />Meningkat</span>
+                  </Reveal>
+                  <Reveal delay="0.15s" className="flex flex-col items-center group">
+                    <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                      <img src="/10BIAYA BERKURANG.png" alt="Biaya Berkurang" className="w-full h-full object-cover rounded-2xl" />
                     </div>
-
-                    <div className="flex items-center gap-4 bg-[#009b7c]/20 p-4 border border-[#009b7c]/30 rounded-2xl relative mb-4 transform scale-105 shadow-[0_0_30px_rgba(0,155,124,0.15)]">
-                      <div className="w-10 h-10 bg-[#009b7c] rounded-xl flex items-center justify-center">
-                        <img src="/logo_bieon.png" className="h-4 brightness-0 invert" alt="B" />
-                      </div>
-                      <div>
-                        <h4 className="text-white font-bold text-sm">BIEON Cloud Platform</h4>
-                        <p className="text-emerald-300 text-xs">AI & Data Aggregation</p>
-                      </div>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Biaya<br />Berkurang</span>
+                  </Reveal>
+                  <Reveal delay="0.2s" className="flex flex-col items-center group">
+                    <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                      <img src="/11OPERASIONAL HIJAU.png" alt="Operasional Lebih Hijau" className="w-full h-full object-cover rounded-2xl" />
                     </div>
-
-                    <div className="flex justify-between items-center px-6 mt-6">
-                      <div className="flex flex-col items-center">
-                        <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-slate-300 mb-2">
-                          <Smartphone size={16} />
-                        </div>
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Mobile</span>
-                      </div>
-                      <div className="w-full border-t border-dashed border-slate-600 mx-2 relative">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 px-2 text-[10px] text-emerald-400 font-mono rounded">sync</div>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="w-10 h-10 bg-slate-700 rounded-full border border-slate-600 flex items-center justify-center text-slate-300 mb-2">
-                          <BarChart3 size={16} />
-                        </div>
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Web App</span>
-                      </div>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Operasional<br />Lebih Hijau</span>
+                  </Reveal>
+                  <Reveal delay="0.25s" className="flex flex-col items-center group">
+                    <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                      <img src="/12KEPUTUSAN CEPAT.png" alt="Keputusan Lebih Cepat" className="w-full h-full object-cover rounded-2xl" />
                     </div>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Keputusan<br />Lebih Cepat</span>
+                  </Reveal>
+                </div>
 
+                {/* CTA Button */}
+                <div className="flex flex-col items-center lg:items-start gap-4">
+                  <button
+                    onClick={() => navigate('/signup')}
+                    className="group relative bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-full font-bold text-base transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center gap-3 overflow-hidden"
+                  >
+                    <Rocket className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">MULAI SEKARANG</span>
+                    <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
+                    <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
+                  </button>
+                  <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                    <span>Aman, Terpercaya, dan Terintegrasi</span>
                   </div>
+                </div>
+              </Reveal>
+
+              {/* Right Content - Image */}
+              <Reveal animation="animate-slide-in-right" className="flex-1 w-full flex justify-center lg:justify-end">
+                <div className="relative max-w-xl lg:max-w-2xl w-full">
+                  <div className="absolute inset-0 bg-emerald-400/10 rounded-full blur-[80px] scale-90 pointer-events-none"></div>
+                  <img
+                    src="/12BIEON.png"
+                    alt="EcoSense Dashboard & Devices"
+                    className="relative w-full h-auto object-cover rounded-[2rem] drop-shadow-2xl overflow-hidden"
+                  />
                 </div>
               </Reveal>
 
@@ -651,8 +747,10 @@ const LandingPage = () => {
       </main>
 
       {/* Flat Footer */}
-      <footer id="contact" className="bg-[#266355] text-white pt-16 pb-6 px-6 md:px-12 lg:px-20">
-        <div className="flex flex-col lg:flex-row justify-between gap-10 lg:gap-24 mb-10 max-w-7xl mx-auto">
+      <footer id="contact" className="relative text-white pt-16 pb-6 px-6 md:px-12 lg:px-20 overflow-hidden bg-cover bg-center" style={{ backgroundImage: "url('/13BIEON.png')" }}>
+        {/* Brand Overlay to preserve design color and readability, reduced opacity to make background image visible */}
+        <div className="absolute inset-0 bg-[#266355]/25 pointer-events-none"></div>
+        <div className="flex flex-col lg:flex-row justify-between gap-10 lg:gap-24 mb-10 max-w-7xl mx-auto relative z-10">
 
           <div className="max-w-[400px]">
             <img src="/logo_bieon_footer.png" alt="BIEON Footer" className="max-w-[280px] w-full h-auto object-contain mb-4 md:ml-[32px] drop-shadow-sm" />
@@ -711,7 +809,7 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-        <div className="text-center text-[13px] text-white/60 font-medium pt-6 mt-8 border-t border-white/10 max-w-7xl mx-auto">
+        <div className="text-center text-[13px] text-white/60 font-medium pt-6 mt-8 border-t border-white/10 max-w-7xl mx-auto relative z-10">
           © Copyright 2026 | BIEON - Smart Green Living Monitoring System | All right reserved
         </div>
       </footer>

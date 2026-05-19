@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -21,11 +22,19 @@ import { auth, googleProvider } from '../../config/firebase';
 import { signInWithPopup } from 'firebase/auth';
 
 const Signup = ({ setTempData }) => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('bieon_language', lang);
+  };
 
   const handleNext = (e) => {
     e.preventDefault();
@@ -90,6 +99,34 @@ const Signup = ({ setTempData }) => {
 
   return (
     <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white pb-12 pt-8">
+      {/* Floating Language Switcher */}
+      <div className="absolute top-6 right-6 z-50">
+        <div className="flex items-center bg-white/40 backdrop-blur-md p-0.5 rounded-xl border border-white/40 shadow-sm select-none">
+          <button
+            onClick={() => handleLanguageChange('id')}
+            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+              currentLang === 'id'
+                ? 'bg-white text-[#009b7c] shadow-sm scale-100'
+                : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
+            }`}
+            title="Bahasa Indonesia"
+          >
+            ID
+          </button>
+          <button
+            onClick={() => handleLanguageChange('en')}
+            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+              currentLang === 'en'
+                ? 'bg-white text-[#009b7c] shadow-sm scale-100'
+                : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
+            }`}
+            title="English"
+          >
+            EN
+          </button>
+        </div>
+      </div>
+
       {/* Ambient Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-300/40 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_8s_ease-in-out_infinite] z-0"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-teal-200/40 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_10s_ease-in-out_infinite] z-0" style={{ animationDelay: '2s' }}></div>
@@ -103,17 +140,17 @@ const Signup = ({ setTempData }) => {
 
           <div className="text-center mb-8">
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Create an Account
+              {t('auth.signup.title')}
             </h1>
             <p className="text-sm font-medium text-slate-500">
-              Mulai perjalanan Smart Living Anda bersama BIEON.
+              {t('auth.signup.subtitle')}
             </p>
           </div>
 
           <form className="space-y-5" onSubmit={handleNext}>
             {/* Email Field */}
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-bold text-slate-700 ml-1">Email Address</label>
+              <label className="block text-[13px] font-bold text-slate-700 ml-1">{t('auth.signup.label_email')}</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#009b7c] transition-colors">
                   <Mail size={18} />
@@ -122,7 +159,7 @@ const Signup = ({ setTempData }) => {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@plantvision.id" 
+                  placeholder={t('auth.signup.placeholder_email')} 
                   required
                   className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm"
                 />
@@ -131,7 +168,7 @@ const Signup = ({ setTempData }) => {
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-bold text-slate-700 ml-1">Password</label>
+              <label className="block text-[13px] font-bold text-slate-700 ml-1">{t('auth.signup.label_password')}</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#009b7c] transition-colors">
                   <Lock size={18} />
@@ -140,9 +177,9 @@ const Signup = ({ setTempData }) => {
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••" 
+                  placeholder={t('auth.signup.placeholder_password')} 
                   required
-                  className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm tracking-widest"
+                  className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm"
                 />
               </div>
             </div>
@@ -160,7 +197,7 @@ const Signup = ({ setTempData }) => {
                  disabled={loading}
                  className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2 disabled:opacity-70"
                >
-                 <span className="relative z-10">{loading ? 'Memproses...' : 'Create Account'}</span>
+                 <span className="relative z-10">{loading ? 'Memproses...' : t('auth.signup.btn_signup')}</span>
                  {!loading && <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />}
                  <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
                </button>
@@ -170,7 +207,7 @@ const Signup = ({ setTempData }) => {
           {/* OR Divider */}
           <div className="flex items-center gap-4 my-8">
             <div className="h-px bg-slate-200 flex-1"></div>
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Atau lanjutkan dengan</span>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">{t('auth.signup.divider')}</span>
             <div className="h-px bg-slate-200 flex-1"></div>
           </div>
 
@@ -185,21 +222,21 @@ const Signup = ({ setTempData }) => {
               <GoogleIcon />
             </div>
             <span className="text-[14px] font-bold text-slate-700">
-              {loading ? 'Silakan Tunggu...' : 'Google'}
+              {loading ? 'Silakan Tunggu...' : t('auth.signup.btn_google')}
             </span>
           </button>
 
           {/* Footer Links */}
           <div className="text-center mt-10 text-[13px] text-slate-500 font-medium">
-            Sudah memiliki akun? 
+            {t('auth.signup.have_account')} 
             <button onClick={() => navigate('/login')} className="text-[#009b7c] font-bold hover:underline ml-1.5 transition-all">
-              Log in di sini
+              {t('auth.signup.link_login')}
             </button>
           </div>
         </div>
         
         <div className="text-center mt-8 text-xs font-bold text-slate-400 hover:text-slate-500 cursor-pointer transition-colors">
-           Terms of Service & Privacy Policy BIEON
+           {t('auth.terms_privacy_footer')}
         </div>
       </div>
     </div>

@@ -15,6 +15,14 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
   const { t, i18n } = useTranslation();
   const [showNotif, setShowNotif] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+
+  const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('bieon_language', lang);
+  };
+
   const lastLocationSentRef = useRef({ lat: null, lng: null, sentAt: 0 });
   const watchIdRef = useRef(null);
 
@@ -160,20 +168,6 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                 <span className="hidden lg:block ml-2">{t('nav.complaint_tab', 'Pengaduan')}</span>
               </button>
 
-              {/* Language Toggle */}
-              <button
-                onClick={() => {
-                  const newLang = i18n.language === 'id' ? 'en' : 'id';
-                  i18n.changeLanguage(newLang);
-                  localStorage.setItem('bieon_language', newLang);
-                }}
-                className="hidden sm:flex items-center justify-center p-2 rounded-lg font-bold text-xs bg-teal-50 text-teal-700 hover:bg-teal-100 transition-colors border border-teal-200 gap-2"
-                title="Toggle Language"
-              >
-                <Globe className="w-4 h-4" />
-                <span className="uppercase">{i18n.language}</span>
-              </button>
-
               {/* Notification */}
               <div className="relative flex">
                 <button
@@ -190,6 +184,32 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                   onNavigate={setActiveMenu}
                   onUnreadChange={setHasUnread}
                 />
+              </div>
+              
+              {/* Premium Language Pill Toggle */}
+              <div className="flex items-center bg-teal-50/60 p-0.5 rounded-xl border border-teal-100/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
+                <button
+                  onClick={() => handleLanguageChange('id')}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'id'
+                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
+                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                  }`}
+                  title="Bahasa Indonesia"
+                >
+                  ID
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'en'
+                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
+                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                  }`}
+                  title="English"
+                >
+                  EN
+                </button>
               </div>
               
               {/* Profile - Direct Navigation */}
