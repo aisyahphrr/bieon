@@ -1684,5 +1684,173 @@
       "fr": "Fr",
       "sa": "Sa"
     }
+  },
+  "auth": {
+    "terms_privacy_footer": "BIEON's Terms of Service & Privacy Policy",
+    "login": {
+      "title": "Login your Account",
+      "subtitle": "Welcome back to BIEON Smart Living.",
+      "label_username_email": "Email or Username",
+      "placeholder_username_email": "Enter your email or username",
+      "label_password": "Password",
+      "placeholder_password": "Enter your password",
+      "forgot_password": "Forgot Password?",
+      "btn_login": "Login",
+      "divider": "or",
+      "btn_google": "Continue with Google",
+      "no_account": "Don't have an account?",
+      "link_signup": "Sign Up"
+    },
+    "signup": {
+      "title": "Create an Account",
+      "subtitle": "Start your Smart Living journey with BIEON.",
+      "label_email": "Email Address",
+      "placeholder_email": "Enter your email address",
+      "label_password": "Password",
+      "placeholder_password": "Create a secure password (min. 8 characters)",
+      "btn_signup": "Create Account",
+      "divider": "Or continue with",
+      "btn_google": "Google",
+      "have_account": "Already have an account?",
+      "link_login": "Log in here"
+    },
+    "setup": {
+      "stepper": {
+        "profile": "Profile",
+        "system": "System",
+        "finish": "Finish"
+      },
+      "step1": {
+        "title": "Hello! Welcome to BIEON",
+        "subtitle": "Before you start monitoring your smart home, let's complete your profile data first!",
+        "label_first_name": "First Name",
+        "placeholder_first_name": "Enter your first name",
+        "label_last_name": "Last Name",
+        "placeholder_last_name": "Enter your last name",
+        "label_username": "Username",
+        "placeholder_username": "Choose a unique username",
+        "label_phone": "Phone Number",
+        "placeholder_phone": "Enter your active phone number",
+        "label_dob": "Date of Birth",
+        "placeholder_dob": "Select Date of Birth",
+        "label_address": "Complete Address",
+        "placeholder_address": "Enter your full home address",
+        "terms_checkbox": "I agree to the Terms & Conditions of BIEON's ECOSENSE.",
+        "btn_next": "Next Step"
+      },
+      "step2": {
+        "title": "Connect Your Home 🔌",
+        "subtitle": "Register your BIEON ID and set up your electricity tariff to start monitoring energy consumption in real-time.",
+        "label_system_name": "System / House Name",
+        "placeholder_system_name": "Example: Sweet Home, Cozy Apartment",
+        "label_bieon_id": "BIEON ID",
+        "placeholder_bieon_id": "Example: BIEON-001",
+        "label_tariff_group": "PLN Tariff Category",
+        "placeholder_tariff_group": "Select Tariff Category",
+        "label_pln": "PLN Tariff Category",
+        "placeholder_pln": "Select Electricity Tariff Category",
+        "search_pln": "Search tariff group (e.g. R1, B-2...)",
+        "search_empty": "Tariff group \"{{query}}\" not found",
+        "btn_back": "Back",
+        "btn_confirm_next": "Confirm & Continue",
+        "btn_next": "Confirm & Continue",
+        "segments": {
+          "subsidi-rumah-tangga": "Household Subsidy",
+          "rumah-tangga": "Household",
+          "bisnis": "Business",
+          "industri": "Industry",
+          "pemerintah-pju": "Government & Public Street Lighting",
+          "pelayanan-sosial": "Social Services",
+          "lainnya": "Others"
+        }
+      },
+      "step3": {
+        "title": "Almost Done! ✨",
+        "subtitle": "Review your information details before we prepare your BIEON Dashboard.",
+        "sec_owner": "Owner Identity",
+        "sec_system": "System Information",
+        "sec_tariff": "Electricity Tariff",
+        "val_empty": "Not selected yet",
+        "btn_finish": "Complete Registration",
+        "footer_encryption": "Your data is secured and fully encrypted by BIEON Security.",
+        "card_owner": "Owner Identity",
+        "card_system": "System Information",
+        "card_tariff": "Electricity Tariff",
+        "card_tariff_empty": "Not selected yet",
+        "btn_loading": "Preparing Dashboard...",
+        "security_text": "Your data is secured and fully encrypted by BIEON Security."
+      }
+    },
+    "terms": {
+      "title": "Terms and Conditions of Use",
+      "subtitle": "BIEON-Smart Green Living Monitoring System Services",
+      "date_text": "Date: April 6, 2026",
+      "btn_confirm": "I confirm that I have read and accept the terms and conditions.",
+      "btn_cancel": "Cancel",
+      "btn_accept": "Accept",
+      "end_text": "End of Terms and Conditions.",
+      "sections": {
+        "introduction": {
+          "title": "1. Introduction",
+          "content_p1": "Welcome to BIEON Smart Green Living Monitoring System. These Terms and Conditions are a legal agreement between you (hereinafter referred to as \"user\") and PT Matra Kreasi Mandiri (hereinafter referred to as \"company\") as the developer and provider of the BIEON system.",
+          "content_p2": "By accessing the BIEON web dashboard, downloading, and using the BIEON hardware installed on your property, you declare that you have read, understood, and agreed to the entire content of these terms and conditions. If you do not agree, you are prohibited from using our services."
+        },
+        "eligibility": {
+          "title": "2. Definitions",
+          "content_li1": "an Internet of Things (IoT) integration system that includes hardware (Master, Hub-Node, Smart Device) and software (Web Dashboard) for monitoring various aspects.",
+          "content_li2_bold": "User (Homeowner):",
+          "content_li2_text": "A legal individual who has access to the BIEON dashboard to monitor and control devices in their home.",
+          "content_li3_bold": "Technician:",
+          "content_li3_text": "Internal company staff authorized to perform diagnostics, remote configuration, and handle complaints on the user's system."
+        },
+        "security": {
+          "title": "3. Service Use and Account Security",
+          "content_li1_bold": "Account access:",
+          "content_li1_text": "The User must maintain the confidentiality of their username and password. All actuation activities (such as turning devices on/off) carried out from the User's account are the sole responsibility of the User.",
+          "content_li2_bold": "Fair use:",
+          "content_li2_text": "This service may only be used for reasonable smart system monitoring and management purposes. Users are strictly prohibited from:",
+          "content_li2_sub1": "Performing reverse engineering on ESP32 hardware, the local network (ESP-NOW), or BIEON's MQTT protocol",
+          "content_li2_sub2": "Attempting to overload the server or search for security vulnerabilities on the BIEON web dashboard",
+          "content_li2_sub3": "Using BIEON devices for illegal purposes or to harm other parties."
+        },
+        "acceptable_use": {
+          "title": "4. Data Collection and Use (Privacy)",
+          "content_intro": "To perform its functions, the BIEON system continuously collects and processes data from your property, which includes but is not limited to:",
+          "content_li1_bold": "Electricity Consumption Data:",
+          "content_li1_text": "Voltage, current, load, and power consumption (kWh)",
+          "content_li2_bold": "Environmental Data:",
+          "content_li2_text": "Air quality (temperature and humidity), water quality (pH, total dissolved solids, water temperature, turbidity).",
+          "content_li3_bold": "Security & Log Data:",
+          "content_li3_text": "door open/closed status, motion, and device on/off history. This data is used solely to display graphs on your dashboard, estimate costs, handle troubleshooting by Technicians, and improve system performance."
+        },
+        "reverse_engineering": {
+          "title": "5. Limitation of Liability",
+          "content_intro": "The following clauses are crucial to understand regarding the nature of IoT devices:",
+          "content_li1_bold": "External Dependencies:",
+          "content_li1_text": "The performance of BIEON Services is heavily dependent on the PLN power supply, the stability of the Internet connection in your area, and the range of your local Wi-Fi router. We are not responsible for notification delays, loss of sensor data logs, or device actuation failures if disruptions occur in these external factors.",
+          "content_li2_bold": "Not an Absolute Safety Device:",
+          "content_li2_text": "BIEON security warning features (such as gas leak and door intrusion sensors) are designed as an early warning system, not as a replacement for professional emergency services (police or medical). We do not guarantee absolutely that the services will prevent fire, theft, or property damage.",
+          "content_li3_bold": "Material Losses:",
+          "content_li3_text": "PT Matra Kreasi Mandiri is exempted from all claims for damages for loss of life, injury, or property damage caused by hardware failure, server disruptions, or User negligence in responding to BIEON's warning system."
+        },
+        "limitation_liability": {
+          "title": "6. Maintenance and Complaints",
+          "content_li1": "Users have the right to request repairs through the Complaint Ticket feature on the dashboard if they experience an Offline status or anomalous sensor readings.",
+          "content_li2": "We reserve the right to assign Technicians to visually inspect the global dashboard or alter client network calibration parameters for troubleshooting purposes, without intervening or turning the User's appliances on/off without permission.",
+          "content_li3": "We may at any time perform server maintenance or Over-The-Air (OTA) updates on local devices, which may result in temporary downtime of the Services."
+        },
+        "severability": {
+          "title": "7. Termination of Access",
+          "content": "We, through the Super Admin, reserve the right to suspend or terminate User account access unilaterally and without prior notice if strong indications of a breach of these Terms and Conditions are found."
+        },
+        "governing_law": {
+          "title": "8. Governing Law",
+          "content_li1": "The effectiveness, interpretation, amendment, execution, and dispute resolution of the Agreement are subject to the laws of Indonesia. If there are no relevant laws and regulations, references to general international business practices and/or industry practices shall be made.",
+          "content_li2": "Disputes arising from or in connection with the Agreement may be resolved by you and PT Matra Kreasi Mandiri Smart Living through consultation, or if no agreement is reached, it may be submitted to the Indonesian Court where the Agreement was signed for adjudication.",
+          "content_li3": "When any provision of this Agreement is deemed invalid by the Indonesian Court, it shall not affect the effectiveness of other provisions or any part thereof; you and BIEON Smart Living shall execute the valid provisions in good faith.",
+          "content_li4": "This Agreement is signed in Indonesia."
+        }
+      }
+    }
   }
 }

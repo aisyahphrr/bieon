@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, Lock, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { auth, googleProvider } from '../../config/firebase';
 import { signInWithPopup } from 'firebase/auth';
+import { useTranslation } from 'react-i18next';
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -33,6 +34,7 @@ const parseJsonSafely = async (response) => {
 };
 
 const Login = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,6 +42,13 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+
+  const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('bieon_language', lang);
+  };
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -171,6 +180,34 @@ const Login = () => {
 
   return (
     <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white pb-12 pt-8">
+      {/* Floating Language Switcher */}
+      <div className="absolute top-6 right-6 z-50">
+        <div className="flex items-center bg-white/40 backdrop-blur-md p-0.5 rounded-xl border border-white/40 shadow-sm select-none">
+          <button
+            onClick={() => handleLanguageChange('id')}
+            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+              currentLang === 'id'
+                ? 'bg-white text-[#009b7c] shadow-sm scale-100'
+                : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
+            }`}
+            title="Bahasa Indonesia"
+          >
+            ID
+          </button>
+          <button
+            onClick={() => handleLanguageChange('en')}
+            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+              currentLang === 'en'
+                ? 'bg-white text-[#009b7c] shadow-sm scale-100'
+                : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
+            }`}
+            title="English"
+          >
+            EN
+          </button>
+        </div>
+      </div>
+
       {/* Ambient Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-300/40 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_8s_ease-in-out_infinite] z-0"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-teal-200/40 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_10s_ease-in-out_infinite] z-0" style={{ animationDelay: '2s' }}></div>
@@ -184,17 +221,17 @@ const Login = () => {
 
           <div className="text-center mb-8">
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Login your Account
+              {t('auth.login.title')}
             </h1>
             <p className="text-sm font-medium text-slate-500">
-              Selamat datang kembali di BIEON Smart Living.
+              {t('auth.login.subtitle')}
             </p>
           </div>
 
           <form className="space-y-5" onSubmit={handleLogin}>
             {/* Email / Username Field */}
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-bold text-slate-700 ml-1">Email / Username</label>
+              <label className="block text-[13px] font-bold text-slate-700 ml-1">{t('auth.login.label_username_email')}</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#009b7c] transition-colors">
                   <User size={18} />
@@ -203,7 +240,7 @@ const Login = () => {
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your Email or Username here"
+                  placeholder={t('auth.login.placeholder_username_email')}
                   className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm"
                 />
               </div>
@@ -211,7 +248,7 @@ const Login = () => {
 
             {/* Password Field */}
             <div className="space-y-1.5">
-              <label className="block text-[13px] font-bold text-slate-700 ml-1">Password</label>
+              <label className="block text-[13px] font-bold text-slate-700 ml-1">{t('auth.login.label_password')}</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#009b7c] transition-colors">
                   <Lock size={18} />
@@ -220,8 +257,8 @@ const Login = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your Password here"
-                  className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm tracking-widest"
+                  placeholder={t('auth.login.placeholder_password')}
+                  className="w-full bg-slate-50/50 text-[14px] text-slate-800 placeholder-slate-400 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 outline-none transition-all shadow-sm"
                 />
               </div>
             </div>
@@ -244,7 +281,7 @@ const Login = () => {
                 disabled={loading}
                 className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2 disabled:bg-slate-400 disabled:hover:translate-y-0"
               >
-                <span className="relative z-10">{loading ? 'Memproses...' : 'Login'}</span>
+                <span className="relative z-10">{loading ? 'Memproses...' : t('auth.login.btn_login')}</span>
                 {!loading ? (
                   <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />
                 ) : (
@@ -258,7 +295,7 @@ const Login = () => {
           {/* OR Divider */}
           <div className="flex items-center gap-4 my-8">
             <div className="h-px bg-slate-200 flex-1"></div>
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">- or -</span>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">- {t('auth.login.divider')} -</span>
             <div className="h-px bg-slate-200 flex-1"></div>
           </div>
 
@@ -277,24 +314,24 @@ const Login = () => {
               </div>
             )}
             <span className="text-[14px] font-bold text-slate-700">
-              {googleLoading ? 'Memproses Google...' : 'Continue with Google'}
+              {googleLoading ? 'Memproses Google...' : t('auth.login.btn_google')}
             </span>
           </button>
 
           {/* Footer Links */}
           <div className="flex justify-between items-center mt-10 text-[13px] text-slate-500 font-medium">
-            <button onClick={() => navigate('/forgot')} className="hover:text-[#009b7c] transition-colors font-bold">Forgot Password</button>
+            <button onClick={() => navigate('/forgot')} className="hover:text-[#009b7c] transition-colors font-bold">{t('auth.login.forgot_password')}</button>
             <div>
-              Don't have an account?
+              {t('auth.login.no_account')}
               <button onClick={() => navigate('/signup')} className="text-[#009b7c] font-bold hover:underline ml-1.5 transition-all">
-                Sign Up
+                {t('auth.login.link_signup')}
               </button>
             </div>
           </div>
         </div>
 
         <div className="text-center mt-8 text-xs font-bold text-slate-400 hover:text-slate-500 cursor-pointer transition-colors">
-          Terms of Service & Privacy Policy BIEON
+          {t('auth.terms_privacy_footer')}
         </div>
       </div>
     </div>

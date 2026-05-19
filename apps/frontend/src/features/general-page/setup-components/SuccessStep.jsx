@@ -1,7 +1,10 @@
 import React from 'react';
 import { CheckCircle2, User, Home, Zap, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) => {
+    const { t } = useTranslation();
+
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col items-center text-center mb-8">
@@ -9,9 +12,9 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
                     <CheckCircle2 className="w-8 h-8 text-[#009b7c]" />
                     <div className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping"></div>
                 </div>
-                <h1 className="text-[22px] md:text-2xl font-black text-slate-800 mb-1 tracking-tight">Hampir Selesai! ✨</h1>
+                <h1 className="text-[22px] md:text-2xl font-black text-slate-800 mb-1 tracking-tight">{t('auth.setup.step3.title')}</h1>
                 <p className="text-[13px] font-bold text-slate-500 tracking-tight leading-relaxed max-w-[300px]">
-                    Tinjau kembali data Anda sebelum kami menyiapkan Dashboard BIEON Anda.
+                    {t('auth.setup.step3.subtitle')}
                 </p>
             </div>
 
@@ -26,7 +29,7 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
                         <User className="w-4 h-4" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Identitas Pemilik</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t('auth.setup.step3.card_owner')}</p>
                         <p className="text-[14px] font-black text-slate-800 leading-tight">
                             {formData.firstName} {formData.lastName}
                         </p>
@@ -41,7 +44,7 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
                         <Home className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Informasi Sistem</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t('auth.setup.step3.card_system')}</p>
                         <p className="text-[14px] font-black text-slate-800 leading-tight">
                             {formData.systemName || "Rumah BIEON Utama"}
                         </p>
@@ -60,9 +63,9 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
                         <Zap className="w-4 h-4" />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Tarif Listrik</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t('auth.setup.step3.card_tariff')}</p>
                         <p className="text-[13px] font-black text-slate-800">
-                            {selectedPln || "Belum dipilih"}
+                            {selectedPln || t('auth.setup.step3.card_tariff_empty')}
                         </p>
                     </div>
                 </div>
@@ -83,17 +86,17 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
                 {loading ? (
                     <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Sedang Menyiapkan Dashboard...
+                        {t('auth.setup.step3.btn_loading')}
                     </>
                 ) : (
                     <>
-                        Selesaikan Pendaftaran
+                        {t('auth.setup.step3.btn_finish')}
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </>
                 )}
             </button>
             <p className="text-center mt-4 text-[11px] font-bold text-slate-400">
-                Data Anda aman dan terenkripsi oleh BIEON Security.
+                {t('auth.setup.step3.security_text')}
             </p>
         </div>
     );

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Import Sub-components
 import ProfileInfoStep from './setup-components/ProfileInfoStep';
@@ -50,6 +51,7 @@ const FALLBACK_PLN_CATEGORIES = [
 ].map((c) => ({ ...c, key: makePlnKey(c.label) }));
 
 const Setup = ({ tempData }) => {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -80,8 +82,17 @@ const Setup = ({ tempData }) => {
     const [viewYear, setViewYear] = useState(new Date().getFullYear());
     const [showYearDropdown, setShowYearDropdown] = useState(false);
 
+    const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+
+    const handleLanguageChange = (lang) => {
+        i18n.changeLanguage(lang);
+        localStorage.setItem('bieon_language', lang);
+    };
+
     // Month Names
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthNames = i18n.language?.startsWith('id')
+        ? ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+        : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     // Fetch PLN options on mount
     useEffect(() => {
@@ -293,6 +304,34 @@ const Setup = ({ tempData }) => {
 
     return (
         <div className="min-h-[100dvh] bg-slate-50 flex font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white">
+            {/* Floating Language Switcher */}
+            <div className="absolute top-6 right-6 z-50">
+                <div className="flex items-center bg-white/40 backdrop-blur-md p-0.5 rounded-xl border border-white/40 shadow-sm select-none">
+                    <button
+                        onClick={() => handleLanguageChange('id')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                            currentLang === 'id'
+                                ? 'bg-white text-[#009b7c] shadow-sm scale-100'
+                                : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
+                        }`}
+                        title="Bahasa Indonesia"
+                    >
+                        ID
+                    </button>
+                    <button
+                        onClick={() => handleLanguageChange('en')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                            currentLang === 'en'
+                                ? 'bg-white text-[#009b7c] shadow-sm scale-100'
+                                : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
+                        }`}
+                        title="English"
+                    >
+                        EN
+                    </button>
+                </div>
+            </div>
+
             {/* Multi-layered Ambient Background */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[50%] bg-emerald-200/30 rounded-full mix-blend-multiply filter blur-[120px] animate-[pulse_10s_ease-in-out_infinite] z-0 pointer-events-none"></div>
             <div className="absolute bottom-[-10%] right-[-5%] w-[35%] h-[45%] bg-blue-200/20 rounded-full mix-blend-multiply filter blur-[100px] animate-[pulse_12s_ease-in-out_infinite] delay-1000 z-0 pointer-events-none"></div>
@@ -320,7 +359,7 @@ const Setup = ({ tempData }) => {
                                         ) : num}
                                     </div>
                                     <span className={`text-[10px] font-black uppercase tracking-widest mt-3 transition-colors duration-300 ${step === num ? 'text-slate-800' : 'text-slate-400'}`}>
-                                        {num === 1 ? 'Profil' : num === 2 ? 'Sistem' : 'Selesai'}
+                                        {num === 1 ? t('auth.setup.stepper.profile') : num === 2 ? t('auth.setup.stepper.system') : t('auth.setup.stepper.finish')}
                                     </span>
                                 </div>
                             ))}

@@ -1683,5 +1683,173 @@
       "fr": "Jum",
       "sa": "Sab"
     }
+  },
+  "auth": {
+    "terms_privacy_footer": "Syarat Layanan & Kebijakan Privasi BIEON",
+    "login": {
+      "title": "Masuk ke Akun Anda",
+      "subtitle": "Selamat datang kembali di BIEON Smart Living.",
+      "label_username_email": "Email atau Username",
+      "placeholder_username_email": "Masukkan email atau username Anda",
+      "label_password": "Password",
+      "placeholder_password": "Masukkan password Anda",
+      "forgot_password": "Lupa Password?",
+      "btn_login": "Masuk",
+      "divider": "atau",
+      "btn_google": "Lanjutkan dengan Google",
+      "no_account": "Belum memiliki akun?",
+      "link_signup": "Daftar Sekarang"
+    },
+    "signup": {
+      "title": "Buat Akun Baru",
+      "subtitle": "Mulai perjalanan Smart Living Anda bersama BIEON.",
+      "label_email": "Alamat Email",
+      "placeholder_email": "Masukkan alamat email Anda",
+      "label_password": "Password",
+      "placeholder_password": "Buat password aman (min. 8 karakter)",
+      "btn_signup": "Buat Akun",
+      "divider": "Atau lanjutkan dengan",
+      "btn_google": "Google",
+      "have_account": "Sudah memiliki akun?",
+      "link_login": "Log in di sini"
+    },
+    "setup": {
+      "stepper": {
+        "profile": "Profil",
+        "system": "Sistem",
+        "finish": "Selesai"
+      },
+      "step1": {
+        "title": "Halo! Selamat datang di BIEON",
+        "subtitle": "Sebelum mulai memonitor hunian cerdasmu, yuk lengkapi data profil berikut!",
+        "label_first_name": "Nama Depan",
+        "placeholder_first_name": "Masukkan nama depan Anda",
+        "label_last_name": "Nama Belakang",
+        "placeholder_last_name": "Masukkan nama belakang Anda",
+        "label_username": "Username",
+        "placeholder_username": "Pilih username unik",
+        "label_phone": "Nomor Telepon",
+        "placeholder_phone": "Masukkan nomor telepon aktif Anda",
+        "label_dob": "Tanggal Lahir",
+        "placeholder_dob": "Pilih Tanggal Lahir",
+        "label_address": "Alamat Lengkap",
+        "placeholder_address": "Masukkan alamat rumah lengkap Anda",
+        "terms_checkbox": "Saya menyetujui Syarat & Ketentuan dari ECOSENSE BIEON.",
+        "btn_next": "Langkah Selanjutnya"
+      },
+      "step2": {
+        "title": "Hubungkan Hunianmu 🔌",
+        "subtitle": "Daftarkan ID BIEON dan atur tarif listrik untuk mulai memantau penggunaan energi secara real-time.",
+        "label_system_name": "Nama Sistem / Rumah",
+        "placeholder_system_name": "Contoh: Rumahku, Apartemen Nyaman",
+        "label_bieon_id": "ID BIEON",
+        "placeholder_bieon_id": "Contoh: BIEON-001",
+        "label_tariff_group": "Golongan Tarif PLN",
+        "placeholder_tariff_group": "Pilih Golongan Tarif PLN",
+        "label_pln": "Golongan Tarif PLN",
+        "placeholder_pln": "Pilih Golongan Tarif Listrik",
+        "search_pln": "Cari golongan (mis. R1, B-2...)",
+        "search_empty": "Golongan \"{{query}}\" tidak ditemukan",
+        "btn_back": "Kembali",
+        "btn_confirm_next": "Konfirmasi & Lanjut",
+        "btn_next": "Konfirmasi & Lanjut",
+        "segments": {
+          "subsidi-rumah-tangga": "Subsidi Rumah Tangga",
+          "rumah-tangga": "Rumah Tangga",
+          "bisnis": "Bisnis",
+          "industri": "Industri",
+          "pemerintah-pju": "Pemerintah & PJU",
+          "pelayanan-sosial": "Pelayanan Sosial",
+          "lainnya": "Lainnya"
+        }
+      },
+      "step3": {
+        "title": "Hampir Selesai! ✨",
+        "subtitle": "Tinjau kembali data Anda sebelum kami menyiapkan Dashboard BIEON Anda.",
+        "sec_owner": "Identitas Pemilik",
+        "sec_system": "Informasi Sistem",
+        "sec_tariff": "Tarif Listrik",
+        "val_empty": "Belum dipilih",
+        "btn_finish": "Selesaikan Pendaftaran",
+        "footer_encryption": "Data Anda aman dan terenkripsi oleh BIEON Security.",
+        "card_owner": "Identitas Pemilik",
+        "card_system": "Informasi Sistem",
+        "card_tariff": "Tarif Listrik",
+        "card_tariff_empty": "Belum dipilih",
+        "btn_loading": "Sedang Menyiapkan Dashboard...",
+        "security_text": "Data Anda aman dan terenkripsi oleh BIEON Security."
+      }
+    },
+    "terms": {
+      "title": "Syarat Dan Ketentuan Penggunaan",
+      "subtitle": "Layanan BIEON-Smart Green Living Monitoring System",
+      "date_text": "Tanggal: 6 April 2026",
+      "btn_confirm": "Saya mengonfirmasi bahwa saya telah membaca dan menerima syarat dan ketentuan yang berlaku.",
+      "btn_cancel": "Batal",
+      "btn_accept": "Setuju",
+      "end_text": "Akhir dari Syarat dan Ketentuan.",
+      "sections": {
+        "introduction": {
+          "title": "1. Pendahuluan",
+          "content_p1": "Selamat datang di BIEON Smart Green Living Monitoring System. Syarat dan Ketentuan ini adalah hukum antara Anda (selanjutnya disebut \"pengguna\") dan PT Matra Kreasi Mandiri (selanjutnya disebut \"perusahaan\") selaku pengembang dan penyedia sistem BIEON.",
+          "content_p2": "Dengan mengakses dashboard web BIEON, mengunduh, dan menggunakan perangkat keras BIEON yang terpasang di properti Anda, Anda menyatakan telah membaca, memahami, dan menyetujui seluruh isi syarat dan ketentuan ini. Jika Anda tidak setuju, Anda dilarang menggunakan layanan kami ini."
+        },
+        "eligibility": {
+          "title": "2. Definisi",
+          "content_li1": "sistem integrasi Internet of Things (IoT) yang mencakup perangkat keras (Master, Hub-Node, Smart Device) dan perangkat lunak (Dashboard Web) untuk monitoring berbagai aspek.",
+          "content_li2_bold": "Pengguna (Homeowner):",
+          "content_li2_text": "Individu sah yang memiliki akses ke dashboard BIEON untuk memantau dan mengontrol perangkat di rumah mereka.",
+          "content_li3_bold": "Teknisi:",
+          "content_li3_text": "staf internal Perusahaan yang berwenang melakukan diagnostik, konfigurasi jarak jauh, dan penanganan keluhan pada sistem pengguna."
+        },
+        "security": {
+          "title": "3. Penggunaan Layanan dan Keamanan Akun",
+          "content_li1_bold": "Akses akun:",
+          "content_li1_text": "Pengguna wajib menjaga kerahasiaan username, kata sandi. Segala aktivitas aktuasi (seperti menyalakan/mematikan perangkat) yang dilakukan dari akun Pengguna adalah tanggung jawab penuh Pengguna.",
+          "content_li2_bold": "Penggunaan wajar:",
+          "content_li2_text": "Layanan ini hanya boleh digunakan untuk tujuan pemantauan dan manajemen sistem cerdas secara wajar. Pengguna dilarang keras:",
+          "content_li2_sub1": "Melakukan rekayasa balik (reverse engineering) terhadap perangkat keras ESP32, jaringan lokal (ESP-NOW), atau protokol MQTT BIEON",
+          "content_li2_sub2": "Mencoba membebani server atau mencari celah keamanan pada dashboard web BIEON",
+          "content_li2_sub3": "Menggunakan perangkat BIEON untuk tujuan ilegal atau membahayakan pihak lain."
+        },
+        "acceptable_use": {
+          "title": "4. Pengumpulan dan Penggunaan Data (Privasi)",
+          "content_intro": "Untuk menjalankan fungsinya, sistem BIEON secara terus-menerus mengumpulkan dan memproses data dari properti Anda, yang meliputi namun tidak terbatas pada:",
+          "content_li1_bold": "Data Penggunaan Energi Listrik:",
+          "content_li1_text": "Tegangan, arus, beban (Load), Konsumsi daya (kWh)",
+          "content_li2_bold": "Data Lingkungan:",
+          "content_li2_text": "Kualitas udara (suhu, dan kelembapan), Kualitas air (pH, padatan terlarut, suhu air, kekeruhan).",
+          "content_li3_bold": "Data Keamanan & Log:",
+          "content_li3_text": "status pintu terbuka/tertutup, pergerakan (motion), serta riwayat On/off alat. Data ini digunakan semata-mata untuk menampilkan grafik di dashboard Anda, perhitungan estimasi biaya, penanganan troubleshooting oleh Teknisi, dan peningkatan kinerja sistem."
+        },
+        "reverse_engineering": {
+          "title": "5. Batasan Tanggung Jawab",
+          "content_intro": "Klausul berikut sangat penting untuk dipahami terkait sifat perangkat IoT:",
+          "content_li1_bold": "Ketergantungan Eksternal:",
+          "content_li1_text": "Kinerja Layanan BIEON sangat bergantung pada pasokan listrik PLN, stabilitas koneksi Internet di area Anda, serta jangkauan router Wi-Fi lokal. Kami tidak bertanggung jawab atas keterlambatan notifikasi, hilangnya log data sensor, atau kegagalan aktuasi perangkat jika terjadi gangguan pada faktor-faktor eksternal tersebut.",
+          "content_li2_bold": "Bukan alat keselamatan Mutlak:",
+          "content_li2_text": "Fitur peringatan keamanan BIEON (seperti sensor kebocoran gas dan intrusi pintu), dirancang sebagai system peringatan dini (early warning system), bukan sebagai pengganti layanan tanggap darurat professional (polisi, atau medis). Kami tidak memberikan jaminan mutlak bahwa layanan akan mencegah bahaya kebakaran, pencurian, atau kerusakan properti.",
+          "content_li3_bold": "Kerugian Materiil:",
+          "content_li3_text": "PT Matra Kreasi Mandiri dibebaskan dari segala tuntutan ganti rugi atas hilangnya nyawa, cedera, atau kerusakan properti yang diakibatkan oleh gagal berfungsinya perangkat keras (hardware failure), gangguan server, atau kelalaian Pengguna dalam merespons sistem peringatan BIEON."
+        },
+        "limitation_liability": {
+          "title": "6. Pemeliharaan dan Pengaduan",
+          "content_li1": "Pengguna berhak mengajukan perbaikan melalui fitur Tiket Pengaduan di dashboard apabila mendapati status Offline atau anomali pembacaan sensor.",
+          "content_li2": "Kami berhak menugaskan Teknisi untuk melakukan pemeriksaan secara visual melalui dashboard global atau mengubah parameter kalibrasi jaringan klien guna keperluan troubleshooting, tanpa mengintervensi atau menyalakan/mematikan alat pribadi Pengguna tanpa izin.",
+          "content_li3": "Kami sewaktu-waktu dapat melakukan pemeliharaan (maintenance) server atau Over-The-Air (OTA) update pada perangkat lokal, yang mungkin mengakibatkan downtime sementara pada Layanan."
+        },
+        "severability": {
+          "title": "7. Pemutusan Akses",
+          "content": "Kami, melalui Super Admin, berhak melakukan penangguhan atau pemutusan akses akun Pengguna secara sepihak dan tanpa pemberitahuan sebelumnya apabila ditemukan indikasi kuat pelanggaran terhadap Syarat dan Ketentuan ini."
+        },
+        "governing_law": {
+          "title": "8. Hukum yang Berlaku",
+          "content_li1": "Keefektifan, penjelasan, perubahan, pelaksanaan, dan penyelesaian perselisihan dari Perjanjian tunduk pada hukum Indonesia. Jika tidak ada undang-undang dan peraturan yang relevan, referensi ke praktik bisnis internasional umum dan (atau) praktik industri harus dibuat.",
+          "content_li2": "Perselisihan yang timbul dari atau sehubungan dengan Perjanjian dapat diselesaikan oleh Anda dan PT Matra Kreasi Mandiri Smart Living melalui musyawarah atau jika tidak mencapai persetujuan, maka dapat diajukan ke Pengadilan Indonesia di mana Perjanjian ditandatangani untuk ajudikasi.",
+          "content_li3": "Ketika suatu ketentuan Perjanjian ini dinilai tidak sah oleh Pengadilan Indonesia, hal itu tidak akan mempengaruhi keefektifan ketentuan lain atau bagian apa pun darinya, Anda dan BIEON Smart Living akan melakukan ketentuan yang sah dengan itikad baik.",
+          "content_li4": "Perjanjian ini ditandatangani di Indonesia."
+        }
+      }
+    }
   }
 }

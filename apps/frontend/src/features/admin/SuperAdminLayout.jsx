@@ -35,6 +35,13 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
 
+  const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('bieon_language', lang);
+  };
+
   useEffect(() => {
     const fetchUnreadStatus = async () => {
       try {
@@ -193,19 +200,31 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
             </div>
 
             <div className="flex items-center gap-3 sm:gap-5 shrink-0">
-              {/* Language Toggle */}
-              <button
-                onClick={() => {
-                  const newLang = i18n.language === 'id' ? 'en' : 'id';
-                  i18n.changeLanguage(newLang);
-                  localStorage.setItem('bieon_language', newLang);
-                }}
-                className="hidden sm:flex items-center justify-center px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5 font-bold text-xs gap-2"
-                title="Toggle Language"
-              >
-                <Globe className="w-4 h-4 text-white/90 group-hover:text-white" />
-                <span className="uppercase text-white/90 group-hover:text-white">{i18n.language}</span>
-              </button>
+              {/* Premium Language Pill Toggle */}
+              <div className="flex items-center bg-[#008268]/60 p-0.5 rounded-xl border border-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] shrink-0 select-none">
+                <button
+                  onClick={() => handleLanguageChange('id')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'id'
+                      ? 'bg-white text-[#009b7c] shadow-md scale-100'
+                      : 'text-white/70 hover:text-white bg-transparent'
+                  }`}
+                  title="Bahasa Indonesia"
+                >
+                  ID
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'en'
+                      ? 'bg-white text-[#009b7c] shadow-md scale-100'
+                      : 'text-white/70 hover:text-white bg-transparent'
+                  }`}
+                  title="English"
+                >
+                  EN
+                </button>
+              </div>
 
               <div className="relative z-50">
                 <button
