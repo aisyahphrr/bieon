@@ -187,11 +187,11 @@ const LandingPage = () => {
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
             <div className="mb-8">
-              <div className="text-5xl lg:text-6xl font-black tracking-tighter mb-4">
+              <div className="text-6xl lg:text-8xl font-black tracking-tighter mb-4">
                 <span className="text-[#059b27]">ECO</span><span className="text-[#129cc0]">SENSE</span>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                Smart Living <br className="hidden lg:block"/>
+              <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-[1.2]">
+                Smart Living <br className="hidden lg:block" />
                 Monitoring System
               </h1>
             </div>
@@ -235,12 +235,12 @@ const LandingPage = () => {
 
           {/* Right Floating Dashboard Image */}
           <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:flex items-center justify-center mt-12 lg:mt-24">
-            
+
             <div className="relative z-20 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-700 ease-out">
-              <img 
-                src="/11BIEON ECO SENSE.png" 
-                alt="BIEON Eco Sense Dashboard" 
-                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
+              <img
+                src="/11BIEON ECO SENSE.png"
+                alt="BIEON Eco Sense Dashboard"
+                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
               />
             </div>
 
@@ -258,22 +258,18 @@ const LandingPage = () => {
 
           <div className="w-full max-w-[1440px] mx-auto px-6 relative z-10">
             <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-              
+
               {/* Left Content: Title + Grid Points */}
               <div className="flex-1 w-full">
-                
+
                 {/* Title Section moved inside Left Content */}
                 <Reveal className="w-full text-center lg:text-left mb-10">
-                  <span className="inline-flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-rose-500/10 text-rose-600 font-extrabold text-[11px] uppercase tracking-widest mb-4 border border-rose-500/20 shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                  <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
                     PROBLEM
-                  </span>
-                  <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight tracking-tight max-w-2xl mx-auto lg:mx-0">
-                    Masih Mengandalkan <br className="hidden sm:inline"/>
-                    <span className="relative inline-block mt-1 sm:mt-0">
-                      <span className="relative z-10 bg-gradient-to-r from-red-600 to-amber-600 bg-clip-text text-transparent">Data Manual?</span>
-                      <span className="absolute bottom-1.5 left-0 w-full h-2 bg-red-500/10 -rotate-1 rounded-md -z-0"></span>
-                    </span>
+                  </div>
+                  <h2 className="text-3xl lg:text-4xl font-black text-slate-900 leading-tight tracking-tight max-w-2xl mx-auto lg:mx-0">
+                    Masih Mengandalkan <br className="hidden sm:inline" />
+                    Data Manual?
                   </h2>
                 </Reveal>
 
@@ -328,10 +324,10 @@ const LandingPage = () => {
               {/* Right Content: The Stressed Man Image */}
               <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 mt-12 lg:mt-0">
                 <div className="relative z-20 rounded-3xl overflow-hidden shadow-2xl border-4 border-white transform hover:-translate-y-2 transition-all duration-700 ease-out">
-                  <img 
-                    src="/problem_illustration.png" 
-                    alt="Mengandalkan Data Manual" 
-                    className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" 
+                  <img
+                    src="/problem_illustration.png"
+                    alt="Mengandalkan Data Manual"
+                    className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
                   />
                 </div>
                 {/* Background Glow */}
@@ -346,7 +342,7 @@ const LandingPage = () => {
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
               <p className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">SOLUTION</p>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-12" style={{ fontFamily: "'Poppins', sans-serif" }}>ONE PLATFORM. TOTAL MONITORING</h2>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">ONE PLATFORM. TOTAL MONITORING</h2>
             </Reveal>
 
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
@@ -388,11 +384,11 @@ const LandingPage = () => {
         {/* Features / Bento Grid Platform Section */}
         <section id="features" className="py-10 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto">
           <div className="text-center mb-8 max-w-2xl mx-auto">
-            <div className="inline-flex py-1 px-3 rounded-full bg-[#009b7c]/10 text-[#009b7c] font-bold text-[11px] uppercase tracking-widest mb-4">
+            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
               Platform Features
             </div>
             <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 mb-6 drop-shadow-sm">
-              Features
+              FITUR
             </h2>
           </div>
 
@@ -459,6 +455,46 @@ const LandingPage = () => {
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
                   Seluruh data dapat diakses kapan saja dan di mana saja melalui dashboard berbasis cloud yang terintegrasi.
                 </p>
+              </div>
+            </Reveal>
+
+          </div>
+        </section>
+
+        {/* Dampak Section */}
+        <section id="dampak" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
+          <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
+            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+              Platform Benefit
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
+              DAMPAK
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            {/* Impact Card 1 */}
+            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/5 30BIAYA.png" alt="- 30% Biaya" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
+            {/* Impact Card 2 */}
+            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/6EFISIENSI.png" alt="+ 50% Efisiensi" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
+            {/* Impact Card 3 */}
+            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/7SUSTAINBILITY.png" alt="Sustainability Ready" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
             </Reveal>
 
@@ -635,41 +671,52 @@ const LandingPage = () => {
         <section className="bg-[#f8fafc] py-16 border-t border-slate-100 relative overflow-hidden">
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
-              <p className="text-[#009b7c] font-extrabold text-[10px] sm:text-xs uppercase tracking-[0.3em] mb-3">TELAH DIPERCAYA OLEH</p>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-12" style={{ fontFamily: "'Poppins', sans-serif" }}>Customer Kami</h2>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">Customer Kami</h2>
             </Reveal>
 
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8 lg:gap-12 items-start mt-8">
               {/* 1. Home Owner */}
-              <Reveal delay="0.1s" className="flex flex-col items-center group">
-                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+              <Reveal delay="0.1s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                   <img src="/13HOME OWNER.png" alt="Home Owner" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[13px] font-extrabold text-slate-700">Home Owner</span>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Home Owner</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Solusi monitoring cerdas untuk membantu rumah lebih efisien, nyaman, dan berkelanjutan melalui pemantauan energi, air, dan lingkungan secara real-time.
+                </p>
               </Reveal>
 
               {/* 2. Business */}
-              <Reveal delay="0.2s" className="flex flex-col items-center group">
-                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+              <Reveal delay="0.2s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                   <img src="/14BUSINESS.png" alt="Business" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[13px] font-extrabold text-slate-700">Business</span>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Business</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Membantu bisnis memantau operasional, efisiensi sumber daya, dan kualitas lingkungan untuk mendukung produktivitas dan pengambilan keputusan berbasis data.
+                </p>
               </Reveal>
 
               {/* 3. Industry */}
-              <Reveal delay="0.3s" className="flex flex-col items-center group">
-                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+              <Reveal delay="0.3s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                   <img src="/15INDUSTRY.png" alt="Industry" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[13px] font-extrabold text-slate-700">Industry</span>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Industry</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Sistem monitoring terintegrasi untuk industri dalam meningkatkan efisiensi, kontrol operasional, keamanan, dan sustainability secara lebih optimal.
+                </p>
               </Reveal>
 
               {/* 4. Government */}
-              <Reveal delay="0.4s" className="flex flex-col items-center group">
-                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+              <Reveal delay="0.4s" className="flex flex-col items-center group text-center">
+                <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                   <img src="/16GOVERNMENT.png" alt="Government" className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <span className="text-[13px] font-extrabold text-slate-700">Government</span>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Government</h3>
+                <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
+                  Mendukung pemerintah dalam pengelolaan data lingkungan, infrastruktur, dan utilitas publik melalui sistem monitoring cerdas yang terhubung dan real-time.
+                </p>
               </Reveal>
             </div>
           </div>
@@ -677,8 +724,10 @@ const LandingPage = () => {
       </main>
 
       {/* Flat Footer */}
-      <footer id="contact" className="bg-[#266355] text-white pt-16 pb-6 px-6 md:px-12 lg:px-20">
-        <div className="flex flex-col lg:flex-row justify-between gap-10 lg:gap-24 mb-10 max-w-7xl mx-auto">
+      <footer id="contact" className="relative text-white pt-16 pb-6 px-6 md:px-12 lg:px-20 overflow-hidden bg-cover bg-center" style={{ backgroundImage: "url('/13BIEON.png')" }}>
+        {/* Brand Overlay to preserve design color and readability, reduced opacity to make background image visible */}
+        <div className="absolute inset-0 bg-[#266355]/25 pointer-events-none"></div>
+        <div className="flex flex-col lg:flex-row justify-between gap-10 lg:gap-24 mb-10 max-w-7xl mx-auto relative z-10">
 
           <div className="max-w-[400px]">
             <img src="/logo_bieon_footer.png" alt="BIEON Footer" className="max-w-[280px] w-full h-auto object-contain mb-4 md:ml-[32px] drop-shadow-sm" />
@@ -737,7 +786,7 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
-        <div className="text-center text-[13px] text-white/60 font-medium pt-6 mt-8 border-t border-white/10 max-w-7xl mx-auto">
+        <div className="text-center text-[13px] text-white/60 font-medium pt-6 mt-8 border-t border-white/10 max-w-7xl mx-auto relative z-10">
           © Copyright 2026 | BIEON - Smart Green Living Monitoring System | All right reserved
         </div>
       </footer>
