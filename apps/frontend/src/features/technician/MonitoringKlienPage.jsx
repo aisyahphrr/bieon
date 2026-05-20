@@ -64,7 +64,7 @@ export function MonitoringKlienPage({ clients = [] }) {
 
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return <ArrowUpDown className="w-3.5 h-3.5 opacity-30" />;
-        return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-emerald-500" /> : <ArrowDown className="w-3.5 h-3.5 text-emerald-500" />;
+        return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-eco" /> : <ArrowDown className="w-3.5 h-3.5 text-eco" />;
     };
 
     return (
@@ -72,7 +72,7 @@ export function MonitoringKlienPage({ clients = [] }) {
             {/* Header Section */}
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+                    <div className="w-10 h-10 bg-eco/10 rounded-xl flex items-center justify-center text-eco">
                         <Activity className="w-6 h-6" />
                     </div>
                     <h1 className="text-2xl font-black text-gray-900 tracking-tight">Monitoring Kesehatan Sistem</h1>
@@ -140,7 +140,7 @@ export function MonitoringKlienPage({ clients = [] }) {
                             onClick={() => setStatusFilter(status)}
                             className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                                 statusFilter === status 
-                                ? 'bg-[#235C50] text-white shadow-lg shadow-emerald-900/20' 
+                                ? 'bg-eco text-white shadow-lg shadow-eco/20' 
                                 : 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100'
                             }`}
                         >
@@ -179,7 +179,7 @@ export function MonitoringKlienPage({ clients = [] }) {
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-inner ${
-                                                client.status === 'online' ? 'bg-gradient-to-br from-emerald-500 to-teal-600' :
+                                                client.status === 'online' ? 'bg-gradient-to-br from-eco to-sense' :
                                                 client.status === 'warning' ? 'bg-gradient-to-br from-amber-500 to-orange-600' :
                                                 'bg-gradient-to-br from-rose-500 to-red-600'
                                             }`}>
@@ -200,7 +200,7 @@ export function MonitoringKlienPage({ clients = [] }) {
                                     <td className="px-6 py-6">
                                         <div className="flex items-center justify-center gap-3">
                                             <div className="flex flex-col items-center">
-                                                <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-100 mb-1">
+                                                <div className="flex items-center gap-1.5 bg-eco/10 text-eco px-2 py-1 rounded-lg border border-eco/20 mb-1">
                                                     <Cpu className="w-3 h-3" />
                                                     <span className="text-xs font-black">{client.jumlahBieon}</span>
                                                 </div>
@@ -218,12 +218,12 @@ export function MonitoringKlienPage({ clients = [] }) {
                                     <td className="px-6 py-6">
                                         <div className="flex justify-center">
                                             <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border font-black text-[11px] uppercase tracking-wider ${
-                                                client.status === 'online' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm shadow-emerald-100' :
+                                                client.status === 'online' ? 'bg-eco/10 text-eco border-eco/20 shadow-sm shadow-eco/10' :
                                                 client.status === 'warning' ? 'bg-amber-50 text-amber-600 border-amber-100 shadow-sm shadow-amber-100' :
                                                 'bg-rose-50 text-rose-600 border-rose-100 shadow-sm shadow-rose-100 animate-pulse'
                                             }`}>
                                                 <div className={`w-2 h-2 rounded-full ${
-                                                    client.status === 'online' ? 'bg-emerald-500' :
+                                                    client.status === 'online' ? 'bg-eco' :
                                                     client.status === 'warning' ? 'bg-amber-500' :
                                                     'bg-rose-500'
                                                 }`} />
@@ -237,13 +237,13 @@ export function MonitoringKlienPage({ clients = [] }) {
                                         <div className="max-w-[200px]">
                                             <p className="text-xs font-bold text-gray-700 mb-1 truncate">{client.statusSistem}</p>
                                             <div className="flex items-center gap-4 text-[10px] text-gray-400 font-bold uppercase">
-                                                <span className="text-emerald-500">{client.devicesOnline} ON</span>
+                                                <span className="text-eco">{client.devicesOnline} ON</span>
                                                 <span className="text-rose-400">{client.devicesOffline} OFF</span>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
-                                        <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-[#235C50] hover:text-white transition-all active:scale-90 shadow-sm">
+                                        <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-eco hover:text-white transition-all active:scale-90 shadow-sm">
                                             <ChevronRight className="w-5 h-5" />
                                         </button>
                                     </td>
@@ -269,7 +269,7 @@ export function MonitoringKlienPage({ clients = [] }) {
                     </p>
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 bg-white border border-gray-200 px-3 py-1.5 rounded-xl">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <div className="w-2 h-2 rounded-full bg-eco" />
                             <span className="text-[10px] font-black text-gray-600 uppercase">Live Sync Active</span>
                         </div>
                     </div>

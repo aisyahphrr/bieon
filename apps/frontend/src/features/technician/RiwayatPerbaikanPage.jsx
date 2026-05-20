@@ -267,7 +267,7 @@ export function RiwayatPerbaikanPage() {
 
     // Header BIEON
     doc.setFontSize(18);
-    doc.setTextColor(15, 158, 120); // #0F9E78 (BIEON Teal)
+    doc.setTextColor(5, 155, 39); // #059b27 (BIEON Eco)
     doc.text(t('export.history_tech_title', 'Riwayat Aktivitas Teknisi'), 14, 22);
         
     doc.setFontSize(11);
@@ -300,7 +300,7 @@ export function RiwayatPerbaikanPage() {
       startY: 40,
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 2.5 },
-      headStyles: { fillColor: [15, 158, 120], textColor: [255, 255, 255], fontStyle: 'bold' },
+      headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [245, 248, 247] }
     });
 
@@ -408,7 +408,7 @@ export function RiwayatPerbaikanPage() {
   const handleExportSingleDetailPDF = (ticket) => {
     if (!ticket) return;
     const doc = new jsPDF('portrait');
-    const primaryColor = [15, 158, 120]; // BIEON Teal
+    const primaryColor = [5, 155, 39]; // BIEON Teal
     
     // Header & Logo Branding
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -564,9 +564,9 @@ export function RiwayatPerbaikanPage() {
   // getStatusBadge replaced by shared TicketStatusBadge component
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/10 to-teal-50/10 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-eco/5 to-sense/10/10 p-4 md:p-8">
       <div className="max-w-[1900px] mx-auto">
-        <h1 className="text-4xl font-bold text-center text-[#235C50] mb-8">Riwayat Aktivitas</h1>
+        <h1 className="text-4xl font-bold text-center text-green-900 mb-8">Riwayat Aktivitas</h1>
 
 
 
@@ -575,13 +575,13 @@ export function RiwayatPerbaikanPage() {
           <div className="flex flex-row w-full lg:w-auto mt-2 lg:mt-0 gap-2 items-center">
             {/* Search Input */}
             <div className="relative flex-1 min-w-[100px] sm:w-[240px] group">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense/500 transition-colors" />
               <input
                 type="text"
                 placeholder={t('table.search_placeholder', 'Cari tiket...')}
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all shadow-sm"
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-sense/100 focus:ring-4 focus:ring-sense/20 bg-white transition-all shadow-sm"
               />
             </div>
             
@@ -589,9 +589,9 @@ export function RiwayatPerbaikanPage() {
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-sense/100 ring-4 ring-sense/20' : 'border-gray-200 hover:bg-gray-50'}`}
               >
-                <Filter className={`w-4 h-4 transition-colors ${selectedCategory !== 'Semua Kategori' ? 'text-teal-500' : 'text-gray-400'}`} />
+                <Filter className={`w-4 h-4 transition-colors ${selectedCategory !== 'Semua Kategori' ? 'text-sense/500' : 'text-gray-400'}`} />
                 <span className={`hidden min-[400px]:inline-block ${selectedCategory !== 'Semua Kategori' ? 'text-gray-900' : 'text-gray-500'}`}>
                   {selectedCategory === 'Semua Kategori' ? t('history.filters.category', 'Kategori') : selectedCategory}
                 </span>
@@ -605,7 +605,7 @@ export function RiwayatPerbaikanPage() {
                         <button
                             key={cat}
                             onClick={() => { setSelectedCategory(cat === '' ? 'Semua Kategori' : cat); setShowCategoryDropdown(false); setCurrentPage(1); }}
-                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedCategory === (cat === '' ? 'Semua Kategori' : cat) ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedCategory === (cat === '' ? 'Semua Kategori' : cat) ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                         >
                             {cat ? t(`complaint.category_${cat.toLowerCase().replace(/\s+/g, '_')}`, cat) : t('history.all_categories', 'Semua Kategori')}
                         </button>
@@ -619,9 +619,9 @@ export function RiwayatPerbaikanPage() {
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowDateDropdown(!showDateDropdown)}
-                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showDateDropdown || dateRange.start || dateRange.end ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showDateDropdown || dateRange.start || dateRange.end ? 'border-sense/100 ring-4 ring-sense/20' : 'border-gray-200 hover:bg-gray-50'}`}
               >
-                <Calendar className={`w-4 h-4 transition-colors ${dateRange.start || dateRange.end ? 'text-teal-500' : 'text-gray-400'}`} />
+                <Calendar className={`w-4 h-4 transition-colors ${dateRange.start || dateRange.end ? 'text-sense/500' : 'text-gray-400'}`} />
                 <span className={`hidden min-[400px]:inline-block ${dateRange.start || dateRange.end ? 'text-gray-900' : 'text-gray-500'}`}>
                   {dateRange.start || dateRange.end ? `${formatDateDisplay(dateRange.start)} - ${formatDateDisplay(dateRange.end)}` : t('history.filters.date_range', 'Rentang Tanggal')}
                 </span>
@@ -638,12 +638,12 @@ export function RiwayatPerbaikanPage() {
                         <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">{t('history.filters.from_date')}</label>
                         <button
                           onClick={() => setActivePicker(activePicker === 'start' ? null : 'start')}
-                          className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${activePicker === 'start' ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200'}`}
+                          className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${activePicker === 'start' ? 'border-sense/100 ring-4 ring-sense/20' : 'border-gray-200'}`}
                         >
                           <span className={dateRange.start ? 'text-gray-900' : 'text-gray-400'}>
                             {dateRange.start ? formatDateDisplay(dateRange.start) : t('history.select_date', 'Pilih Tanggal')}
                           </span>
-                          <Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'start' ? 'text-teal-500' : ''}`} />
+                          <Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'start' ? 'text-sense/500' : ''}`} />
                         </button>
                       </div>
 
@@ -652,12 +652,12 @@ export function RiwayatPerbaikanPage() {
                         <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">{t('history.filters.to_date')}</label>
                         <button
                           onClick={() => setActivePicker(activePicker === 'end' ? null : 'end')}
-                          className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${activePicker === 'end' ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200'}`}
+                          className={`w-full flex items-center justify-between px-4 py-3 bg-gray-50 border rounded-xl text-sm font-medium transition-all ${activePicker === 'end' ? 'border-sense/100 ring-4 ring-sense/20' : 'border-gray-200'}`}
                         >
                           <span className={dateRange.end ? 'text-gray-900' : 'text-gray-400'}>
                             {dateRange.end ? formatDateDisplay(dateRange.end) : t('history.select_date', 'Pilih Tanggal')}
                           </span>
-                          <Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'end' ? 'text-teal-500' : ''}`} />
+                          <Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'end' ? 'text-sense/500' : ''}`} />
                         </button>
                       </div>
 
@@ -670,7 +670,7 @@ export function RiwayatPerbaikanPage() {
                               <div className="relative">
                                 <button
                                   onClick={() => setShowYearDropdown(!showYearDropdown)}
-                                  className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-teal-600 transition-colors"
+                                  className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-sense transition-colors"
                                 >
                                   {viewYear} <ChevronDown className={`w-2.5 h-2.5 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} />
                                 </button>
@@ -682,7 +682,7 @@ export function RiwayatPerbaikanPage() {
                                         <button
                                           key={year}
                                           onClick={() => { setViewYear(year); setShowYearDropdown(false); }}
-                                          className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${viewYear === year ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                          className={`w-full text-left px-3 py-1.5 text-[11px] transition-colors ${viewYear === year ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                         >
                                           {year}
                                         </button>
@@ -714,8 +714,8 @@ export function RiwayatPerbaikanPage() {
                                   key={i}
                                   onClick={() => handleSelectDate(d)}
                                   className={`h-9 w-full flex items-center justify-center rounded-lg text-xs transition-all
-                                        ${!d.current ? 'text-gray-300' : 'text-gray-700 hover:bg-teal-50 hover:text-teal-600'}
-                                        ${isSelected ? 'bg-teal-500 text-white font-bold' : ''}
+                                        ${!d.current ? 'text-gray-300' : 'text-gray-700 hover:bg-sense/5 hover:text-sense'}
+                                        ${isSelected ? 'bg-sense/50 text-white font-bold' : ''}
                                       `}
                                 >
                                   {d.day}
@@ -735,7 +735,7 @@ export function RiwayatPerbaikanPage() {
                         </button>
                         <button
                           onClick={() => { setShowDateDropdown(false); setActivePicker(null); }}
-                          className="flex-1 py-2 bg-[#235C50] text-white rounded-lg text-xs font-bold hover:bg-teal-900 transition-all shadow-md"
+                          className="flex-1 py-2 bg-eco text-white rounded-lg text-xs font-bold hover:bg-green-700 transition-all shadow-md"
                         >
                           {t('history.filters.apply')}
                         </button>
@@ -748,7 +748,7 @@ export function RiwayatPerbaikanPage() {
             
             <button
                 onClick={handleExportPDF}
-                className="flex lg:hidden items-center justify-center px-3 sm:px-4 py-2.5 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-all shadow-sm active:scale-95 shrink-0"
+                className="flex lg:hidden items-center justify-center px-3 sm:px-4 py-2.5 bg-eco text-white rounded-xl hover:bg-green-700 transition-all shadow-sm active:scale-95 shrink-0"
             >
                 <Download className="w-4 h-4" />
             </button>
@@ -756,7 +756,7 @@ export function RiwayatPerbaikanPage() {
 
           <button
             onClick={handleExportPDF}
-            className="hidden lg:flex items-center gap-2 px-6 py-2.5 bg-[#235C50] text-white rounded-xl font-bold text-sm hover:bg-teal-900 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className="hidden lg:flex items-center gap-2 px-6 py-2.5 bg-eco text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-all shadow-sm active:scale-95 whitespace-nowrap"
           >
             <Download className="w-4 h-4" /> {t('table.export', 'Export')}
           </button>
@@ -804,7 +804,7 @@ export function RiwayatPerbaikanPage() {
                   <tr>
                     <td colSpan="8" className="px-3 md:px-4 lg:px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="w-8 h-8 border-4 border-gray-100 border-t-teal-500 rounded-full animate-spin"></div>
+                        <div className="w-8 h-8 border-4 border-gray-100 border-t-sense rounded-full animate-spin"></div>
                         <p className="text-sm font-bold text-gray-400">{t('notification.ui.loading', 'Memuat riwayat...')}</p>
                       </div>
                     </td>
@@ -838,7 +838,7 @@ export function RiwayatPerbaikanPage() {
                     <td className="px-3 md:px-4 lg:px-6 py-4 text-center whitespace-nowrap">
                       <button
                         onClick={() => setSelectedTicket(item)}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#EDF5F1] text-[#235C50] border border-[#235C50]/10 rounded-lg text-xs font-bold hover:bg-[#235C50] hover:text-white transition-all active:scale-95"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-eco/10 text-eco border border-eco/20 rounded-lg text-xs font-bold hover:bg-eco hover:text-white transition-all active:scale-95"
                       >
                         Detail <ChevronRight className="w-3 h-3" />
                       </button>
@@ -860,13 +860,13 @@ export function RiwayatPerbaikanPage() {
           <div className="md:hidden divide-y divide-gray-100 pb-2">
             {isLoading ? (
               <div className="p-10 text-center">
-                <div className="w-8 h-8 border-4 border-gray-100 border-t-teal-500 rounded-full animate-spin mx-auto mb-3"></div>
+                <div className="w-8 h-8 border-4 border-gray-100 border-t-sense rounded-full animate-spin mx-auto mb-3"></div>
                 <p className="text-sm font-bold text-gray-400">{t('notification.ui.loading', 'Memuat riwayat...')}</p>
               </div>
             ) : paginatedData.map((item) => (
               <div key={item.id} className="p-5 active:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-100">{item.id}</span>
+                  <span className="text-[11px] font-bold text-sense bg-sense/5 px-2.5 py-1 rounded-md border border-sense/20">{item.id}</span>
                   <span className="text-[11px] text-gray-400 font-bold">{item.finishedDate}</span>
                 </div>
                 <h3 className="text-sm font-bold text-gray-900 mb-1">{item.client}</h3>
@@ -876,12 +876,12 @@ export function RiwayatPerbaikanPage() {
                 <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
                 <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                   <div className="flex items-center gap-4 text-[10px] sm:text-[11px] font-bold text-gray-500">
-                    <div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-teal-600" /> <span className="truncate max-w-[80px] sm:max-w-none">{item.duration}</span></div>
+                    <div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-sense" /> <span className="truncate max-w-[80px] sm:max-w-none">{item.duration}</span></div>
                     <div className="flex items-center gap-1 text-amber-500"><Star className="w-3.5 h-3.5 fill-amber-400" /> {item.rating.stars}/5</div>
                   </div>
                   <button
                     onClick={() => setSelectedTicket(item)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#0D9488] text-white rounded-lg text-xs font-bold hover:bg-[#0F766E] shadow-sm shadow-teal-500/20 active:scale-95 transition-all shrink-0"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-sense text-white rounded-lg text-xs font-bold hover:bg-sky-700 shadow-sm shadow-sense/20 active:scale-95 transition-all shrink-0"
                   >
                     Detail <ChevronRight className="w-3.5 h-3.5 hidden min-[360px]:block" />
                   </button>
@@ -918,7 +918,7 @@ export function RiwayatPerbaikanPage() {
                             setCurrentPage(1);
                             setShowRowsDropdown(false);
                           }}
-                          className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                          className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                         >
                           {val}
                         </button>
@@ -967,13 +967,13 @@ export function RiwayatPerbaikanPage() {
         role="technician"
         isHistoryView={true}
         renderActions={
-          <div className="bg-emerald-50 rounded-2xl p-6 shadow-sm border border-emerald-100 border-dashed text-center">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
+          <div className="bg-eco/5 rounded-2xl p-6 shadow-sm border border-eco/20 border-dashed text-center">
+            <CheckCircle2 className="w-8 h-8 text-eco/500 mx-auto mb-3" />
             <p className="font-bold text-emerald-900 text-sm mb-1">{t('complaint.action.history.finished_title', 'Riwayat Selesai')}</p>
-            <p className="text-xs text-emerald-700 leading-relaxed px-2">{t('complaint.action.history.finished_desc', 'Tiket ini telah diselesaikan dan dikonfirmasi oleh pelanggan.')}</p>
+            <p className="text-xs text-green-700 leading-relaxed px-2">{t('complaint.action.history.finished_desc', 'Tiket ini telah diselesaikan dan dikonfirmasi oleh pelanggan.')}</p>
             <button
               onClick={() => handleExportSingleDetailPDF(selectedTicket)}
-              className="mt-4 w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-xs hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-center gap-2"
+              className="mt-4 w-full py-3 bg-white border border-eco/30 text-green-700 font-bold rounded-xl text-xs hover:bg-eco/5 transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <Download className="w-4 h-4" /> {t('complaint.action.history.export_pdf', 'Ekspor Riwayat (PDF)')}
             </button>

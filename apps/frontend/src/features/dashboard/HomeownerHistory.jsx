@@ -23,6 +23,31 @@ import HomeownerLayout from './HomeownerLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
 import { useTranslation } from 'react-i18next';
 import i18n_core from 'i18next';
+import { mockHistoryData } from './homeownerMockData';
+
+// Helper to decode JWT token safely in browser
+function getEmailFromToken() {
+  try {
+    const localEmail = localStorage.getItem('email');
+    if (localEmail) return localEmail;
+
+    const token = localStorage.getItem('token');
+    if (!token) return '';
+
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const decoded = JSON.parse(jsonPayload);
+    return decoded.email || '';
+  } catch (error) {
+    return '';
+  }
+}
 
 export function HomeownerHistory({ onNavigate }) {
     const { t, i18n } = useTranslation();
@@ -122,6 +147,18 @@ export function HomeownerHistory({ onNavigate }) {
         setIsLoading(true);
         setError(null);
         try {
+            const userEmail = getEmailFromToken();
+            const isTestAccount = userEmail === 'asrisaras17@gmail.com';
+            const USE_MOCK = isTestAccount && (import.meta.env.VITE_USE_MOCK_DATA === 'true' || localStorage.getItem('USE_MOCK_DATA') === 'true');
+
+            if (USE_MOCK) {
+                const dummyData = mockHistoryData[activeTab] || [];
+                const mappedData = dummyData.map((item, index) => mapItemData(activeTab, item, index));
+                setHistoryData(mappedData);
+                setIsLoading(false);
+                return;
+            }
+
             const token = localStorage.getItem('token');
             const currentTabConfig = tabs.find(t => t.id === activeTab);
             let url = currentTabConfig.endpoint;
@@ -326,7 +363,7 @@ export function HomeownerHistory({ onNavigate }) {
             const pageWidth = doc.internal.pageSize.width;
 
             doc.setFontSize(22);
-            doc.setTextColor(35, 92, 80);
+            doc.setTextColor(5, 155, 39);
             doc.text(t('history.export.pdf_header', { tab: activeTab }), 15, 20);
 
             doc.setFontSize(10);
@@ -342,7 +379,7 @@ export function HomeownerHistory({ onNavigate }) {
                 head: headers,
                 body: body,
                 theme: 'striped',
-                headStyles: { fillColor: [35, 92, 80], textColor: [255, 255, 255], fontSize: 10, halign: 'center' },
+                headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontSize: 10, halign: 'center' },
                 bodyStyles: { fontSize: 9, halign: 'center' },
                 margin: { left: 15, right: 15 }
             });
@@ -363,7 +400,7 @@ export function HomeownerHistory({ onNavigate }) {
 
             // --- COVER PAGE ---
             doc.setFontSize(28);
-            doc.setTextColor(35, 92, 80);
+            doc.setTextColor(5, 155, 39);
             doc.text(t('history.export.audit_report_title', 'LAPORAN AUDIT SISTEM BIEON'), pageWidth / 2, 80, { align: 'center' });
 
             doc.setFontSize(14);
@@ -374,25 +411,37 @@ export function HomeownerHistory({ onNavigate }) {
             doc.text(`${t('history.export.report_period', 'Periode Laporan')}: ${new Date().toLocaleDateString(i18n_core.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
             doc.text(t('history.export.print_date', { date: formatDateTime(new Date()) }), pageWidth / 2, 118, { align: 'center' });
 
-            doc.setDrawColor(35, 92, 80);
+            doc.setDrawColor(5, 155, 39);
             doc.setLineWidth(1);
             doc.line(pageWidth / 2 - 30, 125, pageWidth / 2 + 30, 125);
 
             // Fetch and Append each tab as a new page
+            const userEmail = getEmailFromToken();
+            const isTestAccount = userEmail === 'asrisaras17@gmail.com';
+            const USE_MOCK = isTestAccount && (import.meta.env.VITE_USE_MOCK_DATA === 'true' || localStorage.getItem('USE_MOCK_DATA') === 'true');
+
             for (let i = 0; i < tabs.length; i++) {
                 try {
                     const tab = tabs[i];
-                    const res = await fetch(tab.endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
-                    if (!res.ok) continue;
+                    let resultData = [];
 
-                    const result = await res.json();
-                    if (!result.success || !result.data || result.data.length === 0) continue;
+                    if (USE_MOCK) {
+                        resultData = mockHistoryData[tab.id] || [];
+                    } else {
+                        const res = await fetch(tab.endpoint, { headers: { 'Authorization': `Bearer ${token}` } });
+                        if (res.ok) {
+                            const result = await res.json();
+                            resultData = result.data || [];
+                        }
+                    }
 
-                    const mapped = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
+                    if (resultData.length === 0) continue;
+
+                    const mapped = resultData.map((item, idx) => mapItemData(tab.id, item, idx));
 
                     doc.addPage();
                     doc.setFontSize(18);
-                    doc.setTextColor(35, 92, 80);
+                    doc.setTextColor(5, 155, 39);
                     doc.text(`${t('history.export.category_label', 'Kategori')}: ${tab.full}`, 15, 20);
                     doc.line(15, 25, pageWidth - 15, 25);
 
@@ -402,7 +451,7 @@ export function HomeownerHistory({ onNavigate }) {
                         head: headers,
                         body: body,
                         theme: 'striped',
-                        headStyles: { fillColor: [35, 92, 80] },
+                        headStyles: { fillColor: [5, 155, 39] },
                         margin: { left: 15, right: 15 }
                     });
                 } catch (tabErr) {
@@ -431,7 +480,11 @@ export function HomeownerHistory({ onNavigate }) {
             hideBottomNav={false}
         >
             <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8">
-                <h1 className="text-3xl sm:text-4xl font-bold text-center text-[#235C50] mb-6 sm:mb-8">{t('history.title')}</h1>
+                {/* Title Section */}
+                <div className="mb-8">
+                    <h1 className="text-3xl font-bold text-text-headline">{t('history.title', 'Riwayat Aktivitas')}</h1>
+                    <p className="text-gray-500 mt-1">{t('history.subtitle', 'Pantau log, aktivitas, dan notifikasi perangkat BIEON Anda')}</p>
+                </div>
 
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
                     <div className="w-full lg:w-auto overflow-hidden">
@@ -451,7 +504,7 @@ export function HomeownerHistory({ onNavigate }) {
                                         setSortConfig({ key: 'time', direction: 'desc' });
                                     }}
                                     className={`px-4 sm:px-6 py-3.5 text-[11px] sm:text-[13px] font-bold transition-all border-b border-r border-gray-200 shrink-0 whitespace-nowrap flex items-center justify-center ${activeTab === tab.id
-                                        ? 'bg-[#EDF5F1] text-[#235C50] border-b-2 border-b-[#235C50]'
+                                        ? 'bg-eco/5 text-eco border-b-2 border-b-eco'
                                         : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
@@ -466,22 +519,22 @@ export function HomeownerHistory({ onNavigate }) {
 
                     <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
                         <div className="relative w-full sm:w-[150px] md:w-[220px] shrink group">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense transition-colors" />
                             <input
                                 type="text"
                                 placeholder={t('history.search')}
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
+                                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-sense focus:ring-4 focus:ring-sense/15 bg-white transition-all"
                             />
                         </div>
 
                         <div className="relative shrink-0">
                             <button
                                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                                className={`flex items-center justify-center gap-2 sm:px-4 py-2.5 w-10 sm:w-auto bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                                className={`flex items-center justify-center gap-2 sm:px-4 py-2.5 w-10 sm:w-auto bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-sense ring-4 ring-sense/15' : 'border-gray-200 hover:bg-gray-50'}`}
                             >
-                                <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-sense' : 'text-gray-400'}`} />
                                 <span className={`hidden sm:inline ${selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}`}>
                                     {selectedRoomFilter ? (activeTab === 'Notifikasi & Alert' ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (
                                         ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
@@ -491,7 +544,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                 : t('history.all_rooms')
                                     )}
                                 </span>
-                                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-sense' : ''}`} />
                             </button>
 
                             {showFilterDropdown && (
@@ -504,7 +557,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                 setCurrentPage(1);
                                                 setShowFilterDropdown(false);
                                             }}
-                                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === '' ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === '' ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                         >
                                             {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
                                                 ? t('history.all_devices') 
@@ -520,7 +573,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                     setCurrentPage(1);
                                                     setShowFilterDropdown(false);
                                                 }}
-                                                className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
                                                 {activeTab === 'Notifikasi & Alert' ? t(`notification.category.${r?.toLowerCase().replace(/\s+/g, '_')}`, r) : r}
                                             </button>
@@ -534,7 +587,7 @@ export function HomeownerHistory({ onNavigate }) {
                         <button
                             onClick={handleExportPDF}
                             title={`Export PDF Tab ${activeTab}`}
-                            className="shrink-0 flex items-center justify-center w-10 h-10 bg-white border border-gray-200 text-[#235C50] rounded-xl hover:bg-gray-50 transition-all shadow-sm"
+                            className="shrink-0 flex items-center justify-center w-10 h-10 bg-white border border-gray-200 text-eco rounded-xl hover:bg-gray-50 transition-all shadow-sm"
                         >
                             <Download className="w-5 h-5" />
                         </button>
@@ -543,7 +596,7 @@ export function HomeownerHistory({ onNavigate }) {
                         <button
                             onClick={handleExportAllPDF}
                             disabled={isExportingAll}
-                            className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-[#235C50] text-white rounded-xl hover:bg-teal-900 transition-all shadow-md font-semibold text-sm disabled:opacity-70 disabled:cursor-wait group"
+                            className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-eco text-white rounded-xl hover:bg-eco-900 transition-all shadow-md font-semibold text-sm disabled:opacity-70 disabled:cursor-wait group"
                         >
                             {isExportingAll ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -558,7 +611,7 @@ export function HomeownerHistory({ onNavigate }) {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
                     {isLoading && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-30 flex flex-col items-center justify-center">
-                            <Loader2 className="w-10 h-10 text-teal-600 animate-spin mb-3" />
+                            <Loader2 className="w-10 h-10 text-eco animate-spin mb-3" />
                             <p className="text-gray-500 font-medium animate-pulse">{t('history.loading')}</p>
                         </div>
                     )}
@@ -838,7 +891,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                             setCurrentPage(1);
                                                             setShowRowsDropdown(false);
                                                         }}
-                                                        className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-sense bg-sense/5 font-black' : 'text-gray-600 hover:bg-gray-50'}`}
                                                     >
                                                         {val}
                                                     </button>

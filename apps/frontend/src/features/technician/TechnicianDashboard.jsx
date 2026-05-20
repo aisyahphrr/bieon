@@ -127,7 +127,7 @@ function ClientLiveMap({ clients, isLoading }) {
         const { lat, lng } = client;
         bounds.push([lat, lng]);
 
-        const statusColor = client.status === 'online' ? '#0F9E78' : client.status === 'warning' ? '#f59e0b' : '#ef4444';
+        const statusColor = client.status === 'online' ? '#059b27' : client.status === 'warning' ? '#f59e0b' : '#ef4444';
         
         const markerHtml = `
           <div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px);">
@@ -167,7 +167,7 @@ function ClientLiveMap({ clients, isLoading }) {
 
         marker.bindPopup(`
           <div style="font-family: sans-serif; padding: 5px; min-width: 150px;">
-            <strong style="color: #0F9E78; font-size: 14px; display: block; margin-bottom: 4px;">${client.nama}</strong>
+            <strong style="color: #059b27; font-size: 14px; display: block; margin-bottom: 4px;">${client.nama}</strong>
             <span style="font-size: 12px; color: #6b7280; display: block; line-height: 1.4;">${client.alamatLengkap}</span>
             <div style="margin-top: 12px; display: flex; justify-content: space-between; border-top: 1px solid #f3f4f6; pt-2;">
               <div style="text-align: center;">
@@ -218,7 +218,7 @@ function ClientLiveMap({ clients, isLoading }) {
       {isLoading && (
         <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-[1000]">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-4 border-[#0F9E78] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-eco border-t-transparent rounded-full animate-spin"></div>
             <span className="text-sm font-bold text-gray-700 tracking-tight">Menyiapkan Data Peta...</span>
           </div>
         </div>
@@ -291,7 +291,7 @@ const MENU_ITEMS = [
 function Toast({ message, type = 'success' }) {
   return (
     <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] animate-in fade-in slide-in-from-top-4 duration-500">
-      <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-3 ${type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-gray-800/90 border-gray-700 text-white'
+      <div className={`px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-md border flex items-center gap-3 ${type === 'success' ? 'bg-eco/50/90 border-eco/60 text-white' : 'bg-gray-800/90 border-gray-700 text-white'
         }`}>
         {type === 'success' && <CheckCircle2 className="w-5 h-5" />}
         <span className="text-sm font-bold tracking-wide">{message}</span>
@@ -407,7 +407,7 @@ export function TechnicianDashboard({ onNavigate }) {
 
     // Header
     doc.setFontSize(22);
-    doc.setTextColor(15, 158, 120); // BIEON Teal
+    doc.setTextColor(5, 155, 39); // BIEON Teal
     doc.text('BIEON', 14, 22);
     
     doc.setFontSize(10);
@@ -454,7 +454,7 @@ export function TechnicianDashboard({ onNavigate }) {
           t('tech_dashboard.table.col_sys_status', 'Status Sistem')
         ]],
         body: tableData,
-        headStyles: { fillColor: [15, 158, 120] },
+        headStyles: { fillColor: [5, 155, 39] },
         styles: { fontSize: 9 },
         alternateRowStyles: { fillColor: [245, 245, 245] }
       });
@@ -528,7 +528,7 @@ export function TechnicianDashboard({ onNavigate }) {
                 <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
               </div>
 
-              <div className="relative overflow-hidden bg-gradient-to-br from-[#0F9E78] to-[#235C50] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
+              <div className="relative overflow-hidden bg-gradient-to-br from-eco to-green-800 rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
                   <ShieldCheck className="w-6 h-6 text-white" />
                 </div>
@@ -568,7 +568,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       placeholder={t('table.search_placeholder', 'Cari No. Tiket, Nama Pelanggan, atau Topik...')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
+                      className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-sense/100 focus:ring-4 focus:ring-sense/20 bg-white transition-all"
                     />
                   </div>
                   <div className="grid grid-cols-2 sm:flex gap-3 w-full sm:w-auto mt-2 sm:mt-0">
@@ -601,7 +601,7 @@ export function TechnicianDashboard({ onNavigate }) {
                                   setStatusFilter(opt.id);
                                   setIsFilterOpen(false);
                                 }}
-                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-teal-50 ${statusFilter === opt.id ? 'text-teal-600 bg-teal-50/50' : 'text-gray-600'}`}
+                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-sense/5 ${statusFilter === opt.id ? 'text-sense bg-sense/5' : 'text-gray-600'}`}
                               >
                                 {opt.label}
                               </button>
@@ -612,7 +612,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
                     <button
                       onClick={handleExportPDF}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F9E78] text-white hover:bg-[#0B8563] rounded-xl transition-colors shadow-sm shadow-[#0F9E78]/20 w-full sm:w-auto"
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-eco text-white hover:bg-green-700 rounded-xl transition-colors shadow-sm shadow-eco/20 w-full sm:w-auto"
                     >
                       <FileText className="w-4 h-4" />
                       <span className="text-sm font-semibold">{t('table.export', 'Export')}</span>
@@ -639,7 +639,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-10 h-10 bg-gradient-to-br from-eco/50 to-sense rounded-full flex items-center justify-center text-white font-bold text-sm">
                               {client.nama.split(' ').map(n => n[0]).join('')}
                             </div>
                             <div>
@@ -662,12 +662,12 @@ export function TechnicianDashboard({ onNavigate }) {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <span className="inline-flex items-center justify-center w-10 h-10 bg-emerald-100 rounded-lg text-emerald-700 font-bold">
+                          <span className="inline-flex items-center justify-center w-10 h-10 bg-eco/10 rounded-lg text-green-700 font-bold">
                             {client.jumlahBieon}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <span className="inline-flex items-center justify-center w-10 h-10 bg-teal-100 rounded-lg text-teal-700 font-bold">
+                          <span className="inline-flex items-center justify-center w-10 h-10 bg-sense/10 rounded-lg text-sky-700 font-bold">
                             {client.jumlahDevice}
                           </span>
                         </td>
@@ -677,7 +677,7 @@ export function TechnicianDashboard({ onNavigate }) {
                         <td className="px-6 py-4 text-center">
                           <button
                             onClick={() => setSelectedClient(client)}
-                            className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
+                            className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-eco to-sense text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
                           >
                             {t('tech_dashboard.table.btn_detail', 'Detail')}
                             <ChevronRight className="w-4 h-4" />
@@ -695,7 +695,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   <div key={client.id} className="p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm border border-emerald-200/50">
+                        <div className="w-10 h-10 bg-gradient-to-br from-eco/50 to-sense rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm border border-eco/10">
                           {client.nama.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
@@ -718,22 +718,22 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100/50 flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-emerald-100/80 rounded-lg flex items-center justify-center shrink-0">
-                          <Cpu className="w-4 h-4 text-emerald-600" />
+                      <div className="bg-eco/5 p-2.5 rounded-xl border border-eco/10 flex items-center gap-2.5">
+                        <div className="w-8 h-8 bg-eco/10 rounded-lg flex items-center justify-center shrink-0">
+                          <Cpu className="w-4 h-4 text-eco" />
                         </div>
                         <div>
                           <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wide">BIEON</p>
-                          <p className="text-sm font-bold text-emerald-700">{client.jumlahBieon}</p>
+                          <p className="text-sm font-bold text-green-700">{client.jumlahBieon}</p>
                         </div>
                       </div>
-                      <div className="bg-teal-50 p-2.5 rounded-xl border border-teal-100/50 flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-teal-100/80 rounded-lg flex items-center justify-center shrink-0">
-                          <Package className="w-4 h-4 text-teal-600" />
+                      <div className="bg-sense/5 p-2.5 rounded-xl border border-sense/10 flex items-center gap-2.5">
+                        <div className="w-8 h-8 bg-sense/10 rounded-lg flex items-center justify-center shrink-0">
+                          <Package className="w-4 h-4 text-sense" />
                         </div>
                         <div>
                           <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Device</p>
-                          <p className="text-sm font-bold text-teal-700">{client.jumlahDevice}</p>
+                          <p className="text-sm font-bold text-sky-700">{client.jumlahDevice}</p>
                         </div>
                       </div>
                     </div>
@@ -744,7 +744,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       </div>
                       <button
                         onClick={() => setSelectedClient(client)}
-                        className="inline-flex items-center gap-1 px-4 py-2 bg-[#0D9488] text-white rounded-xl text-xs font-bold hover:bg-[#0F766E] transition-all shadow-sm shadow-teal-500/20 active:scale-95"
+                        className="inline-flex items-center gap-1 px-4 py-2 bg-sense text-white rounded-xl text-xs font-bold hover:bg-sky-700 transition-all shadow-sm shadow-sense/20 active:scale-95"
                       >
                         {t('tech_dashboard.table.btn_detail', 'Detail')} <ChevronRight className="w-3.5 h-3.5" />
                       </button>
@@ -764,13 +764,13 @@ export function TechnicianDashboard({ onNavigate }) {
             {/* Bar Charts - 2 Columns */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Bar Chart BIEON Instalasi */}
-              <div className="bg-gradient-to-br from-white to-emerald-50/30 rounded-3xl shadow-xl border border-emerald-100 p-6">
+              <div className="bg-gradient-to-br from-white to-eco/10/30 rounded-3xl shadow-xl border border-eco/20 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.token_access_title', 'Layanan Akses Kendali Perangkat')}</h3>
                     <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.token_access_sub', 'Frekuensi akses token per bulan')}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-eco/50 to-sense rounded-2xl flex items-center justify-center">
                     <Cpu className="w-6 h-6 text-white" />
                   </div>
                 </div>
@@ -806,8 +806,8 @@ export function TechnicianDashboard({ onNavigate }) {
                     />
                     <defs>
                       <linearGradient id="colorBieon" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
-                        <stop offset="100%" stopColor="#14b8a6" stopOpacity={0.8} />
+                        <stop offset="0%" stopColor="var(--color-eco)" stopOpacity={1} />
+                        <stop offset="100%" stopColor="var(--color-sense)" stopOpacity={0.8} />
                       </linearGradient>
                     </defs>
                   </BarChart>
@@ -1005,10 +1005,10 @@ export function TechnicianDashboard({ onNavigate }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[85vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-3xl flex items-start justify-between">
+            <div className="sticky top-0 bg-gradient-to-r from-eco to-sense text-white p-6 rounded-t-3xl flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-1">{t('tech_dashboard.client_modal.title', 'Detail Pelanggan')}</h2>
-                <p className="text-emerald-100">{t('tech_dashboard.client_modal.subtitle', 'Informasi Lengkap Sistem Smart Home')}</p>
+                <p className="text-eco/50">{t('tech_dashboard.client_modal.subtitle', 'Informasi Lengkap Sistem Smart Home')}</p>
               </div>
               <button
                 onClick={() => setSelectedClient(null)}
@@ -1022,7 +1022,7 @@ export function TechnicianDashboard({ onNavigate }) {
             <div className="p-8">
               {/* Client Header Info */}
               <div className="flex items-center gap-4 pb-6 border-b mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-eco/50 to-sense rounded-full flex items-center justify-center text-white font-bold text-xl">
                   {selectedClient.nama.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div className="flex-1">
@@ -1044,9 +1044,9 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="mb-6">
                 <h4 className="font-bold text-gray-800 mb-4 text-lg">{t('tech_dashboard.client_modal.section_stats', 'Statistik Sistem')}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100">
+                  <div className="bg-gradient-to-br from-eco/5 to-sense/10 rounded-2xl p-5 border border-eco/20">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-eco/50 to-sense rounded-xl flex items-center justify-center">
                         <Cpu className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -1056,9 +1056,9 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-2xl p-5 border border-teal-100">
+                  <div className="bg-gradient-to-br from-sense/5 to-cyan-50 rounded-2xl p-5 border border-sense/20">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-sense/50 to-cyan-600 rounded-xl flex items-center justify-center">
                         <Package className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -1068,9 +1068,9 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border border-green-100">
+                  <div className="bg-gradient-to-br from-green-50 to-eco/10 rounded-2xl p-5 border border-green-100">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-eco rounded-xl flex items-center justify-center">
                         <Activity className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -1121,9 +1121,9 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-100">
+                  <div className="bg-gradient-to-br from-eco/5 to-sense/10 rounded-xl p-4 border border-eco/20">
                     <div className="flex items-start gap-3">
-                      <MapPin className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
+                      <MapPin className="w-5 h-5 text-eco flex-shrink-0 mt-1" />
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-gray-600 mb-1">{t('tech_dashboard.client_modal.address', 'Alamat Lengkap')}</p>
                         <p className="font-bold text-gray-800">{selectedClient.alamatLengkap}</p>
@@ -1135,7 +1135,7 @@ export function TechnicianDashboard({ onNavigate }) {
                 {/* Right Column - Status & Dates */}
                 <div className="space-y-3">
                   <h4 className="font-bold text-gray-800 mb-3 text-lg">{t('tech_dashboard.client_modal.section_info', 'Status & Informasi')}</h4>
-                  <div className={`rounded-xl p-5 border-2 ${selectedClient.adaPengaduan ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'}`}>
+                  <div className={`rounded-xl p-5 border-2 ${selectedClient.adaPengaduan ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 'bg-gradient-to-br from-green-50 to-eco/10 border-green-200'}`}>
                     <div className="flex items-center gap-3 mb-2">
                       <AlertCircle className={`w-6 h-6 ${selectedClient.adaPengaduan ? 'text-red-600' : 'text-green-600'}`} />
                       <p className="text-sm font-semibold text-gray-600">{t('tech_dashboard.client_modal.complaint_status', 'Status Pengaduan')}</p>
@@ -1145,7 +1145,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     </p>
                   </div>
 
-                  <div className={`rounded-xl p-5 border-2 ${selectedClient.status === 'online' ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'}`}>
+                  <div className={`rounded-xl p-5 border-2 ${selectedClient.status === 'online' ? 'bg-gradient-to-br from-green-50 to-eco/10 border-green-200' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'}`}>
                     <div className="flex items-center gap-3 mb-2">
                       <Activity className={`w-6 h-6 ${selectedClient.status === 'online' ? 'text-green-600' : 'text-red-600'}`} />
                       <p className="text-sm font-semibold text-gray-600">{t('tech_dashboard.client_modal.system_active', 'System Active')}</p>

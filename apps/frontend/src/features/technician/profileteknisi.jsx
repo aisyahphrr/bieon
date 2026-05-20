@@ -191,8 +191,8 @@ export function TechnicianProfilePage({ onNavigate }) {
         return (
             <div className="w-full h-screen flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-emerald-600 font-semibold">{t('tech_profile.loading', 'Memuat Profil Teknisi...')}</p>
+                    <div className="w-12 h-12 border-4 border-eco border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-eco font-semibold">{t('tech_profile.loading', 'Memuat Profil Teknisi...')}</p>
                 </div>
             </div>
         );
@@ -241,7 +241,7 @@ export function TechnicianProfilePage({ onNavigate }) {
         <div className="w-full max-w-7xl mx-auto py-8">
             <div className="w-full">
                 {/* Header with Cover Photo */}
-                <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl shadow-xl mb-6 overflow-hidden relative h-32 sm:h-48">
+                <div className="bg-gradient-to-r from-eco via-eco/80 to-sense rounded-3xl shadow-xl mb-6 overflow-hidden relative h-32 sm:h-48">
                     <div className="absolute inset-0 bg-black/10"></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                 </div>
@@ -252,7 +252,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
                             {/* Photo */}
                             <div className="relative group -mt-10 md:mt-0">
-                                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl flex items-center justify-center text-white shadow-2xl border-4 border-white overflow-hidden">
+                                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-eco to-sense rounded-3xl flex items-center justify-center text-white shadow-2xl border-4 border-white overflow-hidden">
                                     {profile.profileImage ? (
                                         <img src={profile.profileImage} alt={profile.fullName} className="w-full h-full object-cover" />
                                     ) : (
@@ -263,7 +263,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                 </div>
                                 <button 
                                     onClick={() => document.getElementById('avatar-input').click()}
-                                    className="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-eco rounded-full flex items-center justify-center text-white shadow-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                     <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </button>
@@ -283,7 +283,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
                                              {profile.fullName.replace(/([a-z])([A-Z])/g, '$1 $2')}
                                          </h1>
-                                         <p className="text-base sm:text-lg text-emerald-600 font-semibold mb-1">{profile.position || t('tech_profile.header.default_position', 'Teknisi BIEON')}</p>
+                                         <p className="text-base sm:text-lg text-eco font-semibold mb-1">{profile.position || t('tech_profile.header.default_position', 'Teknisi BIEON')}</p>
                                          
                                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-gray-600 mb-2">
                                              <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-lg">
@@ -293,7 +293,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                                  <span className="text-xs font-bold">{profile.technicianId}</span>
                                              </div>
                                              {profile.workArea && (
-                                                 <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                                                 <div className="flex items-center gap-1.5 text-eco font-bold">
                                                      <MapPin className="w-3.5 h-3.5" />
                                                      <span className="text-xs">{profile.workArea}</span>
                                                  </div>
@@ -301,7 +301,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                          </div>
                                      </div>
                                      <div className={`px-4 py-1.5 rounded-full text-xs font-bold ${profile.status === 'aktif'
-                                             ? 'bg-green-50 text-green-600'
+                                             ? 'bg-eco/10 text-eco'
                                              : 'bg-gray-100 text-gray-700'
                                          }`}>
                                          {profile.status === 'aktif' ? t('tech_profile.header.status_available', 'Available') : t('tech_profile.header.status_offline', 'Offline')}
@@ -310,16 +310,16 @@ export function TechnicianProfilePage({ onNavigate }) {
 
                                  {/* Quick Stats */}
                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                     <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-100/50">
+                                     <div className="bg-gradient-to-br from-eco/5 to-eco/10 rounded-2xl p-4 border border-eco/20">
                                          <div className="flex items-center gap-2 mb-1">
                                              <Star className="w-4 h-4 text-amber-500" />
                                              <span className="text-2xl font-bold text-gray-900">{stats.avgRating}</span>
                                          </div>
                                          <p className="text-xs text-gray-600 font-medium tracking-tight">{t('tech_profile.header.rating', 'Rating')}</p>
                                      </div>
-                                     <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 border border-blue-100/50">
+                                     <div className="bg-gradient-to-br from-sense/5 to-sense/10 rounded-2xl p-4 border border-sense/20">
                                          <div className="flex items-center gap-2 mb-1">
-                                             <Wrench className="w-4 h-4 text-blue-500" />
+                                             <Wrench className="w-4 h-4 text-sense" />
                                              <span className="text-2xl font-bold text-gray-900">{stats.totalRepairs}</span>
                                          </div>
                                          <p className="text-xs text-gray-600 font-medium tracking-tight">{t('tech_profile.header.repairs', 'Perbaikan')}</p>
@@ -332,7 +332,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                              </div>
                                              <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
                                                  stats.complianceRate >= 80 
-                                                 ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' 
+                                                 ? 'bg-eco/10 text-eco border border-eco/20' 
                                                  : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
                                              }`}>
                                                  {stats.complianceRate >= 80 ? t('tech_profile.header.safe', 'Aman') : t('tech_profile.header.warning', 'Warning')}
@@ -354,7 +354,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-eco to-sense rounded-2xl flex items-center justify-center">
                                         <User className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
@@ -365,7 +365,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                 {!isEditingPersonal ? (
                                     <button
                                         onClick={() => setIsEditingPersonal(true)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors self-end sm:self-auto"
+                                        className="flex items-center gap-2 px-4 py-2 bg-eco hover:bg-eco/90 text-white rounded-xl transition-colors self-end sm:self-auto"
                                     >
                                         <Edit3 className="w-4 h-4" />
                                         <span className="text-sm font-semibold">{t('tech_profile.actions.edit', 'Edit')}</span>
@@ -374,7 +374,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                     <div className="flex flex-wrap gap-2 justify-end self-end sm:self-auto">
                                         <button
                                             onClick={handleSavePersonal}
-                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors"
+                                            className="flex items-center gap-2 px-4 py-2 bg-eco hover:bg-eco/90 text-white rounded-xl transition-colors"
                                         >
                                             <Save className="w-4 h-4" />
                                             <span className="text-sm font-semibold">{t('tech_profile.actions.save', 'Simpan')}</span>
@@ -519,7 +519,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                         {/* Professional Information */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-gradient-to-br from-sense to-sense/80 rounded-2xl flex items-center justify-center">
                                     <Briefcase className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
@@ -547,7 +547,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                         {profile.specializations && profile.specializations.map((spec, index) => (
                                             <span
                                                 key={index}
-                                                className="px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-xl text-sm font-semibold"
+                                                className="px-4 py-2 bg-gradient-to-r from-sense/10 to-sense/20 text-sense rounded-xl text-sm font-semibold"
                                             >
                                                 {spec}
                                             </span>
@@ -561,7 +561,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                         {profile.coverageAreas && profile.coverageAreas.map((area, index) => (
                                             <span
                                                 key={index}
-                                                className="px-4 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 rounded-xl text-sm font-semibold flex items-center gap-2"
+                                                className="px-4 py-2 bg-gradient-to-r from-eco/10 to-eco/20 text-eco rounded-xl text-sm font-semibold flex items-center gap-2"
                                             >
                                                 <MapPinned className="w-4 h-4" />
                                                 {area}
@@ -585,17 +585,17 @@ export function TechnicianProfilePage({ onNavigate }) {
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div className="bg-[#EBFFF9] rounded-2xl p-5">
+                                <div className="bg-eco/10 rounded-2xl p-5">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Lock className="w-5 h-5 text-emerald-600" />
+                                        <Lock className="w-5 h-5 text-eco" />
                                         <span className="text-sm font-semibold text-gray-700">{t('tech_profile.stats.access_codes', 'Akses Kendali Perangkat')}</span>
                                     </div>
                                     <p className="text-3xl font-bold text-gray-900">{stats.totalAccessCodes || 0}</p>
                                 </div>
 
-                                <div className="bg-[#F0F7FF] rounded-2xl p-5">
+                                <div className="bg-sense/10 rounded-2xl p-5">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Target className="w-5 h-5 text-blue-600" />
+                                        <Target className="w-5 h-5 text-sense" />
                                         <span className="text-sm font-semibold text-gray-700">{t('tech_profile.stats.total_repairs', 'Total Perbaikan')}</span>
                                     </div>
                                     <p className="text-3xl font-bold text-gray-900">{stats.totalRepairs}</p>
@@ -618,9 +618,9 @@ export function TechnicianProfilePage({ onNavigate }) {
                                     <p className="text-3xl font-bold text-gray-900">{stats.complianceRate}%</p>
                                 </div>
 
-                                <div className="bg-[#F0F7FF] rounded-2xl p-5">
+                                <div className="bg-sense/10 rounded-2xl p-5">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Clock className="w-5 h-5 text-blue-600" />
+                                        <Clock className="w-5 h-5 text-sense" />
                                         <span className="text-sm font-semibold text-gray-700">{t('tech_profile.stats.avg_completion', 'Rata-rata Penyelesaian')}</span>
                                     </div>
                                     <p className="text-3xl font-bold text-gray-900">{stats.avgCompletionHours} {t('tech_profile.stats.hours', 'jam')}</p>
@@ -628,13 +628,13 @@ export function TechnicianProfilePage({ onNavigate }) {
 
                                 <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                                     <div className="flex items-center gap-2 mb-4">
-                                        <ShieldCheck className={`w-5 h-5 ${stats.complianceRate >= 80 ? 'text-emerald-600' : 'text-rose-500'}`} />
+                                        <ShieldCheck className={`w-5 h-5 ${stats.complianceRate >= 80 ? 'text-eco' : 'text-rose-500'}`} />
                                         <span className="text-sm font-semibold text-gray-700">{t('tech_profile.stats.sla_status', 'Status SLA')}</span>
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider w-fit ${
                                             stats.complianceRate >= 80 
-                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                                            ? 'bg-eco/10 text-eco border border-eco/20' 
                                             : 'bg-rose-50 text-rose-600 border border-rose-100 animate-pulse'
                                         }`}>
                                             {stats.complianceRate >= 80 ? t('tech_profile.stats.sla_safe', 'Aman') : t('tech_profile.stats.sla_attention', 'Butuh Perhatian')}
@@ -666,11 +666,11 @@ export function TechnicianProfilePage({ onNavigate }) {
                                     <div key={index}>
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="text-sm font-semibold text-gray-700">{skill.name}</span>
-                                            <span className="text-sm font-bold text-emerald-600">{skill.level}/5</span>
+                                            <span className="text-sm font-bold text-eco">{skill.level}/5</span>
                                         </div>
                                         <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                                             <div
-                                                className="h-full bg-[#009270] rounded-full transition-all"
+                                                className="h-full bg-eco rounded-full transition-all"
                                                 style={{ width: `${(skill.level / 5) * 100}%` }}
                                             ></div>
                                         </div>
@@ -682,7 +682,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                         {/* Recent Work History */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-gradient-to-br from-sense to-sense/80 rounded-2xl flex items-center justify-center">
                                     <Clock className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
@@ -698,13 +698,13 @@ export function TechnicianProfilePage({ onNavigate }) {
                                         className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors gap-4"
                                     >
                                         <div className="flex items-start sm:items-center gap-4">
-                                            <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-100">
-                                                <Wrench className="w-6 h-6 text-emerald-600" />
+                                            <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-eco/10">
+                                                <Wrench className="w-6 h-6 text-eco" />
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-gray-900">{work.homeowner?.fullName || t('tech_profile.history.default_client', 'Pelanggan BIEON')}</p>
                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-gray-600 mt-1">
-                                                    <span className="font-medium text-emerald-600">{work.category}</span>
+                                                    <span className="font-medium text-eco">{work.category}</span>
                                                     <span className="hidden sm:inline">•</span>
                                                     <span className="line-clamp-1">{work.homeowner?.address || t('tech_profile.history.no_location', 'Lokasi tidak tersedia')}</span>
                                                     <span className="hidden sm:inline">•</span>
@@ -719,7 +719,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                                     <span className="text-sm font-bold text-amber-700">{work.rating.stars}</span>
                                                 </div>
                                             )}
-                                            <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700 capitalize">
+                                            <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-eco/10 text-eco capitalize">
                                                 {work.status?.toLowerCase() === 'selesai' ? t('tech_profile.history.status_completed', 'Selesai') : work.status}
                                             </span>
                                         </div>
@@ -736,7 +736,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                         {/* Preferences Settings */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-gradient-to-br from-sense to-eco rounded-2xl flex items-center justify-center">
                                     <Globe className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
@@ -758,7 +758,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                         }}
                                         className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-300 font-bold text-xs ${
                                             i18n.language === 'id' 
-                                                ? 'bg-teal-50 border-teal-600 text-teal-700 shadow-sm ring-2 ring-teal-600/10' 
+                                                ? 'bg-eco/5 border-eco text-eco shadow-sm ring-2 ring-eco/10' 
                                                 : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50/50'
                                         }`}
                                     >
@@ -767,7 +767,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                             <span>{t('tech_profile.settings.lang_id', 'Bahasa Indonesia')}</span>
                                         </div>
                                         {i18n.language === 'id' && (
-                                            <div className="w-2 h-2 rounded-full bg-teal-600" />
+                                            <div className="w-2 h-2 rounded-full bg-eco" />
                                         )}
                                     </button>
                                     <button
@@ -778,7 +778,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                         }}
                                         className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-300 font-bold text-xs ${
                                             i18n.language === 'en' 
-                                                ? 'bg-teal-50 border-teal-600 text-teal-700 shadow-sm ring-2 ring-teal-600/10' 
+                                                ? 'bg-eco/5 border-eco text-eco shadow-sm ring-2 ring-eco/10' 
                                                 : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50/50'
                                         }`}
                                     >
@@ -787,7 +787,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                             <span>{t('tech_profile.settings.lang_en', 'English')}</span>
                                         </div>
                                         {i18n.language === 'en' && (
-                                            <div className="w-2 h-2 rounded-full bg-teal-600" />
+                                            <div className="w-2 h-2 rounded-full bg-eco" />
                                         )}
                                     </button>
                                 </div>
@@ -1041,7 +1041,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                                     <p className="text-xs text-gray-500 font-medium mb-2">{cert.issuer}</p>
                                                     <div className="flex items-center gap-2">
                                                         <Calendar className={`w-3 h-3 ${isExpired ? 'text-red-400' : 'text-gray-400'}`} />
-                                                        <p className={`text-[10px] font-bold ${isExpired ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                        <p className={`text-[10px] font-bold ${isExpired ? 'text-red-600' : 'text-eco'}`}>
                                                             {isExpired ? t('tech_profile.certifications.expired_on', 'Kadaluarsa pada ') : t('tech_profile.certifications.valid_until', 'Valid s/d ')} {formatDate(cert.endDate)}
                                                         </p>
                                                     </div>

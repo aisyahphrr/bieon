@@ -74,7 +74,7 @@ const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }
                                     if (btn.action === 'process') handleStartProcess(item);
                                     else setSelectedTicket(item);
                                 }}
-                                className={`px-4 py-2 rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-[#0D9488] text-white hover:bg-[#0F766E]' : 'bg-gray-100 text-gray-400'
+                                className={`px-4 py-2 rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-sense text-white hover:bg-sense/90' : 'bg-gray-100 text-gray-400'
                                     }`}
                             >
                                 {btn.label}
@@ -158,7 +158,7 @@ const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket })
                                 if (btn.action === 'process') handleStartProcess(item);
                                 else setSelectedTicket(item);
                             }}
-                            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-[#0D9488] text-white hover:bg-[#0F766E]' : 'bg-gray-100 text-gray-400'
+                            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-sense text-white hover:bg-sense/90' : 'bg-gray-100 text-gray-400'
                                 }`}
                         >
                             {btn.label} {btn.action !== 'process' && <ChevronRight className="w-3 h-3" />}
@@ -193,7 +193,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
         
         // Header PDF
         doc.setFontSize(18);
-        doc.setTextColor(15, 158, 120); // #0F9E78 (BIEON Teal)
+        doc.setTextColor(5, 155, 39); // #059b27 (BIEON Eco)
         doc.text(t('export.tech_taskboard_title', 'BIEON - Taskboard Teknisi'), 14, 22);
 
         doc.setFontSize(10);
@@ -230,7 +230,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
             body: tableRows,
             startY: 40,
             theme: 'grid',
-            headStyles: { fillColor: [15, 158, 120], textColor: [255, 255, 255], fontStyle: 'bold' },
+            headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontStyle: 'bold' },
             styles: { fontSize: 8, cellPadding: 2 }, // Perkecil font sedikit untuk portrait
             alternateRowStyles: { fillColor: [245, 245, 245] }
         });
@@ -437,7 +437,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
             `}</style>
             <div className="py-8">
                 <div className="mb-8">
-                    <h1 className="text-2xl font-bold text-[#1E4D40] mb-2 text-center sm:text-left">{t('complaint.tech_dashboard.header_title', 'Taskboard Teknisi - Pusat Pengaduan')}</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-2 text-center sm:text-left">{t('complaint.tech_dashboard.header_title', 'Taskboard Teknisi - Pusat Pengaduan')}</h1>
                     <p className="text-gray-500 text-sm max-w-2xl text-center sm:text-left">{t('complaint.tech_dashboard.header_desc', 'Pantau dan selesaikan tiket pengaduan Pelanggan yang ditugaskan kepada Anda. Perhatikan batas waktu SLA untuk setiap tiket.')}</p>
                 </div>
 
@@ -471,7 +471,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                     </div>
                     <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between mb-2 md:mb-4">
-                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-eco/5 flex items-center justify-center text-eco/500 group-hover:scale-110 transition-transform">
                                 <CheckCircle2 className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </div>
                         </div>
@@ -506,21 +506,21 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
 
                             <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
                                 <div className="relative flex-1 sm:w-auto md:w-64 group">
-                                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense transition-colors" />
                                     <input
                                         type="text"
                                         placeholder={t('table.search_placeholder', 'Cari tiket...')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 bg-white transition-all"
+                                        className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-sense focus:ring-4 focus:ring-sense/20 bg-white transition-all"
                                     />
                                 </div>
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                        className={`flex items-center justify-center sm:justify-between gap-1.5 md:gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                                        className={`flex items-center justify-center sm:justify-between gap-1.5 md:gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-sense ring-4 ring-sense/20' : 'border-gray-200 hover:bg-gray-50'}`}
                                     >
-                                        <Filter className={`w-4 h-4 transition-colors ${selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                        <Filter className={`w-4 h-4 transition-colors ${selectedStatusFilter ? 'text-sense' : 'text-gray-400'}`} />
                                         <span className="hidden sm:inline-block">{selectedStatusFilter ? formatStatusDisplay(selectedStatusFilter, 'technician') : t('table.all_status', 'Semua Status')}</span>
                                         <ChevronDown className={`hidden sm:block w-4 h-4 transition-all ${showStatusDropdown ? 'rotate-180' : ''}`} />
                                     </button>
@@ -532,7 +532,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                                     <button
                                                         key={s}
                                                         onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
-                                                        className={`w-full text-left px-4 py-2 text-sm ${selectedStatusFilter === s ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-4 py-2 text-sm ${selectedStatusFilter === s ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                     >
                                                         {s ? formatStatusDisplay(s, 'technician') : t('table.all_status', 'Semua Status')}
                                                     </button>
@@ -541,7 +541,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                         </>
                                     )}
                                 </div>
-                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent">
+                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-eco/10 text-eco rounded-xl text-sm font-bold hover:bg-eco/20 transition-colors shrink-0 shadow-sm border border-transparent">
                                     <Download className="w-4 h-4 shrink-0" />
                                     <span className="hidden sm:inline-block">{t('table.export', 'Ekspor')}</span>
                                 </button>
@@ -616,7 +616,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                                 <button
                                                     key={val}
                                                     onClick={() => { setRowsPerPage(val); setCurrentPage(1); setShowRowsDropdown(false); }}
-                                                    className={`w-full text-left px-3 sm:px-4 py-1.5 text-xs sm:text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                    className={`w-full text-left px-3 sm:px-4 py-1.5 text-xs sm:text-sm transition-colors ${rowsPerPage === val ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                                 >
                                                     {val}
                                                 </button>

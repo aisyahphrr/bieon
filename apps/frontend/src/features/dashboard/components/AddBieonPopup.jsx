@@ -57,7 +57,7 @@ export default function AddBieonPopup({ isOpen, onClose, onSuccess, userId }) {
 
   const modalContent = (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[999] p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-[32px] shadow-2xl max-w-md w-full p-8 animate-in zoom-in duration-300 border border-emerald-100">
+      <div className="bg-white rounded-[32px] shadow-2xl max-w-md w-full p-8 animate-in zoom-in duration-300 border border-eco/20">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-slate-800">{t('homeowner_qc.add_bieon.title')}</h2>
@@ -88,7 +88,7 @@ export default function AddBieonPopup({ isOpen, onClose, onSuccess, userId }) {
               value={bieonId}
               onChange={(e) => setBieonId(e.target.value.toUpperCase())}
               placeholder={t('homeowner_qc.add_bieon.placeholder_id')}
-              className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:bg-white font-bold text-slate-700 transition-all shadow-sm"
+              className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:outline-none focus:border-eco focus:bg-white font-bold text-slate-700 transition-all shadow-sm"
             />
             <p className="text-[11px] text-slate-400 mt-2 font-medium italic pl-1">
               {t('homeowner_qc.add_bieon.demo_tip')}
@@ -106,7 +106,7 @@ export default function AddBieonPopup({ isOpen, onClose, onSuccess, userId }) {
             <button
               disabled={isLoading || !bieonId.trim()}
               type="submit"
-              className="flex-1 px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+              className="flex-1 px-6 py-4 bg-eco hover:bg-eco/90 text-white rounded-2xl font-bold shadow-lg shadow-eco/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
             >
               {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('homeowner_qc.add_bieon.btn_submit')}
             </button>

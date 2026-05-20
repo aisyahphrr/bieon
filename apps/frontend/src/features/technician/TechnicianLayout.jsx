@@ -147,8 +147,8 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                   onClick={() => setActiveMenu(id)}
                   className={`font-semibold pb-1 border-b-2 transition-all ${
                     activeMenu === id
-                      ? 'text-teal-700 border-teal-700'
-                      : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
+                      ? 'text-sense border-sense'
+                      : 'text-gray-500 border-transparent hover:text-sense hover:border-sense'
                   }`}
                 >
                   {t(tKey, label)}
@@ -187,13 +187,13 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
               </div>
               
               {/* Premium Language Pill Toggle */}
-              <div className="flex items-center bg-teal-50/60 p-0.5 rounded-xl border border-teal-100/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
+              <div className="flex items-center bg-sense/5 p-0.5 rounded-xl border border-sense/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
                 <button
                   onClick={() => handleLanguageChange('id')}
                   className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
                     currentLang === 'id'
-                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
-                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                      ? 'bg-white text-sense shadow-sm border border-sense/10 scale-100'
+                      : 'text-slate-400 hover:text-sense bg-transparent'
                   }`}
                   title="Bahasa Indonesia"
                 >
@@ -203,8 +203,8 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                   onClick={() => handleLanguageChange('en')}
                   className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
                     currentLang === 'en'
-                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
-                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                      ? 'bg-white text-sense shadow-sm border border-sense/10 scale-100'
+                      : 'text-slate-400 hover:text-sense bg-transparent'
                   }`}
                   title="English"
                 >
@@ -216,16 +216,16 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
               <div className="relative">
                 <button
                   onClick={() => setActiveMenu('profile')}
-                  className="flex items-center gap-2 hover:bg-gray-50 p-1 md:p-1.5 rounded-xl transition-all border border-transparent hover:border-teal-100"
+                  className="flex items-center gap-2 hover:bg-gray-50 p-1 md:p-1.5 rounded-xl transition-all border border-transparent hover:border-sense/20"
                 >
-                  <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
+                  <div className="w-9 h-9 bg-gradient-to-br from-eco/50 to-sense rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
                     {(localStorage.getItem('fullName') || 'T').charAt(0).toUpperCase()}
                   </div>
                   <div className="text-left hidden xl:block">
                     <div className="text-xs font-bold text-gray-900 leading-tight">
                       {localStorage.getItem('fullName') || 'Teknisi BPJS'}
                     </div>
-                    <div className="text-[10px] text-teal-600 font-semibold uppercase tracking-wider">
+                    <div className="text-[10px] text-sense font-semibold uppercase tracking-wider">
                       {localStorage.getItem('role') || 'Teknisi'}
                     </div>
                   </div>
@@ -250,12 +250,12 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
             <button
               key={item.id}
               onClick={() => setActiveMenu(item.id)}
-              className={`flex-1 flex flex-col items-center justify-center transition-all duration-300 ${isActive ? 'text-[#009270] scale-105' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 flex flex-col items-center justify-center transition-all duration-300 ${isActive ? 'text-eco scale-105' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              <div className={`p-2 rounded-2xl mb-1 transition-all duration-300 ${isActive ? 'bg-[#009270]/10 shadow-sm' : 'bg-transparent'}`}>
-                <Icon className={`w-5 h-5 stroke-[2.5] ${isActive ? 'text-[#009270]' : ''}`} />
+              <div className={`p-2 rounded-2xl mb-1 transition-all duration-300 ${isActive ? 'bg-eco/10 shadow-sm' : 'bg-transparent'}`}>
+                <Icon className={`w-5 h-5 stroke-[2.5] ${isActive ? 'text-eco' : ''}`} />
               </div>
-              <span className={`text-[10px] font-bold tracking-tight ${isActive ? 'text-[#009270]' : 'text-gray-400'}`}>
+              <span className={`text-[10px] font-bold tracking-tight ${isActive ? 'text-eco' : 'text-gray-400'}`}>
                 {t(item.tKey, item.label)}
               </span>
             </button>

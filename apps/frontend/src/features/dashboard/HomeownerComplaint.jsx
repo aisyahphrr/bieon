@@ -34,6 +34,7 @@ import { formatStatusDisplay, getActionButtons } from '../../utils/complaintHelp
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { mockComplaints, mockDevices, mockHubs } from './homeownerMockData';
 
 export function HomeownerComplaint({ onNavigate }) {
     const { t, i18n } = useTranslation();
@@ -90,7 +91,25 @@ export function HomeownerComplaint({ onNavigate }) {
         }
     };
 
+    const checkMock = () => {
+        const token = localStorage.getItem('token');
+        let email = localStorage.getItem('email') || '';
+        if (token) {
+            const payload = decodeJwtPayload(token);
+            if (payload && payload.email) email = payload.email;
+        }
+        const isTestAccount = email === 'asrisaras17@gmail.com';
+        return isTestAccount && (import.meta.env.VITE_USE_MOCK_DATA === 'true' || localStorage.getItem('USE_MOCK_DATA') === 'true');
+    };
+
     const fetchUserSystems = async (userId) => {
+        if (checkMock()) {
+            setUserHubs(mockHubs);
+            if (mockHubs.length === 1) {
+                setFormData(prev => ({ ...prev, hubId: mockHubs[0]._id, bieonId: mockHubs[0].bieonId }));
+            }
+            return;
+        }
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`/api/hubs/owner/${userId}`, {
@@ -111,6 +130,10 @@ export function HomeownerComplaint({ onNavigate }) {
     };
 
     const fetchUserDevices = async (userId) => {
+        if (checkMock()) {
+            setUserDevices(mockDevices);
+            return;
+        }
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`/api/kendaliperangkat/my-devices`, {
@@ -129,6 +152,34 @@ export function HomeownerComplaint({ onNavigate }) {
         const idToUse = userId || currentUserId;
         try {
             setIsLoading(true);
+
+            if (checkMock()) {
+                const data = mockComplaints;
+                const mappedData = data.map(item => {
+                    const safeId = item._id ? item._id.toString() : '';
+                    return {
+                        ...item,
+                        originalId: safeId, // Save DB ID to hit PUT endpoints
+                        id: safeId ? `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}` : 'TCK-000000',
+                        description: item.desc || 'No Description',
+                        createdAt: item.createdAt,
+                        date: new Date(item.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
+                        technician: item.technician ? item.technician.fullName : 'Menunggu Teknisi',
+                        status: item.status?.toLowerCase() || 'unassigned',
+                        customer: item.homeowner?.fullName || 'Unknown User',
+                        clientInfo: item.homeowner ? {
+                            name: item.homeowner.fullName,
+                            email: item.homeowner.email,
+                            phone: item.homeowner.phoneNumber,
+                            address: item.homeowner.address
+                        } : null
+                    };
+                });
+                setComplaints(mappedData);
+                setIsLoading(false);
+                return;
+            }
+
             const token = localStorage.getItem('token');
             if (!token || !idToUse) {
                 setIsLoading(false);
@@ -272,7 +323,7 @@ export function HomeownerComplaint({ onNavigate }) {
         
         // Header PDF
         doc.setFontSize(18);
-        doc.setTextColor(15, 158, 120); // Teal BIEON
+        doc.setTextColor(5, 155, 39); // Eco BIEON
         doc.text(t('history.export.detail_report_title', 'LAPORAN DETAIL PENGADUAN'), 14, 22);
         
         doc.setFontSize(11);
@@ -466,12 +517,12 @@ export function HomeownerComplaint({ onNavigate }) {
                 {/* Title Section */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-teal-800">{t('complaint.title', 'Pusat Pengaduan')}</h1>
+                        <h1 className="text-3xl font-bold text-text-headline">{t('complaint.title', 'Pusat Pengaduan')}</h1>
                         <p className="text-gray-500 mt-1">{t('complaint.subtitle', 'Lapor kendala pada perangkat BIEON Anda')}</p>
                     </div>
                     <button
                         onClick={() => setIsFormOpen(true)}
-                        className="mt-4 md:mt-0 self-end md:self-auto flex items-center gap-2 px-6 py-3 bg-[#0F9E78] text-white rounded-xl font-bold hover:bg-[#0B8563] shadow-md transition-all"
+                        className="mt-4 md:mt-0 self-end md:self-auto flex items-center gap-2 px-6 py-3 bg-eco text-white rounded-xl font-bold hover:bg-eco/90 shadow-md shadow-eco/20 transition-all"
                     >
                         <span className="text-lg leading-none">+</span> {t('complaint.send_complaint', 'Kirim Pengaduan')}
                     </button>
@@ -488,28 +539,28 @@ export function HomeownerComplaint({ onNavigate }) {
                             </h3>
                             <div className="flex-1 flex flex-col justify-between space-y-4">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">1</div>
+                                    <div className="w-8 h-8 rounded-full bg-eco/5 text-eco border border-eco/20 flex items-center justify-center font-bold text-sm shrink-0">1</div>
                                     <div>
                                         <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_1_title', 'Buat Laporan')}</h4>
                                         <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_1_desc', 'Isi formulir pengaduan dengan detail kendala dan pilih perangkat yang bermasalah')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">2</div>
+                                    <div className="w-8 h-8 rounded-full bg-eco/5 text-eco border border-eco/20 flex items-center justify-center font-bold text-sm shrink-0">2</div>
                                     <div>
                                         <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_2_title', 'Respons Cepat')}</h4>
                                         <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_2_desc', 'Laporan Anda akan langsung diterima. Teknisi kami akan merespons dalam waktu maksimal 15 menit.')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">3</div>
+                                    <div className="w-8 h-8 rounded-full bg-eco/5 text-eco border border-eco/20 flex items-center justify-center font-bold text-sm shrink-0">3</div>
                                     <div>
                                         <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_3_title', 'Proses Perbaikan')}</h4>
                                         <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_3_desc', 'Teknisi melakukan perbaikan via remote atau kunjungan ke lokasi Anda (maksimal 2x24 jam)')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">4</div>
+                                    <div className="w-8 h-8 rounded-full bg-eco/5 text-eco border border-eco/20 flex items-center justify-center font-bold text-sm shrink-0">4</div>
                                     <div>
                                         <h4 className="font-bold text-gray-900 text-sm">{t('complaint.flow_4_title', 'Konfirmasi Selesai')}</h4>
                                         <p className="text-xs text-gray-500 mt-0.5">{t('complaint.flow_4_desc', 'Jika kendala sudah teratasi, tekan tombol Selesaikan Tiket pada daftar di bawah untuk menutup laporan')}</p>
@@ -548,13 +599,13 @@ export function HomeownerComplaint({ onNavigate }) {
                         </h3>
                         <div className="flex-1 flex flex-col justify-between">
                             <div className="flex items-center gap-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                <Phone className="w-4 h-4 text-emerald-600" /> +62 857-579-785
+                                <Phone className="w-4 h-4 text-eco" /> +62 857-579-785
                             </div>
                             <div className="flex items-center gap-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                <Phone className="w-4 h-4 text-emerald-600" /> +62 857-579-785
+                                <Phone className="w-4 h-4 text-eco" /> +62 857-579-785
                             </div>
                             <div className="flex items-center gap-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                <Mail className="w-4 h-4 text-emerald-600" /> bieon@gmail.com
+                                <Mail className="w-4 h-4 text-eco" /> bieon@gmail.com
                             </div>
                         </div>
                     </div>
@@ -567,30 +618,30 @@ export function HomeownerComplaint({ onNavigate }) {
                             <h2 className="text-lg font-bold text-gray-900">{t('complaint.history_title', 'Riwayat Pengaduan Saya')}</h2>
                             <p className="text-sm text-gray-500">{t('complaint.history_desc', 'Pantau status perbaikan perangkat Anda secara real-time. Jangan lupa untuk mengonfirmasi tiket yang sudah selesai diperbaiki oleh teknisi.')}</p>
                         </div>
-                        <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
+                        <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
                             <div className="relative flex-1 sm:w-auto md:w-64 group">
-                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense transition-colors" />
                                 <input
                                     type="text"
                                     placeholder={t('history.search', 'Cari...')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all"
+                                    className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium bg-white focus:outline-none focus:border-sense focus:ring-4 focus:ring-sense/15 transition-all"
                                 />
                             </div>
                             <div className="flex items-center gap-2 md:gap-3 shrink-0">
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                        className={`flex items-center justify-center sm:justify-between gap-1.5 md:gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-teal-500 ring-4 ring-teal-500/10' : 'border-gray-200 hover:bg-gray-50'}`}
+                                        className={`flex items-center justify-center sm:justify-between gap-1.5 md:gap-3 px-3 py-2.5 bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showStatusDropdown ? 'border-sense ring-4 ring-sense/15' : 'border-gray-200 hover:bg-gray-50'}`}
                                     >
                                         <div className="flex items-center gap-1.5 md:gap-2.5 overflow-hidden">
-                                            <Filter className={`w-4 h-4 shrink-0 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-teal-500' : 'text-gray-400'}`} />
+                                            <Filter className={`w-4 h-4 shrink-0 transition-colors ${showStatusDropdown || selectedStatusFilter ? 'text-sense' : 'text-gray-400'}`} />
                                             <span className={`hidden sm:inline-block truncate ${selectedStatusFilter ? 'text-gray-900' : 'text-gray-500'}`}>
                                                 {selectedStatusFilter ? t(`complaint.status_${selectedStatusFilter.toLowerCase().replace(/\s+/g, '_')}`, selectedStatusFilter) : t('complaint.status_all', 'Semua Status')}
                                             </span>
                                         </div>
-                                        <ChevronDown className={`hidden sm:block w-4 h-4 shrink-0 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-teal-500' : ''}`} />
+                                        <ChevronDown className={`hidden sm:block w-4 h-4 shrink-0 text-gray-400 transition-all ${showStatusDropdown ? 'rotate-180 text-sense' : ''}`} />
                                     </button>
 
                                     {showStatusDropdown && (
@@ -605,7 +656,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                             setCurrentPage(1);
                                                             setShowStatusDropdown(false);
                                                         }}
-                                                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedStatusFilter === status ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedStatusFilter === status ? 'text-sense bg-sense/5 font-black' : 'text-gray-600 hover:bg-gray-50'}`}
                                                     >
                                                         {status ? t(`complaint.status_${status.toLowerCase().replace(/\s+/g, '_')}`, status) : t('complaint.status_all', 'Semua Status')}
                                                     </button>
@@ -614,7 +665,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         </>
                                     )}
                                 </div>
-                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-[#E6F5F0] text-[#0F9E78] rounded-xl text-sm font-bold hover:bg-[#d6efe6] transition-colors shrink-0 shadow-sm border border-transparent">
+                                <button onClick={handleExport} className="flex items-center justify-center gap-2 px-3 py-2.5 bg-eco/10 text-eco rounded-xl text-sm font-bold hover:bg-eco/15 transition-colors shrink-0 shadow-sm border border-transparent">
                                     <Download className="w-4 h-4 shrink-0" />
                                     <span className="hidden sm:inline-block">{t('complaint.export', 'Export')}</span>
                                 </button>
@@ -652,7 +703,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                     <tr>
                                         <td colSpan={7} className="py-12 text-center text-gray-500">
                                             <div className="flex flex-col items-center justify-center space-y-2">
-                                                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 border-2 border-eco border-t-transparent rounded-full animate-spin"></div>
                                                 <span className="text-sm">{t('history.loading_data', 'Memuat data pengaduan...')}</span>
                                             </div>
                                         </td>
@@ -676,7 +727,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                         key={idx}
                                                         onClick={() => setSelectedTicket(ticket)}
                                                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                                            btn.variant === 'primary' ? 'bg-[#0F9E78] text-white hover:bg-[#0B8563] shadow shadow-[#0F9E78]/20' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow shadow-emerald-600/20'
+                                                            btn.variant === 'primary' ? 'bg-eco text-white hover:bg-eco/90 shadow shadow-eco/20' : 'bg-sense text-white hover:bg-sense/90 shadow shadow-sense/20'
                                                         }`}
                                                     >
                                                         {btn.label} {btn.action === 'confirm' ? '✓' : <span className="text-[10px]">›</span>}
@@ -689,7 +740,8 @@ export function HomeownerComplaint({ onNavigate }) {
                                     <tr>
                                         <td colSpan={7} className="py-12 text-center text-gray-500">{t('complaint.no_complaint', 'Tidak ada pengaduan yang ditemukan.')}</td>
                                     </tr>
-                                )}
+                                )
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -698,14 +750,14 @@ export function HomeownerComplaint({ onNavigate }) {
                     <div className="md:hidden divide-y divide-gray-100">
                         {isLoading ? (
                             <div className="py-12 flex flex-col items-center justify-center text-gray-500">
-                                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                <div className="w-6 h-6 border-2 border-eco border-t-transparent rounded-full animate-spin mb-2"></div>
                                 <span className="text-sm">Memuat data pengaduan...</span>
                             </div>
                         ) : currentComplaints.length > 0 ? (
                             currentComplaints.map(ticket => (
                                 <div key={ticket.id} className="p-4 hover:bg-gray-50 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">
+                                        <span className="text-[11px] font-bold text-eco bg-eco/5 px-2 py-1 rounded-md border border-eco/20">
                                             {ticket.id}
                                         </span>
                                         <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{ticket.date}</span>
@@ -736,7 +788,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                     key={idx}
                                                     onClick={() => setSelectedTicket(ticket)}
                                                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all active:scale-95 shrink-0 ${
-                                                        btn.variant === 'primary' ? 'bg-[#0D9488] text-white hover:bg-[#0F766E]' : 'bg-[#0F9E78] text-white hover:bg-[#0B8563]'
+                                                        btn.variant === 'primary' ? 'bg-eco text-white hover:bg-eco/90' : 'bg-sense text-white hover:bg-sense/90'
                                                     }`}
                                                 >
                                                     {btn.label} {btn.action === 'confirm' && '✓'}
@@ -777,7 +829,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                         setCurrentPage(1);
                                                         setShowRowsDropdown(false);
                                                     }}
-                                                    className={`w-full text-left px-3 sm:px-4 py-1.5 text-xs sm:text-sm transition-colors ${rowsPerPage === val ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                    className={`w-full text-left px-3 sm:px-4 py-1.5 text-xs sm:text-sm transition-colors ${rowsPerPage === val ? 'text-sense bg-sense/5 font-black' : 'text-gray-600 hover:bg-gray-50'}`}
                                                 >
                                                     {val}
                                                 </button>
@@ -815,12 +867,12 @@ export function HomeownerComplaint({ onNavigate }) {
             {/* MODAL: FORM PENGADUAN BARU */}
             {isFormOpen && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
-                    <div className="relative bg-white/95 backdrop-blur-3xl rounded-[24px] sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,155,124,0.3)] w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in duration-500 border border-white/50">
+                    <div className="relative bg-white/95 backdrop-blur-3xl rounded-[24px] sm:rounded-3xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in duration-500 border border-white/50">
                         {/* Header Section */}
                         <div className="px-8 pt-10 pb-6 text-left shrink-0">
                             <div className="flex items-start justify-between">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-teal-800">
+                                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-eco">
                                         <FileText className="w-7 h-7" />
                                     </div>
                                     <div>
@@ -837,13 +889,13 @@ export function HomeownerComplaint({ onNavigate }) {
                         {/* Body */}
                         <div className="p-8 flex-1 overflow-y-auto custom-scrollbar">
                             {submitError && (
-                                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium flex items-center gap-2">
+                                <div className="mb-6 p-4 bg-alert-danger/10 border border-alert-danger/20 text-alert-danger rounded-xl text-sm font-medium flex items-center gap-2">
                                     <AlertCircle className="w-5 h-5 shrink-0" />
                                     {submitError}
                                 </div>
                             )}
                             {submitSuccess && (
-                                <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium flex items-center gap-2">
+                                <div className="mb-6 p-4 bg-eco/5 border border-eco/20 text-eco rounded-xl text-sm font-medium flex items-center gap-2">
                                     <CheckCircle2 className="w-5 h-5 shrink-0" />
                                     {submitSuccess}
                                 </div>
@@ -859,7 +911,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                     key={hub._id}
                                                     type="button"
                                                     onClick={() => setFormData({ ...formData, hubId: hub._id, bieonId: hub.bieonId, device: '', category: '' })}
-                                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${formData.hubId === hub._id ? 'bg-teal-50 border-teal-500 text-teal-700' : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'}`}
+                                                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${formData.hubId === hub._id ? 'bg-eco/5 border-eco text-eco' : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'}`}
                                                 >
                                                     {hub.name} ({hub.bieonId})
                                                 </button>
@@ -875,7 +927,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                                className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showCategoryDropdown ? 'bg-white border-teal-500 ring-4 ring-teal-500/10' : 'hover:bg-gray-100'}`}
+                                                className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showCategoryDropdown ? 'bg-white border-eco ring-4 ring-eco/15' : 'hover:bg-gray-100'}`}
                                             >
                                                 <span className={formData.category ? 'text-gray-900' : 'text-gray-400'}>
                                                     {formData.category ? t(`complaint.category_${formData.category.toLowerCase().replace(/\s+/g, '_')}`, formData.category) : t('complaint.select_category', 'Pilih kategori pengaduan')}
@@ -904,7 +956,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                         setFormData({ ...formData, category: cat, device: '' });
                                                                         setShowCategoryDropdown(false);
                                                                     }}
-                                                                    className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                    className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.category === cat ? 'text-eco bg-eco/5 font-black' : 'text-gray-600 hover:bg-gray-50'}`}
                                                                 >
                                                                     {t(`complaint.category_${cat.toLowerCase().replace(/\s+/g, '_')}`, cat)}
                                                                 </button>
@@ -922,7 +974,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowDeviceDropdown(!showDeviceDropdown)}
-                                                className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showDeviceDropdown ? 'bg-white border-teal-500 ring-4 ring-teal-500/10' : 'hover:bg-gray-100'}`}
+                                                className={`w-full flex items-center justify-between px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl text-sm font-medium transition-all ${showDeviceDropdown ? 'bg-white border-eco ring-4 ring-eco/15' : 'hover:bg-gray-100'}`}
                                             >
                                                 <span className={formData.device ? 'text-gray-900' : 'text-gray-400'}>
                                                     {formData.device || t('complaint.room_device', 'Ruangan & Perangkat')}
@@ -940,7 +992,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                     const matchCategory = !formData.category || dev.category === formData.category;
                                                                     const matchHub = !formData.hubId || dev.hubId === formData.hubId;
                                                                     return matchCategory && matchHub;
-                                                                });
+                                                                 });
                                                                 
                                                                 if (filtered.length === 0) {
                                                                     return <div className="px-5 py-3 text-sm text-gray-400 italic">{t('complaint.no_device_match', 'Tidak ada perangkat yang sesuai')}</div>;
@@ -961,7 +1013,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                                 });
                                                                                 setShowDeviceDropdown(false);
                                                                             }}
-                                                                            className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === label ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                            className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === label ? 'text-eco bg-eco/5 font-black' : 'text-gray-600 hover:bg-gray-50'}`}
                                                                         >
                                                                             {label}
                                                                         </button>
@@ -977,7 +1029,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                                 setFormData({ ...formData, device: 'Perangkat Lainnya' });
                                                                 setShowDeviceDropdown(false);
                                                             }}
-                                                            className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === 'Perangkat Lainnya' ? 'text-teal-600 bg-teal-50 font-bold' : 'text-gray-600 hover:bg-gray-100 border-t border-gray-50'}`}
+                                                            className={`w-full text-left px-5 py-3 text-sm transition-colors ${formData.device === 'Perangkat Lainnya' ? 'text-eco bg-eco/5 font-black' : 'text-gray-600 hover:bg-gray-100 border-t border-gray-50'}`}
                                                         >
                                                             {t('complaint.other_device', '+ Perangkat Lainnya')}
                                                         </button>
@@ -996,7 +1048,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         value={formData.topic}
                                         onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
                                         placeholder={t('complaint.problem_topic_placeholder', 'Contoh: Sensor pH air tidak terbaca di dashboard')}
-                                        className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-teal-500 focus:outline-none font-medium transition-all placeholder:text-gray-400"
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-eco focus:outline-none font-medium transition-all placeholder:text-gray-400"
                                     />
                                 </div>
 
@@ -1008,13 +1060,13 @@ export function HomeownerComplaint({ onNavigate }) {
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         placeholder={t('complaint.detail_desc_placeholder', 'Jelaskan kronologi atau detail kendala yang Anda alami agar teknisi kami dapat menganalisis lebih cepat...')}
-                                        className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-teal-500 focus:outline-none font-medium transition-all resize-none placeholder:text-gray-400"
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-eco focus:outline-none font-medium transition-all resize-none placeholder:text-gray-400"
                                     />
                                 </div>
 
                                 {/* File Upload Section */}
                                 <div>
-                                    <div className="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center bg-white relative hover:border-teal-500 transition-all group">
+                                    <div className="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center bg-white relative hover:border-eco transition-all group">
                                         <input
                                             type="file"
                                             multiple
@@ -1077,7 +1129,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                 form="complaintForm"
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="flex-[2] py-3.5 bg-[#558580] text-white font-bold rounded-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:bg-gray-400"
+                                className="flex-[2] py-3.5 bg-eco text-white font-bold rounded-xl hover:bg-eco/90 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:bg-gray-400"
                             >
                                 {isSubmitting ? (
                                     <>
@@ -1105,25 +1157,25 @@ export function HomeownerComplaint({ onNavigate }) {
             {/* MODAL: KONFIRMASI & BERI PENILAIAN (RATING) */}
             {ratingTargetId && (
                 <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 pb-12 overflow-y-auto animate-in fade-in duration-300">
-                    <div className="bg-[#489C74] rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-500 max-h-[90vh] flex flex-col border border-white/10">
+                    <div className="bg-surface-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-500 max-h-[90vh] flex flex-col border border-slate-100">
                         <button
                             onClick={() => setRatingTargetId(null)}
-                            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors p-1"
+                            className="absolute top-4 right-4 text-text-dim hover:text-text-headline transition-colors p-1"
                         >
                             <X className="w-5 h-5 sm:w-6 sm:h-6" />
                         </button>
 
                         {/* Floating Emoji Badge */}
                         <div className="absolute -top-16 sm:-top-24 left-1/2 -translate-x-1/2">
-                            <div className="w-32 h-32 sm:w-44 sm:h-44 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20 relative group transition-transform hover:scale-105 duration-500">
-                                <div className="absolute inset-0 bg-white/5 rounded-full animate-pulse"></div>
-                                <span className="text-7xl sm:text-8xl drop-shadow-[0_20px_20px_rgba(0,0,0,0.4)] animate-bounce-slow relative z-10">🤩</span>
+                            <div className="w-32 h-32 sm:w-44 sm:h-44 bg-eco/5 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl border-4 border-eco/20 relative group transition-transform hover:scale-105 duration-500">
+                                <div className="absolute inset-0 bg-eco/5 rounded-full animate-pulse"></div>
+                                <span className="text-7xl sm:text-8xl drop-shadow-[0_20px_20px_rgba(0,0,0,0.15)] animate-bounce-slow relative z-10">🤩</span>
                             </div>
                         </div>
 
                         <div className="pt-8 sm:pt-14 overflow-y-auto custom-scrollbar pr-2">
-                            <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 tracking-tight leading-tight">{t('complaint.confirm_rating_title', 'Konfirmasi & Beri Penilaian')}</h2>
-                            <p className="text-white/90 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed font-medium px-1 sm:px-2">
+                            <h2 className="text-lg sm:text-xl font-bold text-text-headline mb-2 sm:mb-3 tracking-tight leading-tight">{t('complaint.confirm_rating_title', 'Konfirmasi & Beri Penilaian')}</h2>
+                            <p className="text-text-dim text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed font-medium px-1 sm:px-2">
                                 {t('complaint.confirm_rating_desc', 'Bagaimana hasil perbaikan dari teknisi kami? Penilaian Anda sangat membantu kami dalam menjaga kualitas layanan PT Matra.')}
                             </p>
 
@@ -1138,32 +1190,32 @@ export function HomeownerComplaint({ onNavigate }) {
                                     >
                                         <Star
                                             className={`w-8 h-8 sm:w-10 sm:h-10 ${(hoverStars || ratingStars) >= star
-                                                ? "fill-[#FCD34D] text-[#FCD34D]"
-                                                : "fill-white/30 text-white/30"
-                                            } drop-shadow-md`}
+                                                ? "fill-alert-warning text-alert-warning"
+                                                : "fill-slate-200 text-slate-200"
+                                            } drop-shadow-sm`}
                                         />
                                     </button>
                                 ))}
                             </div>
 
-                            <p className="text-white/80 text-[10px] sm:text-xs mb-4 sm:mb-5 leading-relaxed px-2 sm:px-4 italic">
+                            <p className="text-text-dim text-[10px] sm:text-xs mb-4 sm:mb-5 leading-relaxed px-2 sm:px-4 italic">
                                 {t('complaint.rating_note', '"Penilaian Anda mencakup keseluruhan dari kecepatan respons, kecepatan perbaikan, komunikasi dan keramahan teknisi kami."')}
                             </p>
 
                             <div className="text-left mb-4 sm:mb-6">
-                                <label className="block text-white text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ml-1">{t('complaint.write_review', 'Tuliskan Ulasan Anda')}</label>
+                                <label className="block text-text-headline text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 ml-1">{t('complaint.write_review', 'Tuliskan Ulasan Anda')}</label>
                                 <textarea
                                     value={ratingReview}
                                     onChange={(e) => setRatingReview(e.target.value)}
                                     placeholder={t('complaint.review_placeholder', 'Contoh: Teknisi datang tepat waktu, masalah kipas exhaust sudah beres dan berfungsi normal.')}
-                                    className="w-full bg-transparent border border-white/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white placeholder-white/60 focus:outline-none focus:border-white resize-none h-20 sm:h-24 text-[11px] sm:text-xs transition-all"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-text-headline placeholder-slate-400 focus:outline-none focus:border-eco focus:ring-4 focus:ring-eco/15 resize-none h-20 sm:h-24 text-[11px] sm:text-xs transition-all"
                                 />
                             </div>
 
                             <button
                                 onClick={submitRating}
                                 disabled={ratingStars === 0}
-                                className={`w-40 sm:w-48 mx-auto py-3 sm:py-3.5 bg-white text-[#489C74] font-bold text-base sm:text-[17px] rounded-full transition-all shadow-xl block ${ratingStars === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl hover:-translate-y-0.5 active:scale-95'}`}
+                                className={`w-40 sm:w-48 mx-auto py-3 sm:py-3.5 bg-eco hover:bg-eco/90 text-white font-bold text-base sm:text-[17px] rounded-full transition-all shadow-xl block ${ratingStars === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-2xl hover:-translate-y-0.5 active:scale-95'}`}
                             >
                                 {t('profile.save_changes', 'Simpan')}
                             </button>

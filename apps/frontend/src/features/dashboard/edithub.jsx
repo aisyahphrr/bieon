@@ -155,27 +155,27 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel, isTechn
             {/* Main Content */}
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Current Configuration Info */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="bg-sense-50/20 border border-sense-100/30 rounded-xl p-4">
                     <div className="flex items-start gap-3">
-                        <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <Info className="w-5 h-5 text-sense mt-0.5" />
                         <div className="flex-1">
-                            <h3 className="font-semibold text-blue-900 mb-1">Konfigurasi Saat Ini</h3>
+                            <h3 className="font-semibold text-sense-950 mb-1">Konfigurasi Saat Ini</h3>
                             <div className="grid grid-cols-2 gap-3 text-sm">
                                 <div>
-                                    <span className="text-blue-700">Hub:</span>{' '}
-                                    <span className="font-semibold text-blue-900">{currentHub?.name}</span>
+                                    <span className="text-sense-700">Hub:</span>{' '}
+                                    <span className="font-semibold text-sense-900">{currentHub?.name}</span>
                                 </div>
                                 <div>
-                                    <span className="text-blue-700">Room:</span>{' '}
-                                    <span className="font-semibold text-blue-900">{device.location}</span>
+                                    <span className="text-sense-700">Room:</span>{' '}
+                                    <span className="font-semibold text-sense-900">{device.location}</span>
                                 </div>
                                 <div>
-                                    <span className="text-blue-700">Kategori:</span>{' '}
-                                    <span className="font-semibold text-blue-900">{CATEGORY_LABELS[device.category]}</span>
+                                    <span className="text-sense-700">Kategori:</span>{' '}
+                                    <span className="font-semibold text-sense-900">{CATEGORY_LABELS[device.category]}</span>
                                 </div>
                                 <div>
-                                    <span className="text-blue-700">Device Type:</span>{' '}
-                                    <span className="font-semibold text-blue-900">{device.deviceType}</span>
+                                    <span className="text-sense-700">Device Type:</span>{' '}
+                                    <span className="font-semibold text-sense-900">{device.deviceType}</span>
                                 </div>
                             </div>
                         </div>
