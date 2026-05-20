@@ -32,7 +32,8 @@ import {
   DoorClosed,
   Beaker,
   ToggleRight,
-  Power
+  Power,
+  Type
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart,
@@ -688,6 +689,7 @@ export function HomeownerDashboard() {
 
   // ─────── Interactive Design System Theme Switcher ───────
   const [cardTheme, setCardTheme] = useState(() => localStorage.getItem('bieon_card_theme') || 'brand');
+  const [dashboardFont, setDashboardFont] = useState(() => localStorage.getItem('bieon_dashboard_font') || 'inter');
 
   const getCardStyles = (theme) => {
     switch (theme) {
@@ -1094,49 +1096,81 @@ export function HomeownerDashboard() {
       currentPage="dashboard"
       hideBottomNav={showComplaintModal || showDataModal || showWarningModal}
     >
-      <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
+      <div className={`max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8 ${dashboardFont === 'poppins' ? 'font-poppins' : 'font-inter'}`}>
         {/* Sandbox Visual Switcher - Presentation Helper */}
-        <div className="bg-surface-card/90 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-eco-50 flex items-center justify-center border border-eco-100/50">
-              <Settings className="w-5 h-5 text-eco-500 animate-[spin_8s_linear_infinite]" />
+        <div className="bg-surface-card/90 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm p-5 mb-6 flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-300">
+          {/* Row 1: Theme Switcher */}
+          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-eco-50 flex items-center justify-center border border-eco-100/50">
+                <Settings className="w-5 h-5 text-eco-500 animate-[spin_8s_linear_infinite]" />
+              </div>
+              <div>
+                <h4 className="font-bold text-text-headline text-sm tracking-tight">Interactive Visual Sandbox</h4>
+                <p className="text-xs text-text-dim mt-0.5">Bandingkan 4 opsi warna dasbor secara real-time untuk presentasi</p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold text-text-headline text-sm tracking-tight">Interactive Visual Sandbox</h4>
-              <p className="text-xs text-text-dim mt-0.5">Bandingkan 4 opsi warna dasbor secara real-time untuk presentasi</p>
+            <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+              <button
+                onClick={() => { setCardTheme('brand'); localStorage.setItem('bieon_card_theme', 'brand'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'brand' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Brand (Eco & Sense)
+              </button>
+              <button
+                onClick={() => { setCardTheme('monochrome'); localStorage.setItem('bieon_card_theme', 'monochrome'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'monochrome' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 1: Semua Hijau
+              </button>
+              <button
+                onClick={() => { setCardTheme('legacy'); localStorage.setItem('bieon_card_theme', 'legacy'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'legacy' ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 2: Klasik (Hijau-Ungu-Biru)
+              </button>
+              <button
+                onClick={() => { setCardTheme('modern'); localStorage.setItem('bieon_card_theme', 'modern'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'modern' ? 'bg-amber-500 text-white border-transparent shadow-sm shadow-amber-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 3: Jingga Modern
+              </button>
+              <button
+                onClick={() => { setCardTheme('duotone'); localStorage.setItem('bieon_card_theme', 'duotone'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'duotone' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 4: Duotone (Eco & Sense)
+              </button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <button
-              onClick={() => { setCardTheme('brand'); localStorage.setItem('bieon_card_theme', 'brand'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'brand' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Brand (Eco & Sense)
-            </button>
-            <button
-              onClick={() => { setCardTheme('monochrome'); localStorage.setItem('bieon_card_theme', 'monochrome'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'monochrome' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 1: Semua Hijau
-            </button>
-            <button
-              onClick={() => { setCardTheme('legacy'); localStorage.setItem('bieon_card_theme', 'legacy'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'legacy' ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 2: Klasik (Hijau-Ungu-Biru)
-            </button>
-            <button
-              onClick={() => { setCardTheme('modern'); localStorage.setItem('bieon_card_theme', 'modern'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'modern' ? 'bg-amber-500 text-white border-transparent shadow-sm shadow-amber-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 3: Jingga Modern
-            </button>
-            <button
-              onClick={() => { setCardTheme('duotone'); localStorage.setItem('bieon_card_theme', 'duotone'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'duotone' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 4: Duotone (Eco & Sense)
-            </button>
+
+          <hr className="border-slate-100/60 w-full" />
+
+          {/* Row 2: Font Switcher */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-sense-50 flex items-center justify-center border border-sense-100/50">
+                <Type className="w-5 h-5 text-sense-500" />
+              </div>
+              <div>
+                <h4 className="font-bold text-text-headline text-sm tracking-tight">Interactive Typography Sandbox</h4>
+                <p className="text-xs text-text-dim mt-0.5">Ubah font dasbor untuk menyesuaikan estetika presentasi</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+              <button
+                onClick={() => { setDashboardFont('inter'); localStorage.setItem('bieon_dashboard_font', 'inter'); }}
+                className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-bold transition-all border ${dashboardFont === 'inter' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Font Inter (Default)
+              </button>
+              <button
+                onClick={() => { setDashboardFont('poppins'); localStorage.setItem('bieon_dashboard_font', 'poppins'); }}
+                className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-bold transition-all border ${dashboardFont === 'poppins' ? 'bg-sense-500 text-white border-transparent shadow-sm shadow-sense-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Font Poppins (Modern)
+              </button>
+            </div>
           </div>
         </div>
 
