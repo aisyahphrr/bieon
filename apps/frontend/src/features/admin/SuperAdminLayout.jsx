@@ -122,9 +122,9 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         />
       )}
 
-      {/* Sidebar - Green Aesthetic Theme */}
+      {/* Sidebar - ECO SENSE brand gradient */}
       <aside
-        className={`fixed left-0 top-0 h-screen z-[60] flex flex-col text-white bg-[#009b7c] border-r border-white/10 shadow-2xl transition-all duration-300 
+        className={`fixed left-0 top-0 h-screen z-[60] flex flex-col text-white bg-gradient-to-b from-bieon-eco to-bieon-sense border-r border-white/10 shadow-2xl transition-all duration-300 
           ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'} 
           ${sidebarExpanded ? 'lg:w-64' : 'lg:w-20'}
         `}
@@ -186,8 +186,8 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
 
       {/* Main Content Area */}
       <div className={`flex-1 min-w-0 flex flex-col h-screen transition-all duration-300 bg-[#F8FAFC] w-full max-w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
-        {/* Top Header - Premium Green Style */}
-        <header className="h-[72px] shrink-0 bg-[#009b7c] text-white border-b border-white/10 sticky top-0 z-40 flex items-center shadow-md shadow-emerald-900/10 backdrop-blur-md">
+        {/* Top Header - ECO SENSE brand gradient */}
+        <header className="h-[72px] shrink-0 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white border-b border-white/10 sticky top-0 z-40 flex items-center shadow-md shadow-bieon-sense/10 backdrop-blur-md">
           <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
               <button
@@ -201,12 +201,12 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
 
             <div className="flex items-center gap-3 sm:gap-5 shrink-0">
               {/* Premium Language Pill Toggle */}
-              <div className="flex items-center bg-[#008268]/60 p-0.5 rounded-xl border border-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] shrink-0 select-none">
+              <div className="flex items-center bg-white/15 p-0.5 rounded-xl border border-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] shrink-0 select-none">
                 <button
                   onClick={() => handleLanguageChange('id')}
                   className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
                     currentLang === 'id'
-                      ? 'bg-white text-[#009b7c] shadow-md scale-100'
+                      ? 'bg-white text-bieon-eco shadow-md scale-100'
                       : 'text-white/70 hover:text-white bg-transparent'
                   }`}
                   title="Bahasa Indonesia"
@@ -217,7 +217,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   onClick={() => handleLanguageChange('en')}
                   className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
                     currentLang === 'en'
-                      ? 'bg-white text-[#009b7c] shadow-md scale-100'
+                      ? 'bg-white text-bieon-eco shadow-md scale-100'
                       : 'text-white/70 hover:text-white bg-transparent'
                   }`}
                   title="English"
@@ -232,7 +232,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5"
                 >
                   <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
-                  {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-[#009b7c] rounded-full animate-pulse"></span>}
+                  {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-bieon-eco rounded-full animate-pulse"></span>}
                 </button>
 
                 <NotificationPopup 

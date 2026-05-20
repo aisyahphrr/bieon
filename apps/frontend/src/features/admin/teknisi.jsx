@@ -60,7 +60,7 @@ const WORK_AREA_COORDINATES = {
     Lainnya: { lat: -6.9, lng: 107.6, label: 'Area teknisi' },
 };
 
-const MAP_COLOR_PALETTE = ['#dc2626', '#059669', '#2563eb', '#9333ea', '#ea580c', '#0891b2', '#4f46e5', '#be123c'];
+const MAP_COLOR_PALETTE = ['#dc2626', '#047c22', '#2563eb', '#9333ea', '#ea580c', '#0891b2', '#4f46e5', '#be123c'];
 
 const parseApiResponse = async (response) => {
     const raw = await response.text();
@@ -359,7 +359,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         workArea: tech.workArea || '-',
         status: tech.status || 'aktif',
         clientsCount: Number(tech.clientsCount) || 0,
-        color: tech.color || '#10b981',
+        color: tech.color || '#059b27',
         clients: Array.isArray(tech.clients) ? tech.clients : [],
         position: tech.position || 'Senior Technician',
         experience: Number(tech.experience) || 0,
@@ -789,7 +789,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     </div>
                 )}
                 {successMessage && (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                    <div className="rounded-2xl border border-bieon-sense/25 bg-bieon-eco/10 px-4 py-3 text-sm font-semibold text-bieon-eco">
                         {successMessage}
                     </div>
                 )}
@@ -808,7 +808,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="bg-[#009b7c] rounded-3xl p-6 shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-3xl p-6 shadow-xl shadow-bieon-eco/20 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="flex items-center justify-between mb-2">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
                                 <UserCheck className="w-6 h-6" />
@@ -901,10 +901,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                                 setFilterStatus(item.id);
                                                                 setIsFilterDropdownOpen(false);
                                                             }}
-                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors flex items-center justify-between ${filterStatus === item.id ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors flex items-center justify-between ${filterStatus === item.id ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-700 hover:bg-gray-50'}`}
                                                         >
                                                             {item.label}
-                                                            {filterStatus === item.id && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                            {filterStatus === item.id && <CheckCircle className="w-4 h-4 text-bieon-eco" />}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -924,7 +924,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                                     <button
                                         onClick={() => setIsAddModalOpen(true)}
-                                        className="px-4 md:px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-xs md:text-sm font-semibold hover:bg-[#008268] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-emerald-100"
+                                        className="px-4 md:px-5 py-2.5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-xs md:text-sm font-semibold hover:brightness-105 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-bieon-eco/15"
                                     >
                                         <Plus className="w-4 h-4 shrink-0 transition-transform group-hover:rotate-90" />
                                         <span className="truncate">{t('admin_technician.table.btn_add_tech', 'Tambah Teknisi')}</span>
@@ -942,7 +942,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         {/* Desktop Table View */}
                         <table className="w-full text-left table-auto hidden md:table">
                             <thead>
-                                <tr className="bg-[#009b7c] text-white text-[12px] font-black uppercase tracking-widest text-left">
+                                <tr className="bg-gradient-to-r from-bieon-eco to-bieon-sense text-white text-[12px] font-black uppercase tracking-widest text-left">
                                     <th className="px-8 py-4 rounded-tl-xl">{t('admin_technician.table.col_id', 'ID Teknisi')}</th>
                                     <th className="px-8 py-4">{t('admin_technician.table.col_name', 'Nama Teknisi')}</th>
                                     <th className="px-8 py-4">{t('admin_technician.table.col_region', 'Lokasi Wilayah')}</th>
@@ -985,8 +985,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 const deletionMeta = getDeletionRequestStatusMeta(tech.deletionRequest);
                                                 const isDefaultStatus = !tech.deletionRequest;
                                                 return (
-                                                    <span className={`px-2 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
+                                                    <span className={`px-2 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-bieon-eco/10 text-bieon-eco' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-bieon-eco' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
                                                         {isDefaultStatus ? (tech.status === 'aktif' ? t('admin_technician.table.filter_active') : t('admin_technician.table.filter_inactive')) : deletionMeta.label}
                                                     </span>
                                                 );
@@ -1003,7 +1003,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 </button>
                                                 <button
                                                     onClick={() => handleEditTechnician(tech)}
-                                                    className="p-2 bg-emerald-50 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg transition-all"
+                                                    className="p-2 bg-bieon-eco/10 text-bieon-eco hover:bg-bieon-eco/15 hover:text-bieon-eco rounded-lg transition-all"
                                                     title={t('admin_technician.form_modal.title_edit')}
                                                 >
                                                     <Edit3 className="w-4 h-4" />
@@ -1045,8 +1045,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             const deletionMeta = getDeletionRequestStatusMeta(tech.deletionRequest);
                                             const isDefaultStatus = !tech.deletionRequest;
                                             return (
-                                                <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-emerald-600' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
+                                                <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-bieon-eco/10 text-bieon-eco' : 'bg-red-50 text-red-600') : getDeletionRequestBadgeClass(deletionMeta.tone)}`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${isDefaultStatus ? (tech.status === 'aktif' ? 'bg-bieon-eco' : 'bg-red-600') : (deletionMeta.tone === 'warning' ? 'bg-amber-600' : deletionMeta.tone === 'danger' ? 'bg-red-600' : 'bg-slate-600')}`}></span>
                                                     {isDefaultStatus ? (tech.status === 'aktif' ? t('admin_technician.table.filter_active') : t('admin_technician.table.filter_inactive')) : deletionMeta.label}
                                                 </span>
                                             );
@@ -1079,7 +1079,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                                     <div className="p-3 border-t border-gray-50 flex items-center justify-between gap-2">
                                         <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">{t('admin_technician.table.col_action')}</button>
-                                        <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-xl hover:bg-emerald-100 transition-all text-center">{t('admin_technician.form_modal.btn_save').split(' ')[0]}</button>
+                                        <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-bieon-eco/10 text-bieon-eco font-bold text-xs rounded-xl hover:bg-bieon-eco/15 transition-all text-center">{t('admin_technician.form_modal.btn_save').split(' ')[0]}</button>
                                         <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-cyan-50 text-cyan-600 font-bold text-xs rounded-xl hover:bg-cyan-100 transition-all text-center">{t('admin_technician.table.btn_view_map').split(' ')[1]}</button>
                                         <button onClick={() => handleDeleteTechnician(tech)} className="w-[45px] flex items-center justify-center py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all shrink-0">
                                             <Trash2 className="w-3.5 h-3.5" />
@@ -1096,7 +1096,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
                     <div className="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
-                        <div className="px-6 py-5 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
+                        <div className="px-6 py-5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 <Plus className="w-6 h-6" /> {t('admin_technician.form_modal.title_add')}
                             </h2>
@@ -1109,7 +1109,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             {/* Section: Akun & Kontak */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-lg bg-bieon-eco/10 text-bieon-eco flex items-center justify-center">
                                         <Mail className="w-4 h-4" />
                                     </div>
                                     <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_account')}</h3>
@@ -1122,7 +1122,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             type="text"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder={t('admin_technician.form_modal.ph_name')}
                                         />
                                     </div>
@@ -1133,7 +1133,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             type="email"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder={t('admin_technician.form_modal.ph_email')}
                                         />
                                     </div>
@@ -1144,7 +1144,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             type="text"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder={t('admin_technician.form_modal.ph_phone')}
                                         />
                                     </div>
@@ -1156,7 +1156,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             onChange={handleInputChange}
                                             type="password"
                                             placeholder="********"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                         />
                                     </div>
                                     <div className="sm:col-span-2 space-y-2">
@@ -1166,7 +1166,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.address}
                                             onChange={handleInputChange}
                                             rows="2"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder={t('admin_technician.form_modal.ph_address')}
                                         ></textarea>
                                     </div>
@@ -1189,7 +1189,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.position}
                                             onChange={handleInputChange}
                                             type="text"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder={t('admin_technician.form_modal.ph_position')}
                                         />
                                     </div>
@@ -1200,7 +1200,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.experience}
                                             onChange={handleInputChange}
                                             type="number"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder={t('admin_technician.form_modal.ph_experience')}
                                         />
                                     </div>
@@ -1215,8 +1215,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                         type="button"
                                                         onClick={() => toggleOption('specializations', spec)}
                                                         className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${isSelected
-                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100'
-                                                            : 'bg-white text-gray-500 ring-gray-200 hover:ring-emerald-300 hover:bg-emerald-50'
+                                                            ? 'bg-bieon-eco text-white ring-bieon-eco/100 shadow-md shadow-bieon-eco/15'
+                                                            : 'bg-white text-gray-500 ring-gray-200 hover:ring-bieon-sense/40 hover:bg-bieon-eco/10'
                                                             }`}
                                                     >
                                                         {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
@@ -1232,12 +1232,12 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsWorkAreaDropdownOpen(!isWorkAreaDropdownOpen)}
-                                                className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-bieon-sense/40 focus:outline-none`}
                                             >
                                                 <span className={formData.workArea ? 'text-gray-800 font-semibold' : 'text-gray-400'}>
                                                     {formData.workArea ? t(`admin_technician.form_modal.opt_city_${formData.workArea === 'Lainnya' ? 'other' : formData.workArea.toLowerCase()}`, formData.workArea) : t('admin_technician.form_modal.lbl_select_city')}
                                                 </span>
-                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-bieon-eco' : ''}`} />
                                             </button>
                                             
                                             {isWorkAreaDropdownOpen && (
@@ -1254,10 +1254,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                                         handleCityChange({ target: { value: city } });
                                                                         setIsWorkAreaDropdownOpen(false);
                                                                     }}
-                                                                    className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                                    className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
                                                                 >
                                                                     {t(`admin_technician.form_modal.${cityKey}`, city)}
-                                                                    {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                                    {formData.workArea === city && <CheckCircle className="w-4 h-4 text-bieon-eco animate-in zoom-in duration-300" />}
                                                                 </button>
                                                             );
                                                         })}
@@ -1272,15 +1272,15 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                                                className={`w-full px-4 py-2.5 bg-white border ${isStatusDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isStatusDropdownOpen ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-bieon-sense/40 focus:outline-none`}
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                                                    <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-bieon-eco' : 'bg-red-500'}`}></span>
                                                     <span className="text-gray-800 font-semibold uppercase tracking-wider">
                                                         {formData.status === 'aktif' ? t('admin_technician.form_modal.status_active') : t('admin_technician.form_modal.status_inactive')}
                                                     </span>
                                                 </div>
-                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-bieon-eco' : ''}`} />
                                             </button>
 
                                             {isStatusDropdownOpen && (
@@ -1288,7 +1288,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                     <div className="fixed inset-0 z-[700]" onClick={() => setIsStatusDropdownOpen(false)}></div>
                                                     <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
                                                         {[
-                                                            { id: 'aktif', label: t('admin_technician.form_modal.status_active'), color: 'bg-emerald-500' },
+                                                            { id: 'aktif', label: t('admin_technician.form_modal.status_active'), color: 'bg-bieon-eco' },
                                                             { id: 'nonaktif', label: t('admin_technician.form_modal.status_inactive'), color: 'bg-red-500' }
                                                         ].map(item => (
                                                             <button
@@ -1304,7 +1304,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                                     <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
                                                                     {item.label}
                                                                 </div>
-                                                                {formData.status === item.id && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                                {formData.status === item.id && <CheckCircle className="w-4 h-4 text-bieon-eco animate-in zoom-in duration-300" />}
                                                             </button>
                                                         ))}
                                                     </div>
@@ -1374,7 +1374,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                             <div className="flex items-center gap-4 pt-4 shrink-0">
                                 <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">{t('admin_technician.form_modal.btn_cancel')}</button>
-                                <button onClick={handleAddTechnician} disabled={isSubmitting} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
+                                <button onClick={handleAddTechnician} disabled={isSubmitting} className="flex-1 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-sm font-bold hover:brightness-105 transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
                                     {isSubmitting ? t('admin_technician.form_modal.btn_save').split(' ')[0] + '...' : t('admin_technician.form_modal.btn_save')}
                                 </button>
@@ -1389,14 +1389,14 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden max-h-[95vh]">
 
                         {/* Header */}
-                        <div className="p-6 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
+                        <div className="p-6 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
                                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
                                     <UserCog className="w-8 h-8 text-white" />
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-bold">{selectedTechnician.name}</h2>
-                                    <p className="text-xs font-medium text-teal-100 mt-0.5">ID: {selectedTechnician.id}</p>
+                                    <p className="text-xs font-medium text-white/80 mt-0.5">ID: {selectedTechnician.id}</p>
                                     {selectedTechnician.deletionRequest && (
                                         <div className={`mt-3 inline-flex px-3 py-1.5 rounded-full text-[11px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedTechnician.deletionRequest).tone)}`}>
                                             {getDeletionRequestStatusMeta(selectedTechnician.deletionRequest).label}
@@ -1453,32 +1453,32 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 {/* Detail Profesional */}
                                 <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                                     <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-lg bg-bieon-eco/10 text-bieon-eco flex items-center justify-center">
                                             <Briefcase className="w-4 h-4" />
                                         </div>
                                         <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.detail_modal.sec_skills')}</h3>
                                     </div>
                                     <div className="space-y-4">
                                         <div className="flex items-start gap-3">
-                                            <Award className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
+                                            <Award className="w-4 h-4 text-bieon-eco mt-1 shrink-0" />
                                             <div>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.sec_skills')}</p>
                                                 <p className="text-sm font-semibold text-gray-800">{t('admin_technician.detail_modal.format_position', { position: selectedTechnician.position || 'Technician', years: selectedTechnician.experience || 0 })}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3">
-                                            <Zap className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
+                                            <Zap className="w-4 h-4 text-bieon-eco mt-1 shrink-0" />
                                             <div>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.lbl_specialization')}</p>
                                                 <div className="flex flex-wrap gap-1 mt-1">
                                                     {(selectedTechnician.specializations || []).map((s, i) => (
-                                                        <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold">{s}</span>
+                                                        <span key={i} className="px-2 py-0.5 bg-bieon-eco/10 text-bieon-eco rounded text-[10px] font-bold">{s}</span>
                                                     ))}
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="flex items-start gap-3">
-                                            <MapIcon className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
+                                            <MapIcon className="w-4 h-4 text-bieon-eco mt-1 shrink-0" />
                                             <div>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase">{t('admin_technician.detail_modal.lbl_coverage')}</p>
                                                 <div className="flex flex-wrap gap-1 mt-1">
@@ -1522,7 +1522,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             setIsAddClientModalOpen(true);
                                             fetchAvailableClients();
                                         }}
-                                        className="px-4 py-2 bg-[#009b7c] text-white rounded-lg text-sm font-semibold hover:bg-[#008268] transition-all flex items-center justify-center gap-2"
+                                        className="px-4 py-2 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-lg text-sm font-semibold hover:brightness-105 transition-all flex items-center justify-center gap-2"
                                     >
                                         <Plus className="w-4 h-4" />
                                         {t('admin_technician.detail_modal.btn_add_client')}
@@ -1557,10 +1557,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                             <span className="text-sm text-gray-800 font-medium">{client.smartDevices}</span>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${client.status === 'online' ? 'bg-green-50 text-green-600' :
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${client.status === 'online' ? 'bg-bieon-eco/10 text-bieon-eco' :
                                                                 client.status === 'warning' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600'
                                                                 }`}>
-                                                                <span className={`w-1.5 h-1.5 rounded-full ${client.status === 'online' ? 'bg-green-600' :
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${client.status === 'online' ? 'bg-bieon-eco' :
                                                                     client.status === 'warning' ? 'bg-yellow-500' : 'bg-red-600'
                                                                     }`}></span>
                                                                 {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
@@ -1588,10 +1588,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                             <span className="font-bold text-gray-800 text-sm block">{client.name}</span>
                                                             <span className="text-xs text-gray-500">{client.location}</span>
                                                         </div>
-                                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${client.status === 'online' ? 'bg-green-50 text-green-600' :
+                                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 whitespace-nowrap ${client.status === 'online' ? 'bg-bieon-eco/10 text-bieon-eco' :
                                                             client.status === 'warning' ? 'bg-yellow-50 text-yellow-600' : 'bg-red-50 text-red-600'
                                                             }`}>
-                                                            <span className={`w-1.5 h-1.5 rounded-full ${client.status === 'online' ? 'bg-green-600' :
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${client.status === 'online' ? 'bg-bieon-eco' :
                                                                 client.status === 'warning' ? 'bg-yellow-500' : 'bg-red-600'
                                                                 }`}></span>
                                                             {client.status.charAt(0).toUpperCase() + client.status.slice(1)}
@@ -1808,7 +1808,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                         </div>
                                                         <p className="mt-1 text-xs text-gray-500">{tech.id} • {tech.workArea || t('admin_technician.map_modal.no_region')}</p>
                                                     </div>
-                                                    <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${tech.currentLocation ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
+                                                    <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${tech.currentLocation ? 'bg-bieon-eco/10 text-bieon-eco' : 'bg-slate-100 text-slate-700'}`}>
                                                         {tech.currentLocation ? t('admin_technician.map_modal.live_available') : t('admin_technician.map_modal.pin_region')}
                                                     </span>
                                                 </div>
@@ -1835,10 +1835,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {isAddClientModalOpen && selectedTechnician && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[700] flex items-center justify-center p-6 animate-in zoom-in-95 duration-200">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
-                        <div className="p-6 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
+                        <div className="p-6 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
                             <div>
                                 <h2 className="text-xl font-bold">{t('admin_technician.detail_modal.btn_add_client')}</h2>
-                                <p className="text-xs font-medium text-teal-50 opacity-90 mt-1">{t('admin_technician.detail_modal.desc_add_client', 'Tambahkan pelanggan ke delegasi tugas teknisi')}</p>
+                                <p className="text-xs font-medium text-white/90 opacity-90 mt-1">{t('admin_technician.detail_modal.desc_add_client', 'Tambahkan pelanggan ke delegasi tugas teknisi')}</p>
                             </div>
                             <button onClick={() => setIsAddClientModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
                                 <X className="w-5 h-5 text-white" />
@@ -1859,7 +1859,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             type="checkbox" 
                                             checked={selectedClients.includes(pelanggan._id)}
                                             onChange={() => toggleClientSelection(pelanggan._id)}
-                                            className="w-5 h-5 mt-0.5 text-[#009b7c] border-gray-300 rounded focus:ring-[#009b7c]" 
+                                            className="w-5 h-5 mt-0.5 text-bieon-eco border-gray-300 rounded focus:ring-bieon-eco" 
                                         />
                                         <div className="flex-1">
                                             <p className="font-bold text-gray-800 text-sm">{pelanggan.fullName}</p>
@@ -1879,7 +1879,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             <button
                                 onClick={handleAssignClients}
                                 disabled={isSubmitting || selectedClients.length === 0}
-                                className="px-6 py-2.5 text-sm font-bold text-white bg-[#009b7c] rounded-xl hover:bg-[#008268] transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-xl hover:brightness-105 transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Save className="w-4 h-4" />
                                 {isSubmitting ? t('admin_technician.form_modal.btn_save').split(' ')[0] + '...' : t('admin_technician.detail_modal.btn_save_assign', 'Simpan Penugasan')}
@@ -1893,7 +1893,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {isEditModalOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
                     <div className="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
-                        <div className="px-6 py-5 bg-[#009b7c] text-white flex items-center justify-between shrink-0">
+                        <div className="px-6 py-5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
                             <h2 className="text-xl font-bold flex items-center gap-2">
                                 <Edit3 className="w-6 h-6" /> {t('admin_technician.form_modal.title_edit')}
                             </h2>
@@ -1906,7 +1906,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                             {/* Section: Akun & Kontak */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-lg bg-bieon-eco/10 text-bieon-eco flex items-center justify-center">
                                         <Mail className="w-4 h-4" />
                                     </div>
                                     <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{t('admin_technician.form_modal.cat_account')}</h3>
@@ -1985,7 +1985,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.position}
                                             onChange={handleInputChange}
                                             type="text"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder="Senior Technician"
                                         />
                                     </div>
@@ -1996,7 +1996,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             value={formData.experience}
                                             onChange={handleInputChange}
                                             type="number"
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#009b7c] transition-all"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
                                             placeholder="5"
                                         />
                                     </div>
@@ -2011,8 +2011,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                         type="button"
                                                         onClick={() => toggleOption('specializations', spec)}
                                                         className={`px-4 py-2 rounded-xl text-xs font-bold ring-1 transition-all flex items-center gap-1.5 ${isSelected
-                                                            ? 'bg-emerald-500 text-white ring-emerald-500 shadow-md shadow-emerald-100'
-                                                            : 'bg-white text-gray-500 ring-gray-200 hover:ring-emerald-300 hover:bg-emerald-50'
+                                                            ? 'bg-bieon-eco text-white ring-bieon-eco/100 shadow-md shadow-bieon-eco/15'
+                                                            : 'bg-white text-gray-500 ring-gray-200 hover:ring-bieon-sense/40 hover:bg-bieon-eco/10'
                                                             }`}
                                                     >
                                                         {isSelected && <CheckCircle className="w-3.5 h-3.5" />}
@@ -2028,12 +2028,12 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsWorkAreaDropdownOpen(!isWorkAreaDropdownOpen)}
-                                                className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isWorkAreaDropdownOpen ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-bieon-sense/40 focus:outline-none`}
                                             >
                                                 <span className={formData.workArea ? 'text-gray-800 font-semibold' : 'text-gray-400'}>
                                                     {formData.workArea ? t(`admin_technician.form_modal.opt_city_${formData.workArea === 'Lainnya' ? 'other' : formData.workArea.toLowerCase()}`, formData.workArea) : t('admin_technician.form_modal.lbl_select_city')}
                                                 </span>
-                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isWorkAreaDropdownOpen ? 'rotate-180 text-bieon-eco' : ''}`} />
                                             </button>
                                             
                                             {isWorkAreaDropdownOpen && (
@@ -2050,10 +2050,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                                         handleCityChange({ target: { value: city } });
                                                                         setIsWorkAreaDropdownOpen(false);
                                                                     }}
-                                                                    className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
+                                                                    className={`w-full text-left px-5 py-3 text-sm font-semibold transition-all flex items-center justify-between ${formData.workArea === city ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-700 hover:bg-gray-50 hover:pl-6'}`}
                                                                 >
                                                                     {t(`admin_technician.form_modal.${cityKey}`, city)}
-                                                                    {formData.workArea === city && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                                    {formData.workArea === city && <CheckCircle className="w-4 h-4 text-bieon-eco animate-in zoom-in duration-300" />}
                                                                 </button>
                                                             );
                                                         })}
@@ -2068,15 +2068,15 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                                                className={`w-full px-4 py-2.5 bg-white border ${isStatusDropdownOpen ? 'border-[#009b7c] ring-4 ring-emerald-50' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-emerald-300 focus:outline-none`}
+                                                className={`w-full px-4 py-2.5 bg-white border ${isStatusDropdownOpen ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-200'} rounded-xl text-sm text-left flex items-center justify-between transition-all hover:border-bieon-sense/40 focus:outline-none`}
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
+                                                    <span className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-bieon-eco' : 'bg-red-500'}`}></span>
                                                     <span className="text-gray-800 font-semibold uppercase tracking-wider">
                                                         {formData.status === 'aktif' ? t('admin_technician.form_modal.status_active') : t('admin_technician.form_modal.status_inactive')}
                                                     </span>
                                                 </div>
-                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isStatusDropdownOpen ? 'rotate-180 text-bieon-eco' : ''}`} />
                                             </button>
 
                                             {isStatusDropdownOpen && (
@@ -2084,7 +2084,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                     <div className="fixed inset-0 z-[700]" onClick={() => setIsStatusDropdownOpen(false)}></div>
                                                     <div className="absolute left-0 right-0 top-[calc(100%+8px)] bg-white border border-gray-100 rounded-2xl shadow-2xl z-[701] py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
                                                         {[
-                                                            { id: 'aktif', label: 'Aktif', color: 'bg-emerald-500' },
+                                                            { id: 'aktif', label: 'Aktif', color: 'bg-bieon-eco' },
                                                             { id: 'nonaktif', label: 'Nonaktif', color: 'bg-red-500' }
                                                         ].map(item => (
                                                             <button
@@ -2100,7 +2100,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                                     <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
                                                                     {item.label}
                                                                 </div>
-                                                                {formData.status === item.id && <CheckCircle className="w-4 h-4 text-emerald-600 animate-in zoom-in duration-300" />}
+                                                                {formData.status === item.id && <CheckCircle className="w-4 h-4 text-bieon-eco animate-in zoom-in duration-300" />}
                                                             </button>
                                                         ))}
                                                     </div>
@@ -2170,7 +2170,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                             <div className="flex items-center gap-4 pt-4 shrink-0">
                                 <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 transition-all shadow-sm">{t('admin_technician.form_modal.btn_cancel')}</button>
-                                <button onClick={handleSaveEdit} disabled={isSubmitting} className="flex-1 py-3 bg-[#009b7c] text-white rounded-xl text-sm font-bold hover:bg-[#008268] transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
+                                <button onClick={handleSaveEdit} disabled={isSubmitting} className="flex-1 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-sm font-bold hover:brightness-105 transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed">
                                     <Save className="w-4 h-4 transition-transform group-hover:scale-110" />
                                     {isSubmitting ? t('admin_technician.form_modal.btn_save').split(' ')[0] + '...' : t('admin_technician.form_modal.btn_save')}
                                 </button>

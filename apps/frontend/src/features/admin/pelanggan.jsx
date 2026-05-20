@@ -426,14 +426,15 @@ export function ManajemenAkunPage({ onNavigate }) {
         <SuperAdminLayout activeMenu="Homeowner" onNavigate={onNavigate} title={t('admin_homeowner.table.title')}>
             <div className="space-y-8">
                 {successMessage && (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                    <div className="rounded-2xl border border-bieon-sense/25 bg-bieon-eco/10 px-4 py-3 text-sm font-semibold text-bieon-eco">
                         {successMessage}
                     </div>
                 )}
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-[#3b82f6] rounded-[2rem] p-6 shadow-xl shadow-blue-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-gradient-to-br from-[#129cc0] via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
                                 <Users className="w-6 h-6" />
                             </div>
@@ -444,8 +445,9 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="bg-[#10b981] rounded-[2rem] p-6 shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-gradient-to-br from-[#059b27] via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
                                 <CheckCircle className="w-6 h-6" />
                             </div>
@@ -456,8 +458,9 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="bg-[#f59e0b] rounded-[2rem] p-6 shadow-xl shadow-amber-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-gradient-to-br from-[#129cc0] via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
                                 <AlertCircle className="w-6 h-6" />
                             </div>
@@ -468,8 +471,9 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="bg-[#a855f7] rounded-[2rem] p-6 shadow-xl shadow-purple-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-gradient-to-br from-[#059b27] via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
                                 <Zap className="w-6 h-6" />
                             </div>
@@ -491,13 +495,13 @@ export function ManajemenAkunPage({ onNavigate }) {
                             </div>
                             <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full lg:w-auto">
                                 <div className="relative group col-span-2 lg:w-72">
-                                    <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009b7c] transition-all" />
+                                    <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-bieon-eco transition-all" />
                                     <input
                                         type="text"
                                         placeholder={t('admin_homeowner.table.search_placeholder')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-11 pr-5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm group-focus-within:bg-white"
+                                        className="w-full pl-11 pr-5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm group-focus-within:bg-white"
                                     />
                                 </div>
 
@@ -505,10 +509,10 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <button
                                         type="button"
                                         onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                                        className="flex items-center justify-between gap-4 px-4 py-2.5 w-full md:min-w-[160px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all text-sm font-semibold text-gray-600 focus:outline-none focus:ring-4 focus:ring-emerald-50"
+                                        className="flex items-center justify-between gap-4 px-4 py-2.5 w-full md:min-w-[160px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all text-sm font-semibold text-gray-600 focus:outline-none focus:ring-4 focus:ring-bieon-eco/10"
                                     >
                                         <div className="flex items-center gap-2">
-                                            <Filter className="w-4 h-4 text-emerald-500" />
+                                            <Filter className="w-4 h-4 text-bieon-eco" />
                                             <span className="capitalize">{filterStatus === 'all' ? t('admin_homeowner.table.filter_all') : t(`admin_homeowner.table.status_${filterStatus}`)}</span>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
@@ -525,10 +529,10 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                             setFilterStatus(status);
                                                             setIsFilterDropdownOpen(false);
                                                         }}
-                                                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${filterStatus === status ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50 hover:pl-6'}`}
+                                                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${filterStatus === status ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-600 hover:bg-gray-50 hover:pl-6'}`}
                                                     >
                                                         <span className="capitalize">{status === 'all' ? t('admin_homeowner.table.filter_all') : t(`admin_homeowner.table.status_${status}`)}</span>
-                                                        {filterStatus === status && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                        {filterStatus === status && <CheckCircle className="w-4 h-4 text-bieon-eco" />}
                                                     </button>
                                                 ))}
                                             </div>
@@ -568,7 +572,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         });
                                         setIsAddModalOpen(true);
                                     }}
-                                    className="px-5 py-2.5 bg-[#009b7c] text-white rounded-xl text-sm font-semibold hover:bg-[#008268] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 group col-span-1 relative z-10"
+                                    className="px-5 py-2.5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-sm font-semibold hover:brightness-105 transition-all shadow-lg shadow-bieon-eco/15 flex items-center justify-center gap-2 group col-span-1 relative z-10"
                                 >
                                     <Plus className="w-4 h-4" /> {t('admin_homeowner.table.btn_add_client')}
                                 </button>
@@ -579,8 +583,8 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                     {/* Loading & Error State */}
                     {isLoading && (
-                        <div className="flex items-center justify-center py-16 gap-3 text-[#009b7c]">
-                            <div className="w-6 h-6 border-2 border-[#009b7c] border-t-transparent rounded-full animate-spin"></div>
+                        <div className="flex items-center justify-center py-16 gap-3 text-bieon-eco">
+                            <div className="w-6 h-6 border-2 border-bieon-eco border-t-transparent rounded-full animate-spin"></div>
                             <span className="text-sm font-semibold text-gray-500">Memuat data homeowner...</span>
                         </div>
                     )}
@@ -594,7 +598,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         <div className="overflow-x-auto hidden md:block">
                             <table className="w-full text-left table-auto min-w-[900px]">
                                 <thead>
-                                    <tr className="bg-[#009b7c] text-white text-[12px] font-black uppercase tracking-widest">
+                                    <tr className="bg-gradient-to-r from-bieon-eco to-bieon-sense text-white text-[12px] font-black uppercase tracking-widest">
                                         <th className="px-6 py-4">{t('admin_homeowner.table.col_identity')}</th>
                                         <th className="px-6 py-4">{t('admin_homeowner.table.col_contact')}</th>
                                         <th className="px-6 py-4">{t('admin_homeowner.table.col_hub')}</th>
@@ -609,12 +613,12 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         <tr key={ho._id} className="hover:bg-gray-50/50 transition-all group">
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
+                                                    <div className="w-11 h-11 bg-gradient-to-br from-bieon-eco to-bieon-sense text-white rounded-2xl flex items-center justify-center text-lg font-black shrink-0 shadow-lg shadow-bieon-sense/15 ring-1 ring-white">
                                                         {(ho.fullName || '?').charAt(0)}
                                                     </div>
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <p className="font-bold text-gray-900">{ho.fullName}</p>
-                                                        <p className="text-xs font-semibold text-[#009b7c]">@{ho.username || '-'}</p>
+                                                        <p className="mt-1 inline-flex max-w-[180px] items-center rounded-lg border border-bieon-sense/15 bg-bieon-sense/5 px-2 py-0.5 text-[11px] font-bold text-bieon-sense truncate">@{ho.username || '-'}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -633,7 +637,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                   </div>
                                               </td>
                                             <td className="px-6 py-5">
-                                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold border border-emerald-100">{t('admin_homeowner.table.hub_format', { count: ho.totalHubs || 0 })}</span>
+                                                <span className="px-2.5 py-1 bg-bieon-eco/10 text-bieon-eco rounded-lg text-[10px] font-bold border border-bieon-eco/20">{t('admin_homeowner.table.hub_format', { count: ho.totalHubs || 0 })}</span>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <span className="text-sm font-semibold text-gray-600">{formatDate(ho.registrationDate)}</span>
@@ -642,29 +646,10 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
-                                                        className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-[#009b7c] hover:border-[#009b7c] hover:bg-emerald-50 rounded-xl transition-all shadow-sm"
+                                                        className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-bieon-eco hover:border-bieon-eco hover:bg-bieon-eco/10 rounded-xl transition-all shadow-sm"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedHomeowner(ho);
-                                                            setFormData({
-                                                                fullName: ho.fullName,
-                                                                email: ho.email,
-                                                                username: ho.username || '',
-                                                                phone: ho.phoneNumber || '',
-                                                                address: ho.address || '',
-                                                                status: ho.status || 'aktif',
-                                                                password: ''
-                                                            });
-                                                            setIsEditModalOpen(true);
-                                                        }}
-                                                        className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-blue-500 hover:border-blue-500 hover:bg-blue-50 rounded-xl transition-all shadow-sm"
-                                                        title="Edit Data"
-                                                    >
-                                                        <Edit3 className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteHomeowner(ho)}
@@ -689,12 +674,12 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <div key={ho._id} className="p-5 space-y-4">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-[#009b7c]/10 text-[#009b7c] rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
+                                            <div className="w-11 h-11 bg-gradient-to-br from-bieon-eco to-bieon-sense text-white rounded-2xl flex items-center justify-center text-lg font-black shrink-0 shadow-lg shadow-bieon-sense/15 ring-1 ring-white">
                                                 {(ho.fullName || '?').charAt(0)}
                                             </div>
-                                            <div>
+                                            <div className="min-w-0">
                                                 <p className="font-bold text-gray-900 leading-tight">{ho.fullName}</p>
-                                                <p className="text-[11px] font-semibold text-[#009b7c]">@{ho.username || '-'}</p>
+                                                <p className="mt-1 inline-flex max-w-[160px] items-center rounded-lg border border-bieon-sense/15 bg-bieon-sense/5 px-2 py-0.5 text-[11px] font-bold text-bieon-sense truncate">@{ho.username || '-'}</p>
                                             </div>
                                         </div>
                                           <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shrink-0 ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(ho.deletionRequest, t).tone)}`}>
@@ -717,7 +702,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <div className="grid grid-cols-2 gap-4 text-xs border-y border-gray-50 py-3">
                                         <div>
                                             <span className="text-gray-500 font-medium block mb-1">{t('admin_homeowner.table.col_hub')}</span>
-                                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold border border-emerald-100">{t('admin_homeowner.table.hub_format', { count: ho.totalHubs || 0 })}</span>
+                                            <span className="px-2 py-0.5 bg-bieon-eco/10 text-bieon-eco rounded-md text-[10px] font-bold border border-bieon-eco/20">{t('admin_homeowner.table.hub_format', { count: ho.totalHubs || 0 })}</span>
                                         </div>
                                         <div>
                                             <span className="text-gray-500 font-medium block mb-1">{t('admin_homeowner.table.col_registered')}</span>
@@ -728,27 +713,9 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     <div className="grid grid-cols-3 gap-2 pt-1">
                                         <button
                                             onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
-                                            className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-[#009b7c] hover:border-[#009b7c] hover:text-white rounded-xl text-[10px] font-bold transition-all shadow-sm"
+                                            className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gradient-to-r from-bieon-eco to-bieon-sense hover:border-bieon-eco hover:text-white rounded-xl text-[10px] font-bold transition-all shadow-sm"
                                         >
                                             <Eye className="w-3.5 h-3.5" /> Detail
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setSelectedHomeowner(ho);
-                                                setFormData({
-                                                    fullName: ho.fullName,
-                                                    email: ho.email,
-                                                    username: ho.username || '',
-                                                    phone: ho.phoneNumber || '',
-                                                    address: ho.address || '',
-                                                    status: ho.status || 'aktif',
-                                                    password: ''
-                                                });
-                                                setIsEditModalOpen(true);
-                                            }}
-                                            className="flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-blue-600 hover:border-blue-600 hover:text-white rounded-xl text-[10px] font-bold transition-all shadow-sm"
-                                        >
-                                            <Edit3 className="w-3.5 h-3.5" /> Edit
                                         </button>
                                         <button
                                             onClick={() => handleDeleteHomeowner(ho)}
@@ -772,7 +739,7 @@ export function ManajemenAkunPage({ onNavigate }) {
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-4 animate-in fade-in duration-300">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-                        <div className="px-8 py-6 bg-[#009b7c] text-white flex items-center justify-between">
+                        <div className="px-8 py-6 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner">
                                     <Plus className="w-6 h-6 text-white" />
@@ -796,7 +763,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         value={formData.username}
                                         onChange={(e) => setFormData({...formData, username: e.target.value})}
                                         placeholder={t('admin_homeowner.form_modal.ph_username')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -806,7 +773,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         value={formData.fullName}
                                         onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                                         placeholder={t('admin_homeowner.form_modal.ph_fullname')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
                                     />
                                 </div>
                             </div>
@@ -819,7 +786,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         value={formData.email}
                                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                                         placeholder={t('admin_homeowner.form_modal.ph_email')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -829,7 +796,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         value={formData.phone}
                                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
                                         placeholder={t('admin_homeowner.form_modal.ph_phone')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
                                     />
                                 </div>
                             </div>
@@ -842,7 +809,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         value={formData.password}
                                         onChange={(e) => setFormData({...formData, password: e.target.value})}
                                         placeholder={t('admin_homeowner.form_modal.ph_password')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm" 
+                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -851,10 +818,10 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         <button
                                             type="button"
                                             onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                                            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm"
+                                            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm"
                                         >
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-bieon-eco' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
                                                 <span className="capitalize">{formData.status}</span>
                                             </div>
                                             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
@@ -871,13 +838,13 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                                 setFormData({...formData, status: st});
                                                                 setIsStatusDropdownOpen(false);
                                                             }}
-                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === st ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === st ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-600 hover:bg-gray-50'}`}
                                                         >
                                                             <div className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-emerald-500' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-bieon-eco' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
                                                                 <span className="capitalize">{st}</span>
                                                             </div>
-                                                            {formData.status === st && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                            {formData.status === st && <CheckCircle className="w-4 h-4 text-bieon-eco" />}
                                                         </button>
                                                     ))}
                                                 </div>
@@ -894,21 +861,21 @@ export function ManajemenAkunPage({ onNavigate }) {
                                     value={formData.address}
                                     onChange={(e) => setFormData({...formData, address: e.target.value})}
                                     placeholder={t('admin_homeowner.form_modal.ph_address')}
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-emerald-50 focus:border-[#009b7c] transition-all shadow-sm"
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm"
                                 ></textarea>
                             </div>
 
-                            <div className="flex items-center gap-4 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                            <div className="flex items-center gap-4 p-5 bg-bieon-eco/10 border border-bieon-eco/20 rounded-2xl">
                                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                    <ShieldCheck className="w-6 h-6 text-[#009b7c]" />
+                                    <ShieldCheck className="w-6 h-6 text-bieon-eco" />
                                 </div>
                                 <div className="flex-1">
-                                    <h4 className="text-sm font-bold text-emerald-900 mb-0.5">{t('admin_homeowner.form_modal.notif_title')}</h4>
-                                    <p className="text-xs font-medium text-emerald-700 opacity-80">{t('admin_homeowner.form_modal.notif_desc')}</p>
+                                    <h4 className="text-sm font-bold text-bieon-eco mb-0.5">{t('admin_homeowner.form_modal.notif_title')}</h4>
+                                    <p className="text-xs font-medium text-bieon-eco opacity-80">{t('admin_homeowner.form_modal.notif_desc')}</p>
                                 </div>
                                 <button
                                     onClick={() => setIsEmailPreviewOpen(true)}
-                                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all font-semibold text-xs shadow-sm"
+                                    className="px-4 py-2 bg-bieon-eco text-white rounded-lg hover:bg-bieon-eco transition-all font-semibold text-xs shadow-sm"
                                 >
                                     {t('admin_homeowner.form_modal.btn_preview')}
                                 </button>
@@ -917,7 +884,7 @@ export function ManajemenAkunPage({ onNavigate }) {
 
                         <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-end gap-3">
                             <button onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">{t('admin_homeowner.form_modal.btn_cancel')}</button>
-                            <button onClick={handleAddHomeowner} className="px-6 py-2.5 bg-[#009b7c] text-white rounded-xl font-semibold text-sm hover:bg-[#008268] transition-all shadow-md shadow-emerald-100 flex items-center gap-2 group">
+                            <button onClick={handleAddHomeowner} className="px-6 py-2.5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl font-semibold text-sm hover:brightness-105 transition-all shadow-md shadow-bieon-eco/15 flex items-center gap-2 group">
                                 {t('admin_homeowner.form_modal.btn_save_new')}
                                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                             </button>
@@ -946,7 +913,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[700] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
                     <div className="bg-white rounded-[2rem] shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
                         {/* Header */}
-                        <div className="px-6 md:px-8 py-6 bg-[#009b7c] flex items-start sm:items-center justify-between gap-4">
+                        <div className="px-6 md:px-8 py-6 bg-gradient-to-r from-bieon-eco to-bieon-sense flex items-start sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-4 sm:gap-5">
                                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center backdrop-blur-md shadow-inner shrink-0">
                                     <UserCog className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
@@ -991,13 +958,13 @@ export function ManajemenAkunPage({ onNavigate }) {
                         <div className="px-8 bg-white border-b border-gray-100 flex items-center gap-8 shrink-0">
                             <button
                                 onClick={() => setActiveDetailTab('info')}
-                                className={`py-4 text-sm font-semibold border-b-2 transition-all ${activeDetailTab === 'info' ? 'border-[#009b7c] text-[#009b7c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                className={`py-4 text-sm font-semibold border-b-2 transition-all ${activeDetailTab === 'info' ? 'border-bieon-eco text-bieon-eco' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
                                 {t('admin_homeowner.detail_modal.tab_info')}
                             </button>
                             <button
                                 onClick={() => setActiveDetailTab('devices')}
-                                className={`py-4 text-sm font-semibold border-b-2 transition-all ${activeDetailTab === 'devices' ? 'border-[#009b7c] text-[#009b7c]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                className={`py-4 text-sm font-semibold border-b-2 transition-all ${activeDetailTab === 'devices' ? 'border-bieon-eco text-bieon-eco' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                             >
                                 {t('admin_homeowner.detail_modal.tab_devices', { count: selectedHomeowner.totalHubs || 0 })}
                             </button>
@@ -1008,7 +975,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                             {activeDetailTab === 'info' ? (
                                 <div className="space-y-6">
                                     <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
-                                        <Users className="w-6 h-6 text-[#009b7c]" /> {t('admin_homeowner.detail_modal.tab_info')}
+                                        <Users className="w-6 h-6 text-bieon-eco" /> {t('admin_homeowner.detail_modal.tab_info')}
                                     </h3>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1051,31 +1018,31 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         </div>
 
                                         {/* Status & Aktivitas */}
-                                        <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100/50">
+                                        <div className="bg-bieon-eco/10 p-6 rounded-3xl border border-bieon-eco/20">
                                             <h4 className="font-bold text-gray-900 mb-6 text-lg">{t('admin_homeowner.detail_modal.sec_status')}</h4>
                                             <div className="space-y-6">
-                                                  <div className="flex items-center justify-between text-sm pb-4 border-b border-emerald-100/50">
+                                                  <div className="flex items-center justify-between text-sm pb-4 border-b border-bieon-eco/20">
                                                       <p className="text-gray-500 font-medium">{t('admin_homeowner.detail_modal.lbl_status_verified', 'Status Sistem')}</p>
                                                     <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).tone)}`}>
                                                         {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).label}
                                                     </span>
                                                   </div>
                                                 <div className="flex items-start gap-4 text-sm">
-                                                    <TrendingUp className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
+                                                    <TrendingUp className="w-5 h-5 text-bieon-eco mt-0.5 shrink-0" />
                                                     <div>
                                                         <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_reg_date')}</p>
                                                         <p className="font-bold text-gray-900">{formatDate(selectedHomeowner.registrationDate)}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
-                                                    <Activity className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
+                                                    <Activity className="w-5 h-5 text-bieon-eco mt-0.5 shrink-0" />
                                                     <div>
                                                         <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_bieon_id')}</p>
                                                         <p className="font-bold text-gray-900">{selectedHomeowner.bieonId || '-'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-start gap-4 text-sm">
-                                                    <UserCog className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
+                                                    <UserCog className="w-5 h-5 text-bieon-eco mt-0.5 shrink-0" />
                                                     <div>
                                                         <p className="text-gray-500 font-medium mb-0.5">{t('admin_homeowner.detail_modal.lbl_system')}</p>
                                                         <p className="font-bold text-gray-900">{selectedHomeowner.systemName || '-'}</p>
@@ -1120,10 +1087,10 @@ export function ManajemenAkunPage({ onNavigate }) {
                                             <div className="space-y-3 flex-1 flex flex-col">
                                                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-blue-50">
                                                     <div className="flex items-center gap-2">
-                                                        <CheckCircle className="w-5 h-5 text-[#10b981]" />
+                                                        <CheckCircle className="w-5 h-5 text-bieon-eco" />
                                                         <span className="text-sm font-semibold text-gray-700">{t('admin_homeowner.detail_modal.lbl_hardware')}</span>
                                                     </div>
-                                                    <span className="text-xl font-bold text-[#10b981]">{selectedHomeowner.totalHubs || 0}</span>
+                                                    <span className="text-xl font-bold text-bieon-eco">{selectedHomeowner.totalHubs || 0}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-blue-50">
                                                     <div className="flex items-center gap-2">
@@ -1174,14 +1141,14 @@ export function ManajemenAkunPage({ onNavigate }) {
                                 <div className="space-y-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                            <Monitor className="w-6 h-6 text-[#009b7c]" /> {t('admin_homeowner.detail_modal.eco_title', { hub: selectedHomeownerHubs.length, device: selectedHomeownerDevices.length })}
+                                            <Monitor className="w-6 h-6 text-bieon-eco" /> {t('admin_homeowner.detail_modal.eco_title', { hub: selectedHomeownerHubs.length, device: selectedHomeownerDevices.length })}
                                         </h3>
                                     </div>
 
                                     <div className="space-y-6">
                                         {isLoadingHubs ? (
                                             <div className="py-12 flex flex-col items-center justify-center gap-3">
-                                                <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-10 h-10 border-4 border-bieon-eco border-t-transparent rounded-full animate-spin"></div>
                                                 <p className="text-sm font-medium text-gray-500 text-center">{t('admin_homeowner.detail_modal.sync_data', 'Sinkronisasi data perangkat...')}</p>
                                             </div>
                                         ) : selectedHomeownerHubs.length > 0 ? (
@@ -1194,7 +1161,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     <div key={hubIdStr || idx} className="bg-gray-50 rounded-3xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-all">
                                                         <div className="px-6 py-5 bg-white border-b border-gray-100 flex items-center justify-between">
                                                             <div className="flex items-center gap-4">
-                                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${hub.status === 'Online' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${hub.status === 'Online' ? 'bg-bieon-eco/10 text-bieon-eco' : 'bg-gray-100 text-gray-400'}`}>
                                                                     <Cpu className="w-6 h-6" />
                                                                 </div>
                                                                 <div>
@@ -1207,8 +1174,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                                 </div>
                                                             </div>
                                                             <div className="flex flex-col items-end">
-                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${hub.status === 'Online' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                                                                    <div className={`w-1.5 h-1.5 rounded-full ${hub.status === 'Online' ? 'bg-emerald-500' : 'bg-gray-400'}`}></div>
+                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase ${hub.status === 'Online' ? 'bg-bieon-eco/15 text-bieon-eco' : 'bg-gray-100 text-gray-500'}`}>
+                                                                    <div className={`w-1.5 h-1.5 rounded-full ${hub.status === 'Online' ? 'bg-bieon-eco' : 'bg-gray-400'}`}></div>
                                                                     {hub.status || 'Offline'}
                                                                 </div>
                                                             </div>
@@ -1217,8 +1184,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                         {hubDevices.length > 0 ? (
                                                             <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                 {hubDevices.map((device) => (
-                                                                    <div key={device._id} className="flex items-center gap-4 p-3.5 bg-white rounded-2xl border border-gray-100/50 shadow-sm hover:border-emerald-200 transition-all group">
-                                                                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all">
+                                                                    <div key={device._id} className="flex items-center gap-4 p-3.5 bg-white rounded-2xl border border-gray-100/50 shadow-sm hover:border-bieon-sense/25 transition-all group">
+                                                                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-bieon-eco/10 group-hover:text-bieon-eco transition-all">
                                                                             <Box className="w-5 h-5" />
                                                                         </div>
                                                                         <div className="flex-1 min-w-0">
@@ -1226,7 +1193,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                                             <div className="flex items-center gap-2">
                                                                                 <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">{device.type}</span>
                                                                                 <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                                                                                <span className={`text-[10px] font-bold ${device.status === 'ONLINE' ? 'text-emerald-600' : 'text-red-400'}`}>{device.status}</span>
+                                                                                <span className={`text-[10px] font-bold ${device.status === 'ONLINE' ? 'text-bieon-eco' : 'text-red-400'}`}>{device.status}</span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -1338,7 +1305,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                             className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
                                         >
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-emerald-500' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-bieon-eco' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
                                                 <span className="capitalize">{t(`admin_homeowner.table.status_${formData.status}`)}</span>
                                             </div>
                                             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
@@ -1358,7 +1325,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                             className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === st ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
                                                         >
                                                             <div className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-emerald-500' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
+                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-bieon-eco' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
                                                                 <span className="capitalize">{t(`admin_homeowner.table.status_${st}`)}</span>
                                                             </div>
                                                             {formData.status === st && <CheckCircle className="w-4 h-4 text-blue-600" />}
