@@ -705,18 +705,18 @@ export function HomeownerDashboard() {
           comfort: 'from-eco-500 to-emerald-600',
           comfortDeco: 'bg-white/20',
           security: 'from-indigo-600 to-purple-600',
-          securityDeco: 'bg-indigo-400/20',
+          securityDeco: 'bg-white/20',
           water: 'from-sense-500 to-cyan-600',
-          waterDeco: 'bg-sense-400/25',
+          waterDeco: 'bg-white/20',
         };
       case 'modern':
         return {
           comfort: 'from-eco-500 to-emerald-600',
           comfortDeco: 'bg-white/20',
           security: 'from-amber-500 to-orange-600',
-          securityDeco: 'bg-amber-400/25',
+          securityDeco: 'bg-white/20',
           water: 'from-sense-500 to-cyan-600',
-          waterDeco: 'bg-sense-400/25',
+          waterDeco: 'bg-white/20',
         };
       case 'duotone':
         return {
@@ -733,9 +733,9 @@ export function HomeownerDashboard() {
           comfort: 'from-eco-500 to-emerald-600',
           comfortDeco: 'bg-white/20',
           security: 'from-eco-500 to-sense-500',
-          securityDeco: 'bg-sense-300/20',
+          securityDeco: 'bg-white/20',
           water: 'from-sense-500 to-cyan-600',
-          waterDeco: 'bg-sense-400/25',
+          waterDeco: 'bg-white/20',
         };
     }
   };

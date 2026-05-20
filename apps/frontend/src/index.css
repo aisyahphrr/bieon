@@ -82,7 +82,7 @@
 }
 
 @theme inline {
-  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --color-eco: #059b27;
   --color-sense: #129cc0;
   --color-bieon-eco: #059b27;
