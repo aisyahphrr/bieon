@@ -480,7 +480,7 @@ export function HomeownerHistory({ onNavigate }) {
             onNavigate={onNavigate}
             hideBottomNav={false}
         >
-            <div className={`max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8 ${dashboardFont === 'poppins' ? 'font-poppins' : 'font-inter'}`}>
+            <div className={`max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8 ${dashboardFont === 'poppins' ? 'font-poppins' : dashboardFont === 'jakarta' ? 'font-jakarta' : 'font-inter'}`}>
                 {/* Title Section */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-headline">{t('history.title', 'Riwayat Aktivitas')}</h1>

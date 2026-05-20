@@ -267,9 +267,13 @@ html {
 }
 
 .font-inter {
-  font-family: "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif !important;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif !important;
 }
 
 .font-poppins {
-  font-family: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif !important;
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+.font-jakarta {
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif !important;
 }

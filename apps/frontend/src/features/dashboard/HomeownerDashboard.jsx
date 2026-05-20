@@ -1096,7 +1096,7 @@ export function HomeownerDashboard() {
       currentPage="dashboard"
       hideBottomNav={showComplaintModal || showDataModal || showWarningModal}
     >
-      <div className={`max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8 ${dashboardFont === 'poppins' ? 'font-poppins' : 'font-inter'}`}>
+      <div className={`max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8 ${dashboardFont === 'poppins' ? 'font-poppins' : dashboardFont === 'jakarta' ? 'font-jakarta' : 'font-inter'}`}>
         {/* Sandbox Visual Switcher - Presentation Helper */}
         <div className="bg-surface-card/90 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm p-5 mb-6 flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-300">
           {/* Row 1: Theme Switcher */}
@@ -1159,16 +1159,22 @@ export function HomeownerDashboard() {
             </div>
             <div className="flex flex-wrap gap-2 w-full md:w-auto">
               <button
-                onClick={() => { setDashboardFont('inter'); localStorage.setItem('bieon_dashboard_font', 'inter'); }}
-                className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-bold transition-all border ${dashboardFont === 'inter' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+                onClick={() => { setDashboardFont('jakarta'); localStorage.setItem('bieon_dashboard_font', 'jakarta'); }}
+                className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${dashboardFont === 'jakarta' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
               >
-                Font Inter (Default)
+                Plus Jakarta Sans (Awal)
+              </button>
+              <button
+                onClick={() => { setDashboardFont('inter'); localStorage.setItem('bieon_dashboard_font', 'inter'); }}
+                className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${dashboardFont === 'inter' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Font Inter
               </button>
               <button
                 onClick={() => { setDashboardFont('poppins'); localStorage.setItem('bieon_dashboard_font', 'poppins'); }}
-                className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-bold transition-all border ${dashboardFont === 'poppins' ? 'bg-sense-500 text-white border-transparent shadow-sm shadow-sense-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+                className={`flex-1 md:flex-none px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${dashboardFont === 'poppins' ? 'bg-sense-500 text-white border-transparent shadow-sm shadow-sense-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
               >
-                Font Poppins (Modern)
+                Font Poppins
               </button>
             </div>
           </div>

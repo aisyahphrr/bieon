@@ -514,7 +514,7 @@ export function HomeownerComplaint({ onNavigate }) {
                 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
                 .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
             `}</style>
-            <div className={`max-w-[1900px] mx-auto px-4 md:px-8 py-8 ${dashboardFont === 'poppins' ? 'font-poppins' : 'font-inter'}`}>
+            <div className={`max-w-[1900px] mx-auto px-4 md:px-8 py-8 ${dashboardFont === 'poppins' ? 'font-poppins' : dashboardFont === 'jakarta' ? 'font-jakarta' : 'font-inter'}`}>
                 {/* Title Section */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
                     <div>
