@@ -391,7 +391,7 @@ export default function AdminHistory({ onNavigate }) {
 
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return <ArrowUpDown className="w-3.5 h-3.5 text-gray-300" />;
-        return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-[#009b7c]" /> : <ArrowDown className="w-3.5 h-3.5 text-[#009b7c]" />;
+        return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-bieon-eco" /> : <ArrowDown className="w-3.5 h-3.5 text-bieon-eco" />;
     };
 
     const requestSort = (key) => {
@@ -552,9 +552,9 @@ export default function AdminHistory({ onNavigate }) {
                         {/* Pilih Pelanggan (With Dynamic Filtering) */}
                         <div className="space-y-2 relative flex-1 min-w-[240px]">
                             <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.select_customer')}</label>
-                            <button onClick={() => setShowCustomerDropdown(!showCustomerDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showCustomerDropdown ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5 bg-white' : 'hover:bg-white hover:border-[#009b7c]/30 text-gray-700'}`}>
+                            <button onClick={() => setShowCustomerDropdown(!showCustomerDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showCustomerDropdown ? 'border-bieon-eco ring-4 ring-bieon-eco/10 bg-white' : 'hover:bg-white hover:border-bieon-eco/30 text-gray-700'}`}>
                                 <div className="flex items-center gap-2 truncate">
-                                    <UserIcon className="w-4 h-4 text-[#009b7c]" />
+                                    <UserIcon className="w-4 h-4 text-bieon-eco" />
                                     <span className="truncate">{isLoadingHomeowners ? t('history.loading') : (selectedHomeowner?.fullName || selectedHomeowner?.name || t('history.filters.select_customer'))}</span>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showCustomerDropdown ? 'rotate-180' : ''}`} />
@@ -565,10 +565,10 @@ export default function AdminHistory({ onNavigate }) {
                                     <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-[50] max-h-64 overflow-y-auto custom-scrollbar">
                                         {/* Jika BIEON terpilih, tampilkan opsi "Semua Pelanggan" untuk mereset BIEON */}
                                         {selectedBieon && (
-                                            <button onClick={() => { setSelectedBieon(''); setCurrentPage(1); }} className="w-full text-center py-2 text-[10px] font-black text-[#009b7c] border-b border-gray-50 bg-[#F2F8F5]/50 hover:bg-[#F2F8F5] transition-colors uppercase tracking-widest">{t('history.filters.all_customers', 'Tampilkan Semua Pelanggan')}</button>
+                                            <button onClick={() => { setSelectedBieon(''); setCurrentPage(1); }} className="w-full text-center py-2 text-[10px] font-black text-bieon-eco border-b border-gray-50 bg-bieon-eco/5 hover:bg-bieon-eco/5 transition-colors uppercase tracking-widest">{t('history.filters.all_customers', 'Tampilkan Semua Pelanggan')}</button>
                                         )}
                                         {displayHomeowners.length > 0 ? displayHomeowners.map(h => (
-                                            <button key={h._id} onClick={() => handleSelectHomeowner(h)} className={`w-full text-left px-5 py-3 text-[13px] ${selectedHomeowner?._id === h._id ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{h.fullName || h.name}</button>
+                                            <button key={h._id} onClick={() => handleSelectHomeowner(h)} className={`w-full text-left px-5 py-3 text-[13px] ${selectedHomeowner?._id === h._id ? 'text-bieon-eco bg-bieon-eco/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{h.fullName || h.name}</button>
                                         )) : <div className="px-5 py-4 text-center text-xs text-gray-400 font-bold italic">{t('history.filters.no_customers', 'Tidak ada pelanggan untuk filter ini')}</div>}
                                     </div>
                                 </>
@@ -578,9 +578,9 @@ export default function AdminHistory({ onNavigate }) {
                         {/* Pilih BIEON (With Dynamic Filtering) */}
                         <div className="space-y-2 relative flex-1 min-w-[180px]">
                             <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.select_bieon')}</label>
-                            <button onClick={() => setShowBieonDropdown(!showBieonDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showBieonDropdown ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5 bg-white' : 'hover:bg-white hover:border-[#009b7c]/30 text-gray-700'}`}>
+                            <button onClick={() => setShowBieonDropdown(!showBieonDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showBieonDropdown ? 'border-bieon-eco ring-4 ring-bieon-eco/10 bg-white' : 'hover:bg-white hover:border-bieon-eco/30 text-gray-700'}`}>
                                 <div className="flex items-center gap-2 truncate">
-                                    <Cpu className="w-4 h-4 text-[#009b7c]" />
+                                    <Cpu className="w-4 h-4 text-bieon-eco" />
                                     <span className="truncate">{isLoadingBieon ? '...' : (selectedBieon || t('history.filters.select_bieon'))}</span>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showBieonDropdown ? 'rotate-180' : ''}`} />
@@ -589,9 +589,9 @@ export default function AdminHistory({ onNavigate }) {
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowBieonDropdown(false)}></div>
                                     <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-[50] max-h-60 overflow-y-auto custom-scrollbar">
-                                        <button onClick={() => handleSelectBieon('')} className={`w-full text-left px-5 py-3 text-[13px] ${!selectedBieon ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{t('history.filters.all_bieon')}</button>
+                                        <button onClick={() => handleSelectBieon('')} className={`w-full text-left px-5 py-3 text-[13px] ${!selectedBieon ? 'text-bieon-eco bg-bieon-eco/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{t('history.filters.all_bieon')}</button>
                                         {displayBieonSystems.map((sys, idx) => (
-                                            <button key={idx} onClick={() => handleSelectBieon(sys.bieonId)} className={`w-full text-left px-5 py-3 text-[13px] ${selectedBieon === sys.bieonId ? 'text-[#009b7c] bg-[#F2F8F5] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{sys.bieonId}</button>
+                                            <button key={idx} onClick={() => handleSelectBieon(sys.bieonId)} className={`w-full text-left px-5 py-3 text-[13px] ${selectedBieon === sys.bieonId ? 'text-bieon-eco bg-bieon-eco/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}>{sys.bieonId}</button>
                                         ))}
                                         {displayBieonSystems.length === 0 && <div className="px-5 py-4 text-center text-xs text-gray-400 font-bold italic">{t('history.filters.no_bieon', 'Tidak ada BIEON untuk pelanggan ini')}</div>}
                                     </div>
@@ -602,7 +602,7 @@ export default function AdminHistory({ onNavigate }) {
                         {/* Rentang Waktu */}
                         <div className="space-y-2 relative flex-1 min-w-[240px]">
                             <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.date_range')}</label>
-                            <button onClick={() => setShowDateDropdown(!showDateDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${dateRange.start || dateRange.end ? 'border-[#009b7c] text-[#009b7c] bg-[#F2F8F5]' : 'hover:bg-white hover:border-[#009b7c]/30 text-gray-500'}`}>
+                            <button onClick={() => setShowDateDropdown(!showDateDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${dateRange.start || dateRange.end ? 'border-bieon-eco text-bieon-eco bg-bieon-eco/5' : 'hover:bg-white hover:border-bieon-eco/30 text-gray-500'}`}>
                                 <div className="flex items-center gap-2 truncate">
                                     <Calendar className="w-4 h-4" />
                                     <span className="truncate">{dateRange.start || dateRange.end ? `${formatDateDisplay(dateRange.start)} - ${formatDateDisplay(dateRange.end)}` : t('history.filters.date_range')}</span>
@@ -615,14 +615,14 @@ export default function AdminHistory({ onNavigate }) {
                                     <div className="absolute top-full left-0 sm:right-0 mt-2 w-[340px] bg-white border border-gray-100 rounded-[2rem] shadow-2xl p-6 z-[50] animate-in fade-in zoom-in-95 duration-200">
                                         <div className="space-y-5">
                                             <div className="flex items-center gap-3 pb-2 border-b border-gray-50">
-                                                <Calendar className="w-5 h-5 text-[#009b7c]" />
+                                                <Calendar className="w-5 h-5 text-bieon-eco" />
                                                 <h3 className="text-[12px] font-black text-gray-700 uppercase tracking-widest">{t('history.filters.custom_range', 'Kustom Rentang')}</h3>
                                             </div>
-                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">{t('history.filters.from_date')}</label><button onClick={() => setActivePicker(activePicker === 'start' ? null : 'start')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'start' ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.start ? formatDateDisplay(dateRange.start) : t('history.filters.from_date')}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'start' ? 'text-[#009b7c]' : ''}`} /></button></div>
-                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">{t('history.filters.to_date')}</label><button onClick={() => setActivePicker(activePicker === 'end' ? null : 'end')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'end' ? 'border-[#009b7c] ring-4 ring-[#009b7c]/5' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.end ? formatDateDisplay(dateRange.end) : t('history.filters.to_date')}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'end' ? 'text-[#009b7c]' : ''}`} /></button></div>
+                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">{t('history.filters.from_date')}</label><button onClick={() => setActivePicker(activePicker === 'start' ? null : 'start')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'start' ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.start ? formatDateDisplay(dateRange.start) : t('history.filters.from_date')}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'start' ? 'text-bieon-eco' : ''}`} /></button></div>
+                                            <div className="space-y-2"><label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block ml-1">{t('history.filters.to_date')}</label><button onClick={() => setActivePicker(activePicker === 'end' ? null : 'end')} className={`w-full h-[46px] flex items-center justify-between px-4 bg-gray-50 border rounded-xl text-xs font-bold transition-all ${activePicker === 'end' ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-100 text-gray-900'}`}><span>{dateRange.end ? formatDateDisplay(dateRange.end) : t('history.filters.to_date')}</span><Calendar className={`w-4 h-4 text-gray-400 ${activePicker === 'end' ? 'text-bieon-eco' : ''}`} /></button></div>
                                             {activePicker && (
                                                 <div className="pt-2 border-t border-gray-50 animate-in slide-in-from-top-2 duration-300">
-                                                    <div className="flex items-center justify-between mb-4"><div className="flex flex-col"><span className="text-xs font-black text-gray-900 uppercase tracking-tight">{monthNames[viewMonth]}</span><div className="relative"><button onClick={() => setShowYearDropdown(!showYearDropdown)} className="flex items-center gap-1 text-[10px] font-black text-[#009b7c] uppercase tracking-widest">{viewYear} <ChevronDown className={`w-3 h-3 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} /></button>{showYearDropdown && (<><div className="fixed inset-0 z-[60]" onClick={() => setShowYearDropdown(false)}></div><div className="absolute top-full left-0 mt-1 w-24 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[70] max-h-40 overflow-y-auto custom-scrollbar">{Array.from({ length: 11 }, (_, i) => 2026 - i).map(y => (<button key={y} onClick={() => { setViewYear(y); setShowYearDropdown(false); }} className={`w-full text-left px-4 py-2 text-[10px] font-bold ${viewYear === y ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}>{y}</button>))}</div></>)}</div></div><div className="flex items-center gap-1"><button onClick={() => changeMonth('prev')} className="p-2 hover:bg-gray-50 rounded-lg"><ChevronLeft className="w-4 h-4 text-gray-400" /></button><button onClick={() => changeMonth('next')} className="p-2 hover:bg-gray-50 rounded-lg"><ChevronRight className="w-4 h-4 text-gray-400" /></button></div></div>
+                                                    <div className="flex items-center justify-between mb-4"><div className="flex flex-col"><span className="text-xs font-black text-gray-900 uppercase tracking-tight">{monthNames[viewMonth]}</span><div className="relative"><button onClick={() => setShowYearDropdown(!showYearDropdown)} className="flex items-center gap-1 text-[10px] font-black text-bieon-eco uppercase tracking-widest">{viewYear} <ChevronDown className={`w-3 h-3 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} /></button>{showYearDropdown && (<><div className="fixed inset-0 z-[60]" onClick={() => setShowYearDropdown(false)}></div><div className="absolute top-full left-0 mt-1 w-24 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[70] max-h-40 overflow-y-auto custom-scrollbar">{Array.from({ length: 11 }, (_, i) => 2026 - i).map(y => (<button key={y} onClick={() => { setViewYear(y); setShowYearDropdown(false); }} className={`w-full text-left px-4 py-2 text-[10px] font-bold ${viewYear === y ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600 hover:bg-gray-50'}`}>{y}</button>))}</div></>)}</div></div><div className="flex items-center gap-1"><button onClick={() => changeMonth('prev')} className="p-2 hover:bg-gray-50 rounded-lg"><ChevronLeft className="w-4 h-4 text-gray-400" /></button><button onClick={() => changeMonth('next')} className="p-2 hover:bg-gray-50 rounded-lg"><ChevronRight className="w-4 h-4 text-gray-400" /></button></div></div>
                                                     <div className="grid grid-cols-7 gap-1 mb-2">
                                                         {['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'].map(d => (
                                                             <span key={d} className="text-[9px] font-black text-gray-300 text-center uppercase tracking-widest">
@@ -630,12 +630,12 @@ export default function AdminHistory({ onNavigate }) {
                                                             </span>
                                                         ))}
                                                     </div>
-                                                    <div className="grid grid-cols-7 gap-1">{calendarDays.map((d, i) => { const currentVal = `${d.year}-${String(d.month + 1).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`; const isSelected = (activePicker === 'start' ? dateRange.start : dateRange.end) === currentVal; return (<button key={i} onClick={() => handleSelectDate(d)} className={`h-8 w-full flex items-center justify-center rounded-lg text-[11px] font-bold transition-all ${!d.current ? 'text-gray-200' : isSelected ? 'bg-[#009b7c] text-white' : 'text-gray-600 hover:bg-[#F2F8F5] hover:text-[#009b7c]'}`}>{d.day}</button>); })}</div>
+                                                    <div className="grid grid-cols-7 gap-1">{calendarDays.map((d, i) => { const currentVal = `${d.year}-${String(d.month + 1).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`; const isSelected = (activePicker === 'start' ? dateRange.start : dateRange.end) === currentVal; return (<button key={i} onClick={() => handleSelectDate(d)} className={`h-8 w-full flex items-center justify-center rounded-lg text-[11px] font-bold transition-all ${!d.current ? 'text-gray-200' : isSelected ? 'bg-gradient-to-r from-bieon-eco to-bieon-sense text-white' : 'text-gray-600 hover:bg-bieon-eco/5 hover:text-bieon-eco'}`}>{d.day}</button>); })}</div>
                                                 </div>
                                             )}
                                             <div className="flex gap-3 pt-2">
                                                 <button onClick={() => { setDateRange({start:'', end:''}); setShowDateDropdown(false); setActivePicker(null); setCurrentPage(1); }} className="flex-1 h-[46px] text-[11px] font-black text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest border border-gray-50 rounded-xl hover:bg-gray-50">{t('history.filters.reset_all')}</button>
-                                                <button onClick={() => { setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 h-[46px] bg-[#009b7c] text-white rounded-xl text-[11px] font-black hover:bg-[#008268] transition-all shadow-lg shadow-[#009b7c]/20 uppercase tracking-widest">{t('history.filters.apply')}</button>
+                                                <button onClick={() => { setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 h-[46px] bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-[11px] font-black hover:brightness-105 transition-all shadow-lg shadow-bieon-eco/20 uppercase tracking-widest">{t('history.filters.apply')}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -643,8 +643,8 @@ export default function AdminHistory({ onNavigate }) {
                             )}
                         </div>
 
-                        <button onClick={handleExportPDF} title={t('history.export.button_tab')} className="flex items-center justify-center w-[54px] h-[54px] bg-white border border-gray-100 text-[#009b7c] rounded-[1.1rem] hover:bg-gray-50 transition-all shadow-sm active:scale-95 shrink-0"><Download className="w-5 h-5" /></button>
-                        <button onClick={handleExportAllPDF} disabled={isExportingAll} className="flex items-center justify-center gap-3 px-8 h-[54px] bg-[#009b7c] text-white rounded-[1.25rem] font-black text-[11px] uppercase tracking-widest hover:bg-[#008268] transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0">{isExportingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}<span className="whitespace-nowrap">{t('history.full_report')}</span></button>
+                        <button onClick={handleExportPDF} title={t('history.export.button_tab')} className="flex items-center justify-center w-[54px] h-[54px] bg-white border border-gray-100 text-bieon-eco rounded-[1.1rem] hover:bg-gray-50 transition-all shadow-sm active:scale-95 shrink-0"><Download className="w-5 h-5" /></button>
+                        <button onClick={handleExportAllPDF} disabled={isExportingAll} className="flex items-center justify-center gap-3 px-8 h-[54px] bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-[1.25rem] font-black text-[11px] uppercase tracking-widest hover:brightness-105 transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0">{isExportingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}<span className="whitespace-nowrap">{t('history.full_report')}</span></button>
                     </div>
                 </div>
 
@@ -665,7 +665,7 @@ export default function AdminHistory({ onNavigate }) {
                                     <button
                                         key={tab.id}
                                         onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSelectedRoomFilter(''); }}
-                                        className={`px-4 sm:px-5 py-2.5 rounded-[0.95rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 flex items-center justify-center ${activeTab === tab.id ? 'bg-[#009b7c] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                                        className={`px-4 sm:px-5 py-2.5 rounded-[0.95rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 flex items-center justify-center ${activeTab === tab.id ? 'bg-gradient-to-r from-bieon-eco to-bieon-sense text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
                                     >
                                         <span className="hidden xl:inline">{tab.full}</span>
                                         <span className="inline xl:hidden">{tab.short}</span>
@@ -684,13 +684,13 @@ export default function AdminHistory({ onNavigate }) {
                                     placeholder={t('history.search_placeholder')} 
                                     value={searchQuery} 
                                     onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#009b7c]/10 shadow-sm" 
+                                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-bieon-eco/10 shadow-sm" 
                                 />
                             </div>
 
 
                                 <div className="relative">
-                                    <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-[#009b7c] border-[#009b7c]' : 'text-gray-500'}`}>
+                                    <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-bieon-eco border-bieon-eco' : 'text-gray-500'}`}>
                                         <Filter className="w-4 h-4" />
                                         <span>{selectedRoomFilter ? (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms'))}</span>
                                         <ChevronDown className="w-4 h-4" />
@@ -699,8 +699,8 @@ export default function AdminHistory({ onNavigate }) {
                                         <>
                                             <div className="fixed inset-0 z-20" onClick={() => setShowFilterDropdown(false)}></div>
                                             <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-30">
-                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms')}</button>
-                                                {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${f?.toLowerCase().replace(/\s+/g, '_')}`, f) : f}</button>)}
+                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms')}</button>
+                                                {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${f?.toLowerCase().replace(/\s+/g, '_')}`, f) : f}</button>)}
                                             </div>
                                         </>
                                     )}
@@ -709,7 +709,7 @@ export default function AdminHistory({ onNavigate }) {
                     </div>
 
                     <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden relative min-h-[400px]">
-                        {isLoading && <div className="absolute inset-0 bg-white/60 z-30 flex flex-col items-center justify-center"><Loader2 className="w-10 h-10 text-[#009b7c] animate-spin mb-3" /><p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">{t('history.loading')}</p></div>}
+                        {isLoading && <div className="absolute inset-0 bg-white/60 z-30 flex flex-col items-center justify-center"><Loader2 className="w-10 h-10 text-bieon-eco animate-spin mb-3" /><p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">{t('history.loading')}</p></div>}
                         <div className="overflow-x-auto pb-2 custom-scrollbar-x">
                             <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
                                 <thead className="bg-white border-b border-gray-200 text-gray-500">
@@ -817,7 +817,7 @@ export default function AdminHistory({ onNavigate }) {
                                                     <td className="px-6 py-4">
                                                         <button 
                                                             onClick={() => { setSelectedTicket(item.rawItem); setIsDetailModalOpen(true); }}
-                                                            className="flex items-center gap-2 px-4 py-2.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-[11px] font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
+                                                            className="flex items-center gap-2 px-4 py-2.5 bg-[#e8f9fb] text-[#1E4D40] rounded-2xl text-[11px] font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
                                                         >
                                                             <Eye className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
                                                             <span>{t('history.columns.action_detail', 'Detail')}</span>
@@ -849,7 +849,7 @@ export default function AdminHistory({ onNavigate }) {
                                 <div className="relative">
                                     <button 
                                         onClick={() => setShowRowsDropdown(!showRowsDropdown)} 
-                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-[#009b7c]/30 transition-all"
+                                        className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-bieon-eco/30 transition-all"
                                     >
                                         {rowsPerPage} <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
                                     </button>
@@ -861,7 +861,7 @@ export default function AdminHistory({ onNavigate }) {
                                                     <button 
                                                         key={val} 
                                                         onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} 
-                                                        className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-500 hover:bg-gray-50'}`}
                                                     >
                                                         {val}
                                                     </button>

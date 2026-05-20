@@ -106,9 +106,9 @@ export function DataLogSistemPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="px-4 py-2 bg-[#009b7c]/10 border border-[#009b7c]/20 rounded-xl">
-              <span className="text-[#009b7c] text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#009b7c] rounded-full animate-pulse" />
+            <div className="px-4 py-2 bg-gradient-to-r from-bieon-eco to-bieon-sense/10 border border-bieon-eco/20 rounded-xl">
+              <span className="text-bieon-eco text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-full animate-pulse" />
                 Live Monitoring: {customerName}
               </span>
             </div>
@@ -139,13 +139,13 @@ export function DataLogSistemPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#009b7c] to-[#007d64] p-6 rounded-[2rem] shadow-xl shadow-emerald-200/50 flex items-center gap-5 border border-[#009b7c]/30 relative overflow-hidden group">
+          <div className="bg-gradient-to-br from-bieon-eco to-bieon-sense p-6 rounded-[2rem] shadow-xl shadow-bieon-eco/20 flex items-center gap-5 border border-bieon-eco/30 relative overflow-hidden group">
             <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
             <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-inner">
               <ShieldCheck className="w-7 h-7 text-white" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-emerald-50 text-opacity-80 uppercase tracking-[0.2em] mb-1">Security</p>
+              <p className="text-[10px] font-black text-white/80 text-opacity-80 uppercase tracking-[0.2em] mb-1">Security</p>
               <p className="text-2xl font-black text-white leading-none">WPA3-Enc</p>
             </div>
           </div>
@@ -194,7 +194,7 @@ export function DataLogSistemPage() {
                 onClick={() => setIsStreaming(!isStreaming)}
                 className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${
                   isStreaming 
-                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' 
+                  ? 'bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20' 
                   : 'bg-gray-200 text-gray-500'
                 }`}
               >
@@ -247,10 +247,10 @@ export function DataLogSistemPage() {
                   <span className="text-gray-600 font-medium select-none w-48 shrink-0">
                     {new Date().toISOString().replace('T', ' ').substring(0, 23)}
                   </span>
-                  <span className="text-[#009b7c] font-black select-none w-14 shrink-0 animate-pulse">[RECV]</span>
-                  <span className="text-[#009b7c] italic font-black animate-pulse flex items-center gap-2">
+                  <span className="text-bieon-eco font-black select-none w-14 shrink-0 animate-pulse">[RECV]</span>
+                  <span className="text-bieon-eco italic font-black animate-pulse flex items-center gap-2">
                     Inbound telemetry stream active...
-                    <span className="w-1.5 h-4 bg-[#009b7c] animate-bounce" />
+                    <span className="w-1.5 h-4 bg-gradient-to-r from-bieon-eco to-bieon-sense animate-bounce" />
                   </span>
                 </div>
               )}
@@ -263,8 +263,8 @@ export function DataLogSistemPage() {
           {/* Console Footer */}
           <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between font-mono text-[10px] text-black font-black uppercase tracking-widest">
             <div className="flex gap-10">
-              <span className="flex items-center gap-2 text-[#009b7c]">
-                <div className="w-2 h-2 bg-[#009b7c] rounded-full" />
+              <span className="flex items-center gap-2 text-bieon-eco">
+                <div className="w-2 h-2 bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-full" />
                 BIEON_RT_ENGINE_STABLE
               </span>
               <span>Buffer: 1024KB / 4096KB</span>

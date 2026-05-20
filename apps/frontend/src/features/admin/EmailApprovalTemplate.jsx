@@ -9,7 +9,7 @@ export function EmailApprovalTemplate({ type = 'welcome', data = {} }) {
   return (
     <div className="bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden font-sans">
       {/* Email Header */}
-      <div className="bg-[#009b7c] p-6 text-white text-center">
+      <div className="bg-gradient-to-r from-bieon-eco to-bieon-sense p-6 text-white text-center">
         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
           <ShieldCheck className="w-6 h-6" />
         </div>
@@ -41,7 +41,7 @@ export function EmailApprovalTemplate({ type = 'welcome', data = {} }) {
              </div>
              <div className="flex items-center justify-between text-xs border-b border-gray-50 pb-2">
                 <span className="text-gray-400 font-bold uppercase">{t('admin_homeowner.email_preview.lbl_status')}</span>
-                <span className={`font-black ${isDeletion ? 'text-red-500' : 'text-[#009b7c]'}`}>
+                <span className={`font-black ${isDeletion ? 'text-red-500' : 'text-bieon-eco'}`}>
                     {isDeletion ? t('admin_homeowner.email_preview.status_deleted') : t('admin_homeowner.email_preview.status_active')}
                 </span>
              </div>
@@ -65,7 +65,7 @@ export function EmailApprovalTemplate({ type = 'welcome', data = {} }) {
 
         <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#009b7c] rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-full animate-pulse"></div>
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">{t('admin_homeowner.email_preview.footer_system')}</span>
             </div>
             <img src="/logo_bieon.png" alt="BIEON" className="h-4 opacity-50 grayscale" />

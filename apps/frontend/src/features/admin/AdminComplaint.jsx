@@ -43,13 +43,13 @@ const SLADisplay = ({ createdAt, assignedAt, processStartedAt, status }) => {
     if (!timer) return null;
 
     const colors = {
-        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+        emerald: 'bg-bieon-eco/10 text-bieon-eco border-bieon-eco/20',
         amber: 'bg-amber-50 text-amber-600 border-amber-100',
         red: 'bg-red-50 text-red-600 border-red-100'
     };
 
     const dotColors = {
-        emerald: 'bg-emerald-500',
+        emerald: 'bg-bieon-eco',
         amber: 'bg-amber-400',
         red: 'bg-red-500'
     };
@@ -171,7 +171,7 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
                                 if (btn.action === 'reassign') handleTransfer(item);
                             }}
                             className={`px-4 py-2 rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1 whitespace-nowrap ${
-                                btn.action === 'detail' ? 'bg-[#009B7C] text-white' :
+                                btn.action === 'detail' ? 'bg-gradient-to-r from-bieon-eco to-bieon-sense text-white' :
                                 btn.action === 'reject' ? 'bg-red-50 text-red-600 border border-red-100' :
                                 btn.action === 'ping' ? 'bg-red-500 text-white shadow-lg shadow-red-100' :
                                 btn.variant === 'primary' ? 'bg-blue-600 text-white' :
@@ -316,7 +316,7 @@ export default function AdminComplaint({ onNavigate }) {
         
         // Header PDF
         doc.setFontSize(18);
-        doc.setTextColor(0, 155, 124); // Admin Teal #009B7C
+        doc.setTextColor(0, 155, 124); // Admin Teal #059b27
         doc.text(t('export.admin_report_title', 'BIEON - Laporan Pengaduan Pelanggan'), 14, 22);
         
         doc.setFontSize(11);
@@ -487,7 +487,7 @@ export default function AdminComplaint({ onNavigate }) {
     const handleExportSingleDetailPDF = (ticket) => {
         if (!ticket) return;
         const doc = new jsPDF('portrait');
-        const primaryColor = [0, 155, 124]; // Admin Teal #009B7C
+        const primaryColor = [0, 155, 124]; // Admin Teal #059b27
         
         // Header & Logo Branding
         doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -777,7 +777,7 @@ export default function AdminComplaint({ onNavigate }) {
             case 'diproses': return 'bg-blue-50 text-blue-600 border-blue-100';
             case 'overdue perbaikan': return 'bg-blue-50 text-red-600 border-blue-200 font-bold';
             case 'menunggu konfirmasi pelanggan': return 'bg-indigo-50 text-indigo-600 border-indigo-100';
-            case 'selesai': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
+            case 'selesai': return 'bg-bieon-eco/10 text-bieon-eco border-bieon-eco/20';
             case 'ditolak': return 'bg-red-50 text-red-700 border-red-200';
             default: return 'bg-gray-50 text-gray-500 border-gray-100';
         }
@@ -793,7 +793,7 @@ export default function AdminComplaint({ onNavigate }) {
             case 'diproses': return 'bg-blue-500';
             case 'overdue perbaikan': return 'bg-red-500';
             case 'menunggu konfirmasi pelanggan': return 'bg-indigo-500';
-            case 'selesai': return 'bg-emerald-500';
+            case 'selesai': return 'bg-bieon-eco';
             case 'ditolak': return 'bg-red-500';
             default: return 'bg-gray-400';
         }
@@ -973,10 +973,10 @@ export default function AdminComplaint({ onNavigate }) {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
                     {stats.map((stat, idx) => (
                         <div key={idx} className={`bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden flex flex-col justify-between min-h-[110px] md:min-h-[140px] ${stat.color === 'red' ? 'border-red-100 shadow-red-50/50' : 'border-gray-100 shadow-sm'}`}>
-                            <div className={`absolute top-0 right-0 w-16 h-16 md:w-24 md:h-24 blur-2xl md:blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-emerald-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
+                            <div className={`absolute top-0 right-0 w-16 h-16 md:w-24 md:h-24 blur-2xl md:blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-bieon-eco' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
 
                             <div className="relative z-10 flex items-center gap-2 md:gap-3 mb-2 md:mb-0">
-                                <div className={`p-2 md:p-2.5 rounded-lg md:rounded-xl shrink-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+                                <div className={`p-2 md:p-2.5 rounded-lg md:rounded-xl shrink-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-bieon-eco/10 text-bieon-eco' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
                                     <stat.icon className="w-4 h-4 md:w-5 md:h-5" />
                                 </div>
 
@@ -991,7 +991,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     )}
                                 </h3>
 
-                                <div className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold border transition-colors whitespace-nowrap mt-1 md:mt-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                <div className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold border transition-colors whitespace-nowrap mt-1 md:mt-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-bieon-eco/10 text-bieon-eco border-bieon-eco/20' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                                     {stat.trend}
                                 </div>
                             </div>
@@ -1008,20 +1008,20 @@ export default function AdminComplaint({ onNavigate }) {
                             </div>
                             <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto">
                                 <div className="relative flex-1 group min-w-0">
-                                    <Search className="w-4 h-4 md:w-4 md:h-4 absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#009B7C] transition-colors" />
+                                    <Search className="w-4 h-4 md:w-4 md:h-4 absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-bieon-eco transition-colors" />
                                     <input
                                         type="text"
                                         placeholder={t('table.search_placeholder', 'Cari tiket...')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-10 md:pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-semibold text-gray-800 placeholder:font-medium placeholder:text-gray-400 focus:outline-none focus:border-[#009B7C] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all truncate"
+                                        className="w-full pl-10 md:pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-semibold text-gray-800 placeholder:font-medium placeholder:text-gray-400 focus:outline-none focus:border-bieon-eco focus:bg-white focus:ring-4 focus:ring-bieon-eco/10 transition-all truncate"
                                     />
                                 </div>
 
                                 <div className="relative shrink-0">
                                     <button
                                         onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                                        className={`flex items-center justify-center gap-2 px-3.5 md:px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
+                                        className={`flex items-center justify-center gap-2 px-3.5 md:px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showStatusDropdown ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-100 hover:bg-gray-50'}`}
                                     >
                                         <Filter className="w-4 h-4 text-gray-400" />
                                         <span className="hidden md:block">{selectedStatusFilter ? formatStatusDisplay(selectedStatusFilter, 'admin') : t('table.all_status', 'Semua Status')}</span>
@@ -1040,7 +1040,7 @@ export default function AdminComplaint({ onNavigate }) {
                                                     <button
                                                         key={s}
                                                         onClick={() => { setSelectedStatusFilter(s); setShowStatusDropdown(false); setCurrentPage(1); }}
-                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedStatusFilter === s ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-400 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedStatusFilter === s ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-400 hover:bg-gray-50'}`}
                                                     >
                                                         {s ? formatStatusDisplay(s, 'admin') : t('table.all_status', 'Semua Status')}
                                                     </button>
@@ -1053,14 +1053,14 @@ export default function AdminComplaint({ onNavigate }) {
                                 <div className="relative shrink-0">
                                     <button
                                         onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                        className={`flex items-center justify-center gap-2 px-3.5 md:px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showCategoryDropdown ? 'border-[#009B7C] ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-50'}`}
+                                        className={`flex items-center justify-center gap-2 px-3.5 md:px-5 py-3.5 bg-white border rounded-2xl text-sm font-medium transition-all shadow-sm ${showCategoryDropdown ? 'border-bieon-eco ring-4 ring-bieon-eco/10' : 'border-gray-100 hover:bg-gray-50'}`}
                                     >
                                         <Activity className="w-4 h-4 text-gray-400" />
                                         <span className="hidden md:block">{selectedCategoryFilter ? t(`complaint.category_${selectedCategoryFilter.toLowerCase().replace(/\s+/g, '_')}`, selectedCategoryFilter) : t('history.all_categories', 'Semua Kategori')}</span>
                                         <ChevronDown className={`w-3.5 h-3.5 text-gray-400 hidden md:block transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
 
                                         {selectedCategoryFilter && (
-                                            <span className="md:hidden absolute top-2.5 right-2 w-2 h-2 bg-[#009B7C] rounded-full border border-white"></span>
+                                            <span className="md:hidden absolute top-2.5 right-2 w-2 h-2 bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-full border border-white"></span>
                                         )}
                                     </button>
 
@@ -1072,7 +1072,7 @@ export default function AdminComplaint({ onNavigate }) {
                                                     <button
                                                         key={cat}
                                                         onClick={() => { setSelectedCategoryFilter(cat); setShowCategoryDropdown(false); setCurrentPage(1); }}
-                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedCategoryFilter === cat ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-400 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-5 py-2.5 text-xs font-bold transition-colors ${selectedCategoryFilter === cat ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-400 hover:bg-gray-50'}`}
                                                     >
                                                         {cat ? t(`complaint.category_${cat.toLowerCase().replace(/\s+/g, '_')}`, cat) : t('history.all_categories', 'Semua Kategori')}
                                                     </button>
@@ -1084,7 +1084,7 @@ export default function AdminComplaint({ onNavigate }) {
 
                                 <button
                                     onClick={handleExport}
-                                    className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-[#E1F2EB] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
+                                    className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-[#e8f9fb] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
                                 >
                                     <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
                                     <span className="hidden md:block">{t('table.export', 'Ekspor')}</span>
@@ -1129,7 +1129,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     <tr>
                                         <td colSpan={8} className="px-8 py-20 text-center">
                                             <div className="flex flex-col items-center justify-center gap-4">
-                                                <div className="w-10 h-10 border-4 border-gray-100 border-t-[#009B7C] rounded-full animate-spin"></div>
+                                                <div className="w-10 h-10 border-4 border-gray-100 border-t-bieon-eco rounded-full animate-spin"></div>
                                                 <p className="text-sm font-bold text-gray-500 animate-pulse">Menarik Data dari Database...</p>
                                             </div>
                                         </td>
@@ -1176,7 +1176,7 @@ export default function AdminComplaint({ onNavigate }) {
                                 {showRowsDropdown && (
                                     <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
                                     {[5, 10, 30, 50].map(val => (
-                                            <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
+                                            <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
                                         ))}
                                     </div>
                                 )}
@@ -1237,7 +1237,7 @@ export default function AdminComplaint({ onNavigate }) {
 
                                 <div className="flex gap-2">
                                     <button
-                                        className="flex-1 py-3 bg-[#009B7C] text-white font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-[#008268] transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2"
+                                        className="flex-1 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white font-bold rounded-xl text-[10px] uppercase tracking-wider hover:brightness-105 transition-all shadow-md shadow-bieon-eco/15 flex items-center justify-center gap-2"
                                         onClick={() => handleLogAction(selectedTicket.id, true)}
                                     >
                                         <ShieldCheck className="w-3.5 h-3.5" /> {t('complaint.action.admin.accept_access', 'Terima Akses')}
@@ -1263,7 +1263,7 @@ export default function AdminComplaint({ onNavigate }) {
                                         }
                                     });
                                 }}
-                                className="w-full py-3 bg-white border border-emerald-200 text-emerald-700 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+                                className="w-full py-3 bg-white border border-bieon-sense/25 text-bieon-eco font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-bieon-eco/10 transition-all flex items-center justify-center gap-2 shadow-sm"
                             >
                                 <Activity className="w-3.5 h-3.5" /> {t('complaint.action.technician.log_status_accepted', 'Lihat Data Log')}
                             </button>
@@ -1310,7 +1310,7 @@ export default function AdminComplaint({ onNavigate }) {
                                     }}
                                     className="w-full py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                                 >
-                                    <MessageSquare className="w-3.5 h-3.5 text-[#009B7C]" /> {t('complaint.action.admin.chat_tech', 'Chat Teknisi')} (WA)
+                                    <MessageSquare className="w-3.5 h-3.5 text-bieon-eco" /> {t('complaint.action.admin.chat_tech', 'Chat Teknisi')} (WA)
                                 </button>
                             )}
 
@@ -1318,7 +1318,7 @@ export default function AdminComplaint({ onNavigate }) {
                             {['selesai', 'ditolak'].includes(selectedTicket?.status?.toLowerCase()) && (
                                 <button
                                     onClick={() => handleExportSingleDetailPDF(selectedTicket)}
-                                    className="w-full py-4 bg-white border-2 border-emerald-100 text-emerald-700 font-bold rounded-2xl text-[11px] uppercase tracking-wider hover:bg-emerald-50 transition-all shadow-sm flex items-center justify-center gap-2 group active:scale-95"
+                                    className="w-full py-4 bg-white border-2 border-bieon-eco/20 text-bieon-eco font-bold rounded-2xl text-[11px] uppercase tracking-wider hover:bg-bieon-eco/10 transition-all shadow-sm flex items-center justify-center gap-2 group active:scale-95"
                                 >
                                     <Download className="w-4 h-4 group-hover:animate-bounce" /> {t('complaint.detail_box.export_pdf', 'Ekspor Detail Pengaduan (PDF)')}
                                 </button>
@@ -1351,7 +1351,7 @@ export default function AdminComplaint({ onNavigate }) {
                     height: 8px;
                     width: 24px;
                     border-radius: 999px;
-                    background: #009B7C;
+                    background: #059b27;
                     cursor: pointer;
                     box-shadow: 0 0 5px rgba(0,0,0,0.2);
                     transition: all 0.1s;
