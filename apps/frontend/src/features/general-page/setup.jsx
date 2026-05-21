@@ -303,7 +303,7 @@ const Setup = ({ tempData }) => {
     };
 
     return (
-        <div className="h-[100dvh] bg-slate-50 flex font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white">
+        <div className="h-[100dvh] bg-white flex font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white">
             {/* Floating Language Switcher */}
             <div className="absolute top-6 right-6 z-50">
                 <div className="flex items-center bg-white/40 backdrop-blur-md p-0.5 rounded-xl border border-white/40 shadow-sm select-none">
@@ -424,19 +424,26 @@ const Setup = ({ tempData }) => {
             />
 
             <div className="hidden lg:block w-[45%] xl:w-[50%] p-4 pl-0">
-                <div className="w-full h-full rounded-[2.5rem] overflow-hidden relative shadow-md bg-slate-100">
-                    <img
-                        key={step}
-                        src={step === 2 ? '/gambar235.png' : `/gambar${step}.png`}
-                        alt={`BIEON Setup Step ${step}`}
-                        className={`transition-all duration-700 ease-in-out animate-in fade-in zoom-in-95 ${
-                            step === 2
-                                ? 'object-contain w-auto h-full mx-auto rounded-[2rem]'
-                                : 'w-full h-full object-center object-cover p-0'
-                        }`}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent mix-blend-overlay pointer-events-none"></div>
-                </div>
+                {step === 2 ? (
+                    <div className="w-full h-full flex items-center justify-center bg-transparent">
+                        <img
+                            key={step}
+                            src="/gambar235.png"
+                            alt="BIEON Setup Step 2"
+                            className="max-h-full max-w-full object-contain rounded-[2.5rem] transition-all duration-700 ease-in-out animate-in fade-in zoom-in-95"
+                        />
+                    </div>
+                ) : (
+                    <div className="w-full h-full rounded-[2.5rem] overflow-hidden relative shadow-md bg-slate-100">
+                        <img
+                            key={step}
+                            src={`/gambar${step}.png`}
+                            alt={`BIEON Setup Step ${step}`}
+                            className="w-full h-full object-center object-cover p-0 transition-all duration-700 ease-in-out animate-in fade-in zoom-in-95"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent mix-blend-overlay pointer-events-none"></div>
+                    </div>
+                )}
             </div>
         </div>
     );
