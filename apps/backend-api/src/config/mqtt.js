@@ -15,6 +15,7 @@ const alertService = require('../services/alertService');
 const AuthEvent = require('../models/AuthEvent');
 const BieonSystem = require('../models/BieonSystem');
 const Hub = require('../models/Hub');
+const { findOneByBieonId, normalizeBieonId } = require('../shared/bieonId');
 
 let mqttClient = null;
 let ioInstance = null;
@@ -632,12 +633,13 @@ const handleHierarchicalTelemetry = async (tenantId, bieonId, hubId, deviceId, p
     console.log(`[DEBUG] Checking hierarchy for Bieon: ${bieonId}, Hub: ${hubId}`);
 
     // 1. BieonSystem
-    let system = await BieonSystem.findOne({ bieonId: bieonId });
+    const canonicalBieonId = normalizeBieonId(bieonId) || bieonId;
+    let system = await findOneByBieonId(BieonSystem, bieonId);
     if (!system) {
         console.log(`[DEBUG] ➕ BieonSystem ${bieonId} NOT FOUND. Creating now...`);
         try {
             const newSystem = new BieonSystem({
-                bieonId: bieonId,
+                bieonId: canonicalBieonId,
                 owner: device.owner,
                 status: 'Active'
             });

@@ -4,6 +4,7 @@ const Alert = require('../models/Alert');
 const Hub = require('../models/Hub');
 const KendaliPerangkat = require('../models/KendaliPerangkat');
 const mongoose = require('mongoose');
+const { bieonIdFilter } = require('../shared/bieonId');
 
 // [Homeowner] CREATE COMPLAINT
 exports.createComplaint = async (req, res) => {
@@ -139,7 +140,7 @@ exports.getAllComplaints = async (req, res) => {
 
         // 2. Add BIEON Filter if requested
         if (bieonId && bieonId !== '') {
-            const hubs = await Hub.find({ bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') } }).select('_id');
+            const hubs = await Hub.find(bieonIdFilter(bieonId)).select('_id');
             const hubIds = hubs.map(h => h._id);
             
             // Cari nama-nama perangkat yang mungkin terkait dengan Hub ini (untuk data lama)

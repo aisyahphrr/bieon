@@ -145,6 +145,8 @@ export function DeviceControlPage({ onNavigate }) {
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
   const [discardingDevices, setDiscardingDevices] = useState({}); // { deviceId: seconds }
+  const [pendingOpenJoinDevice, setPendingOpenJoinDevice] = useState(null);
+  const [pendingOpenJoinAction, setPendingOpenJoinAction] = useState(null); // 'save' | 'configure'
 
   // Efek Hitung Mundur untuk Pembuangan Perangkat
   useEffect(() => {
@@ -193,7 +195,7 @@ export function DeviceControlPage({ onNavigate }) {
       setJoinedDevicesPool(prev => prev.filter(id => id !== deviceId));
       setDiscoveredDevices(prev => prev.filter(dev => dev.id !== deviceId));
     } else {
-      setJoinedDevicesPool(prev => [...prev, deviceId]);
+      setJoinedDevicesPool(prev => prev.includes(deviceId) ? prev : [...prev, deviceId]);
     }
   };
 
@@ -768,6 +770,53 @@ export function DeviceControlPage({ onNavigate }) {
     setDeviceForm({ name: deviceType === "other" ? "" : deviceType, location: "", notes: "" });
     setStep("add-device-form");
   };
+
+  const initOpenJoinDeviceConfiguration = (dev, action = "configure") => {
+    setPendingOpenJoinDevice(dev);
+    setPendingOpenJoinAction(action);
+    setSelectedCategory("");
+    setSelectedDeviceType("");
+    setSelectedProduct(null);
+    setDeviceForm({ name: dev.name || "", location: "", notes: "" });
+    // Keep the Open Join popup open and ask category selection inline
+  };
+
+  const determineSensorAspect = (dev) => {
+    const nameLower = (dev.name || "").toLowerCase();
+    const typeLower = (dev.type || "").toLowerCase();
+    if (nameLower.includes("bluecheck") || typeLower.includes("water") || typeLower.includes("air")) return "kualitasAir";
+    if (nameLower.includes("airguard") || typeLower.includes("th") || typeLower.includes("humidity") || nameLower.includes("kenyamanan")) return "kenyamanan";
+    if (nameLower.includes("motion") || nameLower.includes("keamanan") || nameLower.includes("door")) return "keamanan";
+    return "kenyamanan";
+  };
+
+  const handleOpenJoinCategorySelection = async (category) => {
+    if (!pendingOpenJoinDevice) return;
+
+    if (pendingOpenJoinAction === "save") {
+      await handleQuickSave(pendingOpenJoinDevice, category);
+      setPendingOpenJoinDevice(null);
+      setPendingOpenJoinAction(null);
+      return;
+    }
+
+    setSelectedCategory(category);
+    const defaultType = category === "sensor"
+      ? pendingOpenJoinDevice.type || "Sensor"
+      : pendingOpenJoinDevice.type || "Control Actuator";
+    setSelectedDeviceType(defaultType);
+    setSelectedProduct({ id: pendingOpenJoinDevice.id });
+    setDeviceForm(prev => ({ ...prev, name: pendingOpenJoinDevice.name || defaultType, location: "", notes: "" }));
+    if (category === "sensor") {
+      setActiveSensorAspect(determineSensorAspect(pendingOpenJoinDevice));
+    } else {
+      setActiveSensorAspect(null);
+    }
+    setStep("add-device-form");
+    setPendingOpenJoinDevice(null);
+    setPendingOpenJoinAction(null);
+  };
+
   const handleAddRoom = (targetType = null) => {
     if (!newRoomInput.trim()) return;
     const roomName = newRoomInput.trim();
@@ -1012,24 +1061,30 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
 
-  const handleQuickSave = async (dev) => {
+  const handleQuickSave = async (dev, chosenCategory = null) => {
     if (!currentBieon || !selectedHub) return;
 
     try {
       const token = localStorage.getItem('token');
 
-      // Mapping Spesifik berdasarkan instruksi Boss
+      const actionCategory = chosenCategory || (dev.type?.toLowerCase().includes("plug") ? "control" : "sensor");
       const isAirguard = dev.id.includes("SNZB-02DR2") || dev.id.includes("SNZB_02DR2");
       const isSmartPlug = dev.id.includes("S60BTPF") || dev.id.includes("S60ZBTPF");
       const isBluecheck = dev.id.toLowerCase().includes("bluecheck") || dev.name.toLowerCase().includes("bluecheck");
 
-      let category = isSmartPlug ? "control" : "sensor";
+      let category = actionCategory;
       let aspect = "kenyamanan";
-      if (isAirguard) aspect = "kenyamanan";
-      else if (isSmartPlug) aspect = "smart-plug";
-      else if (isBluecheck) aspect = "kualitasAir";
+      if (chosenCategory) {
+        if (category === "control") aspect = dev.type.toLowerCase().includes("plug") ? "smart-plug" : "smart-switch";
+        else aspect = determineSensorAspect(dev);
+      } else {
+        if (isAirguard) aspect = "kenyamanan";
+        else if (isSmartPlug) category = "control", aspect = "smart-plug";
+        else if (isBluecheck) aspect = "kualitasAir";
+      }
 
-      const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(category, dev.type, "manual", aspect);
+      const typeLabel = actionCategory === "sensor" ? (dev.type || "Sensor") : (dev.type || "Control Actuator");
+      const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(category, typeLabel, "manual", aspect);
 
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
       const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
@@ -1115,9 +1170,14 @@ export function DeviceControlPage({ onNavigate }) {
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
       const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
 
+      const productIdValue = selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || null;
+      if (!productIdValue) {
+        throw new Error('Product ID tidak tersedia untuk perangkat ini');
+      }
+
       const deviceData = {
         name: deviceForm.name,
-        productId: selectedProduct?.productId || selectedProduct?.id || null, // Tambahkan ID Teknis Asli
+        productId: productIdValue,
         deviceType: backendType,
         category: backendCategory,
         location: deviceForm.location,
@@ -2788,16 +2848,29 @@ export function DeviceControlPage({ onNavigate }) {
                             originalProduct: p
                           })) || [];
 
+                        const allCandidates = [];
+                        const seenIds = new Set();
+                        const pushUnique = (item) => {
+                          const id = item.id || item.productId || item.dbId;
+                          if (!id || seenIds.has(id)) return;
+                          seenIds.add(id);
+                          allCandidates.push(item);
+                        };
+
+                        fromScan.forEach(pushUnique);
+                        quickSaved.forEach(pushUnique);
+                        registeredUnused.forEach(pushUnique);
+
                         return (
                           <div className="space-y-3">
-                            {fromScan.length === 0 && !isScanning && !scanAttempted && (
+                            {allCandidates.length === 0 && !isScanning && !scanAttempted && (
                               <div className="flex flex-col items-center justify-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
                                 <p className="text-sm text-gray-400 italic">Menunggu perangkat bergabung...</p>
                                 <p className="text-[10px] text-gray-300 mt-2 text-center px-6">Klik tombol Buka Open Join untuk mulai mendeteksi perangkat baru.</p>
                               </div>
                             )}
 
-                            {isScanning && fromScan.length === 0 && (
+                            {isScanning && allCandidates.length === 0 && (
                               <div className="flex flex-col items-center justify-center py-10 bg-bieon-eco/5/30 rounded-3xl border border-dashed border-bieon-eco/30 animate-pulse">
                                 <div className="relative w-12 h-12 mb-3">
                                   <div className="absolute inset-0 bg-bieon-eco/20 rounded-full animate-ping" />
@@ -2822,7 +2895,7 @@ export function DeviceControlPage({ onNavigate }) {
                             )}
 
                             <div className="grid gap-3">
-                              {[...fromScan, ...quickSaved, ...registeredUnused].map((dev) => {
+                              {allCandidates.map((dev) => {
                                 const isJoined = joinedDevicesPool.includes(dev.id) || dev.isFromDb;
                                 const isSensor = (dev.type || "").toLowerCase().includes("sensor") || 
                                                  registeredProducts.find(p => p.productId === dev.id)?.category === 'sensor';
@@ -3033,94 +3106,65 @@ export function DeviceControlPage({ onNavigate }) {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => handleQuickSave(dev)}
-                                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-lg transition-all border border-white/20"
-                                    >
-                                      Simpan
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        // Cari produk yang cocok di registeredProducts
-                                        let product = registeredProducts.find(p => deviceId.startsWith(p.productId));
-
-                                        // Mapping Spesifik berdasarkan instruksi Boss
-                                        const isAirguard = deviceId.includes("SNZB-02DR2") || deviceId.includes("SNZB_02DR2");
-                                        const isSmartPlug = deviceId.includes("S60BTPF") || deviceId.includes("S60ZBTPF");
-                                        const isBluecheck = deviceId.toLowerCase().includes("bluecheck") || dev.name.toLowerCase().includes("bluecheck");
-
-                                        // Jika tidak ada di registeredProducts, buat objek produk otomatis
-                                        if (!product) {
-                                          let category = "sensor";
-                                          let aspect = "";
-
-                                          if (isAirguard) {
-                                            category = "sensor";
-                                            aspect = "kenyamanan";
-                                          } else if (isBluecheck) {
-                                            category = "sensor";
-                                            aspect = "air";
-                                          } else if (isSmartPlug) {
-                                            category = "control";
-                                            aspect = "smart-plug"; // Pakai ENUM yang valid di backend
-                                          } else {
-                                            category = dev.type.toLowerCase().includes("sensor") ? "sensor" : "control";
-                                            if (category === "sensor") {
-                                              if (dev.type.includes("TH")) aspect = "kenyamanan";
-                                              else if (dev.type.includes("Water")) aspect = "air";
-                                              else aspect = "keamanan";
-                                            } else {
-                                              aspect = dev.type.toLowerCase().includes("plug") ? "smart-plug" : "smart-switch";
-                                            }
-                                          }
-
-                                          product = {
-                                            productId: deviceId, // Pakai ID lengkap biar UNIK di database
-                                            productName: dev.name,
-                                            category: category,
-                                            aspect: aspect
-                                          };
-                                        }
-
-                                        setSelectedProduct(product);
-                                        setSelectedCategory(product.category);
-                                        setSelectedDeviceType(product.productName);
-                                        setDeviceForm(prev => ({
-                                          ...prev,
-                                          name: product.productName,
-                                          customId: deviceId
-                                        }));
-
-                                        // Set Active Aspect for Config Step
-                                        if (isBluecheck || (product.category === "sensor" && product.aspect === "air")) {
-                                          setActiveSensorAspect("kualitasAir");
-                                        } else if (isAirguard || (product.category === "sensor" && product.aspect === "kenyamanan")) {
-                                          setActiveSensorAspect("kenyamanan");
-                                        } else if (product.category === "sensor" && product.aspect === "keamanan") {
-                                          setActiveSensorAspect("keamanan");
-                                        }
-
-                                        setStep("add-device-form");
-                                      }}
-                                      className="px-3 py-1.5 bg-white hover:bg-bieon-eco/5 text-bieon-eco text-[10px] font-bold rounded-lg transition-all shadow-sm"
-                                    >
-                                      Atur
-                                    </button>
+                                    {pendingOpenJoinDevice?.id === dev.id ? (
+                                      <>
+                                        <select
+                                          key={`${dev.id}-${pendingOpenJoinAction}`}
+                                          defaultValue=""
+                                          onChange={(e) => {
+                                            const category = e.target.value;
+                                            if (category) handleOpenJoinCategorySelection(category);
+                                          }}
+                                          className="px-2.5 py-1.5 bg-white text-gray-800 text-[10px] font-bold rounded-lg outline-none cursor-pointer min-w-[7.5rem] max-w-[9rem]"
+                                          aria-label="Pilih kategori perangkat"
+                                        >
+                                          <option value="" disabled>
+                                            {pendingOpenJoinAction === "save" ? "Simpan sebagai…" : "Atur sebagai…"}
+                                          </option>
+                                          <option value="sensor">Sensor</option>
+                                          <option value="control">Control Aktuator</option>
+                                        </select>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setPendingOpenJoinDevice(null);
+                                            setPendingOpenJoinAction(null);
+                                          }}
+                                          className="px-2 py-1.5 text-white/70 hover:text-white text-[10px] font-bold"
+                                        >
+                                          Batal
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => initOpenJoinDeviceConfiguration(dev, "save")}
+                                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-lg transition-all border border-white/20"
+                                        >
+                                          Simpan
+                                        </button>
+                                        <button
+                                          onClick={() => initOpenJoinDeviceConfiguration(dev, "configure")}
+                                          className="px-3 py-1.5 bg-white hover:bg-bieon-eco/5 text-bieon-eco text-[10px] font-bold rounded-lg transition-all shadow-sm"
+                                        >
+                                          Atur
+                                        </button>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
 
+                          <div className="mt-4 flex items-start gap-2">
+                            <span className="text-yellow-500 text-xs">✨</span>
+                            <p className="text-[10px] text-gray-400 italic leading-relaxed">
+                              Device baru akan otomatis muncul dan dipisahkan berdasarkan tipe (Sensor/Aktuator) saat bergabung.
+                            </p>
+                          </div>
                         </div>
                       )}
-
-                      <div className="mt-6 flex items-start gap-2">
-                        <span className="text-yellow-500 text-xs">✨</span>
-                        <p className="text-[10px] text-gray-400 italic leading-relaxed">
-                          Device baru akan otomatis muncul dan dipisahkan berdasarkan tipe (Sensor/Aktuator) saat bergabung.
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </div>

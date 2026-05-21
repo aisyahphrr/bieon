@@ -6,6 +6,7 @@ const Activity = require('../models/Activity');
 const Alert = require('../models/Alert');
 const User = require('../models/User');
 const PlnTariff = require('../models/PlnTariff');
+const { bieonIdFilter } = require('../shared/bieonId');
 
 /**
  * Helper to get homeownerId based on user role
@@ -41,7 +42,7 @@ const buildHistoryQuery = async (req, ownerField = 'owner') => {
         const KendaliPerangkat = require('../models/KendaliPerangkat');
         
         // 1. Cari Hub ID berdasarkan BIEON ID
-        const hubs = await Hub.find({ bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') } }).select('_id');
+        const hubs = await Hub.find(bieonIdFilter(bieonId)).select('_id');
         const hubIds = hubs.map(h => h._id);
         
         if (hubIds.length > 0) {
@@ -215,7 +216,7 @@ exports.getEnergySummary = async (req, res) => {
         let hubIds = [];
         if (bieonId) {
             const Hub = require('../models/Hub');
-            const hubs = await Hub.find({ bieonId }).select('_id');
+            const hubs = await Hub.find(bieonIdFilter(bieonId)).select('_id');
             hubIds = hubs.map(h => h._id);
         }
         
