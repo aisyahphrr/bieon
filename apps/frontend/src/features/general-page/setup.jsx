@@ -337,14 +337,14 @@ const Setup = ({ tempData }) => {
             <div className="absolute bottom-[-10%] right-[-5%] w-[35%] h-[45%] bg-blue-200/20 rounded-full mix-blend-multiply filter blur-[100px] animate-[pulse_12s_ease-in-out_infinite] delay-1000 z-0 pointer-events-none"></div>
             <div className="absolute top-[20%] right-[10%] w-[25%] h-[30%] bg-emerald-100/20 rounded-full mix-blend-multiply filter blur-[80px] animate-[pulse_15s_ease-in-out_infinite] delay-2000 z-0 pointer-events-none"></div>
 
-            <div className="flex-1 flex flex-col px-6 md:px-16 py-10 overflow-y-auto relative z-10 bg-white/70 backdrop-blur-2xl">
-                <div className="mb-12">
+            <div className="flex-1 flex flex-col px-6 md:px-16 py-6 overflow-hidden relative z-10 bg-white/70 backdrop-blur-2xl">
+                <div className="mb-6">
                     <img src="/logo_bieon.png" alt="BIEON" className="h-[28px] object-contain" />
                 </div>
 
                 <div className="w-full max-w-md mx-auto">
                     {/* High-end Stepper UI */}
-                    <div className="mb-14 relative px-2">
+                    <div className="mb-8 relative px-2">
                         <div className="flex items-center justify-between relative z-10">
                             {[1, 2, 3].map((num) => (
                                 <div key={num} className="flex flex-col items-center">
@@ -424,12 +424,12 @@ const Setup = ({ tempData }) => {
             />
 
             <div className="hidden lg:block w-[45%] xl:w-[50%] p-4 pl-0">
-                {step === 2 ? (
+                {step === 2 || step === 3 ? (
                     <div className="w-full h-full flex items-center justify-center bg-transparent">
                         <img
                             key={step}
-                            src="/gambar235.png"
-                            alt="BIEON Setup Step 2"
+                            src={step === 2 ? '/gambar235.png' : '/gambar3.png'}
+                            alt={`BIEON Setup Step ${step}`}
                             className="max-h-full max-w-full object-contain rounded-[2.5rem] transition-all duration-700 ease-in-out animate-in fade-in zoom-in-95"
                         />
                     </div>
