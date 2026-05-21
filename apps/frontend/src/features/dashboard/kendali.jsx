@@ -145,6 +145,8 @@ export function DeviceControlPage({ onNavigate }) {
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
   const [discardingDevices, setDiscardingDevices] = useState({}); // { deviceId: seconds }
+  const [pendingOpenJoinDevice, setPendingOpenJoinDevice] = useState(null);
+  const [pendingOpenJoinAction, setPendingOpenJoinAction] = useState(null); // 'save' | 'configure'
 
   // Efek Hitung Mundur untuk Pembuangan Perangkat
   useEffect(() => {
@@ -193,7 +195,7 @@ export function DeviceControlPage({ onNavigate }) {
       setJoinedDevicesPool(prev => prev.filter(id => id !== deviceId));
       setDiscoveredDevices(prev => prev.filter(dev => dev.id !== deviceId));
     } else {
-      setJoinedDevicesPool(prev => [...prev, deviceId]);
+      setJoinedDevicesPool(prev => prev.includes(deviceId) ? prev : [...prev, deviceId]);
     }
   };
 
@@ -642,10 +644,11 @@ export function DeviceControlPage({ onNavigate }) {
     setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
     setCurrentBieon(updatedBieon);
   };
-  const handleSelectHub = (hub) => {
+  const handleSelectHub = async (hub) => {
     resetForm();
     setSelectedHub(hub);
     setStep("add-device-choice");
+    await fetchRegisteredProducts();
   };
 
   const fetchRegisteredProducts = async () => {
@@ -768,6 +771,53 @@ export function DeviceControlPage({ onNavigate }) {
     setDeviceForm({ name: deviceType === "other" ? "" : deviceType, location: "", notes: "" });
     setStep("add-device-form");
   };
+
+  const initOpenJoinDeviceConfiguration = (dev, action = "configure") => {
+    setPendingOpenJoinDevice(dev);
+    setPendingOpenJoinAction(action);
+    setSelectedCategory("");
+    setSelectedDeviceType("");
+    setSelectedProduct(null);
+    setDeviceForm({ name: dev.name || "", location: "", notes: "" });
+    // Keep the Open Join popup open and ask category selection inline
+  };
+
+  const determineSensorAspect = (dev) => {
+    const nameLower = (dev.name || "").toLowerCase();
+    const typeLower = (dev.type || "").toLowerCase();
+    if (nameLower.includes("bluecheck") || typeLower.includes("water") || typeLower.includes("air")) return "kualitasAir";
+    if (nameLower.includes("airguard") || typeLower.includes("th") || typeLower.includes("humidity") || nameLower.includes("kenyamanan")) return "kenyamanan";
+    if (nameLower.includes("motion") || nameLower.includes("keamanan") || nameLower.includes("door")) return "keamanan";
+    return "kenyamanan";
+  };
+
+  const handleOpenJoinCategorySelection = async (category) => {
+    if (!pendingOpenJoinDevice) return;
+
+    if (pendingOpenJoinAction === "save") {
+      await handleQuickSave(pendingOpenJoinDevice, category);
+      setPendingOpenJoinDevice(null);
+      setPendingOpenJoinAction(null);
+      return;
+    }
+
+    setSelectedCategory(category);
+    const defaultType = category === "sensor"
+      ? pendingOpenJoinDevice.type || "Sensor"
+      : pendingOpenJoinDevice.type || "Control Actuator";
+    setSelectedDeviceType(defaultType);
+    setSelectedProduct({ id: pendingOpenJoinDevice.id });
+    setDeviceForm(prev => ({ ...prev, name: pendingOpenJoinDevice.name || defaultType, location: "", notes: "" }));
+    if (category === "sensor") {
+      setActiveSensorAspect(determineSensorAspect(pendingOpenJoinDevice));
+    } else {
+      setActiveSensorAspect(null);
+    }
+    setStep("add-device-form");
+    setPendingOpenJoinDevice(null);
+    setPendingOpenJoinAction(null);
+  };
+
   const handleAddRoom = (targetType = null) => {
     if (!newRoomInput.trim()) return;
     const roomName = newRoomInput.trim();
@@ -1002,6 +1052,8 @@ export function DeviceControlPage({ onNavigate }) {
       setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
       setCurrentBieon(updatedBieon);
 
+      await fetchRegisteredProducts();
+
       resetForm();
       setIsEditingDevice(null);
       setStep("view-bieon");
@@ -1012,24 +1064,30 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
 
-  const handleQuickSave = async (dev) => {
+  const handleQuickSave = async (dev, chosenCategory = null) => {
     if (!currentBieon || !selectedHub) return;
 
     try {
       const token = localStorage.getItem('token');
 
-      // Mapping Spesifik berdasarkan instruksi Boss
+      const actionCategory = chosenCategory || (dev.type?.toLowerCase().includes("plug") ? "control" : "sensor");
       const isAirguard = dev.id.includes("SNZB-02DR2") || dev.id.includes("SNZB_02DR2");
       const isSmartPlug = dev.id.includes("S60BTPF") || dev.id.includes("S60ZBTPF");
       const isBluecheck = dev.id.toLowerCase().includes("bluecheck") || dev.name.toLowerCase().includes("bluecheck");
 
-      let category = isSmartPlug ? "control" : "sensor";
+      let category = actionCategory;
       let aspect = "kenyamanan";
-      if (isAirguard) aspect = "kenyamanan";
-      else if (isSmartPlug) aspect = "smart-plug";
-      else if (isBluecheck) aspect = "kualitasAir";
+      if (chosenCategory) {
+        if (category === "control") aspect = dev.type.toLowerCase().includes("plug") ? "smart-plug" : "smart-switch";
+        else aspect = determineSensorAspect(dev);
+      } else {
+        if (isAirguard) aspect = "kenyamanan";
+        else if (isSmartPlug) category = "control", aspect = "smart-plug";
+        else if (isBluecheck) aspect = "kualitasAir";
+      }
 
-      const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(category, dev.type, "manual", aspect);
+      const typeLabel = actionCategory === "sensor" ? (dev.type || "Sensor") : (dev.type || "Control Actuator");
+      const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(category, typeLabel, "manual", aspect);
 
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
       const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
@@ -1115,9 +1173,14 @@ export function DeviceControlPage({ onNavigate }) {
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
       const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
 
+      const productIdValue = selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || null;
+      if (!productIdValue) {
+        throw new Error('Product ID tidak tersedia untuk perangkat ini');
+      }
+
       const deviceData = {
         name: deviceForm.name,
-        productId: selectedProduct?.productId || selectedProduct?.id || null, // Tambahkan ID Teknis Asli
+        productId: productIdValue,
         deviceType: backendType,
         category: backendCategory,
         location: deviceForm.location,
@@ -1182,6 +1245,8 @@ export function DeviceControlPage({ onNavigate }) {
       if (!editingId) {
         setJoinedDevicesPool(prev => prev.filter(id => id !== (selectedProduct?.productId || selectedProduct?.id)));
       }
+
+      await fetchRegisteredProducts();
 
       resetForm();
       setIsEditingDevice(null);
@@ -1379,6 +1444,7 @@ export function DeviceControlPage({ onNavigate }) {
         const matching = updatedSystems.find((s) => s.id === currentBieon.id);
         setCurrentBieon(matching || null);
       }
+      await fetchRegisteredProducts();
       alert("Perangkat berhasil dihapus dari database!");
     } catch (error) {
       alert("Error: " + error.message);
@@ -2098,6 +2164,7 @@ export function DeviceControlPage({ onNavigate }) {
                         const isRemote = (device.controlledDevice && device.controlledDevice.trim() !== "");
                         const isAnySubOn = device.controls && Object.keys(device.controls).some(key => key.endsWith('_power') && device.controls[key] === 1);
                         const isActuallyOn = String(device.status) === "1" || (isRemote && isAnySubOn);
+                        const isWaterQuality = (device.deviceType === "Kualitas Air" || device.deviceType === "Sensor Kualitas Air" || device.environmentAspect?.toLowerCase() === "kualitas air" || (device.name || "").toLowerCase().includes("bluecheck"));
 
                         return (
                           <div
@@ -2108,16 +2175,30 @@ export function DeviceControlPage({ onNavigate }) {
                             {/* Slim Header - Always visible */}
                             <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}>
                               <div className="flex items-start gap-3">
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${isActuallyOn ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-gray-900"}`}>
-                                  <Power className={`w-5 h-5 sm:w-6 sm:h-6 ${isActuallyOn ? "text-white" : "text-bieon-eco/90"}`} />
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                                  device.category?.toLowerCase() === "sensor"
+                                    ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                                    : (isActuallyOn ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-gray-900")
+                                }`}>
+                                  {device.category?.toLowerCase() === "sensor" ? (
+                                    <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                                  ) : (
+                                    <Power className={`w-5 h-5 sm:w-6 sm:h-6 ${isActuallyOn ? "text-white" : "text-bieon-eco/90"}`} />
+                                  )}
                                 </div>
                                 <div className="min-w-0">
                                   <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">{device.name}</h3>
                                   <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1">
                                     <span className="text-xs sm:text-sm font-semibold text-gray-600">{device.deviceType} • {device.location}</span>
-                                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${isActuallyOn ? "bg-bieon-eco/10 text-bieon-eco/90 shadow-sm border border-bieon-eco/30" : "bg-gray-800 text-gray-300 border border-gray-700"}`}>
-                                      {isActuallyOn ? "ON / ACTIVE" : "OFF / STANDBY"}
-                                    </span>
+                                    {device.category?.toLowerCase() === "sensor" ? (
+                                      <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-bieon-eco/10 text-bieon-eco/90 shadow-sm border border-bieon-eco/30">
+                                        MONITORING
+                                      </span>
+                                    ) : (
+                                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${isActuallyOn ? "bg-bieon-eco/10 text-bieon-eco/90 shadow-sm border border-bieon-eco/30" : "bg-gray-800 text-gray-300 border border-gray-700"}`}>
+                                        {isActuallyOn ? "ON / ACTIVE" : "OFF / STANDBY"}
+                                      </span>
+                                    )}
                                   </div>
                                   <p className="text-xs text-gray-400 mt-1 hidden sm:block">ID: {device.id} • Installed: {new Date(device.installedDate).toLocaleDateString("id-ID")}</p>
                                   {(device.notes || device.thresholds?.notes) && (
@@ -2149,54 +2230,153 @@ export function DeviceControlPage({ onNavigate }) {
                               <div className="mt-5 pt-5 border-t border-gray-100">
 
                                 {/* NEW: HASIL MONITORING REAL-TIME SECTION */}
-                                {(device.category?.toLowerCase() === 'sensor' || device.type?.toLowerCase() === 'sensor') && (
-                                  <div className="mb-8">
-                                    <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                      {/* Temperature Card */}
-                                      <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <Thermometer className="w-4 h-4 text-orange-500" />
-                                          <span className="text-xs font-bold text-gray-500">Suhu Sekarang</span>
-                                        </div>
-                                        <div className="flex items-baseline gap-1">
-                                          <span className="text-2xl font-black text-gray-900">
-                                            {device.currentValues?.temperature?.toFixed(1) || '--.-'}
-                                          </span>
-                                          <span className="text-sm font-bold text-gray-400">°C</span>
+                                {(device.category?.toLowerCase() === 'sensor' || device.type?.toLowerCase() === 'sensor') && (() => {
+                                  const hasParams = device.sensorParams && Object.keys(device.sensorParams).length > 0;
+                                  
+                                  if (isWaterQuality) {
+                                    const showPh = !hasParams || device.sensorParams?.ph !== undefined;
+                                    const showTurbidity = !hasParams || device.sensorParams?.turbidity !== undefined;
+                                    const showTds = !hasParams || device.sensorParams?.tds !== undefined;
+                                    const showWaterTemp = !hasParams || device.sensorParams?.temperature !== undefined;
+                                    
+                                    return (
+                                      <div className="mb-8 animate-in fade-in duration-500">
+                                        <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
+                                        <div className="flex flex-row gap-4 overflow-x-auto pb-2 scrollbar-thin">
+                                          {showPh && (
+                                            <div className="bg-gradient-to-br from-cyan-50 to-white p-4 rounded-2xl border border-cyan-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <Beaker className="w-4 h-4 text-cyan-500" />
+                                                <span className="text-xs font-bold text-gray-500">pH Air</span>
+                                              </div>
+                                              <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-black text-gray-900">
+                                                  {device.currentValues?.ph !== undefined ? parseFloat(device.currentValues.ph).toFixed(1) : '--.-'}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          {showTurbidity && (
+                                            <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <Waves className="w-4 h-4 text-blue-500 animate-pulse" />
+                                                <span className="text-xs font-bold text-gray-500">Kekeruhan</span>
+                                              </div>
+                                              <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-black text-gray-900">
+                                                  {device.currentValues?.turbidity !== undefined ? parseFloat(device.currentValues.turbidity).toFixed(0) : '--'}
+                                                </span>
+                                                <span className="text-sm font-bold text-gray-400 font-bold ml-1">NTU</span>
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          {showTds && (
+                                            <div className="bg-gradient-to-br from-teal-50 to-white p-4 rounded-2xl border border-teal-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <Droplets className="w-4 h-4 text-teal-500" />
+                                                <span className="text-xs font-bold text-gray-500">TDS</span>
+                                              </div>
+                                              <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-black text-gray-900">
+                                                  {device.currentValues?.tds !== undefined ? parseFloat(device.currentValues.tds).toFixed(0) : '--'}
+                                                </span>
+                                                <span className="text-sm font-bold text-gray-400 font-bold ml-1">mg/L</span>
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          {showWaterTemp && (
+                                            <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <Thermometer className="w-4 h-4 text-orange-500" />
+                                                <span className="text-xs font-bold text-gray-500">Suhu Air</span>
+                                              </div>
+                                              <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-black text-gray-900">
+                                                  {device.currentValues?.waterTemp !== undefined 
+                                                    ? parseFloat(device.currentValues.waterTemp).toFixed(1) 
+                                                    : (device.currentValues?.temperature !== undefined 
+                                                        ? parseFloat(device.currentValues.temperature).toFixed(1) 
+                                                        : '--.-')}
+                                                </span>
+                                                <span className="text-sm font-bold text-gray-400 font-bold ml-1">°C</span>
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                            <div className="flex items-center gap-2 mb-2">
+                                              <Zap className="w-4 h-4 text-bieon-eco" />
+                                              <span className="text-xs font-bold text-gray-500">Baterai Alat</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-1">
+                                              <span className="text-2xl font-black text-gray-900">
+                                                {device.battery || '--'}
+                                              </span>
+                                              <span className="text-sm font-bold text-gray-400 font-bold ml-1">%</span>
+                                            </div>
+                                          </div>
                                         </div>
                                       </div>
-
-                                      {/* Humidity Card */}
-                                      <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <Droplets className="w-4 h-4 text-blue-500" />
-                                          <span className="text-xs font-bold text-gray-500">Kelembapan</span>
-                                        </div>
-                                        <div className="flex items-baseline gap-1">
-                                          <span className="text-2xl font-black text-gray-900">
-                                            {device.currentValues?.humidity?.toFixed(1) || '--.-'}
-                                          </span>
-                                          <span className="text-sm font-bold text-gray-400">%</span>
-                                        </div>
-                                      </div>
-
-                                      {/* Battery/Signal (Optional) */}
-                                      <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm col-span-2 sm:col-span-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <Zap className="w-4 h-4 text-bieon-eco" />
-                                          <span className="text-xs font-bold text-gray-500">Baterai Alat</span>
-                                        </div>
-                                        <div className="flex items-baseline gap-1">
-                                          <span className="text-2xl font-black text-gray-900">
-                                            {device.battery || '--'}
-                                          </span>
-                                          <span className="text-sm font-bold text-gray-400">%</span>
+                                    );
+                                  }
+                                  
+                                  // Default for Comfort or other sensors
+                                  const showTemp = !hasParams || device.sensorParams?.temperature !== undefined;
+                                  const showHumid = !hasParams || device.sensorParams?.humidity !== undefined;
+                                  
+                                  return (
+                                    <div className="mb-8 animate-in fade-in duration-500">
+                                      <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
+                                      <div className="flex flex-row gap-4 overflow-x-auto pb-2 scrollbar-thin">
+                                        {showTemp && (
+                                          <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                            <div className="flex items-center gap-2 mb-2">
+                                              <Thermometer className="w-4 h-4 text-orange-500" />
+                                              <span className="text-xs font-bold text-gray-500">Suhu Sekarang</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-1">
+                                              <span className="text-2xl font-black text-gray-900">
+                                                {device.currentValues?.temperature?.toFixed(1) || '--.-'}
+                                              </span>
+                                              <span className="text-sm font-bold text-gray-400 font-bold ml-1">°C</span>
+                                            </div>
+                                          </div>
+                                        )}
+                                        
+                                        {showHumid && (
+                                          <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                            <div className="flex items-center gap-2 mb-2">
+                                              <Droplets className="w-4 h-4 text-blue-500" />
+                                              <span className="text-xs font-bold text-gray-500">Kelembapan</span>
+                                            </div>
+                                            <div className="flex items-baseline gap-1">
+                                              <span className="text-2xl font-black text-gray-900">
+                                                {device.currentValues?.humidity?.toFixed(1) || '--.-'}
+                                              </span>
+                                              <span className="text-sm font-bold text-gray-400 font-bold ml-1">%</span>
+                                            </div>
+                                          </div>
+                                        )}
+                                        
+                                        <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <Zap className="w-4 h-4 text-bieon-eco" />
+                                            <span className="text-xs font-bold text-gray-500">Baterai Alat</span>
+                                          </div>
+                                          <div className="flex items-baseline gap-1">
+                                            <span className="text-2xl font-black text-gray-900">
+                                              {device.battery || '--'}
+                                            </span>
+                                            <span className="text-sm font-bold text-gray-400 font-bold ml-1">%</span>
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
+                                  );
+                                })()}
 
                                 {/* Configuration Context Section - Hidden for Technicians or if no mode */}
                                 {!isTechnicianMode && device.controlMethod && (
@@ -2232,15 +2412,15 @@ export function DeviceControlPage({ onNavigate }) {
                                                     {key === "isMotionEnabled" && <Eye className="w-4 h-4 text-purple-600" />}
                                                     {key === "isDoorEnabled" && <Lock className="w-4 h-4 text-red-600" />}
                                                     {["ph", "turbidity", "tds"].includes(key) && <Waves className="w-4 h-4 text-cyan-600" />}
-                                                    <span className="text-xs  text-gray-700">
-                                                      {key === "temperature" ? "Suhu" :
+                                                    <span className="text-xs text-gray-700">
+                                                      {key === "temperature" ? (isWaterQuality ? "Suhu Air" : "Suhu") :
                                                         key === "humidity" ? "Lembap" :
                                                           key === "isMotionEnabled" ? "Gerakan" :
                                                             key === "isDoorEnabled" ? "Buka Pintu" :
                                                               key === "ph" ? "pH" :
                                                                 key === "turbidity" ? "Kekeruhan" :
                                                                   key === "tds" ? "TDS" : "Suhu Air"}:
-                                                      {val !== undefined ? ` > ${val}${key === "temperature" || key === "waterTemp" ? "°C" : key === "humidity" ? "%" : ""}` : " (Aktif)"}
+                                                      {val !== undefined ? ` > ${val}${(key === "temperature" || key === "waterTemp") ? "°C" : key === "humidity" ? "%" : ""}` : " (Aktif)"}
                                                     </span>
                                                   </div>
                                                 ))
@@ -2280,7 +2460,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 {!isTechnicianMode && (
                                   <div className="mb-6">
                                     <p className="text-xs  text-gray-400 uppercase tracking-wider mb-3">
-                                      {device.category === "sensor" ? "Status Monitoring" :
+                                      {device.category?.toLowerCase() === "sensor" ? "Status Monitoring" :
                                         (device.controlMethod === "Lingkungan" ? "Kontrol Lingkungan" :
                                           (device.controlMethod === "Jadwal" ? "Kontrol Jadwal" : "Kontrol Manual"))}
                                     </p>
@@ -2418,7 +2598,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         </div>
                                       ) : (
                                         <div className="flex flex-wrap gap-4">
-                                          {device.category !== "sensor" && (
+                                          {device.category?.toLowerCase() !== "sensor" && (
                                             <button
                                               onClick={() => toggleDevicePower(device.id)}
                                               className={`flex-1 min-w-[200px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 font-medium active:scale-95
@@ -2482,12 +2662,24 @@ export function DeviceControlPage({ onNavigate }) {
                                               <span className="text-sm  text-gray-700 w-12">{device.controls?.brightness || 100}%</span>
                                             </div>
                                           )}
-                                          {device.category === "sensor" && !isTechnicianMode && (
-                                            <div className="flex-1 min-w-[250px] flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2">
-                                              <button onClick={() => toggleDevicePower(device.id)} className="w-full text-sm  text-gray-700 flex items-center justify-center gap-2">
-                                                <Eye className="w-4 h-4" /> {device.status === "1" ? "Stop Monitoring" : "Start Monitoring"}
-                                              </button>
-                                            </div>
+                                          {device.category?.toLowerCase() === "sensor" && !isTechnicianMode && (
+                                            <button
+                                              onClick={() => toggleDevicePower(device.id)}
+                                              className={`flex-1 min-w-[200px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 font-medium active:scale-95
+                                                ${device.isToggling ? "opacity-70 cursor-wait" : "cursor-pointer"}
+                                                ${String(device.status) === "1" ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border border-green-200 hover:bg-green-100"}`}
+                                            >
+                                              {device.isToggling ? (
+                                                <div className="flex items-center gap-2">
+                                                  <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin"></div>
+                                                  Memproses...
+                                                </div>
+                                              ) : (
+                                                <>
+                                                  <Eye className="w-4 h-4" /> {String(device.status) === "1" ? "Stop Monitoring" : "Start Monitoring"}
+                                                </>
+                                              )}
+                                            </button>
                                           )}
                                         </div>
                                       )}
@@ -2497,7 +2689,7 @@ export function DeviceControlPage({ onNavigate }) {
 
 
                                 {/* Sensor Only Data Block - Single Row Compact Version */}
-                                {device.category === "sensor" && device.status === "1" && device.currentValues && (
+                                {device.category?.toLowerCase() === "sensor" && device.status === "1" && device.currentValues && (
                                   <div className="mb-6 flex flex-wrap items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-gray-100">
                                     {/* Compact Eligibility Badge */}
                                     {(() => {
@@ -2769,6 +2961,7 @@ export function DeviceControlPage({ onNavigate }) {
                             dbId: d?._id || d?.id,
                             name: d?.name,
                             type: d?.type || d?.deviceType || "",
+                            category: d?.category || "",
                             status: "Belum Dikonfigurasi",
                             isFromDb: true,
                             originalDevice: d
@@ -2782,22 +2975,36 @@ export function DeviceControlPage({ onNavigate }) {
                             dbId: p?._id || p?.id,
                             name: p.productName,
                             type: p.category === 'sensor' ? (p.aspect === 'air' ? 'Sensor Kualitas Air' : p.aspect === 'kenyamanan' ? 'Sensor Kenyamanan' : p.aspect === 'keamanan' ? 'Sensor Keamanan' : 'Sensor') : 'Control',
+                            category: p.category || "",
                             status: "Belum Dikonfigurasi",
                             isFromDb: true,
                             isFromRegistered: true,
                             originalProduct: p
                           })) || [];
 
+                        const allCandidates = [];
+                        const seenIds = new Set();
+                        const pushUnique = (item) => {
+                          const id = item.id || item.productId || item.dbId;
+                          if (!id || seenIds.has(id)) return;
+                          seenIds.add(id);
+                          allCandidates.push(item);
+                        };
+
+                        fromScan.forEach(pushUnique);
+                        quickSaved.forEach(pushUnique);
+                        registeredUnused.forEach(pushUnique);
+
                         return (
                           <div className="space-y-3">
-                            {fromScan.length === 0 && !isScanning && !scanAttempted && (
+                            {allCandidates.length === 0 && !isScanning && !scanAttempted && (
                               <div className="flex flex-col items-center justify-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
                                 <p className="text-sm text-gray-400 italic">Menunggu perangkat bergabung...</p>
                                 <p className="text-[10px] text-gray-300 mt-2 text-center px-6">Klik tombol Buka Open Join untuk mulai mendeteksi perangkat baru.</p>
                               </div>
                             )}
 
-                            {isScanning && fromScan.length === 0 && (
+                            {isScanning && allCandidates.length === 0 && (
                               <div className="flex flex-col items-center justify-center py-10 bg-bieon-eco/5/30 rounded-3xl border border-dashed border-bieon-eco/30 animate-pulse">
                                 <div className="relative w-12 h-12 mb-3">
                                   <div className="absolute inset-0 bg-bieon-eco/20 rounded-full animate-ping" />
@@ -2822,9 +3029,10 @@ export function DeviceControlPage({ onNavigate }) {
                             )}
 
                             <div className="grid gap-3">
-                              {[...fromScan, ...quickSaved, ...registeredUnused].map((dev) => {
+                              {allCandidates.map((dev) => {
                                 const isJoined = joinedDevicesPool.includes(dev.id) || dev.isFromDb;
                                 const isSensor = (dev.type || "").toLowerCase().includes("sensor") || 
+                                                 dev.category === 'sensor' ||
                                                  registeredProducts.find(p => p.productId === dev.id)?.category === 'sensor';
                                 
                                 return (
@@ -2844,7 +3052,9 @@ export function DeviceControlPage({ onNavigate }) {
                                           const aspect = registeredMatch?.aspect || dev.originalDevice?.aspect || dev.originalProduct?.aspect;
                                           
                                           let aspectLabel = aspect;
-                                          if (!aspectLabel) {
+                                          if (isSensor) {
+                                            aspectLabel = "sensor";
+                                          } else if (!aspectLabel) {
                                             const nameLower = (dev.name || "").toLowerCase();
                                             const typeLower = (dev.type || "").toLowerCase();
                                             const isControl = nameLower.includes("plug") || nameLower.includes("control") || typeLower.includes("control") || typeLower.includes("plug") ||
@@ -2863,7 +3073,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           if (!aspectLabel) return null;
                                           return (
                                             <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
-                                              aspectLabel === 'kenyamanan' ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' : 
+                                              (aspectLabel === 'kenyamanan' || aspectLabel === 'sensor') ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' : 
                                               aspectLabel === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
                                               aspectLabel === 'controll' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
                                               'text-orange-500 border-orange-100 bg-orange-50'
@@ -3033,94 +3243,65 @@ export function DeviceControlPage({ onNavigate }) {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => handleQuickSave(dev)}
-                                      className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-lg transition-all border border-white/20"
-                                    >
-                                      Simpan
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        // Cari produk yang cocok di registeredProducts
-                                        let product = registeredProducts.find(p => deviceId.startsWith(p.productId));
-
-                                        // Mapping Spesifik berdasarkan instruksi Boss
-                                        const isAirguard = deviceId.includes("SNZB-02DR2") || deviceId.includes("SNZB_02DR2");
-                                        const isSmartPlug = deviceId.includes("S60BTPF") || deviceId.includes("S60ZBTPF");
-                                        const isBluecheck = deviceId.toLowerCase().includes("bluecheck") || dev.name.toLowerCase().includes("bluecheck");
-
-                                        // Jika tidak ada di registeredProducts, buat objek produk otomatis
-                                        if (!product) {
-                                          let category = "sensor";
-                                          let aspect = "";
-
-                                          if (isAirguard) {
-                                            category = "sensor";
-                                            aspect = "kenyamanan";
-                                          } else if (isBluecheck) {
-                                            category = "sensor";
-                                            aspect = "air";
-                                          } else if (isSmartPlug) {
-                                            category = "control";
-                                            aspect = "smart-plug"; // Pakai ENUM yang valid di backend
-                                          } else {
-                                            category = dev.type.toLowerCase().includes("sensor") ? "sensor" : "control";
-                                            if (category === "sensor") {
-                                              if (dev.type.includes("TH")) aspect = "kenyamanan";
-                                              else if (dev.type.includes("Water")) aspect = "air";
-                                              else aspect = "keamanan";
-                                            } else {
-                                              aspect = dev.type.toLowerCase().includes("plug") ? "smart-plug" : "smart-switch";
-                                            }
-                                          }
-
-                                          product = {
-                                            productId: deviceId, // Pakai ID lengkap biar UNIK di database
-                                            productName: dev.name,
-                                            category: category,
-                                            aspect: aspect
-                                          };
-                                        }
-
-                                        setSelectedProduct(product);
-                                        setSelectedCategory(product.category);
-                                        setSelectedDeviceType(product.productName);
-                                        setDeviceForm(prev => ({
-                                          ...prev,
-                                          name: product.productName,
-                                          customId: deviceId
-                                        }));
-
-                                        // Set Active Aspect for Config Step
-                                        if (isBluecheck || (product.category === "sensor" && product.aspect === "air")) {
-                                          setActiveSensorAspect("kualitasAir");
-                                        } else if (isAirguard || (product.category === "sensor" && product.aspect === "kenyamanan")) {
-                                          setActiveSensorAspect("kenyamanan");
-                                        } else if (product.category === "sensor" && product.aspect === "keamanan") {
-                                          setActiveSensorAspect("keamanan");
-                                        }
-
-                                        setStep("add-device-form");
-                                      }}
-                                      className="px-3 py-1.5 bg-white hover:bg-bieon-eco/5 text-bieon-eco text-[10px] font-bold rounded-lg transition-all shadow-sm"
-                                    >
-                                      Atur
-                                    </button>
+                                    {pendingOpenJoinDevice?.id === dev.id ? (
+                                      <>
+                                        <select
+                                          key={`${dev.id}-${pendingOpenJoinAction}`}
+                                          defaultValue=""
+                                          onChange={(e) => {
+                                            const category = e.target.value;
+                                            if (category) handleOpenJoinCategorySelection(category);
+                                          }}
+                                          className="px-2.5 py-1.5 bg-white text-gray-800 text-[10px] font-bold rounded-lg outline-none cursor-pointer min-w-[7.5rem] max-w-[9rem]"
+                                          aria-label="Pilih kategori perangkat"
+                                        >
+                                          <option value="" disabled>
+                                            {pendingOpenJoinAction === "save" ? "Simpan sebagai…" : "Atur sebagai…"}
+                                          </option>
+                                          <option value="sensor">Sensor</option>
+                                          <option value="control">Control Aktuator</option>
+                                        </select>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setPendingOpenJoinDevice(null);
+                                            setPendingOpenJoinAction(null);
+                                          }}
+                                          className="px-2 py-1.5 text-white/70 hover:text-white text-[10px] font-bold"
+                                        >
+                                          Batal
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => initOpenJoinDeviceConfiguration(dev, "save")}
+                                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-lg transition-all border border-white/20"
+                                        >
+                                          Simpan
+                                        </button>
+                                        <button
+                                          onClick={() => initOpenJoinDeviceConfiguration(dev, "configure")}
+                                          className="px-3 py-1.5 bg-white hover:bg-bieon-eco/5 text-bieon-eco text-[10px] font-bold rounded-lg transition-all shadow-sm"
+                                        >
+                                          Atur
+                                        </button>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               );
                             })}
                           </div>
 
+                          <div className="mt-4 flex items-start gap-2">
+                            <span className="text-yellow-500 text-xs">✨</span>
+                            <p className="text-[10px] text-gray-400 italic leading-relaxed">
+                              Device baru akan otomatis muncul dan dipisahkan berdasarkan tipe (Sensor/Aktuator) saat bergabung.
+                            </p>
+                          </div>
                         </div>
                       )}
-
-                      <div className="mt-6 flex items-start gap-2">
-                        <span className="text-yellow-500 text-xs">✨</span>
-                        <p className="text-[10px] text-gray-400 italic leading-relaxed">
-                          Device baru akan otomatis muncul dan dipisahkan berdasarkan tipe (Sensor/Aktuator) saat bergabung.
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </div>

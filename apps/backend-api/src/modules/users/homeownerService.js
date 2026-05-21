@@ -1,6 +1,7 @@
 const User = require('../../models/User');
 const Hub = require('../../models/Hub');
 const Device = require('../../models/Device');
+const { normalizeBieonId } = require('../../shared/bieonId');
 
 const ROLE_HOMEOWNER = 'Homeowner';
 
@@ -58,7 +59,7 @@ const normalizePayload = (payload) => ({
     address: payload.address?.trim(),
     systemName: payload.systemName?.trim(),
     plnTariff: payload.plnTariff?.trim(),
-    bieonId: payload.bieonId?.trim(),
+    bieonId: payload.bieonId?.trim() ? normalizeBieonId(payload.bieonId.trim()) : undefined,
     status: payload.status || 'aktif',
 });
 

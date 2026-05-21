@@ -6,6 +6,11 @@ const { generateNumericOtp, isValidOtp } = require('../shared/otp');
 const { isValidEmail, normalizeEmail, isValidIdPhone, normalizePhoneE164 } = require('../shared/identifier');
 const { sendOtpEmail } = require('../shared/mailer');
 const { sendOtpWhatsApp } = require('../shared/whatsappCloud');
+const {
+    normalizeBieonId,
+    findOneByBieonId,
+    findManyByBieonId,
+} = require('../shared/bieonId');
 
 const OTP_EXPIRES_MINUTES = 5;
 const OTP_COOLDOWN_MS = 60 * 1000;
@@ -33,24 +38,22 @@ exports.register = async (req, res) => {
         // --- VALIDASI BIEON ID (Hardware Flow) ---
         if (bieonId) {
             const BieonSystem = require('../models/BieonSystem');
-            
-            // Normalisasi input
-            const normalizedBieonId = String(bieonId).trim();
-            
-            // 1. Cek apakah ID ada di stok developer (case-insensitive)
-            const systemStock = await BieonSystem.findOne({ 
-                bieonId: { $regex: new RegExp(`^${normalizedBieonId}$`, 'i') } 
-            });
-            
+
+            if (!normalizeBieonId(bieonId)) {
+                return res.status(400).json({ message: 'Bieon ID tidak valid.' });
+            }
+
+            // 1. Cek apakah ID ada di stok developer (bieon_001 = BIEON-001 = BIEON_1)
+            const systemStock = await findOneByBieonId(BieonSystem, bieonId);
             if (!systemStock) {
-                // Jika masuk ke sini, artinya bieonId memang benar-benar tidak ada di koleksi BieonSystem
                 return res.status(400).json({ message: 'Bieon ID tidak valid atau tidak terdaftar di stok developer.' });
             }
 
+            // Pakai penulisan persis di DB (mis. BIEON_001) agar konsisten dengan hub/MQTT
             const exactBieonId = systemStock.bieonId;
 
             // 2. Cek apakah ID sudah diklaim user lain
-            const ownerExists = await User.findOne({ bieonId: exactBieonId });
+            const ownerExists = await findOneByBieonId(User, bieonId);
             if (ownerExists || systemStock.owner) {
                 return res.status(400).json({ message: 'Bieon ID sudah digunakan oleh pengguna lain.' });
             }
@@ -83,7 +86,7 @@ exports.register = async (req, res) => {
             const Hub = require('../models/Hub');
             const { publishCommand } = require('../config/mqtt');
             
-            const hubs = await Hub.find({ bieonId });
+            const hubs = await findManyByBieonId(Hub, bieonId);
             const hubsPayload = [];
 
             for (const hub of hubs) {
@@ -108,13 +111,13 @@ exports.register = async (req, res) => {
             if (hubsPayload.length > 0) {
                 const payload = {
                     tenant_id: newUser.tenantId, 
-                    bieon_id: bieonId,
+                    bieon_id: exactBieonId,
                     hub_id: "hub_001", // ID Master/Gateway
                     hubs: hubsPayload
                 };
                 
                 // Tambahkan RETAIN agar ESP32 yang telat nyala tetap menerimanya
-                publishCommand(`bieon/${bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
+                publishCommand(`bieon/${exactBieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
             }
 
             return res.status(201).json({ message: 'Registrasi berhasil!', user: { id: newUser._id, email: newUser.email, role: newUser.role } });
@@ -215,7 +218,9 @@ exports.updateSettings = async (req, res) => {
         if (updates.email !== undefined) allowedUpdates.email = updates.email;
         if (updates.systemName !== undefined) allowedUpdates.systemName = updates.systemName;
         if (updates.plnTariff !== undefined) allowedUpdates.plnTariff = updates.plnTariff;
-        if (updates.bieonId !== undefined) allowedUpdates.bieonId = updates.bieonId;
+        if (updates.bieonId !== undefined) {
+            allowedUpdates.bieonId = normalizeBieonId(updates.bieonId) || updates.bieonId;
+        }
 
         const updatedUser = await User.findByIdAndUpdate(userId, allowedUpdates, { new: true }).select('-password');
 
