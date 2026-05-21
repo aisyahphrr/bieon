@@ -145,7 +145,7 @@ exports.getUserSystems = async (req, res) => {
         
         // Untuk setiap sistem, ambil daftar hub-nya
         const result = await Promise.all(systems.map(async (sys) => {
-            const hubs = await findManyByBieonId(Hub, sys.bieonId);
+            const hubs = await Hub.find({ owner: userId, ...bieonIdFilter(sys.bieonId) });
             return {
                 ...sys.toObject(),
                 hubs: hubs.map(h => ({

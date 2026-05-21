@@ -3,6 +3,7 @@ import { User, Lock, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { auth, googleProvider } from '../../config/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -18,8 +19,6 @@ const Logo = () => (
     <img src="/logo_bieon.png" alt="BIEON Logo" className="h-10 md:h-12 object-contain drop-shadow-sm hover:scale-105 transition-transform duration-300" />
   </div>
 );
-
-import { useNavigate } from 'react-router-dom';
 
 const parseJsonSafely = async (response) => {
   const raw = await response.text();
