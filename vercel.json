@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build --workspace=@bieon/frontend",
   "outputDirectory": "apps/frontend/dist",
-  "installCommand": "PUPPETEER_SKIP_DOWNLOAD=true npm install --include=optional",
+  "installCommand": "PUPPETEER_SKIP_DOWNLOAD=true npm ci --include=optional",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
