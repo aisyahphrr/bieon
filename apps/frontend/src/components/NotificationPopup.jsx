@@ -10,13 +10,13 @@ import { useTranslation } from 'react-i18next';
 const typeStyles = {
   danger: { border: 'border-red-100', bg: 'bg-red-50/50', iconText: 'text-red-500', iconBg: 'bg-red-100/50', icon: AlertTriangle, accent: 'border-red-500' },
   warning: { border: 'border-amber-100', bg: 'bg-amber-50/50', iconText: 'text-amber-600', iconBg: 'bg-amber-100/50', icon: Zap, accent: 'border-amber-500' },
-  info: { border: 'border-blue-100', bg: 'bg-blue-50/50', iconText: 'text-blue-600', iconBg: 'bg-blue-100/50', icon: LogIn, accent: 'border-blue-500' },
-  success: { border: 'border-emerald-100', bg: 'bg-emerald-50/50', iconText: 'text-emerald-600', iconBg: 'bg-emerald-100/50', icon: CheckCircle, accent: 'border-emerald-500' },
+  info: { border: 'border-sense/20', bg: 'bg-sense/5', iconText: 'text-sense', iconBg: 'bg-sense/10', icon: LogIn, accent: 'border-sense' },
+  success: { border: 'border-eco/20', bg: 'bg-eco/5', iconText: 'text-eco', iconBg: 'bg-eco/10', icon: CheckCircle, accent: 'border-eco' },
   purple: { border: 'border-purple-100', bg: 'bg-purple-50/50', iconText: 'text-purple-600', iconBg: 'bg-purple-100/50', icon: Lock, accent: 'border-purple-500' },
   sistem: { border: 'border-slate-100', bg: 'bg-slate-50/50', iconText: 'text-slate-600', iconBg: 'bg-slate-100/50', icon: Server, accent: 'border-slate-500' },
   pengaduan: { border: 'border-orange-100', bg: 'bg-orange-50/50', iconText: 'text-orange-600', iconBg: 'bg-orange-100/50', icon: MessageSquare, accent: 'border-orange-500' },
   water: { border: 'border-indigo-100', bg: 'bg-indigo-50/50', iconText: 'text-indigo-600', iconBg: 'bg-indigo-100/50', icon: Activity, accent: 'border-indigo-500' },
-  kenyamanan: { border: 'border-teal-100', bg: 'bg-teal-50/50', iconText: 'text-teal-600', iconBg: 'bg-teal-100/50', icon: Fan, accent: 'border-teal-500' }
+  kenyamanan: { border: 'border-sense/20', bg: 'bg-sense/5', iconText: 'text-sense', iconBg: 'bg-sense/10', icon: Fan, accent: 'border-sense' }
 };
 
 const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange, onNavigate }) => {
@@ -201,8 +201,8 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
       {/* Header */}
       <div className="px-6 py-5 flex items-center justify-between border-b border-gray-50 flex-shrink-0 bg-white/50">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-50 rounded-xl">
-            <Bell className="w-5 h-5 text-[#059669] stroke-[2.5px]" />
+          <div className="p-2 bg-eco/10 rounded-xl">
+            <Bell className="w-5 h-5 text-eco stroke-[2.5px]" />
           </div>
           <h2 className="text-gray-900 font-bold text-[17px] tracking-tight">{t('notification.ui.title', 'Notifikasi')}</h2>
         </div>
@@ -210,7 +210,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
           <button onClick={resetReadStatus} className="text-[11px] text-gray-400 font-bold hover:text-gray-600 transition-colors uppercase tracking-wider">
             {t('notification.ui.reset', 'Reset')}
           </button>
-          <button onClick={markAllAsRead} className="text-[13px] text-[#059669] font-bold hover:text-emerald-700 transition-colors">
+          <button onClick={markAllAsRead} className="text-[13px] text-eco font-bold hover:text-green-700 transition-colors">
             {t('notification.ui.read_all', 'Baca Semua')}
           </button>
         </div>
@@ -220,7 +220,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
       <div className="overflow-y-auto w-full p-4 space-y-3 custom-scrollbar">
         {isLoading && notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-            <div className="w-8 h-8 border-3 border-gray-100 border-t-emerald-500 rounded-full animate-spin mb-3" />
+            <div className="w-8 h-8 border-3 border-gray-100 border-t-eco rounded-full animate-spin mb-3" />
             <p className="text-xs font-bold uppercase tracking-widest opacity-60">{t('notification.ui.loading', 'Memuat...')}</p>
           </div>
         ) : notifications.length > 0 ? (
@@ -421,7 +421,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
                             </div>
                           )}
                           {role === 'homeowner' && (
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-md uppercase tracking-wider">
+                            <span className="px-2 py-0.5 bg-eco/10 text-eco text-[10px] font-black rounded-md uppercase tracking-wider">
                               {t('notification.ui.new', 'Baru')}
                             </span>
                           )}

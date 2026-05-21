@@ -51,5 +51,5 @@ export const getDeletionRequestBadgeClass = (tone) => {
         return 'bg-slate-100 text-slate-700';
     }
 
-    return 'bg-emerald-50 text-emerald-600';
+    return 'bg-bieon-eco/10 text-bieon-eco';
 };

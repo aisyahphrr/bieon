@@ -241,7 +241,7 @@ export function ComplaintDetailModal({
     };
 
     const getPerformanceIndicator = (points) => {
-        if (points >= 95) return { label: t('complaint.perf.good', 'Bagus'), bg: 'bg-emerald-50', color: 'text-emerald-600' };
+        if (points >= 95) return { label: t('complaint.perf.good', 'Bagus'), bg: 'bg-eco/5', color: 'text-eco' };
         if (points >= 75) return { label: t('complaint.perf.standard', 'Standar'), bg: 'bg-amber-50', color: 'text-amber-600' };
         return { label: t('complaint.perf.danger', 'Bahaya'), bg: 'bg-red-50', color: 'text-red-600' };
     };
@@ -375,8 +375,8 @@ export function ComplaintDetailModal({
     // --- PDF EXPORT HANDLER ---
     const handleExportDetail = () => {
         const doc = new jsPDF();
-        const primaryGreen = [0, 155, 124]; // BIEON Green
-        const secondaryGreen = [225, 242, 235]; // BIEON Light Green
+        const primaryGreen = [5, 155, 39]; // BIEON Green (Eco)
+        const secondaryGreen = [230, 245, 233]; // BIEON Light Green (Eco Light)
         
         // 1. FULL WIDTH GREEN HEADER
         doc.setFillColor(...primaryGreen);
@@ -433,7 +433,7 @@ export function ComplaintDetailModal({
         const statusLate = t('export.status_late', 'TERLAMBAT');
 
         const slaBody = [
-            [t('export.sla_response', 'Respon Teknisi'), '15 Min', getDurationFromTimeline('response'), 
+            [t('export.sla_aspect', 'Aspek SLA'), '15 Min', getDurationFromTimeline('response'), 
              localTicket.responsePoints >= 100 ? statusOntime : statusLate, `${localTicket.responsePoints || 0} Pts`],
             [t('export.sla_repair', 'Perbaikan Unit'), '48 Hours', getDurationFromTimeline('repair'), 
              localTicket.repairPoints >= 100 ? statusOntime : statusLate, `${localTicket.repairPoints || 0} Pts`]
@@ -449,7 +449,7 @@ export function ComplaintDetailModal({
             didDrawCell: (data) => {
                 if (data.section === 'body' && data.column.index === 3) {
                     const statusText = data.cell.raw;
-                    if (statusText === statusOntime) doc.setTextColor(0, 155, 124);
+                    if (statusText === statusOntime) doc.setTextColor(5, 155, 39);
                     else doc.setTextColor(239, 68, 68);
                     doc.setFont('helvetica', 'bold');
                 }
@@ -518,18 +518,18 @@ export function ComplaintDetailModal({
         const colors = {
             'unassigned': 'bg-gray-50 text-gray-400 border-gray-100',
             'menunggu respons': 'bg-blue-50 text-blue-600 border-blue-100',
-            'diproses': 'bg-teal-50 text-teal-600 border-teal-100',
+            'diproses': 'bg-sense/5 text-sense border-sense/20',
             'overdue respons': 'bg-red-50 text-red-600 border-red-100',
             'overdue perbaikan': 'bg-red-50 text-red-600 border-red-100',
             'menunggu konfirmasi pelanggan': 'bg-indigo-50 text-indigo-600 border-indigo-100',
-            'selesai': 'bg-[#E1F2EB] text-[#1E4D40] border-[#BEE3D1]',
+            'selesai': 'bg-eco/5 text-eco border-eco/20',
             'ditolak': 'bg-red-50 text-red-600 border-red-100'
         };
 
         const slaTimer = (role !== 'homeowner' && (ticket.status?.toLowerCase() === 'diproses' || ticket.status?.toLowerCase() === 'menunggu respons' || isOverdue)) ? (
             <span className={`text-[9px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ml-2 ${level === 'red' ? 'bg-red-50 text-red-600 border-red-100 animate-pulse' :
                     level === 'amber' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                        'bg-teal-50 text-teal-600 border-teal-100'
+                        'bg-eco/5 text-eco border-eco/20'
                 }`}>
                 SLA: {type} {isOverdue ? 'OVERDUE' : ''}
             </span>
@@ -607,7 +607,7 @@ export function ComplaintDetailModal({
                                             {role === 'homeowner' && localTicket.status.toLowerCase() === 'menunggu konfirmasi pelanggan' && (
                                                 <button
                                                     onClick={() => setIsRatingModalOpen(true)}
-                                                    className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-black hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
+                                                    className="w-full py-3.5 bg-eco text-white rounded-xl font-black hover:bg-green-700 transition-all shadow-lg shadow-eco/20 flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
                                                 >
                                                     {t('complaint.action.homeowner.confirm_btn', 'Konfirmasi & Nilai')}
                                                 </button>
@@ -708,7 +708,7 @@ export function ComplaintDetailModal({
                                                 <div className="absolute left-[7px] top-6 bottom-[-28px] w-[1px] bg-gray-200"></div>
                                             )}
                                             <div className="relative z-10 shrink-0 mt-1">
-                                                <div className={`w-3.5 h-3.5 rounded-full ring-4 ring-white ${idx === 0 ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
+                                                <div className={`w-3.5 h-3.5 rounded-full ring-4 ring-white ${idx === 0 ? 'bg-eco' : 'bg-gray-300'}`}></div>
                                             </div>
                                             <div>
                                                 <div className="text-[10px] text-gray-400 mb-1">{formatDisplayTime(step.time)}</div>
@@ -717,7 +717,7 @@ export function ComplaintDetailModal({
                                                     {getLocalizedTimelineDesc(step.desc)}
                                                 </div>
                                                 {step.status && (
-                                                    <div className={`text-[9px] font-bold mt-1.5 inline-block px-1.5 py-0.5 rounded border tracking-wide ${step.desc?.toLowerCase().includes('ping') ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-teal-50 text-teal-600 border-teal-100'}`}>
+                                                    <div className={`text-[9px] font-bold mt-1.5 inline-block px-1.5 py-0.5 rounded border tracking-wide ${step.desc?.toLowerCase().includes('ping') ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-eco/5 text-eco border-eco/20'}`}>
                                                         {formatStatusDisplay(step.status.replace('Status: ', ''), role)}
                                                     </div>
                                                 )}
@@ -725,10 +725,10 @@ export function ComplaintDetailModal({
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                             </div>
 
-                            {/* BOX: HASIL PENILAIAN (If available) */}
-                            {localTicket.status?.toLowerCase() === 'selesai' && localTicket.rating && (
+                             {/* BOX: HASIL PENILAIAN (If available) */}
+                             {localTicket.status?.toLowerCase() === 'selesai' && localTicket.rating && (
                                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex items-center gap-4">
@@ -756,28 +756,28 @@ export function ComplaintDetailModal({
                                         </p>
                                     </div>
                                 </div>
-                            )}
-                        </div>
+                             )}
+                         </div>
 
-                        {/* RIGHT COLUMN (1/3) - Sidebar Information */}
-                        <div className="lg:col-span-1 space-y-6 text-start">
+                         {/* RIGHT COLUMN (1/3) - Sidebar Information */}
+                         <div className="lg:col-span-1 space-y-6 text-start">
 
-                            {/* BOX: INFORMASI CLIENT */}
-                            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-                                <h3 className="text-xs font-bold text-darkgrey-400 uppercase tracking-wider mb-6 pb-2 border-b border-gray-50 flex items-center justify-between">
-                                    {t('complaint.detail_box.customer_info', 'Informasi Pelanggan')}
-                                    <User className="w-4 h-4 text-blue-500" />
-                                </h3>
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <User className="w-4 h-4 text-blue-600 shrink-0" />
-                                        <div>
-                                            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">{t('complaint.customer_info.name', 'Nama Pelanggan')}</p>
-                                            <p className="text-sm font-semibold text-gray-900">{localTicket.clientInfo?.name || localTicket.client || localTicket.homeowner?.fullName}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Mail className="w-4 h-4 text-teal-600 shrink-0" />
+                             {/* BOX: INFORMASI CLIENT */}
+                             <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+                                 <h3 className="text-xs font-bold text-darkgrey-400 uppercase tracking-wider mb-6 pb-2 border-b border-gray-50 flex items-center justify-between">
+                                     {t('complaint.detail_box.customer_info', 'Informasi Pelanggan')}
+                                     <User className="w-4 h-4 text-blue-500" />
+                                 </h3>
+                                 <div className="space-y-4">
+                                     <div className="flex items-center gap-3">
+                                         <User className="w-4 h-4 text-blue-600 shrink-0" />
+                                         <div>
+                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">{t('complaint.customer_info.name', 'Nama Pelanggan')}</p>
+                                             <p className="text-sm font-semibold text-gray-900">{localTicket.clientInfo?.name || localTicket.client || localTicket.homeowner?.fullName}</p>
+                                         </div>
+                                     </div>
+                                     <div className="flex items-center gap-3">
+                                         <Mail className="w-4 h-4 text-eco shrink-0" />
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">{t('complaint.customer_info.email', 'Email')}</p>
                                             <span className="text-sm font-medium text-gray-700">{localTicket.clientInfo?.email || localTicket.homeowner?.email || '-'}</span>
@@ -835,7 +835,7 @@ export function ComplaintDetailModal({
                                                 {/* Overall Assessment - Compact */}
                                                 {(localTicket.responsePoints > 0 || localTicket.repairPoints > 0) && (
                                                     <div className={`px-2 py-0.5 rounded-md border flex items-center gap-1.5 ${(localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1) >= 70
-                                                            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                                                            ? 'bg-eco/5 border-eco/10 text-eco'
                                                             : 'bg-red-50 border-red-100 text-red-700'
                                                         }`}>
                                                         <span className="text-[9px] font-black uppercase">
@@ -907,15 +907,15 @@ export function ComplaintDetailModal({
                                         {renderActions ? renderActions : (
                                             <div className="space-y-3">
                                                 {role === 'homeowner' && localTicket.status.toLowerCase() === 'menunggu konfirmasi pelanggan' && (
-                                                    <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 text-center shadow-sm animate-pulse">
-                                                        <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-100">
+                                                    <div className="bg-eco/5 border border-eco/20 rounded-2xl p-6 text-center shadow-sm animate-pulse">
+                                                        <div className="w-12 h-12 bg-eco text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-eco/20">
                                                             <CheckCircle2 className="w-6 h-6" />
                                                         </div>
-                                                        <h4 className="text-sm font-bold text-emerald-900 mb-2">{t('complaint.action.homeowner.ticket_finished_title', 'Tiket Selesai Dikerjakan')}</h4>
-                                                        <p className="text-[10px] text-emerald-600 mb-6 leading-relaxed">{t('complaint.action.homeowner.ticket_finished_desc', 'Teknisi telah menyelesaikan perbaikan. Mohon konfirmasi dan berikan penilaian Anda.')}</p>
+                                                        <h4 className="text-sm font-bold text-gray-900 mb-2">{t('complaint.action.homeowner.ticket_finished_title', 'Tiket Selesai Dikerjakan')}</h4>
+                                                        <p className="text-[10px] text-eco mb-6 leading-relaxed">{t('complaint.action.homeowner.ticket_finished_desc', 'Teknisi telah menyelesaikan perbaikan. Mohon konfirmasi dan berikan penilaian Anda.')}</p>
                                                         <button
                                                             onClick={() => setIsRatingModalOpen(true)}
-                                                            className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-black hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
+                                                            className="w-full py-3.5 bg-eco text-white rounded-xl font-black hover:bg-green-700 transition-all shadow-lg shadow-eco/20 flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
                                                         >
                                                             {t('complaint.action.homeowner.confirm_btn', 'Konfirmasi & Nilai')}
                                                         </button>
@@ -928,16 +928,16 @@ export function ComplaintDetailModal({
                                                             <>
                                                                 <button
                                                                     onClick={() => setIsProgressModalOpen(true)}
-                                                                    className="w-full py-3 bg-white border border-teal-500 text-teal-700 rounded-xl font-bold hover:bg-teal-50 transition-all shadow-sm flex items-center justify-center gap-2 text-xs"
+                                                                    className="w-full py-3 bg-white border border-eco text-eco rounded-xl font-bold hover:bg-eco/5 transition-all shadow-sm flex items-center justify-center gap-2 text-xs"
                                                                 >
-                                                                    <RefreshCw className="w-4 h-4 text-teal-600" /> {t('complaint.action.technician.update_progress', 'Update Progres')}
+                                                                    <RefreshCw className="w-4 h-4 text-eco" /> {t('complaint.action.technician.update_progress', 'Update Progres')}
                                                                 </button>
 
                                                                 <button
                                                                     disabled={!localTicket.hasStartedRepair}
                                                                     onClick={() => handleStatusUpdate('menunggu konfirmasi pelanggan')}
                                                                     className={`w-full py-3 border rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-xs ${localTicket.hasStartedRepair
-                                                                            ? 'bg-[#009B7C] text-white border-transparent hover:bg-[#00856a] shadow-lg shadow-emerald-100'
+                                                                            ? 'bg-eco text-white border-transparent hover:bg-green-700 shadow-lg shadow-eco/20'
                                                                             : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed shadow-none'
                                                                         }`}
                                                                 >
@@ -994,7 +994,7 @@ export function ComplaintDetailModal({
                                                                             }
                                                                         });
                                                                     }}
-                                                                    className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-teal-200"
+                                                                    className="w-full py-3 bg-eco text-white rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 text-xs shadow-lg shadow-eco/20"
                                                                 >
                                                                     <FileText className="w-4 h-4" /> {t('complaint.action.technician.log_status_accepted', 'Akses Log Diterima')}
                                                                 </button>
@@ -1010,7 +1010,7 @@ export function ComplaintDetailModal({
                                                             onClick={handleExportDetail}
                                                             className="w-full py-3 bg-white border border-gray-100 text-gray-500 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 text-[11px] uppercase tracking-wider group"
                                                         >
-                                                            <Download className="w-4 h-4 text-gray-300 group-hover:text-teal-500 transition-colors" /> {t('complaint.detail_box.export_pdf', 'Ekspor Detail Pengaduan (PDF)')}
+                                                            <Download className="w-4 h-4 text-gray-300 group-hover:text-eco transition-colors" /> {t('complaint.detail_box.export_pdf', 'Ekspor Detail Pengaduan (PDF)')}
                                                         </button>
                                                     </div>
                                                 )}
@@ -1041,7 +1041,7 @@ export function ComplaintDetailModal({
                                             <button 
                                                 key={key} 
                                                 onClick={() => { setProgressOption(key); setShowProgressDropdown(false); }} 
-                                                className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${progressOption === key ? 'text-teal-600 font-bold bg-teal-50' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${progressOption === key ? 'text-sense font-black bg-sense/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
                                                 {t(`complaint.action.technician.${key}`)}
                                             </button>
@@ -1056,7 +1056,7 @@ export function ComplaintDetailModal({
                         </div>
                         <div className="flex gap-4">
                             <button onClick={() => setIsProgressModalOpen(false)} className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl">{t('common.cancel', 'Batal')}</button>
-                            <button onClick={handleUpdateProgress} disabled={!progressOption || isSubmitting} className="flex-1 py-3 bg-teal-600 text-white font-bold rounded-xl">{t('complaint.action.technician.submit_progress', 'Simpan Progres')}</button>
+                            <button onClick={handleUpdateProgress} disabled={!progressOption || isSubmitting} className="flex-1 py-3 bg-eco text-white font-bold rounded-xl">{t('complaint.action.technician.submit_progress', 'Simpan Progres')}</button>
                         </div>
                     </div>
                 </div>
@@ -1065,7 +1065,7 @@ export function ComplaintDetailModal({
             {/* MODAL: RATING (Homeowner) */}
             {isRatingModalOpen && (
                 <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-[#489C74] rounded-[2.5rem] p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-300">
+                    <div className="bg-eco rounded-[2.5rem] p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-300">
                         <button onClick={() => setIsRatingModalOpen(false)} className="absolute top-4 right-4 text-white/50 hover:text-white"><X className="w-6 h-6" /></button>
                         <div className="absolute -top-16 left-1/2 -translate-x-1/2 text-8xl drop-shadow-2xl animate-bounce">
                             {ratingStars >= 5 ? '🤩' : ratingStars >= 4 ? '😊' : ratingStars >= 3 ? '😐' : ratingStars >= 1 ? '🙁' : '😍'}
@@ -1086,7 +1086,7 @@ export function ComplaintDetailModal({
                             <button 
                                 onClick={() => handleStatusUpdate('selesai', '', { stars: ratingStars, review: ratingReview })} 
                                 disabled={ratingStars === 0 || isSubmitting} 
-                                className="w-full py-4 bg-white text-[#489C74] font-black rounded-2xl shadow-xl hover:bg-emerald-50 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale uppercase tracking-widest text-xs"
+                                className="w-full py-4 bg-white text-eco font-black rounded-2xl shadow-xl hover:bg-eco/5 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale uppercase tracking-widest text-xs"
                             >
                                 {isSubmitting ? t('complaint.detail_box.sending', 'Mengirim...') : t('complaint.action.homeowner.submit_rating', 'Kirim Penilaian')}
                             </button>

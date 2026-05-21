@@ -250,7 +250,7 @@ export default function AdminTariff({ onNavigate }) {
     // --- Data Charts (Dynamic) ---
     const [multiLineChartData, setMultiLineChartData] = useState([]);
     const [pieData, setPieData] = useState([]);
-    const PIE_COLORS = ['#10B981', '#3B82F6', '#A855F7', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
+    const PIE_COLORS = ['#059b27', '#3B82F6', '#A855F7', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
     // --- History Data (Dynamic) ---
     const [historyData, setHistoryData] = useState([]);
@@ -371,8 +371,8 @@ export default function AdminTariff({ onNavigate }) {
 
     // Badge styling mapping
     const getBadgeStyle = (category) => {
-        if (category.includes('R1 - 450')) return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
-        if (category.includes('R1 - 900')) return 'bg-teal-100 text-teal-700 border border-teal-200';
+        if (category.includes('R1 - 450')) return 'bg-bieon-eco/15 text-bieon-eco border border-bieon-sense/25';
+        if (category.includes('R1 - 900')) return 'bg-bieon-sense/10 text-bieon-sense border border-bieon-sense/25';
         if (category.includes('R1M')) return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
         if (category.includes('R2')) return 'bg-blue-100 text-blue-700 border border-blue-200';
         if (category.includes('R3')) return 'bg-purple-100 text-purple-700 border border-purple-200';
@@ -624,7 +624,7 @@ export default function AdminTariff({ onNavigate }) {
                                 key={opt}
                                 onClick={() => handleSegmentClick(idx)}
                                 className={`px-6 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap transition-all duration-300 ${activeSlide === idx
-                                    ? 'bg-white text-[#009B7C] shadow-sm ring-1 ring-emerald-500/20'
+                                    ? 'bg-white text-bieon-eco shadow-sm ring-1 ring-bieon-eco/20'
                                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'
                                     }`}
                             >
@@ -637,7 +637,7 @@ export default function AdminTariff({ onNavigate }) {
                     <div className="md:hidden flex items-center justify-between w-full max-w-[90vw] px-2 py-0.5 mt-1">
                         <button 
                             onClick={() => scrollTabs('left')}
-                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
+                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-bieon-eco"
                             aria-label="Scroll Kiri"
                         >
                             <ChevronLeft className="w-4 h-4 font-bold" strokeWidth={3} />
@@ -652,14 +652,14 @@ export default function AdminTariff({ onNavigate }) {
                                 onChange={handleTabsRangeChange}
                                 className="w-full h-[6px] bg-gray-100 rounded-full appearance-none cursor-grab active:cursor-grabbing focus:outline-none"
                                 style={{
-                                    background: `linear-gradient(to right, #009B7C ${tabsScrollProgress}%, #F3F4F6 ${tabsScrollProgress}%)`
+                                    background: `linear-gradient(to right, #059b27 ${tabsScrollProgress}%, #F3F4F6 ${tabsScrollProgress}%)`
                                 }}
                             />
                         </div>
 
                         <button 
                             onClick={() => scrollTabs('right')}
-                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-[#009B7C]"
+                            className="p-1 hover:bg-gray-50 rounded-full active:scale-95 transition-all text-gray-400 hover:text-bieon-eco"
                             aria-label="Scroll Kanan"
                         >
                             <ChevronRight className="w-4 h-4 font-bold" strokeWidth={3} />
@@ -670,7 +670,7 @@ export default function AdminTariff({ onNavigate }) {
                 {/* 2 ELONGATED CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 select-none">
                     {/* Card 1 - Info Golongan */}
-                    <div className="bg-gradient-to-r from-[#10B981] to-[#059669] rounded-[1.25rem] shadow-md shadow-emerald-500/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-[1.25rem] shadow-md shadow-bieon-eco/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex-1">
                             <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">{t('admin_tariff.cards.info_title', 'Informasi Golongan')}</p>
                             <h3 className="text-[28px] font-extrabold tracking-tight leading-none mb-2">{t('admin_tariff.categories.' + getSegmentKey(activeSegmentName), activeSegmentName)}</h3>
@@ -724,7 +724,7 @@ export default function AdminTariff({ onNavigate }) {
                                             <div className="flex items-center justify-between max-w-sm">
                                                 <div className="text-sm font-bold text-gray-900">{stat.name}</div>
                                                 {stat.percentage !== 0 ? (
-                                                    <div className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${stat.percentage > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                    <div className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${stat.percentage > 0 ? 'bg-red-50 text-red-600' : 'bg-bieon-eco/10 text-bieon-eco'}`}>
                                                         {stat.percentage > 0 ? t('admin_tariff.matrix.status_up', 'Naik') : t('admin_tariff.matrix.status_down', 'Turun')} ({stat.percentage > 0 ? '+' : ''}{stat.percentage.toFixed(2)}%)
                                                     </div>
                                                 ) : (
@@ -733,7 +733,7 @@ export default function AdminTariff({ onNavigate }) {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="font-bold text-[#009B7C] text-[15px]">
+                                            <div className="font-bold text-bieon-eco text-[15px]">
                                                 Rp {stat.currentTariff.toFixed(2)}
                                             </div>
                                             <div className="text-[10px] text-gray-400 font-medium">{t('admin_tariff.matrix.unit', 'per kWh')}</div>
@@ -744,7 +744,7 @@ export default function AdminTariff({ onNavigate }) {
                                                     setFormGolongan(stat.name);
                                                     document.getElementById('update-form-section')?.scrollIntoView({ behavior: 'smooth' });
                                                 }}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-[#E1F2EB] text-gray-600 hover:text-[#009B7C] rounded-lg text-xs font-bold transition-colors"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-[#e8f9fb] text-gray-600 hover:text-bieon-eco rounded-lg text-xs font-bold transition-colors"
                                             >
                                                 <Zap className="w-3.5 h-3.5" /> {t('admin_tariff.matrix.btn_update', 'Update')}
                                             </button>
@@ -784,7 +784,7 @@ export default function AdminTariff({ onNavigate }) {
                                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#9CA3AF' }} domain={['dataMin - 50', 'dataMax + 50']} />
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                                         <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: '#f3f4f6', strokeWidth: 2 }} />
-                                        <Line type="monotone" dataKey="r1" name="R1" stroke="#10B981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                        <Line type="monotone" dataKey="r1" name="R1" stroke="#059b27" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                                         <Line type="monotone" dataKey="r2" name="R2" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                                         <Line type="monotone" dataKey="r3" name="R3" stroke="#A855F7" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                                     </LineChart>
@@ -858,7 +858,7 @@ export default function AdminTariff({ onNavigate }) {
                     <div id="update-form-section" className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 h-fit">
                         <div className="mb-6 border-b border-gray-100 pb-4">
                             <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 leading-tight mb-2">
-                                <Zap className="w-5 h-5 text-[#009b7c]" /> {t('admin_tariff.form.title', 'Update Tarif Listrik PLN')}
+                                <Zap className="w-5 h-5 text-bieon-eco" /> {t('admin_tariff.form.title', 'Update Tarif Listrik PLN')}
                             </h2>
                             <p className="text-sm text-gray-500">{t('admin_tariff.form.subtitle', 'Perbarui tarif listrik sesuai dengan kebijakan terbaru PLN.')}</p>
                         </div>
@@ -881,7 +881,7 @@ export default function AdminTariff({ onNavigate }) {
                                         <button
                                             type="button"
                                             onClick={() => setShowFormGolDropdown(!showFormGolDropdown)}
-                                            className={`w-full flex items-center justify-between px-4 py-3.5 bg-gray-50 border rounded-2xl text-sm font-bold transition-all ${showFormGolDropdown ? 'border-[#009b7c] bg-white ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-100/50'}`}
+                                            className={`w-full flex items-center justify-between px-4 py-3.5 bg-gray-50 border rounded-2xl text-sm font-bold transition-all ${showFormGolDropdown ? 'border-bieon-eco bg-white ring-4 ring-bieon-eco/10' : 'border-gray-100 hover:bg-gray-100/50'}`}
                                         >
                                             <span className={formGolongan ? 'text-gray-900' : 'text-gray-400'}>
                                                 {formGolongan || t('admin_tariff.form.ph_category', 'Pilih Golongan PLN')}
@@ -899,7 +899,7 @@ export default function AdminTariff({ onNavigate }) {
                                                             value={formGolonganSearch}
                                                             onChange={(e) => setFormGolonganSearch(e.target.value)}
                                                             placeholder={t('admin_tariff.form.search_category', 'Cari golongan (mis. R1, B-2, PJU...)')}
-                                                            className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-[12px] font-bold text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-emerald-500/10 transition-all"
+                                                            className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-[12px] font-bold text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-bieon-eco focus:ring-2 focus:ring-bieon-eco/10 transition-all"
                                                         />
                                                     </div>
 
@@ -929,7 +929,7 @@ export default function AdminTariff({ onNavigate }) {
                                                                         setShowFormGolDropdown(false);
                                                                         setFormGolonganSearch('');
                                                                     }}
-                                                                    className={`w-full text-left px-5 py-3 text-[12px] font-bold transition-colors ${formGolongan === cat.label ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                    className={`w-full text-left px-5 py-3 text-[12px] font-bold transition-colors ${formGolongan === cat.label ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                                                 >
                                                                     {cat.label}
                                                                 </button>
@@ -951,7 +951,7 @@ export default function AdminTariff({ onNavigate }) {
                                                                         setShowFormGolDropdown(false);
                                                                         setFormGolonganSearch('');
                                                                     }}
-                                                                    className={`w-full text-left px-5 py-3 text-[12px] font-bold transition-colors ${formGolongan === cat.label ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                    className={`w-full text-left px-5 py-3 text-[12px] font-bold transition-colors ${formGolongan === cat.label ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                                                 >
                                                                     {cat.label}
                                                                 </button>
@@ -974,7 +974,7 @@ export default function AdminTariff({ onNavigate }) {
                                             value={newTariff}
                                             onChange={(e) => setNewTariff(e.target.value)}
                                             placeholder={t('admin_tariff.form.ph_tariff', 'Contoh: 1495')}
-                                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-[#009b7c] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all custom-scrollbar-hide"
+                                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:border-bieon-eco focus:bg-white focus:ring-4 focus:ring-bieon-eco/10 transition-all custom-scrollbar-hide"
                                         />
                                     </div>
                                     <p className="text-[10px] text-gray-400">{t('admin_tariff.form.hint_tariff', 'Masukkan tarif dalam Rupiah (Rp)')}</p>
@@ -987,12 +987,12 @@ export default function AdminTariff({ onNavigate }) {
                                         <button
                                             type="button"
                                             onClick={() => setShowCalendar(!showCalendar)}
-                                            className={`w-full flex items-center justify-between px-4 py-3.5 bg-gray-50 border rounded-2xl text-sm font-bold transition-all ${showCalendar ? 'border-[#009b7c] bg-white ring-4 ring-emerald-500/10' : 'border-gray-100 hover:bg-gray-100/50'}`}
+                                            className={`w-full flex items-center justify-between px-4 py-3.5 bg-gray-50 border rounded-2xl text-sm font-bold transition-all ${showCalendar ? 'border-bieon-eco bg-white ring-4 ring-bieon-eco/10' : 'border-gray-100 hover:bg-gray-100/50'}`}
                                         >
                                             <span className={selectedDate ? 'text-gray-900' : 'text-gray-400'}>
                                                 {selectedDate || t('admin_tariff.form.ph_date', 'Pilih Tanggal')}
                                             </span>
-                                            <Calendar className={`w-4 h-4 text-gray-400 transition-colors ${showCalendar ? 'text-[#009b7c]' : ''}`} />
+                                            <Calendar className={`w-4 h-4 text-gray-400 transition-colors ${showCalendar ? 'text-bieon-eco' : ''}`} />
                                         </button>
 
                                         {showCalendar && (
@@ -1003,7 +1003,7 @@ export default function AdminTariff({ onNavigate }) {
                                                         <div className="flex flex-col">
                                                             <span className="text-[15px] font-bold text-gray-900">{monthNames[viewMonth]}</span>
                                                             <div className="relative">
-                                                                <button type="button" onClick={() => setShowYearDropdown(!showYearDropdown)} className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-[#009b7c] transition-colors">
+                                                                <button type="button" onClick={() => setShowYearDropdown(!showYearDropdown)} className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-bieon-eco transition-colors">
                                                                     {viewYear} <ChevronDown className={`w-3 h-3 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} />
                                                                 </button>
                                                                 {showYearDropdown && (
@@ -1015,7 +1015,7 @@ export default function AdminTariff({ onNavigate }) {
                                                                                     key={year}
                                                                                     type="button"
                                                                                     onClick={() => { setViewYear(year); setShowYearDropdown(false); }}
-                                                                                    className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${viewYear === year ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                                                    className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors ${viewYear === year ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                                                                 >
                                                                                     {year}
                                                                                 </button>
@@ -1053,8 +1053,8 @@ export default function AdminTariff({ onNavigate }) {
                                                                         }
                                                                     }}
                                                                     className={`h-9 w-full flex items-center justify-center rounded-xl text-xs font-bold transition-all
-                                                                            ${!d.current ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-emerald-50 hover:text-emerald-600'}
-                                                                            ${isSelected ? 'bg-[#009b7c] text-white hover:bg-[#008268] hover:text-white shadow-md shadow-emerald-100' : ''}
+                                                                            ${!d.current ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-bieon-eco/10 hover:text-bieon-eco'}
+                                                                            ${isSelected ? 'bg-gradient-to-r from-bieon-eco to-bieon-sense text-white hover:brightness-105 hover:text-white shadow-md shadow-bieon-eco/15' : ''}
                                                                         `}
                                                                 >
                                                                     {d.day}
@@ -1077,14 +1077,14 @@ export default function AdminTariff({ onNavigate }) {
                                     value={note}
                                     onChange={(e) => setNote(e.target.value)}
                                     placeholder={t('admin_tariff.form.ph_note', 'Contoh: Penyesuaian tarif PLN sesuai SK Menteri ESDM No. 28/2026')}
-                                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium text-gray-900 focus:outline-none focus:border-[#009b7c] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all min-h-[100px] resize-none"
+                                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium text-gray-900 focus:outline-none focus:border-bieon-eco focus:bg-white focus:ring-4 focus:ring-bieon-eco/10 transition-all min-h-[100px] resize-none"
                                 />
                                 <p className="text-[10px] text-gray-400">{t('admin_tariff.form.hint_note', 'Jelaskan alasan/dasar hukum perubahan tarif')}</p>
                             </div>
 
                             <button
                                 onClick={handleUpdateTariff}
-                                className="w-full py-4 bg-[#009B7C] text-white font-bold rounded-2xl text-sm hover:bg-[#008268] transition-all shadow-lg flex justify-center items-center gap-2 group mt-4"
+                                className="w-full py-4 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white font-bold rounded-2xl text-sm hover:brightness-105 transition-all shadow-lg flex justify-center items-center gap-2 group mt-4"
                             >
                                 <Zap className="w-4 h-4 opacity-80" /> {t('admin_tariff.form.btn_submit', 'Update Tarif Listrik')}
                             </button>
@@ -1107,14 +1107,14 @@ export default function AdminTariff({ onNavigate }) {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder={t('admin_tariff.history.search_ph', 'Cari Keterangan...')}
-                                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#009b7c] focus:ring-2 focus:ring-emerald-500/10 transition-all custom-scrollbar-hide h-10"
+                                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-bieon-eco focus:ring-2 focus:ring-bieon-eco/10 transition-all custom-scrollbar-hide h-10"
                                     />
                                 </div>
                                 {/* Filter */}
                                 <div className="relative w-full sm:w-48">
                                     <button
                                         onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                                        className={`flex items-center justify-start gap-2 w-full px-4 py-2 bg-gray-50 border rounded-xl text-xs font-bold transition-all h-10 ${showFilterDropdown ? 'border-[#009b7c]' : 'border-gray-100 hover:bg-gray-100/50'}`}
+                                        className={`flex items-center justify-start gap-2 w-full px-4 py-2 bg-gray-50 border rounded-xl text-xs font-bold transition-all h-10 ${showFilterDropdown ? 'border-bieon-eco' : 'border-gray-100 hover:bg-gray-100/50'}`}
                                     >
                                         <Filter className="w-3.5 h-3.5 text-gray-500 shrink-0" />
                                         <span className="text-gray-700 whitespace-nowrap truncate">{filterGolongan === 'All' ? t('admin_tariff.history.filter_all', 'Semua Golongan') : translatePlnCategory(filterGolongan)}</span>
@@ -1125,7 +1125,7 @@ export default function AdminTariff({ onNavigate }) {
                                             <div className="absolute right-0 top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-[40] max-h-[240px] overflow-y-auto modal-custom-scrollbar">
                                                 <button
                                                     onClick={() => { setFilterGolongan('All'); setShowFilterDropdown(false); }}
-                                                    className={`w-full text-left px-5 py-2.5 text-[12px] font-black transition-colors ${filterGolongan === 'All' ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                    className={`w-full text-left px-5 py-2.5 text-[12px] font-black transition-colors ${filterGolongan === 'All' ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                                 >
                                                     {t('admin_tariff.history.filter_all', 'Semua Golongan')}
                                                 </button>
@@ -1133,7 +1133,7 @@ export default function AdminTariff({ onNavigate }) {
                                                     <button
                                                         key={opt}
                                                         onClick={() => { setFilterGolongan(opt); setShowFilterDropdown(false); }}
-                                                        className={`w-full text-left px-5 py-2.5 text-[12px] font-black transition-colors ${filterGolongan === opt ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-5 py-2.5 text-[12px] font-black transition-colors ${filterGolongan === opt ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600 hover:bg-gray-50'}`}
                                                     >
                                                         {opt}
                                                     </button>
@@ -1145,7 +1145,7 @@ export default function AdminTariff({ onNavigate }) {
                                 {/* Export Button */}
                                 <button
                                     onClick={handleExportPDF}
-                                    className="flex items-center justify-center gap-2 px-6 py-2 h-10 bg-[#E1F2EB] text-[#1E4D40] rounded-xl text-xs font-bold hover:bg-[#d4ece3] transition-all shadow-sm w-full sm:w-auto shrink-0"
+                                    className="flex items-center justify-center gap-2 px-6 py-2 h-10 bg-[#e8f9fb] text-[#1E4D40] rounded-xl text-xs font-bold hover:bg-[#d4ece3] transition-all shadow-sm w-full sm:w-auto shrink-0"
                                 >
                                     <Download className="w-3.5 h-3.5 shrink-0" /> <span className="whitespace-nowrap">{t('admin_tariff.history.btn_export', 'Export')}</span>
                                 </button>
@@ -1189,7 +1189,7 @@ export default function AdminTariff({ onNavigate }) {
                                                     Rp {item.tariff.toFixed(2)}
                                                 </div>
                                                 {item.percentage !== 0 ? (
-                                                    <div className={`flex items-center gap-0.5 text-[10px] font-bold mt-1 ${item.percentage > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                    <div className={`flex items-center gap-0.5 text-[10px] font-bold mt-1 ${item.percentage > 0 ? 'text-red-500' : 'text-bieon-eco'}`}>
                                                         {item.percentage > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                                         {item.percentage > 0 ? t('admin_tariff.matrix.status_up', 'Naik') : t('admin_tariff.matrix.status_down', 'Turun')} ({item.percentage > 0 ? '+' : ''}{item.percentage}%)
                                                     </div>
@@ -1225,7 +1225,7 @@ export default function AdminTariff({ onNavigate }) {
                                     {showRowsDropdown && (
                                         <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
                                             {[5, 10, 30, 50].map(val => (
-                                                <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-[#009b7c] bg-[#F2F8F5]' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
+                                                <button key={val} onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-500 hover:bg-gray-50'}`}>{val}</button>
                                             ))}
                                         </div>
                                     )}
@@ -1317,8 +1317,8 @@ export default function AdminTariff({ onNavigate }) {
             {toast.show && (
                 <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-5 duration-300">
                     <div className="bg-[#1E293B] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-700/50 backdrop-blur-md">
-                        <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        <div className="w-8 h-8 bg-bieon-eco/20 rounded-full flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-bieon-sense" />
                         </div>
                         <span className="text-sm font-bold tracking-tight">{toast.message}</span>
                     </div>

@@ -216,7 +216,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50/20 to-teal-50/20 flex flex-col font-sans">
+    <div className="min-h-screen bg-surface-main flex flex-col font-sans">
 
       {/* Top Navbar */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm relative">
@@ -235,8 +235,8 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   key={id}
                   onClick={() => navigate(`/${id}`)}
                   className={`font-semibold pb-1 border-b-2 transition-all ${currentPage === id
-                      ? 'text-teal-700 border-teal-700 cursor-default'
-                      : 'text-gray-500 border-transparent hover:text-teal-700 hover:border-teal-700'
+                      ? 'text-sense border-sense cursor-default'
+                      : 'text-gray-500 border-transparent hover:text-sense hover:border-sense'
                     }`}
                 >
                   {t(labelKey)}
@@ -265,10 +265,10 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                     <Bell className="w-5 h-5 text-gray-600" />
                     {hasUnread && <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
                   </button>
-                  <NotificationPopup 
-                    isOpen={showNotif} 
-                    onClose={() => setShowNotif(false)} 
-                    role="homeowner" 
+                  <NotificationPopup
+                    isOpen={showNotif}
+                    onClose={() => setShowNotif(false)}
+                    role="homeowner"
                     onNavigate={handleNotificationNavigate}
                     onUnreadChange={setHasUnread}
                   />
@@ -276,13 +276,13 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               )}
 
               {/* Premium Language Pill Toggle */}
-              <div className="flex items-center bg-teal-50/60 p-0.5 rounded-xl border border-teal-100/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
+              <div className="flex items-center bg-sense/10 p-0.5 rounded-xl border border-sense/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
                 <button
                   onClick={() => handleLanguageChange('id')}
                   className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
                     currentLang === 'id'
-                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
-                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                      ? 'bg-white text-sense shadow-sm border border-sense/10 scale-100'
+                      : 'text-slate-400 hover:text-sense bg-transparent'
                   }`}
                   title="Bahasa Indonesia"
                 >
@@ -292,8 +292,8 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   onClick={() => handleLanguageChange('en')}
                   className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
                     currentLang === 'en'
-                      ? 'bg-white text-teal-700 shadow-sm border border-teal-100/50 scale-100'
-                      : 'text-slate-400 hover:text-teal-700 bg-transparent'
+                      ? 'bg-white text-sense shadow-sm border border-sense/10 scale-100'
+                      : 'text-slate-400 hover:text-sense bg-transparent'
                   }`}
                   title="English"
                 >
@@ -307,7 +307,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   onClick={() => !isTechnicianMode && setShowProfilePopup(true)}
                   className={`flex items-center gap-2 p-1 md:p-1.5 rounded-lg transition-all ${isTechnicianMode ? 'cursor-not-allowed opacity-80' : 'hover:bg-gray-50'}`}
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold font-accent shadow-inner">
+                  <div className="w-8 h-8 bg-gradient-to-br from-eco to-sense rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold font-accent shadow-inner">
                     {isTechnicianMode
                       ? (localStorage.getItem('bieon_active_homeowner_name') || 'HO').substring(0, 2).toUpperCase()
                       : (userProfile?.fullName || 'US').substring(0, 2).toUpperCase()}
@@ -365,15 +365,15 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       {/* Mobile Bottom Nav */}
       {!hideBottomNav && (
         <div className="md:hidden fixed bottom-6 left-4 right-4 z-40">
-          <div className="bg-white/90 backdrop-blur-lg border border-emerald-100 shadow-2xl rounded-2xl flex items-center justify-around h-16 p-2 ring-4 ring-emerald-500/10">
+          <div className="bg-white/90 backdrop-blur-lg border border-sense/25 shadow-2xl rounded-2xl flex items-center justify-around h-16 p-2 ring-4 ring-sense/10">
             {filteredNavItems.map(({ id, labelKey, mobileIcon: Icon }) => (
               <button
                 key={id}
                 onClick={() => navigate(`/${id}`)}
-                className={`flex flex-col items-center justify-center transition-all ${currentPage === id ? 'text-teal-600 scale-110' : 'text-gray-400 hover:text-teal-400'
+                className={`flex flex-col items-center justify-center transition-all ${currentPage === id ? 'text-sense scale-110' : 'text-gray-400 hover:text-sense/80'
                   }`}
               >
-                <Icon className={`w-6 h-6 ${currentPage === id ? 'fill-teal-600/10' : ''}`} strokeWidth={currentPage === id ? 2.5 : 2} />
+                <Icon className={`w-6 h-6 ${currentPage === id ? 'fill-sense/10' : ''}`} strokeWidth={currentPage === id ? 2.5 : 2} />
                 <span className={`text-[10px] sm:text-xs font-bold mt-1 ${currentPage === id ? '' : 'text-gray-400'}`}>{t(labelKey)}</span>
               </button>
             ))}

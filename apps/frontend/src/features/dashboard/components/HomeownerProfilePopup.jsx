@@ -115,16 +115,16 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
-      <div className="relative bg-white/90 backdrop-blur-3xl rounded-[24px] sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,155,124,0.3)] w-full sm:max-w-[420px] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-500 border border-white/50">
+      <div className="relative bg-white/90 backdrop-blur-3xl rounded-[24px] sm:rounded-3xl shadow-eco/30 w-full sm:max-w-[420px] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-500 border border-white/50">
         
         {/* Ambient Top Glow */}
-        <div className="absolute top-0 left-1/4 right-1/4 h-32 bg-emerald-400/20 blur-[50px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-0 left-1/4 right-1/4 h-32 bg-eco/20 blur-[50px] rounded-full pointer-events-none"></div>
 
         {/* Header Section */}
         <div className="px-8 pt-8 pb-4 relative z-10 shrink-0 border-b border-gray-100/50">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
-              {view === 'main' ? t('profile.title') : view === 'edit' ? t('profile.edit_title') : t('profile.settings_title')}
+              {view === 'main' ? t('profile.title') : t('profile.edit_title')}
             </h2>
             <button 
               onClick={() => {
@@ -136,7 +136,6 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               <X className="w-6 h-6" />
             </button>
           </div>
-          {view !== 'main' && <div className="mt-4 border-b border-gray-100" />}
         </div>
 
         {/* Content Area - Seamless Scrollable with CSS Masking */}
@@ -154,7 +153,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               {/* Avatar Section */}
               <div className="flex flex-col items-center">
                 <div className="relative mb-4 group cursor-pointer" onClick={() => setView('edit')}>
-                  <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-[0_8px_30px_rgba(0,155,124,0.2)] bg-slate-50 relative group-hover:scale-105 transition-transform duration-300">
+                  <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-eco/25 bg-slate-50 relative group-hover:scale-105 transition-transform duration-300">
                     <img 
                       src={profilePic} 
                       alt="Avatar" 
@@ -166,7 +165,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setView('edit'); }}
-                    className="absolute bottom-1 right-1 w-8 h-8 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl text-slate-400 hover:text-[#009b7c] transition-all border-[3px] border-white scale-110"
+                    className="absolute bottom-1 right-1 w-8 h-8 bg-white border border-gray-100 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl text-slate-400 hover:text-eco transition-all border-[3px] border-white scale-110"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
@@ -185,9 +184,9 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   <span className="font-bold text-slate-500">{t('profile.dob')}</span>
                   <span className="font-bold text-slate-700">{formData.dob}</span>
                 </div>
-                <div className="flex justify-between items-center text-[13px]">
-                  <span className="font-bold text-slate-500">{t('profile.address')}</span>
-                  <span className="font-bold text-slate-700">{formData.address}</span>
+                <div className="flex justify-between items-start gap-4 text-[13px]">
+                  <span className="font-bold text-slate-500 shrink-0">{t('profile.address')}</span>
+                  <span className="font-bold text-slate-700 text-right">{formData.address}</span>
                 </div>
               </div>
 
@@ -197,7 +196,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                   <h4 className="text-lg font-extrabold text-slate-800 tracking-tight">{t('profile.your_device')}</h4>
                   <button 
                     onClick={() => setShowAddBieonPopup(true)}
-                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-[#009b7c] hover:text-white transition-all shadow-sm"
+                    className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-eco hover:text-white transition-all shadow-sm"
                     title={t('profile.add_bieon_id')}
                   >
                     <Plus className="w-4 h-4" />
@@ -207,7 +206,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                 <div className="px-2 mb-2 space-y-3">
                   {isLoadingBieon ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
+                      <Loader2 className="w-6 h-6 text-eco animate-spin" />
                     </div>
                   ) : bieonSystems.length > 0 ? (
                     bieonSystems.map((sys) => (
@@ -220,17 +219,17 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                           if (onNavigate) onNavigate('kendali');
                           else navigate('/kendali');
                         }}
-                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-emerald-500 hover:shadow-md transition-all group cursor-pointer"
+                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-eco hover:shadow-md transition-all group cursor-pointer"
                       >
-                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-emerald-100 group-hover:bg-emerald-50 transition-colors flex items-center justify-center bg-white">
-                          <Cpu className="w-6 h-6 text-emerald-500" />
+                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-eco/10 group-hover:bg-eco/5 transition-colors flex items-center justify-center bg-white">
+                          <Cpu className="w-6 h-6 text-eco" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[14px] font-bold text-slate-800 tracking-tight group-hover:text-emerald-700 transition-colors">{sys.bieonId === userProfile.bieonId ? 'Master BIEON System' : 'BIEON System'}</div>
-                          <div className="text-[12px] font-bold text-emerald-600 font-mono mt-0.5">{sys.bieonId}</div>
+                          <div className="text-[14px] font-bold text-slate-800 tracking-tight group-hover:text-eco transition-colors">{sys.bieonId === userProfile.bieonId ? 'Master BIEON System' : 'BIEON System'}</div>
+                          <div className="text-[12px] font-bold text-eco font-mono mt-0.5">{sys.bieonId}</div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sys.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : sys.status === 'Inactive' ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-600'}`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sys.status === 'Active' ? 'bg-eco/10 text-eco' : sys.status === 'Inactive' ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-600'}`}>
                             {sys.status === 'Active' ? t('homeowner_qc.device.status_active') : sys.status === 'Inactive' ? t('homeowner_qc.device.status_inactive') : t('homeowner_qc.device.status_unknown')}
                           </span>
                           <span className="text-[9px] text-slate-400 font-bold uppercase">{t('homeowner_qc.device.hub_count', { count: sys.hubCount || 0 })}</span>
@@ -245,19 +244,57 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                 </div>
               </div>
 
-              {/* Settings Action Row - Tightened spacing */}
-              <div className="pt-2 space-y-4 px-2">
-                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">{t('profile.settings_title')}</h4>
-                <div className="space-y-1 pb-4">
+              {/* Language Selection Row */}
+              <div className="pt-2 space-y-4 px-2 relative">
+                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">{t('profile.language')}</h4>
+                
+                <div className="relative">
                   <button 
-                    onClick={() => setView('settings')}
-                    className="w-full flex items-center gap-4 group transition-all p-3 -mx-3 rounded-xl hover:bg-slate-50"
+                    onClick={() => setOpenDropdown(openDropdown === 'language' ? null : 'language')}
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 ${
+                      openDropdown === 'language' 
+                      ? 'bg-white border-eco shadow-lg shadow-eco/10 ring-4 ring-eco/5' 
+                      : 'bg-slate-50/50 border-slate-200 hover:border-eco/30 hover:bg-white'
+                    }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-[#009b7c] group-hover:text-white transition-all">
-                      <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-eco/10 text-eco flex items-center justify-center font-bold text-[10px]">
+                        {i18n.language === 'id' ? 'ID' : 'EN'}
+                      </div>
+                      <span className="text-[14px] font-bold text-slate-700">{i18n.language === 'id' ? t('profile.lang_id') : t('profile.lang_en')}</span>
                     </div>
-                    <span className="text-[15px] font-bold text-slate-700 group-hover:text-slate-900 transition-colors">{t('profile.settings_title')}</span>
+                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'language' ? 'rotate-180 text-eco' : ''}`} />
                   </button>
+
+                  {openDropdown === 'language' && (
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in slide-in-from-bottom-2 duration-200">
+                      <div 
+                        onClick={() => { 
+                          i18n.changeLanguage('en');
+                          localStorage.setItem('bieon_language', 'en');
+                          setOpenDropdown(null); 
+                        }}
+                        className="flex items-center justify-between p-3.5 hover:bg-eco/5 cursor-pointer group transition-colors"
+                      >
+                        <span className={`text-sm font-bold ${i18n.language === 'en' ? 'text-eco' : 'text-slate-600 group-hover:text-eco'}`}>{t('profile.lang_en')}</span>
+                        {i18n.language === 'en' && <Check className="w-4 h-4 text-eco" />}
+                      </div>
+                      <div 
+                        onClick={() => { 
+                          i18n.changeLanguage('id');
+                          localStorage.setItem('bieon_language', 'id');
+                          setOpenDropdown(null); 
+                        }}
+                        className="flex items-center justify-between p-3.5 hover:bg-eco/5 cursor-pointer group transition-colors border-t border-slate-50"
+                      >
+                        <span className={`text-sm font-bold ${i18n.language === 'id' ? 'text-eco' : 'text-slate-600 group-hover:text-eco'}`}>{t('profile.lang_id')}</span>
+                        {i18n.language === 'id' && <Check className="w-4 h-4 text-eco" />}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1 pb-4">
                   <button 
                     onClick={async () => {
                       try {
@@ -319,11 +356,11 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                       <Camera className="w-8 h-8 text-white" />
                     </div>
                   </div>
-                  <div className="absolute bottom-0 right-0 bg-[#009b7c] w-7 h-7 rounded-full flex items-center justify-center border-2 border-white text-white shadow-md">
+                  <div className="absolute bottom-0 right-0 bg-eco w-7 h-7 rounded-full flex items-center justify-center border-2 border-white text-white shadow-md">
                     <Plus className="w-4 h-4" />
                   </div>
                 </div>
-                <span className="text-[11px] font-bold text-[#009b7c]">{t('profile.change_photo')}</span>
+                <span className="text-[11px] font-bold text-eco">{t('profile.change_photo')}</span>
               </div>
 
               <div className="space-y-4 flex-1 px-1">
@@ -341,7 +378,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                       name={field.name}
                       value={formData[field.name]}
                       onChange={handleChange}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-semibold shadow-sm"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-eco focus:ring-4 focus:ring-eco/10 transition-all font-semibold shadow-sm"
                     />
                   </div>
                 ))}
@@ -350,7 +387,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               <div className="pt-6">
                 <button 
                   onClick={handleSave}
-                  className="w-full py-3.5 bg-[#009b7c] text-white font-bold text-[14px] rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-eco text-white font-bold text-[14px] rounded-xl hover:bg-eco-900 shadow-lg shadow-eco/25 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5" />
                   {t('profile.save_changes')}
@@ -359,113 +396,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
             </div>
           )}
 
-          {/* SETTINGS VIEW */}
-          {view === 'settings' && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300 pt-6 px-1 pb-6">
-              {/* Theme Dropdown */}
-              <div className="space-y-2.5">
-                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">{t('profile.theme')}</label>
-                <div className="relative">
-                  <button 
-                    onClick={() => setOpenDropdown(openDropdown === 'theme' ? null : 'theme')}
-                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
-                      openDropdown === 'theme' 
-                      ? 'bg-white border-emerald-500 shadow-lg shadow-emerald-500/10 ring-4 ring-emerald-500/5' 
-                      : 'bg-slate-50/50 border-slate-200 hover:border-emerald-300 hover:bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${settingsData.theme === 'Dark' ? 'bg-slate-800 text-white' : 'bg-amber-100 text-amber-600'}`}>
-                        {settingsData.theme === 'Dark' ? <Zap className="w-4 h-4" /> : <Zap className="w-4 h-4 fill-amber-500" />}
-                      </div>
-                      <span className="text-[15px] font-bold text-slate-700">{settingsData.theme === 'Dark' ? t('profile.theme_dark') : t('profile.theme_light')}</span>
-                    </div>
-                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'theme' ? 'rotate-180 text-emerald-500' : ''}`} />
-                  </button>
 
-                  {openDropdown === 'theme' && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
-                      <div 
-                        onClick={() => { setSettingsData({...settingsData, theme: 'Light'}); setOpenDropdown(null); }}
-                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors"
-                      >
-                        <span className={`text-sm font-bold ${settingsData.theme === 'Light' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.theme_light')}</span>
-                        {settingsData.theme === 'Light' && <Check className="w-4 h-4 text-emerald-500" />}
-                      </div>
-                      <div 
-                        onClick={() => { setSettingsData({...settingsData, theme: 'Dark'}); setOpenDropdown(null); }}
-                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors border-t border-slate-50"
-                      >
-                        <span className={`text-sm font-bold ${settingsData.theme === 'Dark' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.theme_dark')}</span>
-                        {settingsData.theme === 'Dark' && <Check className="w-4 h-4 text-emerald-500" />}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Language Dropdown */}
-              <div className="space-y-2.5">
-                <label className="text-[12px] font-extrabold text-slate-400 uppercase tracking-widest pl-1">{t('profile.language')}</label>
-                <div className="relative">
-                  <button 
-                    onClick={() => setOpenDropdown(openDropdown === 'language' ? null : 'language')}
-                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
-                      openDropdown === 'language' 
-                      ? 'bg-white border-emerald-500 shadow-lg shadow-emerald-500/10 ring-4 ring-emerald-500/5' 
-                      : 'bg-slate-50/50 border-slate-200 hover:border-emerald-300 hover:bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-[10px]">
-                        {i18n.language === 'id' ? 'ID' : 'EN'}
-                      </div>
-                      <span className="text-[15px] font-bold text-slate-700">{i18n.language === 'id' ? t('profile.lang_id') : t('profile.lang_en')}</span>
-                    </div>
-                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'language' ? 'rotate-180 text-emerald-500' : ''}`} />
-                  </button>
-
-                  {openDropdown === 'language' && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in zoom-in-95 fade-in duration-200">
-                      <div 
-                        onClick={() => { 
-                          i18n.changeLanguage('en');
-                          localStorage.setItem('bieon_language', 'en');
-                          setOpenDropdown(null); 
-                        }}
-                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors"
-                      >
-                        <span className={`text-sm font-bold ${i18n.language === 'en' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.lang_en')}</span>
-                        {i18n.language === 'en' && <Check className="w-4 h-4 text-emerald-500" />}
-                      </div>
-                      <div 
-                        onClick={() => { 
-                          i18n.changeLanguage('id');
-                          localStorage.setItem('bieon_language', 'id');
-                          setOpenDropdown(null); 
-                        }}
-                        className="flex items-center justify-between p-4 hover:bg-emerald-50 cursor-pointer group transition-colors border-t border-slate-50"
-                      >
-                        <span className={`text-sm font-bold ${i18n.language === 'id' ? 'text-emerald-600' : 'text-slate-600 group-hover:text-emerald-600'}`}>{t('profile.lang_id')}</span>
-                        {i18n.language === 'id' && <Check className="w-4 h-4 text-emerald-500" />}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3 shadow-sm">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-                    <Settings className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <p className="text-[12px] text-emerald-800 font-bold leading-relaxed">
-                    {t('profile.settings_note')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Add Bieon Popup */}

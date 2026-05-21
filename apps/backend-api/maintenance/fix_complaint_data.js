@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
+const dns = require('dns');
+
+// Paksa Node.js gunakan DNS Google/Cloudflare agar menembus blokir DNS lokal/WiFi
+dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
 
 // Load environment variables from .env file
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -37,7 +41,7 @@ async function fixComplaintData() {
 
             // 2. Logic: No technician means it cannot be 'menunggu respons' or in-progress states
             const hasTechnician = !!doc.technician;
-            
+
             if (!hasTechnician) {
                 // If it's something that requires a technician, revert to unassigned
                 const techRequiredStatuses = ['menunggu respons', 'diproses', 'menunggu konfirmasi', 'overdue respons', 'overdue perbaikan'];

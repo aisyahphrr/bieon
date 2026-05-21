@@ -169,7 +169,7 @@ exports.login = async (req, res) => {
 
         // Buat Kunci JWT (Berlaku 1 Hari)
         const token = jwt.sign(
-            { userId: user._id, role: user.role, bieonId: user.bieonId },
+            { userId: user._id, role: user.role, bieonId: user.bieonId, email: user.email },
             process.env.JWT_SECRET || 'rahasia_cadangan',
             { expiresIn: '1d' }
         );
@@ -180,7 +180,7 @@ exports.login = async (req, res) => {
         res.status(200).json({
             message: 'Login berhasil!',
             token,
-            user: { id: user._id, fullName: user.fullName, role: user.role }
+            user: { id: user._id, fullName: user.fullName, role: user.role, email: user.email }
         });
     } catch (error) {
         res.status(500).json({ message: 'Terjadi kesalahan server', error: error.message });

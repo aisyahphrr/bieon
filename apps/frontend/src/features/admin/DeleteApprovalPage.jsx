@@ -14,7 +14,7 @@ const formatDateTime = (value) => {
 
 const toneClasses = {
     pending: 'bg-amber-50 text-amber-700 border-amber-200',
-    approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    approved: 'bg-bieon-eco/10 text-bieon-eco border-bieon-sense/25',
     rejected: 'bg-red-50 text-red-700 border-red-200',
 };
 
@@ -109,7 +109,7 @@ export default function DeleteApprovalPage() {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
                 <div className="bg-white border border-slate-200 rounded-3xl shadow-xl p-8 w-full max-w-lg text-center">
-                    <Loader2 className="w-10 h-10 mx-auto text-[#009b7c] animate-spin" />
+                    <Loader2 className="w-10 h-10 mx-auto text-bieon-eco animate-spin" />
                     <p className="mt-4 text-base font-bold text-slate-800">Memuat permintaan persetujuan...</p>
                 </div>
             </div>
@@ -133,7 +133,7 @@ export default function DeleteApprovalPage() {
                 <div className="px-8 py-7 border-b border-slate-200 bg-gradient-to-r from-white to-slate-50">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-[#009b7c]/10 text-[#009b7c] flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-bieon-eco to-bieon-sense/10 text-bieon-eco flex items-center justify-center">
                                 <ShieldCheck className="w-6 h-6" />
                             </div>
                             <div>
@@ -149,7 +149,7 @@ export default function DeleteApprovalPage() {
 
                 <div className="p-8 space-y-6">
                     {resultMessage && (
-                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                        <div className="rounded-2xl border border-bieon-sense/25 bg-bieon-eco/10 px-4 py-3 text-sm font-semibold text-bieon-eco">
                             {resultMessage}
                         </div>
                     )}

@@ -180,6 +180,7 @@
   },
   "history": {
     "title": "Activity History",
+    "subtitle": "Monitor logs, activities, and alerts of your BIEON devices",
     "comfort": "Comfort",
     "security": "Security",
     "water_quality": "Water Quality",

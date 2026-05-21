@@ -34,9 +34,9 @@ export function TicketStatusBadge({ status, rating, assignedAt, processStartedAt
       case 'diproses':
       case 'overdue perbaikan':
         return { 
-          bg: 'bg-blue-50', 
-          text: (s === 'overdue perbaikan' && role !== 'homeowner') ? 'text-red-600' : 'text-blue-600', 
-          dot: (s === 'overdue perbaikan' && role !== 'homeowner') ? 'bg-red-500' : 'bg-blue-500', 
+          bg: 'bg-sense/10', 
+          text: (s === 'overdue perbaikan' && role !== 'homeowner') ? 'text-red-600' : 'text-sense', 
+          dot: (s === 'overdue perbaikan' && role !== 'homeowner') ? 'bg-red-500' : 'bg-sense', 
           label: (s === 'overdue perbaikan' && role !== 'homeowner') ? t('complaint.status_overdue_perbaikan', 'Overdue Perbaikan') : t('complaint.status_diproses', 'Diproses'),
           timerStart: processStartedAt
         };
@@ -45,7 +45,7 @@ export function TicketStatusBadge({ status, rating, assignedAt, processStartedAt
         return { bg: 'bg-indigo-50', text: 'text-indigo-600', dot: 'bg-indigo-600', label: t('complaint.status_menunggu_konfirmasi_pelanggan', 'Menunggu Konfirmasi Pelanggan') };
 
       case 'selesai':
-        return { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-600', label: t('complaint.status_selesai', 'Selesai') };
+        return { bg: 'bg-eco/10', text: 'text-eco', dot: 'bg-eco', label: t('complaint.status_selesai', 'Selesai') };
 
       case 'ditolak':
         return { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500', label: t('complaint.status_ditolak', 'Ditolak') };

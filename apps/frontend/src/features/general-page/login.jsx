@@ -126,6 +126,7 @@ const Login = () => {
       localStorage.setItem('userId', data.user.id);
       localStorage.setItem('role', data.user.role);
       localStorage.setItem('fullName', data.user.fullName);
+      localStorage.setItem('email', data.user.email || email);
 
       // Arahkan berdasarkan role
       const userRole = data.user?.role;
