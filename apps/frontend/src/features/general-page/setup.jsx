@@ -303,7 +303,7 @@ const Setup = ({ tempData }) => {
     };
 
     return (
-        <div className="min-h-[100dvh] bg-slate-50 flex font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white">
+        <div className="h-[100dvh] bg-slate-50 flex font-sans relative overflow-hidden selection:bg-[#009b7c] selection:text-white">
             {/* Floating Language Switcher */}
             <div className="absolute top-6 right-6 z-50">
                 <div className="flex items-center bg-white/40 backdrop-blur-md p-0.5 rounded-xl border border-white/40 shadow-sm select-none">
@@ -424,13 +424,18 @@ const Setup = ({ tempData }) => {
             />
 
             <div className="hidden lg:block w-[45%] xl:w-[50%] p-4 pl-0">
-                <div className="w-full h-full rounded-[2.5rem] overflow-hidden relative shadow-md">
+                <div className="w-full h-full rounded-[2.5rem] overflow-hidden relative shadow-md bg-slate-100">
                     <img
-                        src="https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&q=80&w=1200"
-                        alt="Greenhouse Monitoring Tech"
-                        className="w-full h-full object-cover object-center"
+                        key={step}
+                        src={step === 2 ? '/gambar235.png' : `/gambar${step}.png`}
+                        alt={`BIEON Setup Step ${step}`}
+                        className={`transition-all duration-700 ease-in-out animate-in fade-in zoom-in-95 ${
+                            step === 2
+                                ? 'object-contain w-auto h-full mx-auto rounded-[2rem]'
+                                : 'w-full h-full object-center object-cover p-0'
+                        }`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent mix-blend-overlay"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent mix-blend-overlay pointer-events-none"></div>
                 </div>
             </div>
         </div>
