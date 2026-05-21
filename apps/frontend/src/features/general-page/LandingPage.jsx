@@ -188,8 +188,8 @@ const LandingPage = () => {
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
             <div className="mb-8">
-              <div className="text-6xl lg:text-8xl font-black tracking-tighter mb-4">
-                <span className="text-[#059b27]">ECO</span><span className="text-[#129cc0]">SENSE</span>
+              <div className="mb-4 flex justify-center lg:justify-start">
+                <img src="/ecosense.png" alt="EcoSense" className="h-16 lg:h-24 w-auto object-contain" />
               </div>
               <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-[1.2]">
                 Smart Living <br className="hidden lg:block" />
@@ -684,30 +684,30 @@ const LandingPage = () => {
                 </p>
 
                 {/* 4 Benefit Icons */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6 mb-10 max-w-lg mx-auto lg:mx-0">
-                  <Reveal delay="0.1s" className="flex flex-col items-center group">
+                <div className="flex flex-wrap gap-6 sm:gap-8 mb-10 max-w-lg mx-0">
+                  <Reveal delay="0.1s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/9EFISIENSI MENINGKAT.png" alt="Efisiensi Meningkat" className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Efisiensi<br />Meningkat</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Efisiensi<br />Meningkat</span>
                   </Reveal>
-                  <Reveal delay="0.15s" className="flex flex-col items-center group">
+                  <Reveal delay="0.15s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/10BIAYA BERKURANG.png" alt="Biaya Berkurang" className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Biaya<br />Berkurang</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Biaya<br />Berkurang</span>
                   </Reveal>
-                  <Reveal delay="0.2s" className="flex flex-col items-center group">
+                  <Reveal delay="0.2s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/11OPERASIONAL HIJAU.png" alt="Operasional Lebih Hijau" className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Operasional<br />Lebih Hijau</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Operasional<br />Lebih Hijau</span>
                   </Reveal>
-                  <Reveal delay="0.25s" className="flex flex-col items-center group">
+                  <Reveal delay="0.25s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/12KEPUTUSAN CEPAT.png" alt="Keputusan Lebih Cepat" className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center leading-tight">Keputusan<br />Lebih Cepat</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Keputusan<br />Lebih Cepat</span>
                   </Reveal>
                 </div>
 
@@ -717,8 +717,8 @@ const LandingPage = () => {
                     onClick={() => navigate('/signup')}
                     className="group relative bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-full font-bold text-base transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center gap-3 overflow-hidden"
                   >
-                    <Rocket className="w-5 h-5 relative z-10" />
-                    <span className="relative z-10">MULAI SEKARANG</span>
+                    <Rocket className="w-6 h-6 self-center relative z-10" />
+                    <span className="relative z-10 leading-none">MULAI SEKARANG</span>
                     <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                     <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
                   </button>

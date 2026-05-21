@@ -32,7 +32,8 @@ import {
   DoorClosed,
   Beaker,
   ToggleRight,
-  Power
+  Power,
+  Type
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart,
@@ -691,6 +692,15 @@ export function HomeownerDashboard() {
 
   const getCardStyles = (theme) => {
     switch (theme) {
+      case 'mint':
+        return {
+          comfort: 'from-[#E6F5EA] to-[#E6F5EA] theme-card-light',
+          comfortDeco: 'bg-slate-400/20',
+          security: 'from-[#E6F5EA] to-[#E6F5EA] theme-card-light',
+          securityDeco: 'bg-slate-400/20',
+          water: 'from-[#E6F5EA] to-[#E6F5EA] theme-card-light',
+          waterDeco: 'bg-slate-400/20',
+        };
       case 'monochrome':
         return {
           comfort: 'from-eco-500 to-emerald-600',
@@ -705,18 +715,18 @@ export function HomeownerDashboard() {
           comfort: 'from-eco-500 to-emerald-600',
           comfortDeco: 'bg-white/20',
           security: 'from-indigo-600 to-purple-600',
-          securityDeco: 'bg-indigo-400/20',
+          securityDeco: 'bg-white/20',
           water: 'from-sense-500 to-cyan-600',
-          waterDeco: 'bg-sense-400/25',
+          waterDeco: 'bg-white/20',
         };
       case 'modern':
         return {
           comfort: 'from-eco-500 to-emerald-600',
           comfortDeco: 'bg-white/20',
           security: 'from-amber-500 to-orange-600',
-          securityDeco: 'bg-amber-400/25',
+          securityDeco: 'bg-white/20',
           water: 'from-sense-500 to-cyan-600',
-          waterDeco: 'bg-sense-400/25',
+          waterDeco: 'bg-white/20',
         };
       case 'duotone':
         return {
@@ -733,9 +743,9 @@ export function HomeownerDashboard() {
           comfort: 'from-eco-500 to-emerald-600',
           comfortDeco: 'bg-white/20',
           security: 'from-eco-500 to-sense-500',
-          securityDeco: 'bg-sense-300/20',
+          securityDeco: 'bg-white/20',
           water: 'from-sense-500 to-cyan-600',
-          waterDeco: 'bg-sense-400/25',
+          waterDeco: 'bg-white/20',
         };
     }
   };
@@ -1094,49 +1104,58 @@ export function HomeownerDashboard() {
       currentPage="dashboard"
       hideBottomNav={showComplaintModal || showDataModal || showWarningModal}
     >
-      <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8">
+      <div className="max-w-[1900px] mx-auto px-3 sm:px-4 md:px-8 py-4 md:py-8 font-sans">
         {/* Sandbox Visual Switcher - Presentation Helper */}
-        <div className="bg-surface-card/90 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-eco-50 flex items-center justify-center border border-eco-100/50">
-              <Settings className="w-5 h-5 text-eco-500 animate-[spin_8s_linear_infinite]" />
+        <div className="bg-surface-card/90 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm p-5 mb-6 flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-300">
+          {/* Row 1: Theme Switcher */}
+          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-eco-50 flex items-center justify-center border border-eco-100/50">
+                <Settings className="w-5 h-5 text-eco-500 animate-[spin_8s_linear_infinite]" />
+              </div>
+              <div>
+                <h4 className="font-bold text-text-headline text-sm tracking-tight">Interactive Visual Sandbox</h4>
+                <p className="text-xs text-text-dim mt-0.5">Bandingkan 5 opsi warna dasbor secara real-time untuk presentasi</p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold text-text-headline text-sm tracking-tight">Interactive Visual Sandbox</h4>
-              <p className="text-xs text-text-dim mt-0.5">Bandingkan 4 opsi warna dasbor secara real-time untuk presentasi</p>
+            <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+              <button
+                onClick={() => { setCardTheme('brand'); localStorage.setItem('bieon_card_theme', 'brand'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'brand' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Brand (Eco & Sense)
+              </button>
+              <button
+                onClick={() => { setCardTheme('monochrome'); localStorage.setItem('bieon_card_theme', 'monochrome'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'monochrome' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 1: Semua Hijau
+              </button>
+              <button
+                onClick={() => { setCardTheme('legacy'); localStorage.setItem('bieon_card_theme', 'legacy'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'legacy' ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 2: Klasik (Hijau-Ungu-Biru)
+              </button>
+              <button
+                onClick={() => { setCardTheme('modern'); localStorage.setItem('bieon_card_theme', 'modern'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'modern' ? 'bg-amber-500 text-white border-transparent shadow-sm shadow-amber-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 3: Jingga Modern
+              </button>
+              <button
+                onClick={() => { setCardTheme('duotone'); localStorage.setItem('bieon_card_theme', 'duotone'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'duotone' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 4: Duotone (Eco & Sense)
+              </button>
+              <button
+                onClick={() => { setCardTheme('mint'); localStorage.setItem('bieon_card_theme', 'mint'); }}
+                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'mint' ? 'bg-[#E6F5EA] text-[#064e3b] border-[#C2E7CB] shadow-sm shadow-eco-500/10' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+              >
+                Opsi 5: Mint & Abu-abu
+              </button>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <button
-              onClick={() => { setCardTheme('brand'); localStorage.setItem('bieon_card_theme', 'brand'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'brand' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Brand (Eco & Sense)
-            </button>
-            <button
-              onClick={() => { setCardTheme('monochrome'); localStorage.setItem('bieon_card_theme', 'monochrome'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'monochrome' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 1: Semua Hijau
-            </button>
-            <button
-              onClick={() => { setCardTheme('legacy'); localStorage.setItem('bieon_card_theme', 'legacy'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'legacy' ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 2: Klasik (Hijau-Ungu-Biru)
-            </button>
-            <button
-              onClick={() => { setCardTheme('modern'); localStorage.setItem('bieon_card_theme', 'modern'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'modern' ? 'bg-amber-500 text-white border-transparent shadow-sm shadow-amber-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 3: Jingga Modern
-            </button>
-            <button
-              onClick={() => { setCardTheme('duotone'); localStorage.setItem('bieon_card_theme', 'duotone'); }}
-              className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'duotone' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
-            >
-              Opsi 4: Duotone (Eco & Sense)
-            </button>
           </div>
         </div>
 

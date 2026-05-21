@@ -479,7 +479,7 @@ export function HomeownerHistory({ onNavigate }) {
             onNavigate={onNavigate}
             hideBottomNav={false}
         >
-            <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8">
+            <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8 font-sans">
                 {/* Title Section */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-headline">{t('history.title', 'Riwayat Aktivitas')}</h1>

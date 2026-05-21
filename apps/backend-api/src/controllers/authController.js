@@ -38,9 +38,8 @@ exports.register = async (req, res) => {
         // --- VALIDASI BIEON ID (Hardware Flow) ---
         if (bieonId) {
             const BieonSystem = require('../models/BieonSystem');
-            const canonicalBieonId = normalizeBieonId(bieonId);
 
-            if (!canonicalBieonId) {
+            if (!normalizeBieonId(bieonId)) {
                 return res.status(400).json({ message: 'Bieon ID tidak valid.' });
             }
 
@@ -49,6 +48,9 @@ exports.register = async (req, res) => {
             if (!systemStock) {
                 return res.status(400).json({ message: 'Bieon ID tidak valid atau tidak terdaftar di stok developer.' });
             }
+
+            // Pakai penulisan persis di DB (mis. BIEON_001) agar konsisten dengan hub/MQTT
+            const exactBieonId = systemStock.bieonId;
 
             // 2. Cek apakah ID sudah diklaim user lain
             const ownerExists = await findOneByBieonId(User, bieonId);
@@ -68,7 +70,7 @@ exports.register = async (req, res) => {
                 address,
                 systemName,
                 plnTariff,
-                bieonId: canonicalBieonId,
+                bieonId: exactBieonId,
                 technicianId,
                 assignedRegion,
                 tenantId: `tenant_${String(await User.countDocuments({ role: 'Homeowner' }) + 1).padStart(3, '0')}`
@@ -109,13 +111,13 @@ exports.register = async (req, res) => {
             if (hubsPayload.length > 0) {
                 const payload = {
                     tenant_id: newUser.tenantId, 
-                    bieon_id: canonicalBieonId,
+                    bieon_id: exactBieonId,
                     hub_id: "hub_001", // ID Master/Gateway
                     hubs: hubsPayload
                 };
                 
                 // Tambahkan RETAIN agar ESP32 yang telat nyala tetap menerimanya
-                publishCommand(`bieon/${canonicalBieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
+                publishCommand(`bieon/${exactBieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
             }
 
             return res.status(201).json({ message: 'Registrasi berhasil!', user: { id: newUser._id, email: newUser.email, role: newUser.role } });
