@@ -34,14 +34,23 @@ exports.register = async (req, res) => {
         if (bieonId) {
             const BieonSystem = require('../models/BieonSystem');
             
-            // 1. Cek apakah ID ada di stok developer
-            const systemStock = await BieonSystem.findOne({ bieonId });
+            // Normalisasi input
+            const normalizedBieonId = String(bieonId).trim();
+            
+            // 1. Cek apakah ID ada di stok developer (case-insensitive)
+            const systemStock = await BieonSystem.findOne({ 
+                bieonId: { $regex: new RegExp(`^${normalizedBieonId}$`, 'i') } 
+            });
+            
             if (!systemStock) {
+                // Jika masuk ke sini, artinya bieonId memang benar-benar tidak ada di koleksi BieonSystem
                 return res.status(400).json({ message: 'Bieon ID tidak valid atau tidak terdaftar di stok developer.' });
             }
 
+            const exactBieonId = systemStock.bieonId;
+
             // 2. Cek apakah ID sudah diklaim user lain
-            const ownerExists = await User.findOne({ bieonId });
+            const ownerExists = await User.findOne({ bieonId: exactBieonId });
             if (ownerExists || systemStock.owner) {
                 return res.status(400).json({ message: 'Bieon ID sudah digunakan oleh pengguna lain.' });
             }
@@ -58,7 +67,7 @@ exports.register = async (req, res) => {
                 address,
                 systemName,
                 plnTariff,
-                bieonId,
+                bieonId: exactBieonId,
                 technicianId,
                 assignedRegion,
                 tenantId: `tenant_${String(await User.countDocuments({ role: 'Homeowner' }) + 1).padStart(3, '0')}`
