@@ -1,5 +1,5 @@
 // Device Control Dashboard
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import {
   Plus,
@@ -78,6 +78,26 @@ export function DeviceControlPage({ onNavigate }) {
   const [newRoomInput, setNewRoomInput] = useState("");
   const [showNewRoomInput, setShowNewRoomInput] = useState(false);
   const [configMode, setConfigMode] = useState("sensor");
+  // Helper: normalize IEEE string (strip separators, uppercase)
+  const normalizeIeee = (s) => {
+    if (!s && s !== 0) return '';
+    return String(s).replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+  };
+  const formatIeeeDisplay = (s) => {
+    const n = normalizeIeee(s);
+    return n || '-';
+  };
+  const formatModelDisplay = (s) => s ? String(s).toUpperCase() : '-';
+  const isPlaceholderText = (value) => {
+    const text = String(value || '').trim().toLowerCase();
+    return !text || text === 'unknown' || text === 'unknown unknown' || text === '-' || text === 'null' || text === 'undefined';
+  };
+  const formatDeviceName = (name, fallbackIeee) => {
+    const cleanName = isPlaceholderText(name) ? '' : String(name || '').trim();
+    if (cleanName) return cleanName;
+    const normalizedIeee = normalizeIeee(fallbackIeee);
+    return normalizedIeee ? `Device ${normalizedIeee}` : 'Perangkat Baru';
+  };
   const [sensorConfig, setSensorConfig] = useState({
     temperature: { enabled: false, value: 27, useDefault: true },
     humidity: { enabled: false, value: 70, useDefault: true },
@@ -140,6 +160,7 @@ export function DeviceControlPage({ onNavigate }) {
   const [activeConfigTarget, setActiveConfigTarget] = useState(null);
   const [isRemoteDetailView, setIsRemoteDetailView] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isOpenJoinRequestPending, setIsOpenJoinRequestPending] = useState(false);
   const [scanAttempted, setScanAttempted] = useState(false);
   const [scanTimer, setScanTimer] = useState(0);
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
@@ -147,6 +168,7 @@ export function DeviceControlPage({ onNavigate }) {
   const [discardingDevices, setDiscardingDevices] = useState({}); // { deviceId: seconds }
   const [pendingOpenJoinDevice, setPendingOpenJoinDevice] = useState(null);
   const [pendingOpenJoinAction, setPendingOpenJoinAction] = useState(null); // 'save' | 'configure'
+  const openJoinSubmitLockRef = useRef(false);
 
   // Efek Hitung Mundur untuk Pembuangan Perangkat
   useEffect(() => {
@@ -161,6 +183,10 @@ export function DeviceControlPage({ onNavigate }) {
         for (const id in next) {
           if (next[id] <= 1) {
             // Timer habis, eksekusi pembuangan
+            const expiredDevice = discoveredDevices.find(dev => dev.id === id);
+            if (expiredDevice && (expiredDevice.isFromDb || expiredDevice.dbId || expiredDevice._id)) {
+              requestDeviceLeave(expiredDevice);
+            }
             setJoinedDevicesPool(p => p.filter(pId => pId !== id));
             setDiscoveredDevices(d => d.filter(dev => dev.id !== id));
             delete next[id];
@@ -218,50 +244,42 @@ export function DeviceControlPage({ onNavigate }) {
     return false;
   };
 
-  const handleStartDiscovery = () => {
-    setIsScanning(true);
-    setScanAttempted(true);
-    setDiscoveredDevices([]);
-    setScanTimer(30);
+  const handleStartDiscovery = async () => {
+    if (openJoinSubmitLockRef.current || isScanning || isOpenJoinRequestPending) {
+      return;
+    }
 
-    // Simulasi Perangkat 1: Sonoff TH (Setelah 2.5 detik)
-    setTimeout(() => {
-      if (!isDeviceAlreadyRegisteredOrConfigured("SNZB_02DR2")) {
-        setDiscoveredDevices(prev => [...prev, {
-          id: "SNZB_02DR2",
-          name: "Sonoff Airguard TH SNZB-0",
-          type: "Sensor TH",
-          category: "sensor",
-          status: "Ready to Pair"
-        }]);
-      }
-    }, 2500);
+    openJoinSubmitLockRef.current = true;
+    setIsOpenJoinRequestPending(true);
 
-    // Simulasi Perangkat 2: Sonoff Smart Plug (Setelah 6 detik)
-    setTimeout(() => {
-      if (!isDeviceAlreadyRegisteredOrConfigured("S60ZBTPF")) {
-        setDiscoveredDevices(prev => [...prev, {
-          id: "S60ZBTPF",
-          name: "Sonoff Zigbee Smart Plug S",
-          type: "Smart Plug",
-          category: "smart-plug",
-          status: "Identified"
-        }]);
+    try {
+      // Minta backend untuk membuka open-join TARGET ke hub yang dipilih (publish ke ESP-B topic)
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch('/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || 'Gagal mengaktifkan open join');
       }
-    }, 6000);
 
-    // Simulasi Perangkat 3: Bieon Bluecheck (Setelah 9 detik)
-    setTimeout(() => {
-      if (!isDeviceAlreadyRegisteredOrConfigured("BLCK04WQS")) {
-        setDiscoveredDevices(prev => [...prev, {
-          id: "BLCK04WQS",
-          name: "Bieon Bluecheck Water Quality",
-          type: "Analog Sensor",
-          category: "sensor",
-          status: "Connected"
-        }]);
-      }
-    }, 9000);
+      setIsScanning(true);
+      setScanAttempted(true);
+      setDiscoveredDevices([]);
+      setJoinedDevicesPool([]);
+      setDiscardingDevices({});
+      setScanTimer(30);
+    } catch (err) {
+      alert('Gagal membuka Open Join: ' + err.message);
+      setIsOpenJoinRequestPending(false);
+      openJoinSubmitLockRef.current = false;
+      return;
+    } finally {
+      setIsOpenJoinRequestPending(false);
+      openJoinSubmitLockRef.current = false;
+    }
+
+    // Waiting for real device_discovered events from backend via Socket.IO
   };
 
   const DEVICE_BRANDS = {
@@ -350,6 +368,13 @@ export function DeviceControlPage({ onNavigate }) {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const devicesData = await devRes.json();
+        const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
+        const uniqueDevicesData = Array.from(
+          new Map(devicesData.map((device) => {
+            const key = normalizeIeee(device.device_ieee) || String(device._id || device.id || '');
+            return [key, device];
+          }))
+        ).map(([, device]) => device);
 
         // Join devices into hubs in systems
         const joinedSystems = systemsData.map(sys => ({
@@ -359,7 +384,7 @@ export function DeviceControlPage({ onNavigate }) {
           totalHubs: sys.hubCount || sys.hubs?.length || 0,
           hubs: sys.hubs.map(hub => ({
             ...hub,
-            devices: devicesData
+            devices: uniqueDevicesData
               .filter(d => String(d.hubId) === String(hub.id))
               .map(d => ({
                 ...d,
@@ -392,22 +417,38 @@ export function DeviceControlPage({ onNavigate }) {
     const socket = io('/'); // Koneksi ke backend
 
     socket.on('device_telemetry', (updatedDevice) => {
-      console.log('📡 Real-time Telemetry received:', updatedDevice._id, updatedDevice.status);
+      // Prefer device_ieee as canonical identifier when available
+      const deviceKey = String(updatedDevice.device_ieee || updatedDevice._id || updatedDevice.id || '');
+      console.log('📡 Real-time Telemetry received:', deviceKey, updatedDevice.status);
+      const pending = pendingToggleRef.current.get(deviceKey);
+
+      if (pending && updatedDevice.status !== undefined) {
+        const telemetryStatus = String(updatedDevice.status);
+        if (telemetryStatus === pending.targetStatus) {
+          clearTimeout(pending.timeoutId);
+          pendingToggleRef.current.delete(deviceKey);
+        }
+      }
+
       setBieonSystems(prevSystems => {
         return prevSystems.map(sys => ({
           ...sys,
           hubs: sys.hubs.map(hub => ({
             ...hub,
             devices: hub.devices.map(dev => {
-              const isMatch = String(dev._id) === String(updatedDevice._id) || String(dev.id) === String(updatedDevice._id);
+                      const devIeee = normalizeIeee(dev.device_ieee || dev.id || dev._id || '');
+                      const updIeee = normalizeIeee(updatedDevice.device_ieee || updatedDevice._id || updatedDevice.id || '');
+                      const isMatch = devIeee && updIeee ? devIeee === updIeee : (String(dev._id) === String(updatedDevice._id) || String(dev.id) === String(updatedDevice._id));
               if (isMatch) {
-                // SINKRONISASI REAL-TIME: Lepas gembok isToggling dan gunakan status terbaru dari backend
                 return {
                   ...dev,
-                  currentValues: updatedDevice.currentValues,
-                  battery: updatedDevice.battery,
-                  status: String(updatedDevice.status),
-                  isToggling: false // Bebaskan gembok agar warna langsung berubah!
+                  device_ieee: updatedDevice.device_ieee || dev.device_ieee,
+                  model: updatedDevice.model || dev.model,
+                  manufacturer: updatedDevice.manufacturer || dev.manufacturer,
+                  currentValues: updatedDevice.currentValues || dev.currentValues,
+                  battery: updatedDevice.battery || dev.battery,
+                  status: updatedDevice.status !== undefined ? String(updatedDevice.status) : dev.status,
+                  isToggling: pending ? String(updatedDevice.status) !== pending.targetStatus : false
                 };
               }
               return dev;
@@ -426,6 +467,52 @@ export function DeviceControlPage({ onNavigate }) {
       });
     });
 
+    socket.on('device_discovered', (newDevice) => {
+      setDiscoveredDevices(prev => {
+        const raw = (newDevice && typeof newDevice.raw === 'object' && newDevice.raw !== null) ? newDevice.raw : {};
+        const ieee = normalizeIeee(newDevice?.device_ieee || raw?.device_ieee || raw?.ieee || raw?.device_ieee_raw || '');
+        const manufacturer = String(newDevice?.manufacturer || raw?.manufacturer || '').trim();
+        const model = String(newDevice?.model || raw?.model || raw?.model_id || '').trim();
+        const explicitName = String(newDevice?.name || raw?.display_name || raw?.name || '').trim();
+        const fallbackName = [manufacturer, model].filter(Boolean).join(' ').trim();
+        const name = isPlaceholderText(explicitName) ? '' : explicitName;
+        const displayName = name || (isPlaceholderText(fallbackName) ? '' : fallbackName) || (ieee ? `Device ${ieee}` : 'Perangkat Baru');
+
+        let type = String(newDevice?.type || raw?.type || model || '').trim();
+        if (isPlaceholderText(type)) {
+          type = 'Sensor';
+        } else if (/SNZB[_-]?02|TH|AIRGUARD/i.test(type)) {
+          type = 'Sensor Kenyamanan';
+        } else if (/S60|PLUG|SWITCH/i.test(type)) {
+          type = 'Control';
+        }
+
+        const nextId = ieee || String(newDevice?._id || newDevice?.id || name).trim();
+        if (!nextId) return prev;
+
+        const alreadyExists = prev.some(dev => {
+          const existingIeee = normalizeIeee(dev?.device_ieee || dev?.id || '');
+          const candidateIeee = normalizeIeee(nextId);
+          if (existingIeee && candidateIeee) {
+            return existingIeee === candidateIeee;
+          }
+          return String(dev?.id || dev?._id || dev?.name || '') === String(nextId);
+        });
+        if (alreadyExists) return prev;
+
+        return [...prev, {
+          ...newDevice,
+          id: nextId,
+          device_ieee: ieee || undefined,
+          manufacturer: manufacturer || undefined,
+          model: model || undefined,
+          name: displayName,
+          type,
+          status: newDevice?.claimed ? 'CLAIMED' : (newDevice?.lifecycleState || newDevice?.status || 'DISCOVERED')
+        }];
+      });
+    });
+
     const techAccess = localStorage.getItem('bieon_tech_access');
     if (techAccess === 'true') {
       setIsTechnicianMode(true);
@@ -434,6 +521,7 @@ export function DeviceControlPage({ onNavigate }) {
     return () => {
       socket.off('device_telemetry');
       socket.off('new_unassigned_device');
+      socket.off('device_discovered');
       socket.disconnect();
     };
   }, []); // Hapus userProfile dari dependency agar tidak infinite loop
@@ -748,6 +836,29 @@ export function DeviceControlPage({ onNavigate }) {
       }
     } catch (err) {
       alert("Error hapus: " + err.message);
+    }
+  };
+  const requestDeviceLeave = async (device) => {
+    const targetId = device?.dbId || device?._id || device?.id;
+    if (!targetId) return false;
+
+    try {
+      const response = await fetch(`/api/kendaliperangkat/${targetId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Gagal mengirim leave');
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error leave device:', err);
+      return false;
     }
   };
   const handleQuickSelect = (category, deviceType) => {
@@ -1300,48 +1411,41 @@ export function DeviceControlPage({ onNavigate }) {
     setTargetConfigs({});
     setIsEditingDevice(null);
   };
-  const toggleDevicePower = async (deviceId) => {
+  const findDeviceById = (deviceId) => {
+    let found = null;
+    for (const sys of bieonSystems) {
+      for (const hub of sys.hubs) {
+        const d = hub.devices.find(dv => String(dv._id) === String(deviceId) || String(dv.id) === String(deviceId) || String(dv.device_ieee) === String(deviceId));
+        if (d) return d;
+      }
+    }
+    return found;
+  };
+
+  const toggleDevicePower = async (deviceIdOrObj) => {
     try {
-      // Tambahkan isToggling: true sementara API berjalan, TAPI jangan ubah status
-      const tempSystems = bieonSystems.map((system) => ({
-        ...system,
-        hubs: system.hubs.map((hub) => ({
-          ...hub,
-          devices: hub.devices.map((device) => {
-            if (device.id === deviceId) {
-              return { ...device, isToggling: true };
-            }
-            return device;
-          })
-        }))
-      }));
-      setBieonSystems(tempSystems);
+      const deviceObj = typeof deviceIdOrObj === 'object' ? deviceIdOrObj : findDeviceById(deviceIdOrObj);
+      if (!deviceObj) return;
 
-      // Cari data perangkat ini dari state sekarang
-      let currentDevice = null;
-      bieonSystems.forEach(sys => {
-        sys.hubs.forEach(hub => {
-          const found = hub.devices.find(d => d._id === deviceId || d.id === deviceId);
-          if (found) currentDevice = found;
-        });
-      });
+      const deviceId = String(deviceObj._id || deviceObj.id || '');
+      const ieeeKey = String(deviceObj.device_ieee || deviceObj.ieee || '').trim().toUpperCase();
+      const newStatus = String(deviceObj.status) === '1' ? '0' : '1';
 
-      if (!currentDevice) return;
-
-      // Optimistic Update: Langsung rubah status di web agar tidak terasa lag
-      // Gunakan String() agar perbandingan 1/"1" tetap akurat
-      const newStatus = String(currentDevice.status) === "1" ? "0" : "1";
-      setBieonSystems(prevSystems => prevSystems.map(system => ({
+      // Update UI immediately, no waiting for telemetry confirmation.
+      setBieonSystems(prev => prev.map(system => ({
         ...system,
         hubs: system.hubs.map(hub => ({
           ...hub,
-          devices: hub.devices.map(dev =>
-            (dev._id === deviceId || dev.id === deviceId) ? { ...dev, status: newStatus, isToggling: true } : dev
-          )
+          devices: hub.devices.map(device => {
+            const matchesById = String(device._id || device.id || '') === deviceId;
+            const matchesByIeee = ieeeKey && String(device.device_ieee || device.ieee || '').trim().toUpperCase() === ieeeKey;
+            return (matchesById || matchesByIeee)
+              ? { ...device, status: newStatus, isToggling: true }
+              : device;
+          })
         }))
       })));
 
-      // Publish command via API
       const response = await fetch(`/api/kendaliperangkat/${deviceId}/toggle`, {
         method: "PUT",
         headers: {
@@ -1351,37 +1455,32 @@ export function DeviceControlPage({ onNavigate }) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || "Gagal mengubah status perangkat");
       }
 
-      // Add a safety timeout: if no MQTT response in 10s, clear loading state
-      setTimeout(() => {
-        setBieonSystems(prevSystems => prevSystems.map(system => ({
-          ...system,
-          hubs: system.hubs.map(hub => ({
-            ...hub,
-            devices: hub.devices.map(dev =>
-              ((dev._id === deviceId || dev.id === deviceId) && dev.isToggling) ? { ...dev, isToggling: false } : dev
-            )
-          }))
-        })));
-      }, 10000);
-
+      setBieonSystems(prev => prev.map(system => ({
+        ...system,
+        hubs: system.hubs.map(hub => ({
+          ...hub,
+          devices: hub.devices.map(device => {
+            const matchesById = String(device._id || device.id || '') === deviceId;
+            const matchesByIeee = ieeeKey && String(device.device_ieee || device.ieee || '').trim().toUpperCase() === ieeeKey;
+            return (matchesById || matchesByIeee)
+              ? { ...device, isToggling: false }
+              : device;
+          })
+        }))
+      })));
     } catch (error) {
       alert("Gagal mengirim perintah: " + error.message);
-      // Revert isToggling jika gagal API
-      setBieonSystems((prev) =>
-        prev.map((sys) => ({
-          ...sys,
-          hubs: sys.hubs.map((hub) => ({
-            ...hub,
-            devices: hub.devices.map((device) =>
-              device.id === deviceId ? { ...device, isToggling: false } : device
-            )
-          }))
+      setBieonSystems(prev => prev.map(system => ({
+        ...system,
+        hubs: system.hubs.map(hub => ({
+          ...hub,
+          devices: hub.devices.map(device => ({ ...device, isToggling: false }))
         }))
-      );
+      })));
     }
   };
   const updateDeviceControl = async (deviceId, controlType, value) => {
@@ -2187,9 +2286,10 @@ export function DeviceControlPage({ onNavigate }) {
                                   )}
                                 </div>
                                 <div className="min-w-0">
-                                  <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">{device.name}</h3>
+                                  <h3 className="font-extrabold text-gray-900 text-sm sm:text-lg truncate">{device.name || formatModelDisplay(device.model || device.deviceType || device.name)}</h3>
                                   <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1">
                                     <span className="text-xs sm:text-sm font-semibold text-gray-600">{device.deviceType} • {device.location}</span>
+                                    <span className="text-xs sm:text-sm font-semibold text-gray-500">IEEE: {formatIeeeDisplay(device.device_ieee || device.id)}</span>
                                     {device.category?.toLowerCase() === "sensor" ? (
                                       <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-bieon-eco/10 text-bieon-eco/90 shadow-sm border border-bieon-eco/30">
                                         MONITORING
@@ -2200,7 +2300,7 @@ export function DeviceControlPage({ onNavigate }) {
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-xs text-gray-400 mt-1 hidden sm:block">ID: {device.id} • Installed: {new Date(device.installedDate).toLocaleDateString("id-ID")}</p>
+                                  <p className="text-xs text-gray-400 mt-1 hidden sm:block italic">Manufacture: {device.manufacturer || '-'}</p>
                                   {(device.notes || device.thresholds?.notes) && (
                                     <p className="text-[10px] text-bieon-eco font-medium mt-1 bg-bieon-eco/5 px-2 py-0.5 rounded-md w-fit border border-bieon-eco/20 italic">
                                       "{device.notes || device.thresholds.notes}"
@@ -2913,14 +3013,14 @@ export function DeviceControlPage({ onNavigate }) {
                     {/* FOOTER BUTTONS */}
                     <div className="flex items-center gap-3 pt-2">
                       <button
-                        onClick={() => { setStep("add-device-choice"); setScanAttempted(false); }}
+                        onClick={() => { setStep("add-device-choice"); setScanAttempted(false); setDiscoveredDevices([]); setJoinedDevicesPool([]); setDiscardingDevices({}); }}
                         className="flex-1 py-4 px-6 border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
                       >
                         Kembali
                       </button>
                       <button
                         onClick={handleStartDiscovery}
-                        disabled={isScanning}
+                        disabled={isScanning || isOpenJoinRequestPending}
                         className="flex-[1.5] py-4 px-6 bg-bieon-eco hover:bg-bieon-eco/90 rounded-2xl text-sm font-bold text-white shadow-lg shadow-bieon-eco/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isScanning ? (
@@ -2947,8 +3047,14 @@ export function DeviceControlPage({ onNavigate }) {
                       {(() => {
                         // Ambil perangkat dari scan live
                         const fromScan = (discoveredDevices || []).filter(dev => {
+                          const devIeee = normalizeIeee(dev?.device_ieee || dev?.id || '');
                           const isAlreadyInDb = (currentBieon?.hubs || []).some(hub =>
-                            (hub?.devices || []).some(d => d?.modelId === dev?.id || d?.productId === dev?.id)
+                            (hub?.devices || []).some(d => {
+                              const dbIeee = normalizeIeee(d?.device_ieee || d?.id || '');
+                              return d?.modelId === dev?.id ||
+                                     d?.productId === dev?.id ||
+                                     (devIeee && dbIeee && devIeee === dbIeee);
+                            })
                           );
                           return !isAlreadyInDb;
                         });
@@ -2959,8 +3065,8 @@ export function DeviceControlPage({ onNavigate }) {
                           .map(d => ({
                             id: d?.productId || d?.modelId || d?.id,
                             dbId: d?._id || d?.id,
-                            name: d?.name,
-                            type: d?.type || d?.deviceType || "",
+                            name: formatDeviceName(d?.name, d?.device_ieee || d?.productId || d?.modelId || d?.id),
+                            type: isPlaceholderText(d?.type) ? (d?.category === 'sensor' ? 'Sensor' : 'Control') : (d?.type || d?.deviceType || ""),
                             category: d?.category || "",
                             status: "Belum Dikonfigurasi",
                             isFromDb: true,
@@ -2973,7 +3079,7 @@ export function DeviceControlPage({ onNavigate }) {
                           .map(p => ({
                             id: p.productId,
                             dbId: p?._id || p?.id,
-                            name: p.productName,
+                            name: formatDeviceName(p.productName, p.productId),
                             type: p.category === 'sensor' ? (p.aspect === 'air' ? 'Sensor Kualitas Air' : p.aspect === 'kenyamanan' ? 'Sensor Kenyamanan' : p.aspect === 'keamanan' ? 'Sensor Keamanan' : 'Sensor') : 'Control',
                             category: p.category || "",
                             status: "Belum Dikonfigurasi",

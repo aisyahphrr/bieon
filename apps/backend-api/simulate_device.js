@@ -17,7 +17,7 @@ const deviceId = process.argv[2] || 'plug_01';
 client.on('connect', () => {
     console.log('✅ Connected to Broker:', brokerUrl);
     
-    const topic = `tenant/tenant_abc/bieon/bieon_01/hub/hub_01/device/${deviceId}/telemetry`;
+    const topic = `bieon/bieon_01/hub/hub_01/device/${deviceId}/telemetry`;
     const payload = JSON.stringify({
         clusters: [
             { cluster: "on_off", value: 1 },

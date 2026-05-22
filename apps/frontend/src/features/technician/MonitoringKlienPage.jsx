@@ -178,10 +178,10 @@ export function MonitoringKlienPage({ clients = [] }) {
                                 <tr key={client.id} className="hover:bg-emerald-50/30 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-inner ${
-                                                client.status === 'online' ? 'bg-gradient-to-br from-eco to-sense' :
-                                                client.status === 'warning' ? 'bg-gradient-to-br from-amber-500 to-orange-600' :
-                                                'bg-gradient-to-br from-rose-500 to-red-600'
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm border ${
+                                                client.status === 'online' ? 'bg-eco/10 text-eco border-eco/20' :
+                                                client.status === 'warning' ? 'bg-amber-100/50 text-amber-600 border-amber-200' :
+                                                'bg-rose-100/50 text-rose-600 border-rose-200'
                                             }`}>
                                                 {client.nama?.substring(0, 2).toUpperCase()}
                                             </div>
@@ -243,7 +243,7 @@ export function MonitoringKlienPage({ clients = [] }) {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-right">
-                                        <button className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-eco hover:text-white transition-all active:scale-90 shadow-sm">
+                                        <button className="p-3 bg-sense/10 text-sense rounded-xl hover:bg-sense hover:text-white transition-all active:scale-90 shadow-sm">
                                             <ChevronRight className="w-5 h-5" />
                                         </button>
                                     </td>

@@ -241,9 +241,7 @@ export function TechnicianProfilePage({ onNavigate }) {
         <div className="w-full max-w-7xl mx-auto py-8">
             <div className="w-full">
                 {/* Header with Cover Photo */}
-                <div className="bg-gradient-to-r from-eco via-eco/80 to-sense rounded-3xl shadow-xl mb-6 overflow-hidden relative h-32 sm:h-48">
-                    <div className="absolute inset-0 bg-black/10"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                <div className="bg-gradient-to-r from-eco/20 via-sense/10 to-white rounded-3xl shadow-sm mb-6 overflow-hidden relative h-32 sm:h-48 border border-eco/10">
                 </div>
 
                 {/* Profile Header Card */}
@@ -252,7 +250,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
                             {/* Photo */}
                             <div className="relative group -mt-10 md:mt-0">
-                                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-eco to-sense rounded-3xl flex items-center justify-center text-white shadow-2xl border-4 border-white overflow-hidden">
+                                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-white rounded-3xl flex items-center justify-center text-eco shadow-xl border-4 border-white overflow-hidden">
                                     {profile.profileImage ? (
                                         <img src={profile.profileImage} alt={profile.fullName} className="w-full h-full object-cover" />
                                     ) : (
@@ -354,8 +352,8 @@ export function TechnicianProfilePage({ onNavigate }) {
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-eco to-sense rounded-2xl flex items-center justify-center">
-                                        <User className="w-6 h-6 text-white" />
+                                    <div className="w-12 h-12 bg-eco/10 rounded-2xl flex items-center justify-center">
+                                        <User className="w-6 h-6 text-eco" />
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-900">{t('tech_profile.personal.title', 'Informasi Personal')}</h2>
@@ -519,8 +517,8 @@ export function TechnicianProfilePage({ onNavigate }) {
                         {/* Professional Information */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-sense to-sense/80 rounded-2xl flex items-center justify-center">
-                                    <Briefcase className="w-6 h-6 text-white" />
+                                <div className="w-12 h-12 bg-sense/10 rounded-2xl flex items-center justify-center">
+                                    <Briefcase className="w-6 h-6 text-sense" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">{t('tech_profile.professional.title', 'Informasi Profesional')}</h2>
@@ -575,8 +573,8 @@ export function TechnicianProfilePage({ onNavigate }) {
                         {/* Performance Statistics */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center">
-                                    <Activity className="w-6 h-6 text-white" />
+                                <div className="w-12 h-12 bg-purple-100/50 rounded-2xl flex items-center justify-center">
+                                    <Activity className="w-6 h-6 text-purple-600" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">{t('tech_profile.stats.title', 'Statistik Performa')}</h2>
@@ -648,8 +646,8 @@ export function TechnicianProfilePage({ onNavigate }) {
                         {/* Skills & Competencies */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">
-                                    <Target className="w-6 h-6 text-white" />
+                                <div className="w-12 h-12 bg-orange-100/50 rounded-2xl flex items-center justify-center">
+                                    <Target className="w-6 h-6 text-orange-500" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">{t('tech_profile.skills.title', 'Skill & Kompetensi')}</h2>
@@ -682,8 +680,8 @@ export function TechnicianProfilePage({ onNavigate }) {
                         {/* Recent Work History */}
                         <div className="bg-white rounded-3xl shadow-lg p-6">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-sense to-sense/80 rounded-2xl flex items-center justify-center">
-                                    <Clock className="w-6 h-6 text-white" />
+                                <div className="w-12 h-12 bg-sense/10 rounded-2xl flex items-center justify-center">
+                                    <Clock className="w-6 h-6 text-sense" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900">{t('tech_profile.history.title', 'Riwayat Pekerjaan Terbaru')}</h2>

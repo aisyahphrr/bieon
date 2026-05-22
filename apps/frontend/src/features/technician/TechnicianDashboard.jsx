@@ -520,36 +520,44 @@ export function TechnicianDashboard({ onNavigate }) {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="relative overflow-hidden bg-gradient-to-br from-[#A443FF] to-[#DB55FF] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6 text-white" />
+              {/* Card 1: Total Pelanggan */}
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(59,130,246,0.15)] hover:-translate-y-1 group">
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-blue-400/20 blur-3xl group-hover:bg-blue-400/30 transition-colors"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-blue-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-7 h-7 text-blue-600 drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalClients}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
+                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalClients}</h3>
+                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
               </div>
 
-              <div className="relative overflow-hidden bg-gradient-to-br from-eco to-green-800 rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
-                  <ShieldCheck className="w-6 h-6 text-white" />
+              {/* Card 2: Akses Kendali Perangkat */}
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(5,155,39,0.15)] hover:-translate-y-1 group">
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-eco/20 blur-3xl group-hover:bg-eco/30 transition-colors"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-eco/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <ShieldCheck className="w-7 h-7 text-eco drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalAccessCodes || 0}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.access_codes', 'Akses Kendali Perangkat')}</p>
+                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalAccessCodes || 0}</h3>
+                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.access_codes', 'Akses Kendali Perangkat')}</p>
               </div>
 
-              <div className="relative overflow-hidden bg-gradient-to-br from-[#5C6AFF] to-[#8F98FF] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
-                  <HardDrive className="w-6 h-6 text-white" />
+              {/* Card 3: Smart Device Aktif */}
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(18,156,192,0.15)] hover:-translate-y-1 group">
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-sense/20 blur-3xl group-hover:bg-sense/30 transition-colors"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-sense/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <HardDrive className="w-7 h-7 text-sense drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.totalDevices}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.active_devices', 'Smart Device Aktif')}</p>
+                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalDevices}</h3>
+                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_devices', 'Smart Device Aktif')}</p>
               </div>
 
-              <div className="relative overflow-hidden bg-gradient-to-br from-[#FF7A00] to-[#FF9E42] rounded-[2rem] p-6 shadow-md text-white transition-all transform hover:scale-[1.02]">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
-                  <AlertCircle className="w-6 h-6 text-white" />
+              {/* Card 4: Pengaduan Aktif */}
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(239,68,68,0.15)] hover:-translate-y-1 group">
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-red-400/20 blur-3xl group-hover:bg-red-400/30 transition-colors"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-red-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <AlertCircle className="w-7 h-7 text-red-500 drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-bold text-white mb-2">{metrics.activeComplaints}</h3>
-                <p className="text-white/90 text-sm font-medium pt-2">{t('tech_dashboard.metrics.active_complaints', 'Pengaduan Aktif')}</p>
+                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.activeComplaints}</h3>
+                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_complaints', 'Pengaduan Aktif')}</p>
               </div>
             </div>
 
@@ -639,7 +647,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-eco/50 to-sense rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            <div className="w-10 h-10 bg-blue-100/50 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm border border-blue-100">
                               {client.nama.split(' ').map(n => n[0]).join('')}
                             </div>
                             <div>
@@ -677,7 +685,7 @@ export function TechnicianDashboard({ onNavigate }) {
                         <td className="px-6 py-4 text-center">
                           <button
                             onClick={() => setSelectedClient(client)}
-                            className="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-eco to-sense text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
+                            className="inline-flex items-center gap-1 px-4 py-2 bg-sense/10 text-sense hover:bg-sense hover:text-white rounded-lg transition-all text-sm font-semibold"
                           >
                             {t('tech_dashboard.table.btn_detail', 'Detail')}
                             <ChevronRight className="w-4 h-4" />
@@ -695,7 +703,7 @@ export function TechnicianDashboard({ onNavigate }) {
                   <div key={client.id} className="p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-eco/50 to-sense rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-sm border border-eco/10">
+                        <div className="w-10 h-10 bg-blue-100/50 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm shrink-0 shadow-sm border border-blue-100">
                           {client.nama.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
@@ -764,14 +772,14 @@ export function TechnicianDashboard({ onNavigate }) {
             {/* Bar Charts - 2 Columns */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Bar Chart BIEON Instalasi */}
-              <div className="bg-gradient-to-br from-white to-eco/10/30 rounded-3xl shadow-xl border border-eco/20 p-6">
+              <div className="bg-gradient-to-br from-white to-eco/5 rounded-3xl shadow-sm border border-eco/10 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.token_access_title', 'Layanan Akses Kendali Perangkat')}</h3>
                     <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.token_access_sub', 'Frekuensi akses token per bulan')}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-eco/50 to-sense rounded-2xl flex items-center justify-center">
-                    <Cpu className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-eco/10 rounded-2xl flex items-center justify-center">
+                    <Cpu className="w-6 h-6 text-eco" />
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
@@ -815,14 +823,14 @@ export function TechnicianDashboard({ onNavigate }) {
               </div>
 
               {/* Line Chart Klien Ditangani */}
-              <div className="bg-gradient-to-br from-white to-purple-50/30 rounded-3xl shadow-xl border border-purple-100 p-6">
+              <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-3xl shadow-sm border border-blue-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.clients_title', 'Jumlah Pelanggan')}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.clients_sub', 'Jumlah Pelanggan yang ditangani oleh teknisi per bulan')}</p>
+                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.clients_title', 'Pertumbuhan Pelanggan BIEON')}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.clients_sub', 'Jumlah klien baru per bulan')}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-2xl flex items-center justify-center">
-                    <Users className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-blue-100/50 rounded-2xl flex items-center justify-center">
+                    <Users className="w-6 h-6 text-blue-600" />
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
@@ -849,18 +857,12 @@ export function TechnicianDashboard({ onNavigate }) {
                     <Line
                       type="monotone"
                       dataKey="jumlah"
-                      stroke="url(#colorKlien)"
+                      stroke="#a855f7"
                       strokeWidth={3}
                       dot={{ fill: '#a855f7', r: 5 }}
                       activeDot={{ r: 7 }}
                       name="Total Klien"
                     />
-                    <defs>
-                      <linearGradient id="colorKlien" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#a855f7" stopOpacity={1} />
-                        <stop offset="100%" stopColor="#d946ef" stopOpacity={1} />
-                      </linearGradient>
-                    </defs>
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -869,14 +871,14 @@ export function TechnicianDashboard({ onNavigate }) {
             {/* Line Charts - 2 Columns */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Tren Pengaduan */}
-              <div className="bg-gradient-to-br from-white to-amber-50/30 rounded-3xl shadow-xl border border-amber-100 p-6">
+              <div className="bg-gradient-to-br from-white to-red-50/50 rounded-3xl shadow-sm border border-red-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.complaints_title', 'Jumlah Pengaduan Pelanggan')}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.complaints_sub', 'Laporan per bulan')}</p>
+                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.complaints_title', 'Tren Pengaduan Pelanggan')}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.complaints_sub', 'Intensitas aduan per bulan')}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center">
-                    <MessageSquare className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-red-100/50 rounded-2xl flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-red-500" />
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
@@ -914,14 +916,14 @@ export function TechnicianDashboard({ onNavigate }) {
               </div>
 
               {/* Map Dummu */}
-              <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-3xl shadow-xl border border-blue-100 p-6 flex flex-col">
+              <div className="bg-gradient-to-br from-white to-sense/5 rounded-3xl shadow-sm border border-sense/10 p-6 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.map_title', 'Peta Persebaran Pelanggan')}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.map_sub', 'Visualisasi distribusi pelanggan berdasarkan wilayah teknisi')}</p>
+                    <h3 className="text-xl font-bold text-gray-800">{t('tech_dashboard.charts.map_title', 'Live Monitoring Area BIEON')}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{t('tech_dashboard.charts.map_sub', 'Distribusi lokasi klien aktif')}</p>
                   </div>
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-                    <MapPin className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-sense/10 rounded-2xl flex items-center justify-center">
+                    <MapPin className="w-6 h-6 text-sense" />
                   </div>
                 </div>
                 <div className="flex-1 w-full rounded-2xl overflow-hidden mt-2 relative min-h-[300px]">

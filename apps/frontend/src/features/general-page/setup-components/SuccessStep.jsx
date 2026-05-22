@@ -7,7 +7,7 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex flex-col items-center text-center mb-8">
+            <div className="flex flex-col items-center text-center mb-5">
                 <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 border border-emerald-100 shadow-sm relative">
                     <CheckCircle2 className="w-8 h-8 text-[#009b7c]" />
                     <div className="absolute inset-0 rounded-full bg-emerald-400/20 animate-ping"></div>
@@ -19,7 +19,7 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
             </div>
 
             {/* Summary Card */}
-            <div className="bg-slate-50/80 border border-slate-200 rounded-[2rem] p-6 mb-10 space-y-5 shadow-sm relative overflow-hidden group">
+            <div className="bg-slate-50/80 border border-slate-200 rounded-[2rem] p-5 mb-6 space-y-4 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                     <CheckCircle2 className="w-24 h-24 rotate-12" />
                 </div>
@@ -81,7 +81,7 @@ const SuccessStep = ({ loading, error, handleRegister, formData, selectedPln }) 
             <button
                 onClick={handleRegister}
                 disabled={loading}
-                className="w-full bg-[#009b7c] hover:bg-emerald-600 disabled:bg-slate-200 text-white font-black py-4.5 px-6 rounded-2xl text-[15px] transition-all flex justify-center items-center gap-3 shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:-translate-y-1 active:scale-95 group"
+                className="w-full bg-[#009b7c] hover:bg-emerald-600 disabled:bg-slate-200 text-white font-black py-3.5 px-6 rounded-2xl text-[15px] transition-all flex justify-center items-center gap-3 shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:-translate-y-1 active:scale-95 group"
             >
                 {loading ? (
                     <>

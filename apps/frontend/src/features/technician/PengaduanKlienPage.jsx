@@ -74,7 +74,7 @@ const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }
                                     if (btn.action === 'process') handleStartProcess(item);
                                     else setSelectedTicket(item);
                                 }}
-                                className={`px-4 py-2 rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-sense text-white hover:bg-sense/90' : 'bg-gray-100 text-gray-400'
+                                className={`px-4 py-2 rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-sense/10 text-sense hover:bg-sense hover:text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
                                     }`}
                             >
                                 {btn.label}
@@ -158,7 +158,7 @@ const TechnicianComplaintRow = ({ item, handleStartProcess, setSelectedTicket })
                                 if (btn.action === 'process') handleStartProcess(item);
                                 else setSelectedTicket(item);
                             }}
-                            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-sense text-white hover:bg-sense/90' : 'bg-gray-100 text-gray-400'
+                            className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-sense/10 text-sense hover:bg-sense hover:text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
                                 }`}
                         >
                             {btn.label} {btn.action !== 'process' && <ChevronRight className="w-3 h-3" />}
@@ -471,7 +471,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                     </div>
                     <div className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                         <div className="flex items-start justify-between mb-2 md:mb-4">
-                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-eco/5 flex items-center justify-center text-eco/500 group-hover:scale-110 transition-transform">
+                            <div className="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-eco/10 flex items-center justify-center text-eco group-hover:scale-110 transition-transform">
                                 <CheckCircle2 className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </div>
                         </div>

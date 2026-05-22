@@ -28,11 +28,11 @@ const SystemHardwareStep = ({
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h1 className="text-[22px] md:text-2xl font-black text-slate-800 mb-1 tracking-tight">{t('auth.setup.step2.title')}</h1>
-            <p className="text-[13px] font-bold text-slate-500 mb-10 tracking-tight leading-relaxed w-full">
+            <p className="text-[13px] font-bold text-slate-500 mb-6 tracking-tight leading-relaxed w-full">
                 {t('auth.setup.step2.subtitle')}
             </p>
 
-            <div className="space-y-6 mb-12">
+            <div className="space-y-5 mb-6">
                 <div className="space-y-2">
                     <label className="block text-[13px] font-bold text-slate-700 pl-1">{t('auth.setup.step2.label_system_name')}</label>
                     <div className="relative group">
@@ -175,14 +175,14 @@ const SystemHardwareStep = ({
             <div className="flex gap-4">
                 <button 
                     onClick={onBack} 
-                    className="flex-1 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-4 px-6 rounded-2xl text-[14px] transition-all flex justify-center items-center gap-2 shadow-sm"
+                    className="flex-1 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-3 px-6 rounded-2xl text-[14px] transition-all flex justify-center items-center gap-2 shadow-sm"
                 >
                     <ChevronLeft className="w-4 h-4" />
                     {t('auth.setup.step2.btn_back')}
                 </button>
                 <button 
                     onClick={onNext} 
-                    className="flex-[2] bg-[#009b7c] hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-[14px] transition-all flex justify-center items-center gap-2 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:-translate-y-1"
+                    className="flex-[2] bg-[#009b7c] hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-2xl text-[14px] transition-all flex justify-center items-center gap-2 shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:-translate-y-1"
                 >
                     {t('auth.setup.step2.btn_next')}
                     <ChevronRight className="w-4 h-4" />

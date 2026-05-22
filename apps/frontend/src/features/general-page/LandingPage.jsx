@@ -237,11 +237,11 @@ const LandingPage = () => {
           {/* Right Floating Dashboard Image */}
           <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:flex items-center justify-center mt-12 lg:mt-24">
 
-            <div className="relative z-20 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-700 ease-out">
+            <div className="relative z-20 w-full max-w-2xl rounded-3xl shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-700 ease-out">
               <img
                 src="/11BIEON ECO SENSE.png"
                 alt="BIEON Eco Sense Dashboard"
-                className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
+                className="w-full h-auto object-contain rounded-3xl hover:scale-105 transition-transform duration-700"
               />
             </div>
 

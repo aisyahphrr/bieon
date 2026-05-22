@@ -18,10 +18,22 @@ const OTP_MAX_PER_HOUR = 5;
 const OTP_MAX_ATTEMPTS = 5;
 const RESET_TOKEN_EXPIRES = '10m';
 
+const buildFlexibleBieonIdRegex = (value) => {
+    const chars = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').split('');
+    if (chars.length === 0) return null;
+    return new RegExp(`^${chars.map((char) => `${char}[^A-Z0-9]*`).join('')}$`, 'i');
+};
+
 // Fungsi Registrasi
 exports.register = async (req, res) => {
     try {
         const { email, password, role, fullName, username, dateOfBirth, phoneNumber, address, systemName, plnTariff, bieonId, technicianId, assignedRegion } = req.body;
+
+        console.log('=== REGISTRATION REQUEST ===');
+        console.log('Email:', email);
+        console.log('BieonId:', bieonId);
+        console.log('Role:', role);
+        console.log('FullName:', fullName);
 
         const normalizedEmail = String(email || '').trim().toLowerCase();
 
@@ -36,15 +48,19 @@ exports.register = async (req, res) => {
         }
 
         // --- VALIDASI BIEON ID (Hardware Flow) ---
-        if (bieonId) {
+        const normalizedBieonId = String(bieonId || '').trim();
+        if (normalizedBieonId) {
             const BieonSystem = require('../models/BieonSystem');
+            const bieonRegex = buildFlexibleBieonIdRegex(normalizedBieonId);
 
             if (!normalizeBieonId(bieonId)) {
                 return res.status(400).json({ message: 'Bieon ID tidak valid.' });
             }
 
             // 1. Cek apakah ID ada di stok developer (bieon_001 = BIEON-001 = BIEON_1)
-            const systemStock = await findOneByBieonId(BieonSystem, bieonId);
+            const systemStock = bieonRegex
+                ? await BieonSystem.findOne({ bieonId: bieonRegex })
+                : null;
             if (!systemStock) {
                 return res.status(400).json({ message: 'Bieon ID tidak valid atau tidak terdaftar di stok developer.' });
             }
@@ -86,7 +102,9 @@ exports.register = async (req, res) => {
             const Hub = require('../models/Hub');
             const { publishCommand } = require('../config/mqtt');
             
-            const hubs = await findManyByBieonId(Hub, bieonId);
+            const hubs = bieonRegex
+                ? await Hub.find({ bieonId: bieonRegex })
+                : [];
             const hubsPayload = [];
 
             for (const hub of hubs) {
@@ -135,7 +153,7 @@ exports.register = async (req, res) => {
             address,
             systemName,
             plnTariff,
-            bieonId,
+            bieonId: normalizedBieonId || undefined,
             technicianId,
             assignedRegion
         });
@@ -243,7 +261,6 @@ exports.logout = async (req, res) => {
     }
 };
 
-
 exports.firebaseLogin = async (req, res) => {
     try {
         const { token, mode } = req.body;
@@ -301,7 +318,6 @@ exports.firebaseLogin = async (req, res) => {
                 id: user._id,
                 email: user.email,
                 fullName: user.fullName,
-                role: user.role,
                 bieonId: user.bieonId || '',
                 firstName: given_name || name?.split(' ')[0] || '',
                 lastName: family_name || name?.split(' ').slice(1).join(' ') || ''
