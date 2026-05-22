@@ -113,7 +113,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   };
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] font-sans text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] font-inter text-gray-900 overflow-hidden">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
@@ -122,26 +122,26 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         />
       )}
 
-      {/* Sidebar - ECO SENSE brand gradient */}
+      {/* Sidebar - Gradasi EcoSense Hijau-Biru */}
       <aside
-        className={`fixed left-0 top-0 h-screen z-[60] flex flex-col text-white bg-gradient-to-b from-bieon-eco to-bieon-sense border-r border-white/10 shadow-2xl transition-all duration-300 
+        className={`fixed left-0 top-0 h-screen z-[60] flex flex-col text-white bg-gradient-to-b from-[#0C6A82]/90 to-emerald-600/90 backdrop-blur-3xl shadow-[4px_0_24px_rgba(0,0,0,0.05)] transition-all duration-300 
           ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'} 
           ${sidebarExpanded ? 'lg:w-64' : 'lg:w-20'}
         `}
       >
         {/* Sidebar Header */}
-        <div className="h-[72px] px-6 flex items-center justify-between border-b border-white/10 shrink-0">
-          <img src="/logo_bieon.png" alt="BIEON" className={`h-8 object-contain brightness-0 invert transition-all duration-300 ${sidebarExpanded || isMobileMenuOpen ? 'opacity-100' : 'opacity-0 hidden lg:block lg:w-0'}`} />
+        <div className="h-[72px] px-6 flex items-center justify-between shrink-0">
+          <img src="/logo_bieon.png" alt="BIEON" className={`h-8 object-contain brightness-0 invert transition-all drop-shadow-sm duration-300 ${sidebarExpanded || isMobileMenuOpen ? 'opacity-100' : 'opacity-0 hidden lg:block lg:w-0'}`} />
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className="hidden lg:flex p-2 hover:bg-white/10 rounded-xl transition-all text-white/70 hover:text-white"
+            className="hidden lg:flex p-2 hover:bg-black/10 rounded-full transition-all text-white/80 hover:text-white"
           >
             <Menu className="w-5 h-5" />
           </button>
           {/* Mobile close button inside sidebar */}
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="lg:hidden p-2 hover:bg-white/10 rounded-xl transition-all text-white"
+            className="lg:hidden p-2 hover:bg-white/10 rounded-xl transition-all text-white/80 hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>
@@ -158,14 +158,17 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   handleNavigate(item.path);
                   if (window.innerWidth < 1024) setIsMobileMenuOpen(false);
                 }}
-                className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center px-0'} py-3.5 rounded-2xl transition-all group relative overflow-hidden ${isActive
-                  ? 'bg-white/20 text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-white/20 backdrop-blur-md'
-                  : 'hover:bg-white/10 text-white/70 hover:text-white'
+                className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center px-0'} py-3.5 rounded-[1.25rem] transition-all group relative overflow-hidden ${isActive
+                  ? 'bg-white/20 text-white font-bold shadow-inner border border-white/10 backdrop-blur-sm'
+                  : 'hover:bg-white/10 text-white/75 hover:text-white'
                   }`}
               >
-                <item.icon className={`w-5 h-5 flex-shrink-0 transition-all ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
+                {isActive && (
+                  <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-white rounded-r-[1.25rem]" />
+                )}
+                <item.icon className={`w-5 h-5 flex-shrink-0 transition-all ${isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`} />
                 {(sidebarExpanded || isMobileMenuOpen) && (
-                  <span className={`ml-4 text-[13px] tracking-wide ${isActive ? 'font-bold' : 'font-medium'} whitespace-nowrap`}>{item.name}</span>
+                  <span className={`ml-4 text-[13px] tracking-wide whitespace-nowrap`}>{item.name}</span>
                 )}
               </button>
             );
@@ -176,38 +179,38 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
         <div className="p-4 border-t border-white/10 shrink-0">
           <button
             onClick={() => handleNavigate('landing', { logout: true })}
-            className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center'} py-3 rounded-2xl hover:bg-white/10 text-white/70 transition-all group font-medium`}
+            className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center'} py-3 rounded-[1.25rem] hover:bg-rose-500/20 text-white/80 hover:text-rose-100 transition-all group font-bold hover:border-rose-500/30`}
           >
-            <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 group-hover:text-red-300" />
-            {(sidebarExpanded || isMobileMenuOpen) && <span className="ml-4 text-sm group-hover:text-red-300 whitespace-nowrap">{t('admin_nav.logout')}</span>}
+            <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
+            {(sidebarExpanded || isMobileMenuOpen) && <span className="ml-4 text-sm whitespace-nowrap">{t('admin_nav.logout')}</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className={`flex-1 min-w-0 flex flex-col h-screen transition-all duration-300 bg-[#F8FAFC] w-full max-w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
-        {/* Top Header - ECO SENSE brand gradient */}
-        <header className="h-[72px] shrink-0 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white border-b border-white/10 sticky top-0 z-40 flex items-center shadow-md shadow-bieon-sense/10 backdrop-blur-md">
+        {/* Top Header - Gradasi EcoSense Hijau-Biru secara horizontal */}
+        <header className="h-[72px] shrink-0 bg-gradient-to-r from-[#0C6A82]/90 to-emerald-600/90 backdrop-blur-3xl text-white sticky top-0 z-40 flex items-center shadow-md">
           <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 -ml-2 hover:bg-white/10 rounded-xl transition-all text-white/90 shrink-0"
+                className="lg:hidden p-2 -ml-2 hover:bg-white/10 rounded-xl transition-all text-white/80 shrink-0"
               >
                 <Menu className="w-6 h-6" />
               </button>
-              <h1 className="text-lg md:text-xl font-bold tracking-tight truncate" title={title}>{title}</h1>
+              <h1 className="text-lg md:text-xl font-bold tracking-tight text-white truncate" title={title}>{title}</h1>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-5 shrink-0">
               {/* Premium Language Pill Toggle */}
-              <div className="flex items-center bg-white/15 p-0.5 rounded-xl border border-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] shrink-0 select-none">
+              <div className="flex items-center bg-black/20 p-0.5 rounded-full border border-white/10 shadow-inner shrink-0 select-none">
                 <button
                   onClick={() => handleLanguageChange('id')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-300 ${
                     currentLang === 'id'
-                      ? 'bg-white text-bieon-eco shadow-md scale-100'
-                      : 'text-white/70 hover:text-white bg-transparent'
+                      ? 'bg-white text-[#0C6A82] shadow-md scale-100'
+                      : 'text-white/60 hover:text-white bg-transparent'
                   }`}
                   title="Bahasa Indonesia"
                 >
@@ -215,10 +218,10 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                 </button>
                 <button
                   onClick={() => handleLanguageChange('en')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-300 ${
                     currentLang === 'en'
-                      ? 'bg-white text-bieon-eco shadow-md scale-100'
-                      : 'text-white/70 hover:text-white bg-transparent'
+                      ? 'bg-white text-[#0C6A82] shadow-md scale-100'
+                      : 'text-white/60 hover:text-white bg-transparent'
                   }`}
                   title="English"
                 >
@@ -229,10 +232,10 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
               <div className="relative z-50">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all group border border-white/5"
+                  className="relative p-2.5 bg-white/10 hover:bg-white/20 rounded-full transition-all group border border-white/10 shadow-sm hover:shadow"
                 >
-                  <Bell className="w-5 h-5 text-white/90 group-hover:text-white" />
-                  {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 border border-bieon-eco rounded-full animate-pulse"></span>}
+                  <Bell className="w-5 h-5 text-white/80 group-hover:text-white" />
+                  {hasUnread && <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 border border-white rounded-full animate-pulse"></span>}
                 </button>
 
                 <NotificationPopup 
@@ -245,8 +248,8 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
               </div>
 
               <div className="relative z-50">
-                <div className="flex items-center gap-2 sm:gap-3 bg-white/10 p-1.5 pr-3 sm:pr-4 rounded-2xl border border-white/5">
-                  <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-inner shrink-0">
+                <div className="flex items-center gap-2 sm:gap-3 bg-white/10 p-1.5 pr-3 sm:pr-4 rounded-full border border-white/10 shadow-sm">
+                  <div className="w-9 h-9 bg-white/20 rounded-full border border-white/20 flex items-center justify-center shadow-inner shrink-0">
                     <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left hidden md:block">
