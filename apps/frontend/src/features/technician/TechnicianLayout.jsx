@@ -161,7 +161,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
               {/* Pengaduan Button */}
               <button
                 onClick={() => setActiveMenu('pengaduan')}
-                className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-semibold transition-all border border-red-100"
                 title={t('nav.complaint_tab', 'Pengaduan')}
               >
                 <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
@@ -218,7 +218,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
                   onClick={() => setActiveMenu('profile')}
                   className="flex items-center gap-2 hover:bg-gray-50 p-1 md:p-1.5 rounded-xl transition-all border border-transparent hover:border-sense/20"
                 >
-                  <div className="w-9 h-9 bg-gradient-to-br from-eco/50 to-sense rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">
+                  <div className="w-9 h-9 bg-sense/10 border border-sense/20 rounded-full flex items-center justify-center text-sense font-bold text-xs shrink-0 shadow-sm">
                     {(localStorage.getItem('fullName') || 'T').charAt(0).toUpperCase()}
                   </div>
                   <div className="text-left hidden xl:block">
