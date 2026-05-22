@@ -1016,7 +1016,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 </button>
                                                 <button
                                                     onClick={() => openMapModal(tech.id)}
-                                                    className="p-2 bg-cyan-50 text-cyan-500 hover:bg-cyan-100 hover:text-cyan-600 rounded-lg transition-all"
+                                                    className="p-2 bg-bieon-sense/10 text-bieon-sense hover:bg-bieon-sense/20 rounded-lg transition-all"
                                                 >
                                                     <MapPin className="w-4 h-4" />
                                                 </button>
@@ -1080,7 +1080,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     <div className="p-3 border-t border-gray-50 flex items-center justify-between gap-2">
                                         <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">{t('admin_technician.table.col_action')}</button>
                                         <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-bieon-eco/10 text-bieon-eco font-bold text-xs rounded-xl hover:bg-bieon-eco/15 transition-all text-center">{t('admin_technician.form_modal.btn_save').split(' ')[0]}</button>
-                                        <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-cyan-50 text-cyan-600 font-bold text-xs rounded-xl hover:bg-cyan-100 transition-all text-center">{t('admin_technician.table.btn_view_map').split(' ')[1]}</button>
+                                        <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-bieon-sense/10 text-bieon-sense font-bold text-xs rounded-xl hover:bg-bieon-sense/20 transition-all text-center">{t('admin_technician.table.btn_view_map').split(' ')[1]}</button>
                                         <button onClick={() => handleDeleteTechnician(tech)} className="w-[45px] flex items-center justify-center py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all shrink-0">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>

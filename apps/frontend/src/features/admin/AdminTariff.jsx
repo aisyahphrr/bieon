@@ -250,7 +250,7 @@ export default function AdminTariff({ onNavigate }) {
     // --- Data Charts (Dynamic) ---
     const [multiLineChartData, setMultiLineChartData] = useState([]);
     const [pieData, setPieData] = useState([]);
-    const PIE_COLORS = ['#059b27', '#3B82F6', '#A855F7', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
+    const PIE_COLORS = ['#059b27', '#129cc0', '#3B82F6', '#A855F7', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316'];
 
     // --- History Data (Dynamic) ---
     const [historyData, setHistoryData] = useState([]);
@@ -373,7 +373,7 @@ export default function AdminTariff({ onNavigate }) {
     const getBadgeStyle = (category) => {
         if (category.includes('R1 - 450')) return 'bg-bieon-eco/15 text-bieon-eco border border-bieon-sense/25';
         if (category.includes('R1 - 900')) return 'bg-bieon-sense/10 text-bieon-sense border border-bieon-sense/25';
-        if (category.includes('R1M')) return 'bg-cyan-100 text-cyan-700 border border-cyan-200';
+        if (category.includes('R1M')) return 'bg-bieon-sense/15 text-bieon-sense border border-bieon-sense/25';
         if (category.includes('R2')) return 'bg-blue-100 text-blue-700 border border-blue-200';
         if (category.includes('R3')) return 'bg-purple-100 text-purple-700 border border-purple-200';
         return 'bg-gray-100 text-gray-700 border border-gray-200';
@@ -446,7 +446,7 @@ export default function AdminTariff({ onNavigate }) {
         
         // Header
         doc.setFontSize(18);
-        doc.setTextColor(0, 155, 124);
+        doc.setTextColor(5, 155, 39);
         doc.text(isEn ? "BIEON - Electricity Tariff History Report" : "BIEON - Laporan Riwayat Tarif Listrik", 15, 20);
         
         doc.setFontSize(11);
@@ -474,7 +474,7 @@ export default function AdminTariff({ onNavigate }) {
             body: tableRows,
             startY: 35,
             theme: 'striped',
-            headStyles: { fillColor: [0, 155, 124], fontSize: 10, halign: 'center' },
+            headStyles: { fillColor: [5, 155, 39], fontSize: 10, halign: 'center' },
             bodyStyles: { fontSize: 9, halign: 'center' },
             margin: { top: 35 }
         });
@@ -785,7 +785,7 @@ export default function AdminTariff({ onNavigate }) {
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                                         <RechartsTooltip content={<CustomTooltip />} cursor={{ stroke: '#f3f4f6', strokeWidth: 2 }} />
                                         <Line type="monotone" dataKey="r1" name="R1" stroke="#059b27" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                        <Line type="monotone" dataKey="r2" name="R2" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                                        <Line type="monotone" dataKey="r2" name="R2" stroke="#129cc0" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                                         <Line type="monotone" dataKey="r3" name="R3" stroke="#A855F7" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                                     </LineChart>
                                 </ResponsiveContainer>

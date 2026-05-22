@@ -796,8 +796,123 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
   }
 };
 
-const handleAuthRequest = async () => {
-  console.warn('[MQTT] auth/request flow disabled by topic policy');
+const handleAuthRequest = async (masterId, payload) => {
+  try {
+    // Mendukung dua format payload:
+    // Format 1: Langsung object device ({"device_ieee": "...", ...})
+    // Format 2: Sesuai struktur db ({"devices": {"IEEE_MAC": {...}}})
+
+    let devicesToAuth = [];
+
+    if (payload && payload.devices) {
+      // Format 2
+      for (const [ieee, data] of Object.entries(payload.devices)) {
+        devicesToAuth.push({ device_ieee: ieee, ...data });
+      }
+    } else if (payload && payload.device_ieee) {
+      // Format 1 (Single device)
+      devicesToAuth.push(payload);
+    } else if (Array.isArray(payload)) {
+      devicesToAuth = payload;
+    }
+
+    const responses = [];
+
+    for (const device of devicesToAuth) {
+      const { device_ieee, device_name, device_profile: reqProfile, model_id: reqModel, manufacturer, model } = device;
+      if (!device_ieee) continue;
+
+      const last4Mac = device_ieee ? device_ieee.replace(/:/g, '').slice(-4).toUpperCase() : '0000';
+      const currentTs = Math.floor(Date.now() / 1000);
+      const hub_ieee = payload.hub_ieee || masterId;
+
+      // Cek di whitelist db berdasarkan manufacturer dan model
+      let whitelistEntry = null;
+      
+      // Hardware bisa mengirim 'manufacturer' dan 'model' secara langsung
+      // Jika tidak ada, fallback ke reqModel jika kebetulan match dengan 'model' di DB (meskipun tanpa manufacturer)
+      if (manufacturer && model) {
+          whitelistEntry = await DeviceWhitelist.findOne({
+            manufacturer: manufacturer,
+            model: model
+          });
+      } else if (model || reqModel) {
+          whitelistEntry = await DeviceWhitelist.findOne({
+            model: model || reqModel
+          });
+      }
+
+      let decision = 'block';
+      let responseObj = {
+        type: "auth_response",
+        master_ieee: masterId,
+        device_ieee: device_ieee,
+        ts: currentTs
+      };
+
+      if (whitelistEntry) {
+        decision = 'allow';
+        const profile = reqProfile || model || reqModel || 'UNKNOWN';
+        
+        console.log(`[Auth Decision] Allow for ${device_ieee} (Model: ${whitelistEntry.model})`);
+        responseObj = {
+          ...responseObj,
+          decision: "allow",
+          device_id: device_name || reqModel || "unknown",
+          device_name: device_name || "Unknown",
+          device_profile: profile,
+          model_id: whitelistEntry.model || reqModel || "UNKNOWN",
+          alias: `${profile}_${last4Mac}`,
+        };
+      } else {
+        decision = 'block';
+        const profile = reqProfile || 'UNKNOWN';
+        console.log(`[Auth Decision] Block for ${device_ieee} (${device_name || 'Unknown'})`);
+        responseObj = {
+          ...responseObj,
+          decision: "block",
+          device_id: "unknown",
+          device_profile: profile,
+          model_id: reqModel || "UNKNOWN",
+          alias: `${profile}_${last4Mac}`,
+        };
+      }
+
+      responses.push(responseObj);
+
+      // Log AuthEvent
+      await AuthEvent.create({
+        type: 'auth_request',
+        status: decision === 'allow' ? 'allow' : (whitelistEntry ? 'rejected' : 'pending'),
+        decision: decision,
+        master_ieee: masterId,
+        hub_ieee: hub_ieee,
+        device_ieee: device_ieee,
+        device_id: responseObj.device_id,
+        device_name: responseObj.device_name || device_name,
+        device_profile: responseObj.device_profile,
+        model_id: responseObj.model_id,
+        alias: responseObj.alias,
+        cached: payload.cached || false,
+        source: 'mqtt',
+        ts: currentTs
+      });
+    }
+
+    // Publish ke response topic
+    if (responses.length > 0) {
+      const responseTopic = `bieon/${masterId}/auth/response`;
+      // Jika hanya 1 balasan, kirim object langsung. Jika lebih, kirim array
+      if (responses.length === 1) {
+        publishCommand(responseTopic, responses[0]);
+      } else {
+        publishCommand(responseTopic, responses);
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ Error handling auth request:', error.message);
+  }
 };
 
 // ===== HIERARCHICAL AUTH HANDLER (TREE STRUCTURE) =====

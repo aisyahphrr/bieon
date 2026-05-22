@@ -88,9 +88,8 @@ exports.createDevice = async (req, res) => {
             // [JALUR VVIP] Cek apakah ini barang Whitelist (Bieon Original) yang sedang di-Open Join
             const whitelistMatch = await DeviceWhitelist.findOne({
                 $or: [
-                    { device_id: prodId }, 
-                    { model_id: prodId },
-                    { device_ieee: device_ieee || req.body.ieee }
+                    { model: prodId },
+                    { manufacturer: prodId } // Fallback jikalau yang dikirim adalah manufacturer
                 ]
             });
 
@@ -139,31 +138,14 @@ exports.createDevice = async (req, res) => {
             }
         }
 
-        // --- NEW: AUTO LOOKUP IEEE FROM WHITELIST ---
-        // Prioritaskan pencarian berdasarkan deviceType (ID Teknis dari Dropdown)
+        // --- NEW: AUTO LOOKUP IEEE FROM WHITELIST DIBATALKAN ---
+        // Karena DeviceWhitelist sekarang berbasis model, bukan perangkat individual,
+        // maka IEEE *harus* dikirim dari frontend/MQTT.
         let finalIeee = device_ieee || req.body.ieee || req.body.mac || req.body.productId;
-        let finalModelId = null;
-        
-        if (!finalIeee || finalIeee === "0000000000000000") {
-            const searchKey = req.body.productId || deviceType; // Ambil ID Teknis
-            const whitelistMatch = await DeviceWhitelist.findOne({
-                $or: [
-                    { device_id: searchKey },     // SNZB_02DR2
-                    { model_id: searchKey },      // S60ZBTPF
-                    { device_profile: searchKey },
-                    { device_id: name },          // Fallback ke Nama
-                    { device_profile: name }
-                ]
-            });
-            if (whitelistMatch) {
-                finalIeee = whitelistMatch.device_ieee;
-                finalModelId = whitelistMatch.model_id;
-                console.log(`[WHITELIST] Found matching IEEE for ${searchKey}: ${finalIeee}`);
-            }
-        }
+        let finalModelId = req.body.productId || deviceType;
         
         const capturedIeee = finalIeee || "0000000000000000";
-        const capturedModelId = finalModelId || req.body.productId || deviceType;
+        const capturedModelId = finalModelId;
 
         const newDevice = new KendaliPerangkat({
             name,

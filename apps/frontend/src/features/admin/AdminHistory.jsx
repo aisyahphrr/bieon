@@ -403,10 +403,10 @@ export default function AdminHistory({ onNavigate }) {
     const handleExportPDF = () => {
         if (processedData.length === 0) return alert(t('history.export.alert_no_data'));
         const doc = new jsPDF('l', 'mm', 'a4');
-        doc.setFontSize(20); doc.setTextColor(0, 155, 124);
+        doc.setFontSize(20); doc.setTextColor(5, 155, 39);
         doc.text(t('history.export.pdf_header', { tab: activeTab }), 15, 20);
         const { headers, body } = generateTableConfig(activeTab, processedData);
-        autoTable(doc, { startY: 38, head: headers, body: body, theme: 'striped', headStyles: { fillColor: [0, 155, 124] } });
+        autoTable(doc, { startY: 38, head: headers, body: body, theme: 'striped', headStyles: { fillColor: [5, 155, 39] } });
         doc.save(`${t('history.export.filename_prefix', 'Laporan_Riwayat_BIEON')}_${activeTab}.pdf`);
     };
 
@@ -424,7 +424,7 @@ export default function AdminHistory({ onNavigate }) {
             doc.rect(0, 0, pageWidth, 45, 'F');
             
             doc.setFontSize(32);
-            doc.setTextColor(0, 155, 124);
+            doc.setTextColor(5, 155, 39);
             doc.setFont("helvetica", "bold");
             doc.text(t('history.export.system_name', 'BIEON SMART SYSTEM'), pageWidth / 2, 85, { align: 'center' });
             
@@ -432,7 +432,7 @@ export default function AdminHistory({ onNavigate }) {
             doc.setTextColor(60, 60, 60);
             doc.text(t('history.title').toUpperCase(), pageWidth / 2, 98, { align: 'center' });
             
-            doc.setDrawColor(0, 155, 124);
+            doc.setDrawColor(5, 155, 39);
             doc.setLineWidth(1);
             doc.line(60, 110, pageWidth - 60, 110);
             
@@ -481,7 +481,7 @@ export default function AdminHistory({ onNavigate }) {
                     if (result.success && result.data && result.data.length > 0) {
                         doc.addPage(); 
                         doc.setFontSize(18);
-                        doc.setTextColor(0, 155, 124);
+                        doc.setTextColor(5, 155, 39);
                         doc.text(`${t('history.columns.category')}: ${tab.full}`, 15, 18);
                         
                         const mappedData = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
@@ -492,7 +492,7 @@ export default function AdminHistory({ onNavigate }) {
                             head: headers, 
                             body: body, 
                             theme: 'striped', 
-                            headStyles: { fillColor: [0, 155, 124], fontSize: 10, halign: 'center' },
+                            headStyles: { fillColor: [5, 155, 39], fontSize: 10, halign: 'center' },
                             bodyStyles: { fontSize: 9, halign: 'center' },
                             margin: { top: 25, bottom: 20 }
                         });

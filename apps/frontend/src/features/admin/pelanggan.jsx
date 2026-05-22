@@ -291,7 +291,7 @@ export function ManajemenAkunPage({ onNavigate }) {
     const handleDownloadPDF = (title, columns, data, filename) => {
         const doc = new jsPDF('l', 'mm', 'a4');
         const isEn = i18n.language === 'en';
-        const primaryColor = [0, 155, 124]; // BIEON Teal
+        const primaryColor = [5, 155, 39]; // BIEON ECO Green
         
         // Header Branding
         doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -430,9 +430,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                         {successMessage}
                     </div>
                 )}
-                {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-gradient-to-br from-[#129cc0] via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-gradient-to-br from-bieon-sense via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
@@ -445,7 +444,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-[#059b27] via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-gradient-to-br from-bieon-eco via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
@@ -458,7 +457,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-[#129cc0] via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-gradient-to-br from-bieon-sense via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
@@ -471,7 +470,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-[#059b27] via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
+                    <div className="bg-gradient-to-br from-bieon-eco via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
                         <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
                             <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">

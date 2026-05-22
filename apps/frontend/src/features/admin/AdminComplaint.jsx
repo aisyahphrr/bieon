@@ -316,7 +316,7 @@ export default function AdminComplaint({ onNavigate }) {
         
         // Header PDF
         doc.setFontSize(18);
-        doc.setTextColor(0, 155, 124); // Admin Teal #059b27
+        doc.setTextColor(5, 155, 39); // Admin Teal #059b27
         doc.text(t('export.admin_report_title', 'BIEON - Laporan Pengaduan Pelanggan'), 14, 22);
         
         doc.setFontSize(11);
@@ -352,7 +352,7 @@ export default function AdminComplaint({ onNavigate }) {
             body: tableRows,
             startY: 40,
             theme: 'grid',
-            headStyles: { fillColor: [0, 155, 124], textColor: [255, 255, 255], fontStyle: 'bold' },
+            headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontStyle: 'bold' },
             styles: { fontSize: 8, cellPadding: 2 },
             alternateRowStyles: { fillColor: [245, 245, 245] }
         });
@@ -487,7 +487,7 @@ export default function AdminComplaint({ onNavigate }) {
     const handleExportSingleDetailPDF = (ticket) => {
         if (!ticket) return;
         const doc = new jsPDF('portrait');
-        const primaryColor = [0, 155, 124]; // Admin Teal #059b27
+        const primaryColor = [5, 155, 39]; // Admin Teal #059b27
         
         // Header & Logo Branding
         doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
