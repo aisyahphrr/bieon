@@ -14,11 +14,18 @@ const {
     bieonIdFilter,
 } = require('../shared/bieonId');
 
+const buildFlexibleBieonIdRegex = (value) => {
+    const chars = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').split('');
+    if (chars.length === 0) return null;
+    return new RegExp(`^${chars.map((char) => `${char}[^A-Z0-9]*`).join('')}$`, 'i');
+};
+
 // Setup Hubs awal untuk sistem baru atau klaim stok yang sudah ada
 exports.setupHubs = async (req, res) => {
     try {
         const { bieonId: rawBieonId, totalHubs, hubCount } = req.body;
         const bieonId = normalizeBieonId(rawBieonId);
+    const bieonRegex = buildFlexibleBieonIdRegex(bieonId);
         // PRIORITAS: Ambil ID dari Token (jauh lebih aman & akurat)
         const userId = req.user?.userId || req.body.userId; 
         const count = totalHubs || hubCount || 1;
@@ -32,7 +39,7 @@ exports.setupHubs = async (req, res) => {
         }
 
         // 1. Cek apakah sistem sudah ada
-        let system = await findOneByBieonId(BieonSystem, bieonId);
+        let system = bieonRegex ? await BieonSystem.findOne({ bieonId: bieonRegex }) : null;
 
         if (system) {
             // Jika ada owner, cek apakah owner tersebut masih aktif (bukan yatim piatu)
@@ -40,9 +47,9 @@ exports.setupHubs = async (req, res) => {
                 const ownerExists = await User.findById(system.owner);
                 if (!ownerExists) {
                     // Bersihkan rekaman yatim piatu (Cleanup Orphan)
-                    await deleteManyByBieonId(Hub, bieonId);
-                    await deleteManyByBieonId(KendaliPerangkat, bieonId);
-                    await BieonSystem.deleteOne(bieonIdFilter(bieonId));
+                    await Hub.deleteMany({ bieonId: bieonRegex || bieonId });
+                    await KendaliPerangkat.deleteMany({ bieonId: bieonRegex || bieonId });
+                    await BieonSystem.deleteOne({ bieonId: bieonRegex || bieonId });
                     system = null; // Set null agar nanti dibuat baru
                 } else {
                     // Jika owner masih ada, berarti benar-benar duplikat
@@ -59,7 +66,7 @@ exports.setupHubs = async (req, res) => {
         // Jika sistem belum ada sama sekali atau baru saja dihapus karena yatim piatu
         if (!system) {
             system = new BieonSystem({
-                bieonId,
+                bieonId: normalizedBieonId,
                 owner: userId,
                 hubCount: count
             });
@@ -67,7 +74,7 @@ exports.setupHubs = async (req, res) => {
         }
 
         // 2. Klaim semua Hub terkait
-        const hubs = await findManyByBieonId(Hub, bieonId);
+        const hubs = await Hub.find({ bieonId: bieonRegex || bieonId });
         const hubsPayload = [];
 
         if (hubs.length > 0) {
@@ -91,7 +98,7 @@ exports.setupHubs = async (req, res) => {
             for (let i = 1; i <= count; i++) {
                 const newHub = new Hub({
                     name: `Hub ${i}`,
-                    bieonId: bieonId,
+                    bieonId: normalizedBieonId,
                     owner: userId,
                     status: 'Online'
                 });
@@ -102,7 +109,7 @@ exports.setupHubs = async (req, res) => {
 
         // 3. Klaim semua Perangkat terkait ke user baru ini
         await KendaliPerangkat.updateMany(
-            { ...bieonIdFilter(bieonId), lifecycleState: 'UNCLAIMED' },
+            { bieonId: bieonRegex || bieonId, lifecycleState: 'UNCLAIMED' },
             { $set: { owner: userId, tenantId: userId } }
         );
 

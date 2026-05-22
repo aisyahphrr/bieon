@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   FileText, 
   Download, 
@@ -10,57 +10,174 @@ import {
   ShieldCheck,
   Server
 } from 'lucide-react';
+import { io } from 'socket.io-client';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const MOCK_RAW_LOGS = [
-  { time: '2026-05-08 16:30:01.002', tag: 'SYS', msg: 'Kernel initialization complete. BIEON_CORE_RT_OS v2.4.1 loaded.' },
-  { time: '2026-05-08 16:30:01.045', tag: 'NET', msg: 'Network stack UP. Local IP: 192.168.1.104. Gateway: 192.168.1.1' },
-  { time: '2026-05-08 16:30:01.080', tag: 'MQTT', msg: 'Connected to broker: mqtt://bieon-prod-01.cloud (Auth: SUCCESS)' },
-  { time: '2026-05-08 16:30:02.112', tag: 'DATA', msg: 'RX: {"hub":"HN001", "node":"R1", "type":"TEMP", "val":26.4, "u":"C"}' },
-  { time: '2026-05-08 16:30:02.450', tag: 'DATA', msg: 'RX: {"hub":"HN001", "node":"R1", "type":"HUM", "val":65.2, "u":"%"}' },
-  { time: '2026-05-08 16:30:03.900', tag: 'WARN', msg: 'Node HN005 reporting high noise level on Zigbee channel 11. Rerouting...' },
-  { time: '2026-05-08 16:30:04.120', tag: 'DATA', msg: 'RX: {"hub":"HN002", "node":"R2", "type":"PLUG", "st":1, "load":45.2, "v":220}' },
-  { time: '2026-05-08 16:30:05.667', tag: 'SYS', msg: 'Health Check: 14/14 nodes responding. System Latency: 42ms' },
-  { time: '2026-05-08 16:30:06.001', tag: 'DATA', msg: 'RX: {"hub":"HN001", "node":"R1", "type":"TEMP", "val":26.5, "u":"C"}' },
-  { time: '2026-05-08 16:30:07.234', tag: 'CMD', msg: 'TX: {"id":"9821", "t":"PLUG_02", "p":{"state":0}, "sig":"2f91a"}' },
-  { time: '2026-05-08 16:30:07.450', tag: 'ACK', msg: 'RX: {"id":"9821", "res":"SUCCESS", "ts":1715124307}' },
-  { time: '2026-05-08 16:30:08.112', tag: 'INFO', msg: 'Auto-balancing energy distribution for Cluster_A (Priority: BALANCED)' },
-  { time: '2026-05-08 16:30:09.900', tag: 'DATA', msg: 'RX: {"hub":"HN005", "node":"R2", "type":"AIR", "aqi":42, "pm25":11}' },
-  { time: '2026-05-08 16:30:10.450', tag: 'DATA', msg: 'RX: {"hub":"HN001", "node":"R1", "type":"TEMP", "val":26.5, "u":"C"}' },
-  { time: '2026-05-08 16:30:11.230', tag: 'ERR', msg: 'FAILED_TO_SYNC: Node HN008 handshake timeout. Retrying in 5s...' },
-  { time: '2026-05-08 16:30:12.120', tag: 'DATA', msg: 'RX: {"hub":"HN001", "node":"R1", "type":"HUM", "val":64.9, "u":"%"}' },
-  { time: '2026-05-08 16:30:13.450', tag: 'SYS', msg: 'Syncing Real-Time Clock with NTP server (id.pool.ntp.org)... OK.' },
-  { time: '2026-05-08 16:30:14.900', tag: 'DATA', msg: 'RX: {"hub":"HN002", "node":"R2", "type":"PLUG", "st":1, "load":44.8, "v":221}' },
-  { time: '2026-05-08 16:30:15.667', tag: 'DATA', msg: 'RX: {"hub":"HN001", "node":"R1", "type":"TEMP", "val":26.6, "u":"C"}' },
-  { time: '2026-05-08 16:30:16.234', tag: 'WARN', msg: 'Battery low (12%) on Node HN004 (Leak Sensor). Notify user.' },
-  { time: '2026-05-08 16:30:17.450', tag: 'DATA', msg: 'RX: {"hub":"HN003", "node":"R3", "type":"PLUG", "st":0}' },
-  { time: '2026-05-08 16:30:18.112', tag: 'SYS', msg: 'Memory Management: Allocated 128MB buffer for batch data stream.' },
-  { time: '2026-05-08 16:30:19.900', tag: 'DATA', msg: 'RX: {"hub":"HN005", "node":"R2", "type":"AIR", "aqi":41, "pm25":10}' },
-  { time: '2026-05-08 16:30:21.000', tag: 'DATA', msg: 'RX: {"hub":"HN001", "node":"R1", "type":"TEMP", "val":26.6, "u":"C"}' },
-];
+const MAX_LOGS = 120;
+
+const toLogTime = (value) => {
+  if (!value) return new Date().toISOString().replace('T', ' ').substring(0, 23);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toISOString().replace('T', ' ').substring(0, 23);
+};
+
+const asText = (value) => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
+
+const buildLog = (time, tag, msg) => ({ time, tag, msg });
 
 export function DataLogSistemPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [logs, setLogs] = useState(MOCK_RAW_LOGS);
+  const [logs, setLogs] = useState([]);
   const [isStreaming, setIsStreaming] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const customerName = location.state?.customerName || "Sistem Global";
+  const ownerId = location.state?.homeownerId || location.state?.ownerId || location.state?.userId || '';
+  const bieonId = location.state?.bieonId || location.state?.systemId || '';
+  const streamingRef = useRef(isStreaming);
 
   useEffect(() => {
-    if (!isStreaming) return;
-    const interval = setInterval(() => {
-      // Simulate real-time updates
-      const newLog = {
-        time: new Date().toISOString().replace('T', ' ').substring(0, 23),
-        tag: Math.random() > 0.8 ? 'WARN' : 'DATA',
-        msg: `RX: {"hub":"HN001", "node":"R1", "type":"TELEMETRY", "ts":${Date.now()}}`
-      };
-      setLogs(prev => [...prev.slice(-49), newLog]); // Keep last 50
-    }, 2000);
-    return () => clearInterval(interval);
+    streamingRef.current = isStreaming;
   }, [isStreaming]);
+
+  const appendLogs = useCallback((entries) => {
+    if (!streamingRef.current || !entries || entries.length === 0) return;
+    setLogs(prev => [...entries, ...prev].slice(0, MAX_LOGS));
+  }, []);
+
+  const normalizeEnergyRows = (rows) => rows.map((item) => buildLog(
+    toLogTime(item.date || item.timestamp || item.createdAt),
+    'PDM',
+    `PDM ${item.device?.name || item.device || item.name || 'Power Meter'} | ${asText(item.totalKwh ?? item.kwh ?? 0)} kWh | ${asText(item.voltage ?? '-') } V | ${asText(item.current ?? '-') } A | ${asText(item.power ?? '-') } W`
+  ));
+
+  const normalizeActivityRows = (rows) => rows.map((item) => buildLog(
+    toLogTime(item.timestamp || item.date || item.createdAt),
+    'CMD',
+    `${item.actuator || item.device || 'Perangkat'} => ${item.status || '-'}${item.trigger ? ` | trigger: ${item.trigger}` : ''}${item.details ? ` | ${item.details}` : ''}`
+  ));
+
+  const normalizeAlertRows = (rows) => rows.map((item) => buildLog(
+    toLogTime(item.date || item.timestamp || item.createdAt),
+    (String(item.type || item.status || 'INFO').toUpperCase().includes('WARN') || String(item.type || item.status || '').toLowerCase().includes('alert')) ? 'WARN' : 'INFO',
+    `${item.category || 'Alert'}: ${item.messageKey || item.message || item.rawMessage || item.title || 'Notification'}`
+  ));
+
+  const normalizeSecurityRows = (rows) => rows.map((item) => buildLog(
+    toLogTime(item.date || item.timestamp || item.createdAt),
+    String(item.status || 'Aman').toLowerCase().includes('bahaya') ? 'ERR' : 'SYS',
+    `Security ${item.room || '-'} | door: ${item.door || '-'} | motion: ${item.motion || '-'} | status: ${item.status || '-'}`
+  ));
+
+  const normalizeEnvironmentRows = (rows) => rows.map((item) => buildLog(
+    toLogTime(item.date || item.timestamp || item.createdAt),
+    'DATA',
+    `Environment ${item.room || item.device || '-'} | temp: ${asText(item.avgTemperature ?? item.temperature ?? '-')} | humidity: ${asText(item.avgHumidity ?? item.humidity ?? '-')}`
+  ));
+
+  const normalizeWaterRows = (rows) => rows.map((item) => buildLog(
+    toLogTime(item.date || item.timestamp || item.createdAt),
+    'DATA',
+    `Water ${item.device?.name || item.device || '-'} | pH: ${asText(item.ph ?? '-')}, turbidity: ${asText(item.turbidity ?? '-')}, temp: ${asText(item.temperature ?? item.temp ?? '-')}, tds: ${asText(item.tds ?? '-')}`
+  ));
+
+  const fetchLiveSnapshot = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setIsLoading(true);
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const query = new URLSearchParams();
+      if (ownerId) query.set('homeownerId', ownerId);
+      if (bieonId) query.set('bieonId', bieonId);
+      const suffix = query.toString() ? `?${query.toString()}` : '';
+
+      const endpoints = [
+        ['/api/history/energy', normalizeEnergyRows],
+        ['/api/history/activity', normalizeActivityRows],
+        ['/api/history/alerts', normalizeAlertRows],
+        ['/api/history/security', normalizeSecurityRows],
+        ['/api/history/environment', normalizeEnvironmentRows],
+        ['/api/history/water', normalizeWaterRows]
+      ];
+
+      const batches = await Promise.all(endpoints.map(async ([endpoint, mapper]) => {
+        try {
+          const res = await fetch(`${endpoint}${suffix}`, { headers });
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.data)) {
+            return mapper(json.data);
+          }
+        } catch (err) {
+          console.warn('[DATALOG] fetch failed:', endpoint, err?.message || err);
+        }
+        return [];
+      }));
+
+      const merged = batches.flat().sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      setLogs(merged.slice(0, MAX_LOGS));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [ownerId, bieonId]);
+
+  useEffect(() => {
+    fetchLiveSnapshot();
+    if (!isStreaming) return undefined;
+
+    const interval = setInterval(fetchLiveSnapshot, 15000);
+    return () => clearInterval(interval);
+  }, [fetchLiveSnapshot, isStreaming]);
+
+  useEffect(() => {
+    const socket = io('/', { transports: ['websocket'] });
+
+    socket.on('connect', () => {
+      appendLogs([buildLog(toLogTime(), 'SYS', `Socket connected ${socket.id || ''}`.trim())]);
+    });
+
+    socket.on('system_log', (payload) => {
+      const message = payload?.payload?.message || payload?.payload?.status || payload?.payload?.event || asText(payload?.payload);
+      const tag = String(payload?.payload?.type || payload?.payload?.status || 'SYS').toUpperCase().includes('WARN') ? 'WARN' : 'SYS';
+      appendLogs([buildLog(toLogTime(), tag, `${payload?.bieonId || 'BIEON'} | ${message}`)]);
+    });
+
+    socket.on('join_state', (payload) => {
+      appendLogs([buildLog(toLogTime(), 'INFO', `Join ${payload?.state || 'unknown'} | ${payload?.bieonId || 'BIEON'}${payload?.payload?.duration ? ` | duration ${payload.payload.duration}s` : ''}`)]);
+    });
+
+    socket.on('device_discovered', (payload) => {
+      appendLogs([buildLog(toLogTime(), 'DATA', `Discovered ${payload?.raw?.device_id || payload?.raw?.name || payload?.raw?.device_ieee || 'device'} | claimed=${Boolean(payload?.claimed)}`)]);
+    });
+
+    socket.on('device_telemetry', (payload) => {
+      const deviceKey = payload?.device_ieee || payload?._id || payload?.id || 'device';
+      appendLogs([buildLog(toLogTime(), 'DATA', `Telemetry ${deviceKey} | ${asText(payload?.value ?? payload?.currentValues ?? payload?.raw)}`)]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [appendLogs]);
+
+  const liveStatusText = useMemo(() => {
+    if (isLoading) return 'Syncing live diagnostics...';
+    if (!isStreaming) return 'Live stream paused';
+    return 'Live data from backend + socket';
+  }, [isLoading, isStreaming]);
 
   const handleDownloadTxt = () => {
     const header = `BIEON SMART GATEWAY LOG\n` +
@@ -173,7 +290,7 @@ export function DataLogSistemPage() {
               {!showSearch ? (
                 <div>
                   <h3 className="text-sm font-black text-gray-900 font-mono">BIEON_GATEWAY_V2.log</h3>
-                  <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tighter">Connected via MQTT @ 192.168.1.45</p>
+                  <p className="text-[10px] text-gray-400 font-mono uppercase tracking-tighter">{liveStatusText}</p>
                 </div>
               ) : (
                 <div className="flex-1 max-w-md animate-in slide-in-from-left-4 duration-300">
@@ -265,14 +382,14 @@ export function DataLogSistemPage() {
             <div className="flex gap-10">
               <span className="flex items-center gap-2 text-bieon-eco">
                 <div className="w-2 h-2 bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-full" />
-                BIEON_RT_ENGINE_STABLE
+                BIEON_RT_ENGINE_LIVE
               </span>
-              <span>Buffer: 1024KB / 4096KB</span>
-              <span>Latency: 12.4ms</span>
+              <span>Buffer: {Math.min(logs.length, MAX_LOGS)}/{MAX_LOGS}</span>
+              <span>{isLoading ? 'Syncing...' : 'Live Ready'}</span>
             </div>
             <div className="flex gap-6">
               <span className="bg-gray-200 px-2 py-0.5 rounded">UTF-8</span>
-              <span>BIEON_RT_ENGINE v2.4</span>
+              <span>BIEON_RT_ENGINE v2.5</span>
             </div>
           </div>
         </div>

@@ -21,15 +21,15 @@ mongoose.connect(process.env.MONGODB_URI).then(async () => {
             const hub = await Hub.findById(dev.hubId);
             if (hub) {
                 const formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
-                // Pakai tenant_001 sesuai permintaan user
-                const topic = `tenant/tenant_001/bieon/${dev.bieonId}/hub/${formattedHubId}/device/${dev.name}/status`;
-                
+                // Publish to device-facing bieon topic (do not publish tenant/... to device broker)
+                const topic = `bieon/${dev.bieonId}/hub/${formattedHubId}/device/${dev.name}/status`;
+
                 publishCommand(topic, {
                     type: "status",
                     state: "PROVISIONED",
                     ts: Math.floor(Date.now() / 1000)
                 }, { qos: 1, retain: true });
-                
+
                 console.log(`[SYNC] Published hierarchy for: ${dev.name} -> ${topic}`);
             }
         } catch (err) {

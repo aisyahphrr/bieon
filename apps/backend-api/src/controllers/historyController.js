@@ -6,7 +6,13 @@ const Activity = require('../models/Activity');
 const Alert = require('../models/Alert');
 const User = require('../models/User');
 const PlnTariff = require('../models/PlnTariff');
-const { bieonIdFilter } = require('../shared/bieonId');
+const PdmMeter = require('../models/PdmMeter');
+
+const buildFlexibleBieonIdRegex = (value) => {
+    const chars = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').split('');
+    if (chars.length === 0) return null;
+    return new RegExp(`^${chars.map((char) => `${char}[^A-Z0-9]*`).join('')}$`, 'i');
+};
 
 /**
  * Helper to get homeownerId based on user role
@@ -42,7 +48,8 @@ const buildHistoryQuery = async (req, ownerField = 'owner') => {
         const KendaliPerangkat = require('../models/KendaliPerangkat');
         
         // 1. Cari Hub ID berdasarkan BIEON ID
-        const hubs = await Hub.find(bieonIdFilter(bieonId)).select('_id');
+        const bieonRegex = buildFlexibleBieonIdRegex(bieonId);
+        const hubs = bieonRegex ? await Hub.find({ bieonId: bieonRegex }).select('_id') : [];
         const hubIds = hubs.map(h => h._id);
         
         if (hubIds.length > 0) {
@@ -216,7 +223,8 @@ exports.getEnergySummary = async (req, res) => {
         let hubIds = [];
         if (bieonId) {
             const Hub = require('../models/Hub');
-            const hubs = await Hub.find(bieonIdFilter(bieonId)).select('_id');
+            const bieonRegex = buildFlexibleBieonIdRegex(bieonId);
+            const hubs = bieonRegex ? await Hub.find({ bieonId: bieonRegex }).select('_id') : [];
             hubIds = hubs.map(h => h._id);
         }
         
@@ -315,13 +323,19 @@ exports.getEnergySummary = async (req, res) => {
         if (hubIds.length > 0) pmQuery.hubId = { $in: hubIds };
 
         const powerMeter = await KendaliPerangkat.findOne(pmQuery);
+        const pdmMeter = await PdmMeter.findOne({
+            owner: ownerId,
+            ...(hubIds.length > 0 ? { bieonId: buildFlexibleBieonIdRegex(bieonId) || bieonId } : {})
+        });
+
+        const combinedLoad = (powerMeter?.currentValues?.currentLoad || 0) + (pdmMeter?.currentValues?.currentLoad || 0);
 
         res.status(200).json({ 
             success: true, 
             data: {
                 dailyData: hourlyBuckets.slice(0, new Date().getHours() + 1), // Hanya tampilkan sampai jam sekarang
                 monthlyData,
-                currentLoad: powerMeter?.currentValues?.currentLoad || 0,
+                currentLoad: combinedLoad,
                 runningConsumption: parseFloat(totalKwhToday.toFixed(2)),
                 avgHourly: totalKwhToday > 0 ? parseFloat((totalKwhToday / (new Date().getHours() + 1)).toFixed(3)) : 0,
                 totalCost: totalCostToday,
