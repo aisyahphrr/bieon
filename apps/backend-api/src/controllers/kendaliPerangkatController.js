@@ -3,12 +3,11 @@ const SensorData = require('../models/SensorData');
 const RegisteredProduct = require('../models/RegisteredProduct');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
-const { publishCommand } = require('../config/mqtt');
 const { broadcastNewDevice, broadcastDeviceTelemetry } = require('../shared/socketEmitter');
 const Hub = require('../models/Hub');
 const TechnicianAccess = require('../models/TechnicianAccess');
 const DeviceWhitelist = require('../models/DeviceWhitelist');
-const { SUPPORTED_MODELS } = require('../config/supportedDevices');
+const mqtt = require('../config/mqtt');
 
 // 1. Mencatat perangkat yang terdeteksi (tanda icon di UI)
 exports.discoverDevice = async (req, res) => {
@@ -200,72 +199,8 @@ exports.createDevice = async (req, res) => {
 
         broadcastNewDevice(newDevice);
 
-        // --- MQTT CONFIG & HIERARCHY SYNC ---
-        try {
-            if (hub) {
-                const formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
-                const userTenantId = user?.tenantId || "tenant_001";
-                const capturedIeee = device_ieee || req.body.ieee || "0000000000000000";
-                const mqttTopic = `bieon/devices/${formattedHubId}/${capturedIeee}/config`;
-
-                // 1. Individual Device Config (Direct Publish)
-                if (req.mqttClient && typeof req.mqttClient.publish === 'function') {
-                    req.mqttClient.publish(mqttTopic, JSON.stringify({
-                        action: "config",
-                        data: newDevice
-                    }));
-                    console.log(`[MQTT] Published individual config to ${mqttTopic}`);
-                } else {
-                    console.warn(`[MQTT] Client not found on request, skipping individual publish for ${mqttTopic}`);
-                }
-
-                // 2. Collective Device Map Publish (Command to Hardware)
-                // PENTING: Filter berdasarkan OWNER dan BIEON_ID agar tidak campur aduk!
-                const allUserDevices = await KendaliPerangkat.find({ 
-                    owner: ownerId, 
-                    bieonId: newDevice.bieonId,
-                    status: 'Active' 
-                });
-                const configTopic = `tenant/${userTenantId}/bieon/${newDevice.bieonId}/config/device-map`;
-                
-                const mappedDevices = allUserDevices.map(d => {
-                    // Smart Matching: Cek di Nama, Tipe, dan Kategori
-                    let modelInfo = SUPPORTED_MODELS[d.modelId] || SUPPORTED_MODELS[d.type] || SUPPORTED_MODELS[d.category] || {};
-                    
-                    if (!modelInfo.telemetry_fields) {
-                        const searchString = `${d.name} ${d.type} ${d.category} ${d.modelId}`.toLowerCase();
-                        if (searchString.includes('kenyamanan') || searchString.includes('th') || searchString.includes('temp') || searchString.includes('sensor')) {
-                            modelInfo = SUPPORTED_MODELS["SNZB-02DR2"];
-                        } else if (searchString.includes('plug') || searchString.includes('switch') || searchString.includes('stop kontak') || searchString.includes('listrik')) {
-                            modelInfo = SUPPORTED_MODELS["smart_plug"];
-                        } else if (searchString.includes('analog') || searchString.includes('water') || searchString.includes('quality') || searchString.includes('air')) {
-                            modelInfo = SUPPORTED_MODELS["analog_sensor"];
-                        }
-                    }
-                    
-                    let rawIeee = d.device_ieee || "0000000000000000";
-                    let cleanIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
-                    let formattedIeee = (cleanIeee.match(/.{1,2}/g) || ["00", "00", "00", "00", "00", "00", "00", "00"]).join(':');
-
-                    return {
-                        ieee: formattedIeee,
-                        device_id: d.modelId || d.type || "SNZB_02DR2", 
-                        telemetry_fields: modelInfo.telemetry_fields || ["status"],
-                        command_fields: modelInfo.command_fields || []
-                    };
-                });
-
-                publishCommand(configTopic, {
-                    type: "device_map",
-                    devices: mappedDevices,
-                    ts: Math.floor(Date.now() / 1000)
-                }, { qos: 1, retain: true });
-
-                console.log(`[MQTT] Config Map published for tenant: ${userTenantId}. Waiting for hardware to announce status.`);
-            }
-        } catch (mqttErr) {
-            console.error('[MQTT] Config Sync Failed:', mqttErr.message);
-        }
+        // MQTT device-map/config publish removed to keep the active topic surface minimal.
+        // UI and downstream services rely on socket events and the approved Bieon topics instead.
 
         res.status(201).json({ message: 'Perangkat berhasil disimpan ke database!', device: newDevice });
     } catch (error) {
@@ -356,8 +291,19 @@ exports.getDevicesByUser = async (req, res) => {
             }
         }
 
-        const devices = await KendaliPerangkat.find({ owner: userId });
-        res.status(200).json(devices);
+        const devices = await KendaliPerangkat.find({ owner: userId }).sort({ updatedAt: -1, createdAt: -1 }).lean();
+
+        const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
+        const seen = new Map();
+
+        for (const device of devices) {
+            const key = normalizeIeee(device.device_ieee) || String(device._id);
+            if (!seen.has(key)) {
+                seen.set(key, device);
+            }
+        }
+
+        res.status(200).json(Array.from(seen.values()));
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data perangkat user', error: error.message });
     }
@@ -366,8 +312,19 @@ exports.getDevicesByUser = async (req, res) => {
 // 5. Ambil perangkat berdasarkan Hub
 exports.getDevicesByHub = async (req, res) => {
     try {
-        const devices = await KendaliPerangkat.find({ hubId: req.params.hubId });
-        res.status(200).json(devices);
+        const devices = await KendaliPerangkat.find({ hubId: req.params.hubId }).sort({ updatedAt: -1, createdAt: -1 }).lean();
+
+        const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
+        const seen = new Map();
+
+        for (const device of devices) {
+            const key = normalizeIeee(device.device_ieee) || String(device._id);
+            if (!seen.has(key)) {
+                seen.set(key, device);
+            }
+        }
+
+        res.status(200).json(Array.from(seen.values()));
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data perangkat', error: error.message });
     }
@@ -395,8 +352,19 @@ exports.getDiscoveredDevices = async (req, res) => {
             }
         }
 
-        const devices = await KendaliPerangkat.find({ owner: userId, status: 'Discovered' });
-        res.status(200).json(devices);
+        const devices = await KendaliPerangkat.find({ owner: userId, status: 'Discovered' }).sort({ updatedAt: -1, createdAt: -1 }).lean();
+
+        const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
+        const seen = new Map();
+
+        for (const device of devices) {
+            const key = normalizeIeee(device.device_ieee) || String(device._id);
+            if (!seen.has(key)) {
+                seen.set(key, device);
+            }
+        }
+
+        res.status(200).json(Array.from(seen.values()));
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data perangkat baru', error: error.message });
     }
@@ -410,6 +378,27 @@ exports.deleteDevice = async (req, res) => {
 
         if (req.user.role !== 'SuperAdmin' && String(device.owner) !== String(req.user.userId)) {
             return res.status(403).json({ message: 'Anda tidak memiliki hak akses.' });
+        }
+
+        const bieonId = device.bieonId || req.user.bieonId;
+        const normalizedIeee = String(device.device_ieee || device.modelId || device.name || '').replace(/[:\-\s]/g, '').toUpperCase();
+        if (bieonId) {
+            const leaveTopic = `bieon/${bieonId}/admin/leave`;
+            const leavePayload = {
+                command: 'leave_device',
+                action: 'leave',
+                ieee: normalizedIeee,
+                device_ieee: normalizedIeee,
+                device_id: String(device._id),
+                command_id: `cmd_${Date.now()}`,
+                requested_by: String(req.user.userId),
+                timestamp: Date.now()
+            };
+            const leavePublished = mqtt.publishCommand(leaveTopic, leavePayload);
+            if (!leavePublished) {
+                return res.status(503).json({ message: 'MQTT broker belum siap untuk mengirim leave command' });
+            }
+            console.log(`[MQTT] Published admin leave to ${leaveTopic}`, leavePayload);
         }
 
         const productIdToReset = device.modelId || device.type;
@@ -474,24 +463,38 @@ exports.toggleDevice = async (req, res) => {
         device.lastCommandTime = new Date();
         await device.save();
 
-        // --- HIERARCHICAL TOPIC GENERATION (Hardware Flow) ---
-        // Format: tenant/<tenantId>/bieon/<bieonId>/hub/<hubId>/device/<deviceId>/command
-        const tenantId = String(device.owner);
         const bieonId = device.bieonId || req.user.bieonId;
+        const normalizedIeee = String(device.device_ieee || device.modelId || device.name || '').replace(/[:\-\s]/g, '').toLowerCase();
         
         // Cari info hub (bieonId/alias hub-nya)
         const Hub = require('../models/Hub');
         const hub = await Hub.findById(device.hubId);
         const hubIdAlias = hub?.bieonId || 'hub_01'; // Fallback ke alias hub
 
-        // GUNAKAN IEEE (PERMANENT ID) BUKAN NAMA (DYNAMICAL ID)
-        const deviceIdentifier = device.device_ieee || device.modelId || device.name.toLowerCase().replace(/\s+/g, '_');
-        const topicCommand = `tenant/${tenantId}/bieon/${bieonId}/hub/${hubIdAlias}/device/${deviceIdentifier}/command`;
-
-        console.log(`[MQTT] Sending stable command to: ${topicCommand}`);
-
-        // Publish ke MQTT
-        publishCommand(topicCommand, newStatus);
+        // Publish hanya ke admin command topic untuk perangkat fisik.
+        // Backend/ESP-B akan meneruskan ke ESP-A berdasarkan ieee target.
+        try {
+            const adminTopic = `bieon/${bieonId}/admin/command`;
+            const adminPayload = {
+                command: newStatus === '1' ? 'on' : 'off',
+                action: newStatus === '1' ? 'on' : 'off',
+                status: newStatus,
+                bieon_id: bieonId,
+                ieee: normalizedIeee,
+                device_ieee: normalizedIeee,
+                device_id: String(device._id),
+                command_id: `cmd_${Date.now()}`,
+                requested_by: String(req.user.userId),
+                timestamp: Date.now()
+            };
+            const published = mqtt.publishCommand(adminTopic, adminPayload);
+            if (!published) {
+                return res.status(503).json({ message: 'MQTT broker belum siap untuk mengirim command' });
+            }
+            console.log(`[MQTT] Published admin command to ${adminTopic}`, adminPayload);
+        } catch (err) {
+            console.warn('[MQTT] Failed to publish admin command to ESP-B topic:', err && err.message ? err.message : err);
+        }
 
         // LOGGING KE AKTIVITAS TERBARU
         await new Activity({
