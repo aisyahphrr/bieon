@@ -82,7 +82,7 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
-@theme inline {
+@theme {
   --font-sans: "Satoshi", "General Sans", "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --color-eco: #059b27;
   --color-sense: #129cc0;

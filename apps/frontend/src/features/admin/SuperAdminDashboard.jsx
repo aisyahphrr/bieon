@@ -56,7 +56,7 @@ import {
   Cell
 } from 'recharts';
 
-
+import { SuperAdminLayout } from './SuperAdminLayout';
 
 const createCustomerStatusLabel = (status, t) => {
   const s = status?.toLowerCase() || 'aktif';
@@ -115,8 +115,6 @@ const ThreeDBar = (props) => {
     </g>
   );
 };
-
-import { SuperAdminLayout } from './SuperAdminLayout';
 
 export default function SuperAdminDashboard({ onNavigate }) {
   const { t, i18n } = useTranslation();
