@@ -6,7 +6,7 @@ const LandingPage = lazy(() => import('./features/general-page/LandingPage'));
 const Login = lazy(() => import('./features/general-page/login'));
 const Signup = lazy(() => import('./features/general-page/signup'));
 const Setup = lazy(() => import('./features/general-page/setup'));
-const HomeownerDashboard = lazy(() => import('./features/dashboard/HomeownerDashboardV2').then(module => ({ default: module.HomeownerDashboard })));
+const HomeownerDashboard = lazy(() => import('./features/dashboard/HomeownerDashboard').then(module => ({ default: module.HomeownerDashboard })));
 const HomeownerHistory = lazy(() => import('./features/dashboard/HomeownerHistory').then(module => ({ default: module.HomeownerHistory })));
 const DeviceControlPage = lazy(() => import('./features/dashboard/kendali').then(module => ({ default: module.DeviceControlPage })));
 const ForgotRequest = lazy(() => import('./features/auth/ForgotRequest'));
