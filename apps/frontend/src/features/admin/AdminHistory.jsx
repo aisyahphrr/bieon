@@ -64,11 +64,11 @@ export default function AdminHistory({ onNavigate }) {
     const [historyData, setHistoryData] = useState([]);
     const [allHomeowners, setAllHomeowners] = useState([]); // Master list
     const [allBieonSystems, setAllBieonSystems] = useState([]); // Master list of {bieonId, owner}
-    
+
     // --- Selection States ---
     const [selectedHomeowner, setSelectedHomeowner] = useState(null);
     const [selectedBieon, setSelectedBieon] = useState('');
-    
+
     // --- Loading & Error States ---
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingHomeowners, setIsLoadingHomeowners] = useState(true);
@@ -87,7 +87,7 @@ export default function AdminHistory({ onNavigate }) {
     const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [currentPage, setCurrentPage] = useState(1);
-    
+
     // --- Dropdown States ---
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [showBieonDropdown, setShowBieonDropdown] = useState(false);
@@ -109,16 +109,16 @@ export default function AdminHistory({ onNavigate }) {
     // ========================================================
     // BIDIRECTIONAL FILTERING LOGIC
     // ========================================================
-    
+
     // 1. Dropdown Pelanggan yang akan ditampilkan
     const displayHomeowners = useMemo(() => {
         if (!selectedBieon) return allHomeowners;
-        
+
         // Cari owner-owner yang memiliki ID BIEON terpilih ini
         const ownerIdsForThisBieon = allBieonSystems
             .filter(h => h.bieonId === selectedBieon)
             .map(h => h.owner);
-            
+
         return allHomeowners.filter(h => ownerIdsForThisBieon.includes(h._id));
     }, [allHomeowners, allBieonSystems, selectedBieon]);
 
@@ -129,7 +129,7 @@ export default function AdminHistory({ onNavigate }) {
             const uniqueIds = Array.from(new Set(allBieonSystems.map(h => h.bieonId)));
             return uniqueIds.map(id => ({ bieonId: id }));
         }
-        
+
         // Jika pelanggan dipilih, hanya tampilkan BIEON miliknya
         return allBieonSystems.filter(h => h.owner === selectedHomeowner._id);
     }, [allBieonSystems, selectedHomeowner]);
@@ -139,7 +139,7 @@ export default function AdminHistory({ onNavigate }) {
         setSelectedHomeowner(h);
         setShowCustomerDropdown(false);
         setCurrentPage(1);
-        
+
         // Reset BIEON jika BIEON yang sekarang tidak dimiliki oleh user baru ini
         if (selectedBieon) {
             const isOwned = allBieonSystems.some(sys => sys.bieonId === selectedBieon && sys.owner === h._id);
@@ -152,7 +152,7 @@ export default function AdminHistory({ onNavigate }) {
         setSelectedBieon(bieonId);
         setShowBieonDropdown(false);
         setCurrentPage(1);
-        
+
         if (bieonId) {
             // Cari siapa pemilik BIEON ini
             const owners = allBieonSystems.filter(h => h.bieonId === bieonId).map(h => h.owner);
@@ -204,13 +204,13 @@ export default function AdminHistory({ onNavigate }) {
     };
 
     const tabs = [
-        { id: 'Kenyamanan',       full: t('history.comfort'),       short: t('history.comfort'), endpoint: '/api/history/environment' },
-        { id: 'Keamanan',         full: t('history.security'),         short: t('history.security'), endpoint: '/api/history/security' },
-        { id: 'Kualitas Air',     full: t('history.water_quality'),     short: t('history.water_quality'), endpoint: '/api/history/water' },
-        { id: 'Konsumsi Energi',  full: t('history.energy'),  short: t('history.energy'), endpoint: '/api/history/energy' },
-        { id: 'Log Perangkat',    full: t('history.device_logs'),    short: t('history.device_logs'), endpoint: '/api/history/activity' },
+        { id: 'Kenyamanan', full: t('history.comfort'), short: t('history.comfort'), endpoint: '/api/history/environment' },
+        { id: 'Keamanan', full: t('history.security'), short: t('history.security'), endpoint: '/api/history/security' },
+        { id: 'Kualitas Air', full: t('history.water_quality'), short: t('history.water_quality'), endpoint: '/api/history/water' },
+        { id: 'Konsumsi Energi', full: t('history.energy'), short: t('history.energy'), endpoint: '/api/history/energy' },
+        { id: 'Log Perangkat', full: t('history.device_logs'), short: t('history.device_logs'), endpoint: '/api/history/activity' },
         { id: 'Notifikasi & Alert', full: t('history.notifications'), short: t('history.notifications'), endpoint: '/api/history/alerts' },
-        { id: 'Pengaduan',        full: t('history.complaints'),        short: t('history.complaints'), endpoint: '/api/complaints' }
+        { id: 'Pengaduan', full: t('history.complaints'), short: t('history.complaints'), endpoint: '/api/complaints' }
     ];
 
     const formatDateTime = (dateStr) => {
@@ -259,23 +259,23 @@ export default function AdminHistory({ onNavigate }) {
         if (tabId === 'Kualitas Air') return { ...base, device: item.device?.name || item.device || t('history.columns.water_sensor', 'Sensor Air'), ph: item.ph, turbidity: cleanValue(item.turbidity), temp: cleanValue(item.temperature), tds: cleanValue(item.tds), rawStatus: item.status };
         if (tabId === 'Konsumsi Energi') return { ...base, device: item.device?.name || item.device || t('history.columns.power_meter', 'Power Meter'), kwh: cleanValue(item.totalKwh), voltage: cleanValue(item.voltage), current: cleanValue(item.current), power: cleanValue(item.power), pf: item.pf + ' PF' };
         if (tabId === 'Log Perangkat') return { ...base, room: item.room, actuator: item.actuator, rawStatus: item.status, trigger: item.trigger };
-        if (tabId === 'Notifikasi & Alert') return { 
-            ...base, 
-            rawStatus: item.type || item.status || 'Normal', 
-            rawCategory: item.category, 
+        if (tabId === 'Notifikasi & Alert') return {
+            ...base,
+            rawStatus: item.type || item.status || 'Normal',
+            rawCategory: item.category,
             messageKey: item.messageKey,
             metadata: item.metadata,
-            rawMessage: item.message, 
-            isRead: item.isRead 
+            rawMessage: item.message,
+            isRead: item.isRead
         };
-        if (tabId === 'Pengaduan') return { 
-            ...base, 
-            id: item._id ? `TCK-${item._id.substring(item._id.length - 6).toUpperCase()}` : base.id, 
+        if (tabId === 'Pengaduan') return {
+            ...base,
+            id: item._id ? `TCK-${item._id.substring(item._id.length - 6).toUpperCase()}` : base.id,
             customer: item.homeowner?.fullName || t('history.unknown_user', 'Unknown User'),
             rawCategory: item.category,
-            topic: item.topic, 
-            device: item.device || item.hub?.name || t('history.general', 'General'), 
-            technician: item.technician?.fullName || t('complaint.status_unassigned'), 
+            topic: item.topic,
+            device: item.device || item.hub?.name || t('history.general', 'General'),
+            technician: item.technician?.fullName || t('complaint.status_unassigned'),
             rating: item.rating?.stars || '-',
             status: item.status,
             rawItem: item // Original data for modal
@@ -301,20 +301,20 @@ export default function AdminHistory({ onNavigate }) {
         setIsLoadingBieon(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/admin/all-bieon-systems', { 
-                headers: { 'Authorization': `Bearer ${token}` } 
+            const response = await fetch('/api/admin/all-bieon-systems', {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             const result = await response.json();
             if (result.success) setAllBieonSystems(result.data || []);
-        } catch (err) { 
-            console.error("Gagal memuat daftar BIEON:", err); 
-        } finally { 
-            setIsLoadingBieon(false); 
+        } catch (err) {
+            console.error("Gagal memuat daftar BIEON:", err);
+        } finally {
+            setIsLoadingBieon(false);
         }
     };
 
-    useEffect(() => { 
-        fetchHomeowners(); 
+    useEffect(() => {
+        fetchHomeowners();
         fetchAllBieonSystems();
     }, []);
 
@@ -329,7 +329,7 @@ export default function AdminHistory({ onNavigate }) {
             if (dateRange.start) query += `&startDate=${dateRange.start}`;
             if (dateRange.end) query += `&endDate=${dateRange.end}`;
             if (activeTab === 'Pengaduan') query += `&isHistory=true`;
-            
+
             const response = await fetch(`${currentTabConfig.endpoint}?${query}`, { headers: { 'Authorization': `Bearer ${token}` } });
             const result = await response.json();
             if (result.success && result.data) setHistoryData(result.data.map((item, index) => mapItemData(activeTab, item, index)));
@@ -359,7 +359,7 @@ export default function AdminHistory({ onNavigate }) {
                     const cat = t(`notification.category.${item.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, item.rawCategory).toLowerCase();
                     return timeStr.includes(q) || statusStr.includes(q) || msg.includes(q) || cat.includes(q);
                 }
-                
+
                 const baseStr = `${timeStr} ${statusStr} ${item.room || item.device || ''}`.toLowerCase();
                 return baseStr.includes(q);
             });
@@ -418,24 +418,24 @@ export default function AdminHistory({ onNavigate }) {
             const doc = new jsPDF('l', 'mm', 'a4'); // Full Landscape
             const pageWidth = doc.internal.pageSize.width;
             const pageHeight = doc.internal.pageSize.height;
-            
+
             // --- COVER PAGE DESIGN (LANDSCAPE OPTIMIZED) ---
             doc.setFillColor(242, 248, 245);
             doc.rect(0, 0, pageWidth, 45, 'F');
-            
+
             doc.setFontSize(32);
             doc.setTextColor(5, 155, 39);
             doc.setFont("helvetica", "bold");
             doc.text(t('history.export.system_name', 'BIEON SMART SYSTEM'), pageWidth / 2, 85, { align: 'center' });
-            
+
             doc.setFontSize(20);
             doc.setTextColor(60, 60, 60);
             doc.text(t('history.title').toUpperCase(), pageWidth / 2, 98, { align: 'center' });
-            
+
             doc.setDrawColor(5, 155, 39);
             doc.setLineWidth(1);
             doc.line(60, 110, pageWidth - 60, 110);
-            
+
             doc.setFontSize(13);
             doc.setTextColor(100, 100, 100);
             const startY = 130;
@@ -453,7 +453,7 @@ export default function AdminHistory({ onNavigate }) {
             addDetail(t('history.columns.customer'), selectedHomeowner.fullName || selectedHomeowner.name, startY);
             addDetail(t('profile.address', 'Alamat'), selectedHomeowner.address || "-", startY + lineSpacing);
             addDetail("ID BIEON", selectedBieon || t('history.filters.all_bieon'), startY + lineSpacing * 2);
-            
+
             const startRange = dateRange.start ? formatDateDisplay(dateRange.start) : t('history.filters.start_date_null', 'Awal Waktu');
             const endRange = dateRange.end ? formatDateDisplay(dateRange.end) : t('history.filters.end_date_null', 'Sekarang');
             addDetail(t('history.filters.date_range'), `${startRange} - ${endRange}`, startY + lineSpacing * 3);
@@ -477,21 +477,21 @@ export default function AdminHistory({ onNavigate }) {
 
                     const res = await fetch(tabUrl, { headers: { 'Authorization': `Bearer ${token}` } });
                     const result = await res.json();
-                    
+
                     if (result.success && result.data && result.data.length > 0) {
-                        doc.addPage(); 
+                        doc.addPage();
                         doc.setFontSize(18);
                         doc.setTextColor(5, 155, 39);
                         doc.text(`${t('history.columns.category')}: ${tab.full}`, 15, 18);
-                        
+
                         const mappedData = result.data.map((item, idx) => mapItemData(tab.id, item, idx));
                         const { headers, body } = generateTableConfig(tab.id, mappedData);
-                        
-                        autoTable(doc, { 
-                            startY: 25, 
-                            head: headers, 
-                            body: body, 
-                            theme: 'striped', 
+
+                        autoTable(doc, {
+                            startY: 25,
+                            head: headers,
+                            body: body,
+                            theme: 'striped',
                             headStyles: { fillColor: [5, 155, 39], fontSize: 10, halign: 'center' },
                             bodyStyles: { fontSize: 9, halign: 'center' },
                             margin: { top: 25, bottom: 20 }
@@ -501,44 +501,44 @@ export default function AdminHistory({ onNavigate }) {
                     console.error(`Error exporting tab ${tab.id}:`, tabErr);
                 }
             }
-            
+
             doc.save(`Laporan_BIEON_${selectedHomeowner.fullName || 'User'}.pdf`);
-        } catch (err) { 
-            console.error(err); 
-        } finally { 
-            setIsExportingAll(false); 
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsExportingAll(false);
         }
     };
 
     const generateTableConfig = (tabId, data) => {
         let headers = [], body = [];
-        if (tabId === 'Kenyamanan') { 
-            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.temperature'), t('history.columns.humidity')]]; 
-            body = data.map(e => [formatDateTime(e.rawTime), e.device, `${e.temp}°C`, `${e.humidity}%`]); 
+        if (tabId === 'Kenyamanan') {
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.temperature'), t('history.columns.humidity')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, `${e.temp}°C`, `${e.humidity}%`]);
         }
-        else if (tabId === 'Keamanan') { 
-            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.door_sensor'), t('history.columns.motion_sensor')]]; 
-            body = data.map(e => [formatDateTime(e.rawTime), e.device, localizeStatus(e.rawDoor), localizeStatus(e.rawMotion)]); 
+        else if (tabId === 'Keamanan') {
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.door_sensor'), t('history.columns.motion_sensor')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, localizeStatus(e.rawDoor), localizeStatus(e.rawMotion)]);
         }
-        else if (tabId === 'Kualitas Air') { 
-            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.ph'), t('history.columns.turbidity'), t('history.columns.tds')]]; 
-            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.ph, `${e.turbidity} NTU`, `${e.tds} ppm`]); 
+        else if (tabId === 'Kualitas Air') {
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.ph'), t('history.columns.turbidity'), t('history.columns.tds')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.ph, `${e.turbidity} NTU`, `${e.tds} ppm`]);
         }
-        else if (tabId === 'Konsumsi Energi') { 
-            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.energy'), t('history.columns.voltage'), t('history.columns.current'), t('history.columns.power_load'), t('history.columns.power_factor')]]; 
-            body = data.map(e => [formatDateTime(e.rawTime), e.device, `${e.kwh} kWh`, `${e.voltage} V`, `${e.current} A`, `${e.power} W`, e.pf]); 
+        else if (tabId === 'Konsumsi Energi') {
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.energy'), t('history.columns.voltage'), t('history.columns.current'), t('history.columns.power_load'), t('history.columns.power_factor')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, `${e.kwh} kWh`, `${e.voltage} V`, `${e.current} A`, `${e.power} W`, e.pf]);
         }
-        else if (tabId === 'Log Perangkat') { 
-            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.actuator'), t('history.columns.status'), t('history.columns.trigger')]]; 
-            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.actuator, localizeStatus(e.rawStatus), localizeTrigger(e.trigger)]); 
+        else if (tabId === 'Log Perangkat') {
+            headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.actuator'), t('history.columns.status'), t('history.columns.trigger')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.actuator, localizeStatus(e.rawStatus), localizeTrigger(e.trigger)]);
         }
-        else if (tabId === 'Notifikasi & Alert') { 
-            headers = [[t('history.columns.time'), t('history.columns.category'), t('history.columns.status'), t('history.columns.message_detail')]]; 
-            body = data.map(e => [formatDateTime(e.rawTime), t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), localizeStatus(e.rawStatus), e.messageKey ? t(e.messageKey, e.metadata) : e.rawMessage]); 
+        else if (tabId === 'Notifikasi & Alert') {
+            headers = [[t('history.columns.time'), t('history.columns.category'), t('history.columns.status'), t('history.columns.message_detail')]];
+            body = data.map(e => [formatDateTime(e.rawTime), t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), localizeStatus(e.rawStatus), e.messageKey ? t(e.messageKey, e.metadata) : e.rawMessage]);
         }
-        else if (tabId === 'Pengaduan') { 
-            headers = [[t('history.columns.time'), t('history.columns.ticket_id'), t('history.columns.customer'), t('history.columns.category'), t('history.columns.topic'), t('history.columns.technician'), t('history.columns.rating'), t('history.columns.status')]]; 
-            body = data.map(e => [formatDateTime(e.rawTime), e.id, e.customer, t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), e.topic, e.technician, e.rating, localizeStatus(e.status)]); 
+        else if (tabId === 'Pengaduan') {
+            headers = [[t('history.columns.time'), t('history.columns.ticket_id'), t('history.columns.customer'), t('history.columns.category'), t('history.columns.topic'), t('history.columns.technician'), t('history.columns.rating'), t('history.columns.status')]];
+            body = data.map(e => [formatDateTime(e.rawTime), e.id, e.customer, t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), e.topic, e.technician, e.rating, localizeStatus(e.status)]);
         }
         return { headers, body };
     };
@@ -548,10 +548,10 @@ export default function AdminHistory({ onNavigate }) {
             <div className="space-y-6">
                 <div className="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                     <div className="flex flex-wrap items-end gap-4 w-full">
-                        
+
                         {/* Pilih Pelanggan (With Dynamic Filtering) */}
                         <div className="space-y-2 relative flex-1 min-w-[240px]">
-                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.select_customer')}</label>
+                            <label className="text-xs font-semibold text-gray-500 mb-1 block ml-1">{t('history.filters.select_customer')}</label>
                             <button onClick={() => setShowCustomerDropdown(!showCustomerDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showCustomerDropdown ? 'border-bieon-eco ring-4 ring-bieon-eco/10 bg-white' : 'hover:bg-white hover:border-bieon-eco/30 text-gray-700'}`}>
                                 <div className="flex items-center gap-2 truncate">
                                     <UserIcon className="w-4 h-4 text-bieon-eco" />
@@ -577,7 +577,7 @@ export default function AdminHistory({ onNavigate }) {
 
                         {/* Pilih BIEON (With Dynamic Filtering) */}
                         <div className="space-y-2 relative flex-1 min-w-[180px]">
-                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.select_bieon')}</label>
+                            <label className="text-xs font-semibold text-gray-500 mb-1 block ml-1">{t('history.filters.select_bieon')}</label>
                             <button onClick={() => setShowBieonDropdown(!showBieonDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${showBieonDropdown ? 'border-bieon-eco ring-4 ring-bieon-eco/10 bg-white' : 'hover:bg-white hover:border-bieon-eco/30 text-gray-700'}`}>
                                 <div className="flex items-center gap-2 truncate">
                                     <Cpu className="w-4 h-4 text-bieon-eco" />
@@ -601,7 +601,7 @@ export default function AdminHistory({ onNavigate }) {
 
                         {/* Rentang Waktu */}
                         <div className="space-y-2 relative flex-1 min-w-[240px]">
-                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest block ml-1">{t('history.filters.date_range')}</label>
+                            <label className="text-xs font-semibold text-gray-500 mb-1 block ml-1">{t('history.filters.date_range')}</label>
                             <button onClick={() => setShowDateDropdown(!showDateDropdown)} className={`w-full h-[54px] flex items-center justify-between px-5 bg-gray-50/50 border border-gray-100 rounded-[1.25rem] text-[13px] font-bold transition-all ${dateRange.start || dateRange.end ? 'border-bieon-eco text-bieon-eco bg-bieon-eco/5' : 'hover:bg-white hover:border-bieon-eco/30 text-gray-500'}`}>
                                 <div className="flex items-center gap-2 truncate">
                                     <Calendar className="w-4 h-4" />
@@ -634,7 +634,7 @@ export default function AdminHistory({ onNavigate }) {
                                                 </div>
                                             )}
                                             <div className="flex gap-3 pt-2">
-                                                <button onClick={() => { setDateRange({start:'', end:''}); setShowDateDropdown(false); setActivePicker(null); setCurrentPage(1); }} className="flex-1 h-[46px] text-[11px] font-black text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest border border-gray-50 rounded-xl hover:bg-gray-50">{t('history.filters.reset_all')}</button>
+                                                <button onClick={() => { setDateRange({ start: '', end: '' }); setShowDateDropdown(false); setActivePicker(null); setCurrentPage(1); }} className="flex-1 h-[46px] text-[11px] font-black text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest border border-gray-50 rounded-xl hover:bg-gray-50">{t('history.filters.reset_all')}</button>
                                                 <button onClick={() => { setShowDateDropdown(false); setActivePicker(null); }} className="flex-1 h-[46px] bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-[11px] font-black hover:brightness-105 transition-all shadow-lg shadow-bieon-eco/20 uppercase tracking-widest">{t('history.filters.apply')}</button>
                                             </div>
                                         </div>
@@ -644,67 +644,61 @@ export default function AdminHistory({ onNavigate }) {
                         </div>
 
                         <button onClick={handleExportPDF} title={t('history.export.button_tab')} className="flex items-center justify-center w-[54px] h-[54px] bg-white border border-gray-100 text-bieon-eco rounded-[1.1rem] hover:bg-gray-50 transition-all shadow-sm active:scale-95 shrink-0"><Download className="w-5 h-5" /></button>
-                        <button onClick={handleExportAllPDF} disabled={isExportingAll} className="flex items-center justify-center gap-3 px-8 h-[54px] bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-[1.25rem] font-black text-[11px] uppercase tracking-widest hover:brightness-105 transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0">{isExportingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}<span className="whitespace-nowrap">{t('history.full_report')}</span></button>
+                        <button onClick={handleExportAllPDF} disabled={isExportingAll} className="flex items-center justify-center gap-3 px-8 h-[54px] bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-[1.25rem] font-semibold text-[13px] hover:brightness-105 transition-all shadow-lg active:scale-95 disabled:opacity-50 shrink-0">{isExportingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}<span className="whitespace-nowrap">{t('history.full_report')}</span></button>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                         {/* Tab Scroll Area */}
-                        <div className="flex-1 min-w-0 overflow-x-auto tabs-scroll-container">
-                            <style>{`
-                                .tabs-scroll-container::-webkit-scrollbar { display: none; }
-                                .tabs-scroll-container { 
-                                    -ms-overflow-style: none; 
-                                    scrollbar-width: none; 
-                                    -webkit-overflow-scrolling: touch;
-                                }
-                            `}</style>
-                            <div className="inline-flex items-center p-1.5 bg-gray-100/80 rounded-2xl gap-1 shadow-inner w-fit">
-                                {tabs.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSelectedRoomFilter(''); }}
-                                        className={`px-4 sm:px-5 py-2.5 rounded-[0.95rem] text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 flex items-center justify-center ${activeTab === tab.id ? 'bg-gradient-to-r from-bieon-eco to-bieon-sense text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                                    >
-                                        <span className="hidden xl:inline">{tab.full}</span>
-                                        <span className="inline xl:hidden">{tab.short}</span>
-                                    </button>
-                                ))}
+                        <div className="relative flex-1 min-w-0">
+                            <div className="bg-gray-100/80 rounded-[1.1rem] shadow-inner w-max max-w-full overflow-x-auto custom-scrollbar-x cursor-grab active:cursor-grabbing scroll-smooth snap-x snap-mandatory">
+                                <div className="flex items-center gap-1 w-max p-1.5 pb-2.5">
+                                    {tabs.map((tab) => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSelectedRoomFilter(''); }}
+                                            className={`px-4 sm:px-5 py-2 rounded-[0.85rem] text-[13px] font-semibold transition-all whitespace-nowrap shrink-0 flex items-center justify-center snap-center ${activeTab === tab.id ? 'bg-gradient-to-r from-bieon-eco to-bieon-sense text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                                        >
+                                            <span className="hidden xl:inline">{tab.full}</span>
+                                            <span className="inline xl:hidden">{tab.short}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
-                        
+
                         {/* Search & Filter Area - Locked Right */}
                         <div className="flex items-center gap-3 w-full lg:w-auto shrink-0 lg:ml-auto">
                             <div className="relative flex-1 lg:w-56 xl:w-64">
                                 <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input 
-                                    type="text" 
-                                    placeholder={t('history.search_placeholder')} 
-                                    value={searchQuery} 
-                                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-bieon-eco/10 shadow-sm" 
+                                <input
+                                    type="text"
+                                    placeholder={t('history.search_placeholder')}
+                                    value={searchQuery}
+                                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-bieon-eco/10 shadow-sm"
                                 />
                             </div>
 
 
-                                <div className="relative">
-                                    <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-bieon-eco border-bieon-eco' : 'text-gray-500'}`}>
-                                        <Filter className="w-4 h-4" />
-                                        <span>{selectedRoomFilter ? (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms'))}</span>
-                                        <ChevronDown className="w-4 h-4" />
-                                    </button>
-                                    {showFilterDropdown && (
-                                        <>
-                                            <div className="fixed inset-0 z-20" onClick={() => setShowFilterDropdown(false)}></div>
-                                            <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-30">
-                                                <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms')}</button>
-                                                {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${f?.toLowerCase().replace(/\s+/g, '_')}`, f) : f}</button>)}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
+                            <div className="relative">
+                                <button onClick={() => setShowFilterDropdown(!showFilterDropdown)} className={`flex items-center justify-between gap-3 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold shadow-sm ${selectedRoomFilter ? 'text-bieon-eco border-bieon-eco' : 'text-gray-500'}`}>
+                                    <Filter className="w-4 h-4" />
+                                    <span>{selectedRoomFilter ? (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms'))}</span>
+                                    <ChevronDown className="w-4 h-4" />
+                                </button>
+                                {showFilterDropdown && (
+                                    <>
+                                        <div className="fixed inset-0 z-20" onClick={() => setShowFilterDropdown(false)}></div>
+                                        <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-30">
+                                            <button onClick={() => { setSelectedRoomFilter(''); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${!selectedRoomFilter ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t('history.all_categories') : t('history.all_rooms')}</button>
+                                            {availableFilters.map(f => <button key={f} onClick={() => { setSelectedRoomFilter(f); setShowFilterDropdown(false); }} className={`w-full text-left px-5 py-2.5 text-xs font-bold ${selectedRoomFilter === f ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-600'}`}>{['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) ? t(`notification.category.${f?.toLowerCase().replace(/\s+/g, '_')}`, f) : f}</button>)}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -713,11 +707,11 @@ export default function AdminHistory({ onNavigate }) {
                         <div className="overflow-x-auto pb-2 custom-scrollbar-x">
                             <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
                                 <thead className="bg-white border-b border-gray-200 text-gray-500">
-                                    <tr className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
-                                        <th onClick={() => requestSort('time')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.time')} {getSortIcon('time')}</div></th>
-                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.category')} {getSortIcon('category')}</div></th>}
+                                    <tr className="bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100/60 text-slate-600 select-none">
+                                        <th onClick={() => requestSort('time')} className="px-6 py-4 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.time')} {getSortIcon('time')}</div></th>
+                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('category')} className="px-6 py-4 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.category')} {getSortIcon('category')}</div></th>}
                                         {!['Notifikasi & Alert', 'Pengaduan'].includes(activeTab) && (
-                                            <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => requestSort(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')} className="px-6 py-4 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1.5">
                                                     {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? t('history.columns.device') : t('history.columns.room')} {getSortIcon(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? 'device' : 'room')}
                                                 </div>
@@ -725,48 +719,48 @@ export default function AdminHistory({ onNavigate }) {
                                         )}
                                         {activeTab === 'Kenyamanan' && (
                                             <>
-                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.temperature')} {getSortIcon('temp')}</div></th>
-                                                <th onClick={() => requestSort('humidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.humidity')} {getSortIcon('humidity')}</div></th>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.temperature')} {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('humidity')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.humidity')} {getSortIcon('humidity')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Keamanan' && (
                                             <>
-                                                <th onClick={() => requestSort('door')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.door_sensor')} {getSortIcon('door')}</div></th>
-                                                <th onClick={() => requestSort('motion')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.motion_sensor')} {getSortIcon('motion')}</div></th>
+                                                <th onClick={() => requestSort('door')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.door_sensor')} {getSortIcon('door')}</div></th>
+                                                <th onClick={() => requestSort('motion')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.motion_sensor')} {getSortIcon('motion')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Kualitas Air' && (
                                             <>
-                                                <th onClick={() => requestSort('ph')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.ph')} {getSortIcon('ph')}</div></th>
-                                                <th onClick={() => requestSort('turbidity')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.turbidity')} {getSortIcon('turbidity')}</div></th>
-                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.temperature')} {getSortIcon('temp')}</div></th>
-                                                <th onClick={() => requestSort('tds')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.tds')} {getSortIcon('tds')}</div></th>
+                                                <th onClick={() => requestSort('ph')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.ph')} {getSortIcon('ph')}</div></th>
+                                                <th onClick={() => requestSort('turbidity')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.turbidity')} {getSortIcon('turbidity')}</div></th>
+                                                <th onClick={() => requestSort('temp')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.temperature')} {getSortIcon('temp')}</div></th>
+                                                <th onClick={() => requestSort('tds')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.tds')} {getSortIcon('tds')}</div></th>
                                             </>
                                         )}
                                         {activeTab === 'Konsumsi Energi' && (
                                             <>
-                                                <th onClick={() => requestSort('kwh')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.energy')} {getSortIcon('kwh')}</div></th>
-                                                <th onClick={() => requestSort('voltage')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.voltage')} {getSortIcon('voltage')}</div></th>
-                                                <th onClick={() => requestSort('current')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.current')} {getSortIcon('current')}</div></th>
-                                                <th onClick={() => requestSort('power')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.power_load')} {getSortIcon('power')}</div></th>
-                                                <th onClick={() => requestSort('pf')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.power_factor')} {getSortIcon('pf')}</div></th>
+                                                <th onClick={() => requestSort('kwh')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.energy')} {getSortIcon('kwh')}</div></th>
+                                                <th onClick={() => requestSort('voltage')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.voltage')} {getSortIcon('voltage')}</div></th>
+                                                <th onClick={() => requestSort('current')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.current')} {getSortIcon('current')}</div></th>
+                                                <th onClick={() => requestSort('power')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.power_load')} {getSortIcon('power')}</div></th>
+                                                <th onClick={() => requestSort('pf')} className="px-6 py-5 text-center text-[12px] font-black cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-2">{t('history.columns.power_factor')} {getSortIcon('pf')}</div></th>
                                             </>
                                         )}
-                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('actuator')} className="px-6 py-5 text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.actuator')} {getSortIcon('actuator')}</div></th>}
+                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('actuator')} className="px-6 py-5 text-[12px] font-black cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.actuator')} {getSortIcon('actuator')}</div></th>}
                                         {activeTab === 'Pengaduan' && (
                                             <>
-                                                <th onClick={() => requestSort('id')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.ticket_id')} {getSortIcon('id')}</div></th>
-                                                <th onClick={() => requestSort('customer')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.customer')} {getSortIcon('customer')}</div></th>
-                                                <th onClick={() => requestSort('category')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.category')} {getSortIcon('category')}</div></th>
-                                                <th className="px-6 py-4 uppercase tracking-wider text-[12px] font-black whitespace-nowrap">{t('history.columns.topic')}</th>
-                                                <th onClick={() => requestSort('technician')} className="px-6 py-4 uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.technician')} {getSortIcon('technician')}</div></th>
-                                                <th onClick={() => requestSort('rating')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.rating')} {getSortIcon('rating')}</div></th>
+                                                <th onClick={() => requestSort('id')} className="px-6 py-4 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.ticket_id')} {getSortIcon('id')}</div></th>
+                                                <th onClick={() => requestSort('customer')} className="px-6 py-4 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.customer')} {getSortIcon('customer')}</div></th>
+                                                <th onClick={() => requestSort('category')} className="px-6 py-4 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.category')} {getSortIcon('category')}</div></th>
+                                                <th className="px-6 py-4 text-[13px] font-semibold whitespace-nowrap">{t('history.columns.topic')}</th>
+                                                <th onClick={() => requestSort('technician')} className="px-6 py-4 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-1.5">{t('history.columns.technician')} {getSortIcon('technician')}</div></th>
+                                                <th onClick={() => requestSort('rating')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{t('history.columns.rating')} {getSortIcon('rating')}</div></th>
                                             </>
                                         )}
-                                        {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-4 text-center uppercase tracking-wider text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{activeTab === 'Notifikasi & Alert' ? t('history.columns.danger_level') : t('history.columns.status')} {getSortIcon('status')}</div></th>}
-                                        {activeTab === 'Pengaduan' && <th className="px-6 py-4 uppercase tracking-wider text-[12px] font-black whitespace-nowrap">{t('history.columns.action')}</th>}
-                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('trigger')} className="px-6 py-5 text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.trigger')} {getSortIcon('trigger')}</div></th>}
-                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('message')} className="px-6 py-5 text-[12px] font-black cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.message_detail')} {getSortIcon('message')}</div></th>}
+                                        {activeTab !== 'Konsumsi Energi' && <th onClick={() => requestSort('status')} className="px-6 py-4 text-center text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center justify-center gap-1.5">{activeTab === 'Notifikasi & Alert' ? t('history.columns.danger_level') : t('history.columns.status')} {getSortIcon('status')}</div></th>}
+                                        {activeTab === 'Pengaduan' && <th className="px-6 py-4 text-[13px] font-semibold whitespace-nowrap">{t('history.columns.action')}</th>}
+                                        {activeTab === 'Log Perangkat' && <th onClick={() => requestSort('trigger')} className="px-6 py-5 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.trigger')} {getSortIcon('trigger')}</div></th>}
+                                        {activeTab === 'Notifikasi & Alert' && <th onClick={() => requestSort('message')} className="px-6 py-5 text-[13px] font-semibold cursor-pointer hover:bg-black/5 transition-colors whitespace-nowrap"><div className="flex items-center gap-2">{t('history.columns.message_detail')} {getSortIcon('message')}</div></th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -815,7 +809,7 @@ export default function AdminHistory({ onNavigate }) {
                                                 )}
                                                 {activeTab === 'Pengaduan' && (
                                                     <td className="px-6 py-4">
-                                                        <button 
+                                                        <button
                                                             onClick={() => { setSelectedTicket(item.rawItem); setIsDetailModalOpen(true); }}
                                                             className="flex items-center gap-2 px-4 py-2.5 bg-[#e8f9fb] text-[#1E4D40] rounded-2xl text-[11px] font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
                                                         >
@@ -833,8 +827,8 @@ export default function AdminHistory({ onNavigate }) {
                                             <td colSpan="10" className="px-6 py-20 text-center">
                                                 <div className="flex flex-col items-center justify-center opacity-40">
                                                     <AlertCircle className="w-12 h-12 mb-4 text-gray-300" />
-                                                    <p className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">{t('history.no_data')}</p>
-                                                    <p className="text-[11px] font-bold text-gray-400 mt-2">{t('history.no_data_desc', 'Data untuk filter ini belum tersedia atau belum sinkron.')}</p>
+                                                    <p className="text-sm font-semibold text-gray-400 mb-1">{t('history.no_data')}</p>
+                                                    <p className="text-[11px] font-medium text-gray-400">{t('history.no_data_desc', 'Data untuk filter ini belum tersedia atau belum sinkron.')}</p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -845,10 +839,10 @@ export default function AdminHistory({ onNavigate }) {
                         <div className="flex flex-col md:flex-row items-center justify-between px-6 py-6 border-t border-gray-100 bg-gray-50/50 rounded-b-[2rem] gap-6">
                             {/* Rows Per Page - Left */}
                             <div className="flex items-center gap-3 order-2 md:order-1">
-                                <span className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">{t('history.rows_per_page', 'Rows')}</span>
+                                <span className="text-xs font-medium text-gray-500 whitespace-nowrap">{t('history.rows_per_page', 'Rows')}</span>
                                 <div className="relative">
-                                    <button 
-                                        onClick={() => setShowRowsDropdown(!showRowsDropdown)} 
+                                    <button
+                                        onClick={() => setShowRowsDropdown(!showRowsDropdown)}
                                         className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 font-bold text-xs shadow-sm hover:border-bieon-eco/30 transition-all"
                                     >
                                         {rowsPerPage} <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showRowsDropdown ? 'rotate-180' : ''}`} />
@@ -858,9 +852,9 @@ export default function AdminHistory({ onNavigate }) {
                                             <div className="fixed inset-0 z-30" onClick={() => setShowRowsDropdown(false)}></div>
                                             <div className="absolute bottom-full left-0 mb-2 w-20 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
                                                 {[5, 10, 30, 50].map(val => (
-                                                    <button 
-                                                        key={val} 
-                                                        onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }} 
+                                                    <button
+                                                        key={val}
+                                                        onClick={() => { setRowsPerPage(val); setShowRowsDropdown(false); setCurrentPage(1); }}
                                                         className={`w-full text-left px-4 py-2 text-xs font-bold ${rowsPerPage === val ? 'text-bieon-eco bg-bieon-eco/5' : 'text-gray-500 hover:bg-gray-50'}`}
                                                     >
                                                         {val}
@@ -873,11 +867,11 @@ export default function AdminHistory({ onNavigate }) {
                             </div>
 
                             {/* Page Info - Center */}
-                            <div className="text-[10px] md:text-[11px] font-semibold text-gray-400 uppercase tracking-widest text-center whitespace-nowrap order-1 md:order-2">
-                                {t('history.page_info', { 
-                                    current: totalItems > 0 ? startIndex + 1 : 0, 
-                                    last: Math.min(startIndex + rowsPerPage, totalItems), 
-                                    total: totalItems 
+                            <div className="text-xs font-medium text-gray-500 text-center whitespace-nowrap order-1 md:order-2">
+                                {t('history.page_info', {
+                                    current: totalItems > 0 ? startIndex + 1 : 0,
+                                    last: Math.min(startIndex + rowsPerPage, totalItems),
+                                    total: totalItems
                                 })}
                             </div>
 
@@ -906,7 +900,7 @@ export default function AdminHistory({ onNavigate }) {
             </div>
 
             {isDetailModalOpen && selectedTicket && (
-                <ComplaintDetailModal 
+                <ComplaintDetailModal
                     isOpen={isDetailModalOpen}
                     onClose={() => setIsDetailModalOpen(false)}
                     ticket={selectedTicket}

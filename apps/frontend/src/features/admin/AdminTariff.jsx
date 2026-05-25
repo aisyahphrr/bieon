@@ -670,32 +670,44 @@ export default function AdminTariff({ onNavigate }) {
                 {/* 2 ELONGATED CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 select-none">
                     {/* Card 1 - Info Golongan */}
-                    <div className="bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-[1.25rem] shadow-md shadow-bieon-eco/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="flex-1">
-                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">{t('admin_tariff.cards.info_title', 'Informasi Golongan')}</p>
-                            <h3 className="text-[28px] font-extrabold tracking-tight leading-none mb-2">{t('admin_tariff.categories.' + getSegmentKey(activeSegmentName), activeSegmentName)}</h3>
+                    <div className="bg-gradient-to-r from-white via-emerald-50/50 to-emerald-100/80 rounded-[1.25rem] shadow-sm border border-emerald-100/50 relative flex items-center text-gray-900 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden group">
+                        {/* Soft geometric accent */}
+                        <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-200/20 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-110 duration-700"></div>
+                        <div className="absolute left-1/2 bottom-0 w-24 h-24 bg-emerald-300/10 rounded-full blur-xl translate-y-1/2"></div>
+                        <div className="flex-1 relative z-10">
+                            <p className="text-[13px] font-bold text-gray-500 tracking-wider mb-1.5 uppercase">{t('admin_tariff.cards.info_title', 'Informasi Golongan')}</p>
+                            <h3 className="text-[26px] xl:text-[28px] font-extrabold tracking-tight leading-none mb-3 text-gray-900">{t('admin_tariff.categories.' + getSegmentKey(activeSegmentName), activeSegmentName)}</h3>
                             <div className="flex items-center gap-2">
-                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold">{t('admin_tariff.cards.sub_count', { count: totalSubCategories, defaultValue: '{{count}} Sub-Golongan' })}</span>
+                                <span className="bg-emerald-100/80 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-bold shadow-sm">{t('admin_tariff.cards.sub_count', { count: totalSubCategories, defaultValue: '{{count}} Sub-Golongan' })}</span>
                             </div>
                         </div>
-                        <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm hidden sm:block">
-                            <Zap className="w-8 h-8 text-white" strokeWidth={2.5} />
+                        <div className="relative z-10 hidden sm:block">
+                            <div className="p-4 rounded-2xl bg-white shadow-md shadow-emerald-200/40 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-emerald-200/60 transition-all duration-300 border border-emerald-50 relative">
+                                <Zap className="w-8 h-8 text-emerald-500" strokeWidth={2.5} />
+                                <div className="absolute inset-0 border border-emerald-400/20 rounded-2xl animate-[spin_4s_linear_infinite]"></div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Card 2 - Rentang Tarif */}
-                    <div className="bg-gradient-to-r from-[#F59E0B] to-[#D97706] rounded-[1.25rem] shadow-md shadow-orange-500/20 relative flex items-center text-white border-0 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
-                        <div className="flex-1">
-                            <p className="text-[13px] font-semibold text-white/90 tracking-wide mb-1 uppercase">{t('admin_tariff.cards.range_title', 'Rentang Tarif')}</p>
-                            <h3 className="text-[24px] xl:text-[28px] font-extrabold tracking-tight leading-none mb-2">
+                    <div className="bg-gradient-to-r from-white via-amber-50/50 to-amber-100/80 rounded-[1.25rem] shadow-sm border border-amber-100/50 relative flex items-center text-gray-900 min-h-[120px] px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75 overflow-hidden group">
+                        {/* Soft geometric accent */}
+                        <div className="absolute right-0 top-0 w-32 h-32 bg-amber-200/20 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-110 duration-700"></div>
+                        <div className="absolute left-1/2 bottom-0 w-24 h-24 bg-amber-300/10 rounded-full blur-xl translate-y-1/2"></div>
+                        <div className="flex-1 relative z-10">
+                            <p className="text-[13px] font-bold text-gray-500 tracking-wider mb-1.5 uppercase">{t('admin_tariff.cards.range_title', 'Rentang Tarif')}</p>
+                            <h3 className="text-[24px] xl:text-[28px] font-extrabold tracking-tight leading-none mb-3 text-gray-900">
                                 {isSingleTariff ? `Rp ${minTariff.toFixed(2)}` : `Rp ${minTariff.toFixed(2)} - ${maxTariff.toFixed(2)}`}
                             </h3>
                             <div className="flex items-center gap-2">
-                                <span className="bg-white/20 px-3 py-1 rounded-full text-[12px] font-bold flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" /> {t('admin_tariff.cards.active_type', 'Tipe Tarif Aktif')}</span>
+                                <span className="bg-amber-100/80 text-amber-700 px-3 py-1 rounded-full text-[11px] font-bold shadow-sm flex items-center gap-1.5"><Zap className="w-3 h-3" /> {t('admin_tariff.cards.active_type', 'Tipe Tarif Aktif')}</span>
                             </div>
                         </div>
-                        <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm hidden sm:block">
-                            <TrendingUp className="w-8 h-8 text-white" strokeWidth={2.5} />
+                        <div className="relative z-10 hidden sm:block">
+                            <div className="p-4 rounded-2xl bg-white shadow-md shadow-amber-200/40 group-hover:-translate-y-1 group-hover:shadow-lg group-hover:shadow-amber-200/60 transition-all duration-300 border border-amber-50 relative">
+                                <TrendingUp className="w-8 h-8 text-amber-500" strokeWidth={2.5} />
+                                <div className="absolute inset-0 border border-amber-400/20 rounded-2xl animate-[spin_4s_linear_infinite]"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -710,7 +722,7 @@ export default function AdminTariff({ onNavigate }) {
                     </div>
                     <div className="overflow-x-auto custom-scrollbar-x pb-4 px-4 pt-4">
                         <table className="w-full text-left min-w-[800px]">
-                            <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
+                            <thead className="bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100/60 text-slate-600 select-none">
                                 <tr>
                                     <th className="px-6 py-4 font-normal rounded-tl-xl w-2/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t('admin_tariff.matrix.col_category', 'Sub-Golongan & Status')}</div></th>
                                     <th className="px-6 py-4 font-normal w-1/5"><div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t('admin_tariff.matrix.col_tariff', 'Tarif Saat Ini')}</div></th>
@@ -744,9 +756,9 @@ export default function AdminTariff({ onNavigate }) {
                                                     setFormGolongan(stat.name);
                                                     document.getElementById('update-form-section')?.scrollIntoView({ behavior: 'smooth' });
                                                 }}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-[#e8f9fb] text-gray-600 hover:text-bieon-eco rounded-lg text-xs font-bold transition-colors"
+                                                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-slate-50 hover:bg-bieon-eco/10 text-slate-600 hover:text-bieon-eco border border-slate-200 hover:border-bieon-eco/30 rounded-xl text-[11px] font-bold transition-all shadow-sm"
                                             >
-                                                <Zap className="w-3.5 h-3.5" /> {t('admin_tariff.matrix.btn_update', 'Update')}
+                                                <Zap className="w-3 h-3" /> {t('admin_tariff.matrix.btn_update', 'Update')}
                                             </button>
                                         </td>
                                     </tr>
@@ -812,6 +824,28 @@ export default function AdminTariff({ onNavigate }) {
                             <div className="h-[300px] w-full flex items-center justify-center">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
+                                        <defs>
+                                            <linearGradient id="pieGrad0" x1="0" y1="0" x2="1" y2="1">
+                                                <stop offset="0%" stopColor="#34D399" />
+                                                <stop offset="100%" stopColor="#059b27" />
+                                            </linearGradient>
+                                            <linearGradient id="pieGrad1" x1="0" y1="0" x2="1" y2="1">
+                                                <stop offset="0%" stopColor="#60A5FA" />
+                                                <stop offset="100%" stopColor="#129cc0" />
+                                            </linearGradient>
+                                            <linearGradient id="pieGrad2" x1="0" y1="0" x2="1" y2="1">
+                                                <stop offset="0%" stopColor="#A78BFA" />
+                                                <stop offset="100%" stopColor="#8B5CF6" />
+                                            </linearGradient>
+                                            <linearGradient id="pieGrad3" x1="0" y1="0" x2="1" y2="1">
+                                                <stop offset="0%" stopColor="#FBBF24" />
+                                                <stop offset="100%" stopColor="#D97706" />
+                                            </linearGradient>
+                                            <linearGradient id="pieGrad4" x1="0" y1="0" x2="1" y2="1">
+                                                <stop offset="0%" stopColor="#F87171" />
+                                                <stop offset="100%" stopColor="#DC2626" />
+                                            </linearGradient>
+                                        </defs>
                                         <Pie
                                             data={pieData}
                                             cx="50%"
@@ -820,18 +854,21 @@ export default function AdminTariff({ onNavigate }) {
                                             outerRadius={90}
                                             paddingAngle={5}
                                             dataKey="value"
+                                            stroke="none"
                                         >
                                             {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                <Cell key={`cell-${index}`} fill={`url(#pieGrad${index % 5})`} />
                                             ))}
                                         </Pie>
                                         <RechartsTooltip
                                             content={({ active, payload }) => {
                                                 if (active && payload && payload.length) {
+                                                    const colorVal = payload[0].payload.fill;
+                                                    // Since fill is now a URL like url(#pieGrad0), we should probably just use a solid fallback color for tooltip text, or gray.
                                                     return (
                                                         <div className="bg-white border p-3 rounded-xl shadow-lg">
                                                             <p className="text-[12px] font-black text-gray-700">{translatePlnCategory(payload[0].name)}</p>
-                                                            <p className="text-sm font-bold mt-1" style={{ color: payload[0].payload.fill }}>
+                                                            <p className="text-sm font-bold mt-1 text-gray-800">
                                                                 {payload[0].value}{t('admin_tariff.charts.pie_unit', '% Pengguna')}
                                                             </p>
                                                         </div>
@@ -1084,9 +1121,9 @@ export default function AdminTariff({ onNavigate }) {
 
                             <button
                                 onClick={handleUpdateTariff}
-                                className="w-full py-4 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white font-bold rounded-2xl text-sm hover:brightness-105 transition-all shadow-lg flex justify-center items-center gap-2 group mt-4"
+                                className="w-full py-4 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white font-bold rounded-2xl text-sm hover:brightness-105 transition-all shadow-lg shadow-bieon-eco/30 flex justify-center items-center gap-2 group mt-4"
                             >
-                                <Zap className="w-4 h-4 opacity-80" /> {t('admin_tariff.form.btn_submit', 'Update Tarif Listrik')}
+                                <Zap className="w-4 h-4 opacity-80 group-hover:scale-110 transition-transform" /> {t('admin_tariff.form.btn_submit', 'Update Tarif Listrik')}
                             </button>
                         </div>
                     </div>
@@ -1145,7 +1182,7 @@ export default function AdminTariff({ onNavigate }) {
                                 {/* Export Button */}
                                 <button
                                     onClick={handleExportPDF}
-                                    className="flex items-center justify-center gap-2 px-6 py-2 h-10 bg-[#e8f9fb] text-[#1E4D40] rounded-xl text-xs font-bold hover:bg-[#d4ece3] transition-all shadow-sm w-full sm:w-auto shrink-0"
+                                    className="flex items-center justify-center gap-2 px-6 py-2 h-10 bg-bieon-eco/10 text-bieon-eco rounded-xl text-[11px] font-bold hover:bg-bieon-eco/20 border border-bieon-eco/20 transition-all shadow-sm w-full sm:w-auto shrink-0 uppercase tracking-wide"
                                 >
                                     <Download className="w-3.5 h-3.5 shrink-0" /> <span className="whitespace-nowrap">{t('admin_tariff.history.btn_export', 'Export')}</span>
                                 </button>
@@ -1156,7 +1193,7 @@ export default function AdminTariff({ onNavigate }) {
                             className="overflow-x-auto custom-scrollbar-x scroll-smooth pb-4 px-4"
                         >
                             <table className="w-full text-left min-w-[800px]">
-                                <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
+                                <thead className="bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100/60 text-slate-600 select-none">
                                     <tr>
                                         <th className="px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors outline-none" onClick={() => requestSort('category')}>
                                             <div className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-bold whitespace-nowrap">{t('admin_tariff.history.col_category', 'GOLONGAN PLN')} {getSortIcon('category')}</div>

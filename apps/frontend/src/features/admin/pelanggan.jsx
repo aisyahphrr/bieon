@@ -81,16 +81,12 @@ export function ManajemenAkunPage({ onNavigate }) {
     const [activeTab, setActiveTab] = useState('accounts');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [isEmailPreviewOpen, setIsEmailPreviewOpen] = useState(false);
     const [selectedHomeowner, setSelectedHomeowner] = useState(null);
     const [activeDetailTab, setActiveDetailTab] = useState('info');
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
-    const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     const [deleteReason, setDeleteReason] = useState('');
 
     // State untuk data dari API
@@ -220,15 +216,6 @@ export function ManajemenAkunPage({ onNavigate }) {
         return () => window.removeEventListener('openHomeownerDetail', handleOpenDetail);
     }, [homeowners]);
 
-    const [formData, setFormData] = useState({
-        username: '',
-        fullName: '',
-        email: '',
-        phone: '',
-        address: '',
-        password: '',
-        status: 'aktif'
-    });
 
     // Filter homeowners dari state API
     const filteredHomeowners = homeowners.filter(ho => {
@@ -247,46 +234,6 @@ export function ManajemenAkunPage({ onNavigate }) {
     const warningHomeowners = 0;
     const totalDevices = homeowners.reduce((sum, h) => sum + (h.totalHubs || 0), 0);
 
-    const handleAddHomeowner = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners`, {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    fullName: formData.fullName,
-                    email: formData.email,
-                    password: formData.password,
-                    phoneNumber: formData.phone || '',
-                    address: formData.address || '',
-                    username: formData.username || ''
-                })
-            });
-
-            const text = await res.text();
-            
-            const contentType = res.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error("Target endpoint tidak tersedia atau ada kesalahan server (HTML diterima).");
-            }
-            
-            const json = JSON.parse(text);
-
-            if (!res.ok) {
-                throw new Error(json.message || 'Gagal menambah homeowner');
-            }
-
-            alert('Homeowner berhasil ditambahkan!');
-            setIsAddModalOpen(false);
-            setHomeowners(prev => [json.data, ...prev]); // update state tanpa reload
-        } catch (error) {
-            alert('Kesalahan sewaktu menambah data: ' + error.message);
-            console.error(error);
-        }
-    };
 
     const handleDownloadPDF = (title, columns, data, filename) => {
         const doc = new jsPDF('l', 'mm', 'a4');
@@ -326,50 +273,6 @@ export function ManajemenAkunPage({ onNavigate }) {
         doc.save(`${filename}_${new Date().getTime()}.pdf`);
     };
 
-    const handleEditHomeowner = async () => {
-        if (!selectedHomeowner) return;
-
-        try {
-            const token = localStorage.getItem('token');
-            const payload = {
-                fullName: formData.fullName,
-                email: formData.email,
-                phoneNumber: formData.phone || '',
-                address: formData.address || '',
-                username: formData.username || ''
-            };
-            if (formData.password) payload.password = formData.password;
-
-            const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/homeowners/${selectedHomeowner._id}`, {
-                method: 'PUT',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const text = await res.text();
-            
-            const contentType = res.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error("Target endpoint tidak tersedia atau ada kesalahan server (HTML diterima).");
-            }
-            
-            const json = JSON.parse(text);
-
-            if (!res.ok) {
-                throw new Error(json.message || 'Gagal mengubah homeowner');
-            }
-
-            alert('Data homeowner berhasil diupdate!');
-            setIsEditModalOpen(false);
-            setHomeowners(prev => prev.map(h => h._id === selectedHomeowner._id ? { ...h, ...json.data } : h));
-        } catch (error) {
-            alert('Kesalahan sewaktu update data: ' + error.message);
-            console.error(error);
-        }
-    };
 
     const handleDeleteHomeowner = (ho) => {
         setSelectedHomeowner(ho);
@@ -431,54 +334,78 @@ export function ManajemenAkunPage({ onNavigate }) {
                     </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-gradient-to-br from-bieon-sense via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                    {/* Card 1: Total Pelanggan */}
+                    <div className="bg-gradient-to-br from-white via-sky-50/50 to-sky-100/80 border border-sky-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-sense/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" fill="none" />
+                                <circle cx="50" cy="50" r="25" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                            </svg>
+                        </div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <Users className="w-6 h-6" />
+                            <div className="w-12 h-12 bg-white text-bieon-sense rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform duration-300">
+                                <Users className="w-6 h-6 group-hover:-rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{totalHomeowners}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.total_clients')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{totalHomeowners}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_homeowner.cards.total_clients')}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-bieon-eco via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                    {/* Card 2: Status Aktif */}
+                    <div className="bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/80 border border-emerald-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-eco/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="20" y="20" width="60" height="60" rx="12" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <rect x="35" y="35" width="30" height="30" rx="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
+                            </svg>
+                        </div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <CheckCircle className="w-6 h-6" />
+                            <div className="w-12 h-12 bg-white text-bieon-eco rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform duration-300">
+                                <CheckCircle className="w-6 h-6 group-hover:rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{activeHomeowners}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.active_status')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{activeHomeowners}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_homeowner.cards.active_status')}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-bieon-sense via-[#0f92b4] to-[#0b7f9d] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(18,156,192,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                    {/* Card 3: Peringatan */}
+                    <div className="bg-gradient-to-br from-white via-rose-50/80 to-rose-100 border border-rose-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-rose-500/[0.08] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 50 C 30 10, 70 90, 90 50" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <path d="M20 50 C 40 20, 60 80, 80 50" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
+                            </svg>
+                        </div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <AlertCircle className="w-6 h-6" />
+                            <div className="w-12 h-12 bg-white text-rose-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <AlertCircle className="w-6 h-6 group-hover:rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{warningHomeowners}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.warnings')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{warningHomeowners}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_homeowner.cards.warnings')}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-bieon-eco via-[#05a936] to-[#04b84a] rounded-[2rem] p-6 shadow-[0_18px_38px_-18px_rgba(5,155,39,0.55)] text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.2),transparent_42%,rgba(255,255,255,0.08))] opacity-70"></div>
+                    {/* Card 4: Total Nodes */}
+                    <div className="bg-gradient-to-br from-sky-100/80 via-white to-emerald-100/80 border border-emerald-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-eco/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 90 Q 50 10, 90 90" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <path d="M20 90 Q 50 30, 80 90" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
+                            </svg>
+                        </div>
                         <div className="flex items-center justify-between mb-2 relative z-10">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <Zap className="w-6 h-6" />
+                            <div className="w-12 h-12 bg-white text-bieon-sense rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <Zap className="w-6 h-6 group-hover:-rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{totalDevices}</span>
-                                <p className="text-xs font-medium text-white/80 mt-1">{t('admin_homeowner.cards.total_nodes')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{totalDevices}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_homeowner.cards.total_nodes')}</p>
                             </div>
                         </div>
                     </div>
@@ -553,27 +480,9 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         filteredHomeowners.map(h => [h._id, h.fullName, h.username || '-', h.email, h.phoneNumber || '-', h.totalHubs || 0]),
                                         i18n.language === 'en' ? "Customer_Report" : "Laporan_Pelanggan"
                                     )}
-                                    className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm flex items-center justify-center gap-2 group col-span-1 relative z-10"
+                                    className="px-5 py-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm flex items-center justify-center gap-2 group col-span-2 relative z-10"
                                 >
                                     <Download className="w-4 h-4" /> {t('admin_homeowner.table.btn_export')}
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        setFormData({
-                                            username: '',
-                                            fullName: '',
-                                            email: '',
-                                            phone: '',
-                                            address: '',
-                                            password: '',
-                                            status: 'aktif'
-                                        });
-                                        setIsAddModalOpen(true);
-                                    }}
-                                    className="px-5 py-2.5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-sm font-semibold hover:brightness-105 transition-all shadow-lg shadow-bieon-eco/15 flex items-center justify-center gap-2 group col-span-1 relative z-10"
-                                >
-                                    <Plus className="w-4 h-4" /> {t('admin_homeowner.table.btn_add_client')}
                                 </button>
 
                             </div>
@@ -597,7 +506,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                         <div className="overflow-x-auto hidden md:block">
                             <table className="w-full text-left table-auto min-w-[900px]">
                                 <thead>
-                                    <tr className="bg-gradient-to-r from-bieon-eco to-bieon-sense text-white text-[12px] font-black uppercase tracking-widest">
+                                    <tr className="bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100/60 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
                                         <th className="px-6 py-4">{t('admin_homeowner.table.col_identity')}</th>
                                         <th className="px-6 py-4">{t('admin_homeowner.table.col_contact')}</th>
                                         <th className="px-6 py-4">{t('admin_homeowner.table.col_hub')}</th>
@@ -612,7 +521,7 @@ export function ManajemenAkunPage({ onNavigate }) {
                                         <tr key={ho._id} className="hover:bg-gray-50/50 transition-all group">
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-11 h-11 bg-gradient-to-br from-bieon-eco to-bieon-sense text-white rounded-2xl flex items-center justify-center text-lg font-black shrink-0 shadow-lg shadow-bieon-sense/15 ring-1 ring-white">
+                                                    <div className="w-11 h-11 bg-emerald-50 text-bieon-eco border border-emerald-100 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300">
                                                         {(ho.fullName || '?').charAt(0)}
                                                     </div>
                                                     <div className="min-w-0">
@@ -735,191 +644,20 @@ export function ManajemenAkunPage({ onNavigate }) {
             </div>
 
             {/* MODALS */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-                        <div className="px-8 py-6 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner">
-                                    <Plus className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight">{t('admin_homeowner.form_modal.title_add')}</h2>
-                                    <p className="text-white/80 text-xs font-medium mt-0.5">{t('admin_homeowner.form_modal.desc_add')}</p>
-                                </div>
-                            </div>
-                            <button onClick={() => setIsAddModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all">
-                                <X className="w-5 h-5 text-white" />
-                            </button>
-                        </div>
 
-                        <div className="p-8 overflow-y-auto space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_username')}</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.username}
-                                        onChange={(e) => setFormData({...formData, username: e.target.value})}
-                                        placeholder={t('admin_homeowner.form_modal.ph_username')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_fullname')}</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.fullName}
-                                        onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                                        placeholder={t('admin_homeowner.form_modal.ph_fullname')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_email')}</label>
-                                    <input 
-                                        type="email" 
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                        placeholder={t('admin_homeowner.form_modal.ph_email')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_phone')}</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                        placeholder={t('admin_homeowner.form_modal.ph_phone')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_password')}</label>
-                                    <input 
-                                        type="password" 
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                        placeholder={t('admin_homeowner.form_modal.ph_password')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm" 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_status')}</label>
-                                    <div className="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                                            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-bieon-eco' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                                                <span className="capitalize">{formData.status}</span>
-                                            </div>
-                                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
-                                        </button>
-                                        {isStatusDropdownOpen && (
-                                            <>
-                                                <div className="fixed inset-0 z-10" onClick={() => setIsStatusDropdownOpen(false)}></div>
-                                                <div className="absolute left-0 bottom-full mb-2 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-20 py-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 backdrop-blur-xl bg-white/95">
-                                                    {['aktif', 'warning', 'nonaktif'].map((st) => (
-                                                        <button
-                                                            key={st}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setFormData({...formData, status: st});
-                                                                setIsStatusDropdownOpen(false);
-                                                            }}
-                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === st ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-bieon-eco' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                                                                <span className="capitalize">{st}</span>
-                                                            </div>
-                                                            {formData.status === st && <CheckCircle className="w-4 h-4 text-bieon-eco" />}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_address')}</label>
-                                <textarea 
-                                    rows="3" 
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                                    placeholder={t('admin_homeowner.form_modal.ph_address')}
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm"
-                                ></textarea>
-                            </div>
-
-                            <div className="flex items-center gap-4 p-5 bg-bieon-eco/10 border border-bieon-eco/20 rounded-2xl">
-                                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                    <ShieldCheck className="w-6 h-6 text-bieon-eco" />
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="text-sm font-bold text-bieon-eco mb-0.5">{t('admin_homeowner.form_modal.notif_title')}</h4>
-                                    <p className="text-xs font-medium text-bieon-eco opacity-80">{t('admin_homeowner.form_modal.notif_desc')}</p>
-                                </div>
-                                <button
-                                    onClick={() => setIsEmailPreviewOpen(true)}
-                                    className="px-4 py-2 bg-bieon-eco text-white rounded-lg hover:bg-bieon-eco transition-all font-semibold text-xs shadow-sm"
-                                >
-                                    {t('admin_homeowner.form_modal.btn_preview')}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-end gap-3">
-                            <button onClick={() => setIsAddModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">{t('admin_homeowner.form_modal.btn_cancel')}</button>
-                            <button onClick={handleAddHomeowner} className="px-6 py-2.5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl font-semibold text-sm hover:brightness-105 transition-all shadow-md shadow-bieon-eco/15 flex items-center gap-2 group">
-                                {t('admin_homeowner.form_modal.btn_save_new')}
-                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isEmailPreviewOpen && (
-                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
-                        <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between shrink-0">
-                            <h2 className="text-lg font-bold text-gray-900 tracking-tight">{t('admin_homeowner.form_modal.btn_preview')}</h2>
-                            <button onClick={() => setIsEmailPreviewOpen(false)} className="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center transition-all shrink-0">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-8 overflow-y-auto">
-                            <EmailApprovalTemplate type="welcome" data={{ fullName: 'Nama Lengkap Pelanggan', email: 'pelanggan@email.com', id: 'HO-007', username: 'pelanggan.bieon' }} />
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {isDetailModalOpen && selectedHomeowner && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[700] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
                     <div className="bg-white rounded-[2rem] shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
                         {/* Header */}
-                        <div className="px-6 md:px-8 py-6 bg-gradient-to-r from-bieon-eco to-bieon-sense flex items-start sm:items-center justify-between gap-4">
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-start sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-4 sm:gap-5">
-                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center backdrop-blur-md shadow-inner shrink-0">
-                                    <UserCog className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-50 text-bieon-eco border border-emerald-100 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center shadow-sm shrink-0">
+                                    <UserCog className="w-6 h-6 sm:w-8 sm:h-8" />
                                 </div>
-                                  <div className="text-white pr-2">
-                                      <h2 className="text-lg sm:text-2xl font-bold tracking-tight leading-tight">{selectedHomeowner.fullName}</h2>
-                                      <p className="text-white/80 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{selectedHomeowner.email}</p>
+                                  <div className="pr-2">
+                                      <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">{selectedHomeowner.fullName}</h2>
+                                      <p className="text-slate-500 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{selectedHomeowner.email}</p>
                                       {selectedHomeowner.deletionRequest && (
                                           <div className={`mt-3 inline-flex px-3 py-1.5 rounded-full text-[11px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).tone)}`}>
                                               {getDeletionRequestStatusMeta(selectedHomeowner.deletionRequest, t).label}
@@ -928,27 +666,8 @@ export function ManajemenAkunPage({ onNavigate }) {
                                   </div>
                               </div>
                             <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={() => {
-                                        setFormData({
-                                            fullName: selectedHomeowner.fullName,
-                                            email: selectedHomeowner.email,
-                                            username: selectedHomeowner.username || '',
-                                            phone: selectedHomeowner.phoneNumber || '',
-                                            address: selectedHomeowner.address || '',
-                                            status: selectedHomeowner.status || 'aktif',
-                                            password: ''
-                                        });
-                                        setIsDetailModalOpen(false);
-                                        setTimeout(() => setIsEditModalOpen(true), 100);
-                                    }}
-                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl flex items-center gap-2 text-sm font-bold transition-all backdrop-blur-sm border border-white/10"
-                                >
-                                    <Edit3 className="w-4 h-4" />
-                                    <span className="hidden sm:inline">{t('admin_homeowner.detail_modal.btn_edit')}</span>
-                                </button>
-                                <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all group shrink-0">
-                                    <X className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+                                <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                    <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                 </button>
                             </div>
                         </div>
@@ -1223,151 +942,19 @@ export function ManajemenAkunPage({ onNavigate }) {
                 </div>
             )}
 
-            {isEditModalOpen && selectedHomeowner && (
-                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
-                        <div className="px-8 py-6 bg-blue-600 text-white flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner">
-                                    <Edit3 className="w-6 h-6 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-xl font-bold tracking-tight">{t('admin_homeowner.form_modal.title_edit')}</h2>
-                                    <p className="text-white/80 text-xs font-medium mt-0.5">{t('admin_homeowner.form_modal.desc_edit')}</p>
-                                </div>
-                            </div>
-                            <button onClick={() => setIsEditModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all">
-                                <X className="w-5 h-5 text-white" />
-                            </button>
-                        </div>
 
-                        <div className="p-8 overflow-y-auto space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_username')}</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.username}
-                                        onChange={(e) => setFormData({...formData, username: e.target.value})}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_fullname')}</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.fullName}
-                                        onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_email')}</label>
-                                    <input 
-                                        type="email" 
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_phone')}</label>
-                                    <input 
-                                        type="text" 
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_password_opt')}</label>
-                                    <input 
-                                        type="password" 
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
-                                        placeholder={t('admin_homeowner.form_modal.ph_password')}
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm" 
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_status')}</label>
-                                    <div className="relative">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                                            className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${formData.status === 'aktif' ? 'bg-bieon-eco' : formData.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                                                <span className="capitalize">{t(`admin_homeowner.table.status_${formData.status}`)}</span>
-                                            </div>
-                                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
-                                        </button>
-                                        {isStatusDropdownOpen && (
-                                            <>
-                                                <div className="fixed inset-0 z-10" onClick={() => setIsStatusDropdownOpen(false)}></div>
-                                                <div className="absolute left-0 bottom-full mb-2 w-full bg-white border border-gray-100 rounded-2xl shadow-2xl z-20 py-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 backdrop-blur-xl bg-white/95 text-gray-800">
-                                                    {['aktif', 'warning', 'nonaktif'].map((st) => (
-                                                        <button
-                                                            key={st}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setFormData({...formData, status: st});
-                                                                setIsStatusDropdownOpen(false);
-                                                            }}
-                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${formData.status === st ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full ${st === 'aktif' ? 'bg-bieon-eco' : st === 'warning' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                                                                <span className="capitalize">{t(`admin_homeowner.table.status_${st}`)}</span>
-                                                            </div>
-                                                            {formData.status === st && <CheckCircle className="w-4 h-4 text-blue-600" />}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-700 ml-1">{t('admin_homeowner.form_modal.lbl_address')}</label>
-                                <textarea 
-                                    rows="3" 
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                                    placeholder={t('admin_homeowner.form_modal.ph_address')}
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm"
-                                ></textarea>
-                            </div>
-                        </div>
-
-                        <div className="px-8 py-5 border-t border-gray-50 bg-gray-50 flex items-center justify-end gap-3">
-                            <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all hover:bg-gray-100 rounded-xl">{t('admin_homeowner.form_modal.btn_cancel')}</button>
-                            <button onClick={handleEditHomeowner} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-100 flex items-center gap-2 group">
-                                {t('admin_homeowner.form_modal.btn_save_edit')}
-                                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {isDeleteModalOpen && selectedHomeowner && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
-                        <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between shrink-0">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Trash2 className="w-6 h-6" /> {t('admin_homeowner.delete_modal.title')}
+                        <div className="px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
+                                    <Trash2 className="w-4 h-4" /> 
+                                </div>
+                                {t('admin_homeowner.delete_modal.title')}
                             </h2>
-                            <button onClick={() => setIsDeleteModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all">
+                            <button onClick={() => setIsDeleteModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
