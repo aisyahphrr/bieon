@@ -1,0 +1,716 @@
+-  Type
+-        <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full p-10 text-center">
+-          <div className="w-20 h-20 bg-eco-50 rounded-full flex items-center justify-center mx-auto mb-5">
+-            <CheckCircle2 className="w-10 h-10 text-eco-500" />
+-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+-        <div className="bg-gradient-to-r from-eco-500 to-sense-500 px-5 sm:px-8 py-4 sm:py-6 text-white">
+-              <MessageSquare className="w-6 h-6" />
+-                <h2 className="text-2xl font-bold">{t('dashboard.complaint_form_title', 'Form Pengaduan')}</h2>
+-                <p className="text-eco-50 text-sm mt-1">{t('dashboard.complaint_form_desc', 'Laporkan kendala atau gangguan perangkat BIEON')}</p>
+-              className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+-              <X className="w-6 h-6" />
+-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500/20 focus:border-eco-500"
+-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500/20 focus:border-eco-500"
+-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-eco-500/20 focus:border-eco-500 resize-none"
+-              className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-eco-500 to-sense-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+-                <Send className="w-5 h-5" />
+-  const handleExportCSV = () => {
+-    const headers = [
+-      chartType === 'daily' ? t('dashboard.time_hour', 'Jam') : t('dashboard.time_month', 'Bulan'),
+-      t('dashboard.consumption', 'Konsumsi (kWh)'),
+-      chartType === 'daily' ? t('dashboard.power', 'Daya (Watt)') : '',
+-      t('dashboard.cost', 'Biaya (Rp)')
+-    ].filter(Boolean).join(',');
+-    const rows = data.map(item => {
+-      return [
+-        'time' in item ? item.time : item.month,
+-        (item.kwh || 0).toFixed(3),
+-        chartType === 'daily' ? (item.kwh * 1000).toFixed(0) : undefined,
+-        item.cost || 0
+-      ].filter(val => val !== undefined).join(',');
+-    });
+-
+-    const totalRow = [
+-      t('dashboard.total', 'TOTAL'),
+-      totalKwh.toFixed(3),
+-      chartType === 'daily' ? '-' : undefined,
+-      totalCost
+-    ].filter(val => val !== undefined).join(',');
+-
+-    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows, totalRow].join("\n");
+-    const encodedUri = encodeURI(csvContent);
+-    const link = document.createElement("a");
+-    link.setAttribute("href", encodedUri);
+-    link.setAttribute("download", `BIEON_Laporan_Energi_${chartType}_${new Date().getTime()}.csv`);
+-    document.body.appendChild(link);
+-    link.click();
+-    document.body.removeChild(link);
+-  };
+-
+-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 duration-300">
+-        <div className="bg-gradient-to-r from-eco-500 to-sense-500 px-4 sm:px-8 py-4 sm:py-6 text-white">
+-          <div className="flex items-center justify-between">
+-            <div>
+-              <h2 className="text-2xl font-bold">{title}</h2>
+-              <p className="text-eco-50 text-sm mt-1">
+-            <button
+-              onClick={onClose}
+-              className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+-            >
+-              <X className="w-6 h-6" />
+-            </button>
+-          <div className="mb-4 sm:mb-6 flex gap-2 sm:gap-3 flex-wrap">
+-            <button
+-              onClick={handleExportPDF}
+-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-alert-danger text-white rounded-xl font-semibold hover:bg-alert-danger/90 transition-all shadow-lg text-sm sm:text-base"
+-            >
+-              <FileDown className="w-5 h-5" />
+-              {t('dashboard.download_pdf', 'Unduh PDF')}
+-            </button>
+-            <button
+-              onClick={handleExportCSV}
+-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-eco-500 text-white rounded-xl font-semibold hover:bg-eco-900 transition-all shadow-lg text-sm sm:text-base"
+-            >
+-              <Download className="w-5 h-5" />
+-              {t('dashboard.download_csv', 'Unduh CSV')}
+-            </button>
+-          </div>
+-          <div className="bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden overflow-x-auto">
+-                <tr className="bg-gradient-to-r from-eco-500 to-sense-500 text-white">
+-                  <th className="px-6 py-4 text-left font-bold">
+-                  <th className="px-6 py-4 text-left font-bold">{t('dashboard.consumption', 'Konsumsi (kWh)')}</th>
+-                  {chartType === 'daily' && <th className="px-6 py-4 text-left font-bold">{t('dashboard.power', 'Daya (Watt)')}</th>}
+-                  <th className="px-6 py-4 text-left font-bold">{t('dashboard.cost', 'Biaya (Rp)')}</th>
+-              <tbody>
+-                    className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+-                      } hover:bg-eco-50 transition-colors`}
+-                    <td className="px-6 py-4 font-semibold text-eco-900">
+-                <tr className="bg-gradient-to-r from-slate-700 to-slate-800 text-white font-bold">
+-                  <td className="px-6 py-4 text-alert-warning">
+-      <div className="bg-white rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 duration-300">
+-        {/* Header with Gradient - Aligned Theme */}
+-        <div className="bg-gradient-to-r from-alert-warning to-[#d97706] px-6 sm:px-8 py-6 text-white relative">
+-          <div className="flex items-center gap-4">
+-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shrink-0">
+-              <Zap className="w-7 h-7 text-white fill-white/20" />
+-            </div>
+-            <div className="pr-8">
+-              <h2 className="text-xl font-bold leading-tight">{t('homeowner_qc.budget.title', 'Manajemen Anggaran Listrik')}</h2>
+-              <p className="text-amber-50 text-xs mt-1 font-medium opacity-90">{t('homeowner_qc.budget.subtitle', 'Monitoring anggaran & batas peringatan kritis')}</p>
+-          <button
+-            onClick={onClose}
+-            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+-          >
+-            <X className="w-6 h-6 text-white" />
+-          </button>
+-        <div className="p-6 sm:p-8 overflow-y-auto flex-1 custom-scrollbar">
+-          <div className={`border rounded-2xl p-5 flex flex-col gap-3 mb-8 transition-colors ${
+-            isOverBudget ? 'bg-alert-danger/10 border-alert-danger/20 text-alert-danger' : 
+-            isWaspada ? 'bg-alert-warning/10 border-alert-warning/20 text-alert-warning' : 
+-            'bg-eco-50 border-eco-500/10'
+-          }`}>
+-            <div className={`flex justify-between items-center text-sm font-semibold mt-1 pt-3 border-t ${
+-              isOverBudget ? 'border-alert-danger/25' : 
+-              isWaspada ? 'border-alert-warning/25' : 
+-              'border-eco-500/25'
+-            }`}>
+-              <span className={isOverBudget ? 'text-alert-danger' : isWaspada ? 'text-alert-warning' : 'text-eco-900'}>{t('dashboard.remaining_budget', 'Sisa Anggaran:')}</span>
+-              <span className={`text-xl font-bold ${isOverBudget ? 'text-alert-danger' : isWaspada ? 'text-alert-warning' : 'text-eco-500'}`}>Rp {Math.max(0, sisaAnggaran).toLocaleString('id-ID')}</span>
+-            <div className={`flex justify-between items-center text-xs mt-1 p-2 rounded-lg font-semibold tracking-wide ${
+-              isOverBudget ? 'bg-alert-danger/10 text-alert-danger' : 
+-              isWaspada ? 'bg-alert-warning/10 text-alert-warning' : 
+-              'bg-eco-50 text-eco-900'
+-            }`}>
+-                {isOverBudget ? <AlertTriangle className="w-3.5 h-3.5" /> : isWaspada ? <Zap className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+-                      ? 'border-alert-warning bg-alert-warning/10 text-alert-warning'
+-                      : 'border-slate-100 bg-white text-text-dim hover:border-alert-warning/50'
+-                    }`}
+-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 group-focus-within:text-alert-warning transition-colors">Rp</div>
+-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-semibold focus:outline-none focus:border-alert-warning focus:bg-white transition-all"
+-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 group-focus-within:text-eco-500 transition-colors">Rp</div>
+-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-semibold focus:outline-none focus:border-eco-500 focus:bg-white transition-all"
+-              className={`w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-[2px] transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2
+-                ${submitted 
+-                  ? 'bg-eco-500 text-white shadow-eco-500/20' 
+-                  : 'bg-gradient-to-r from-alert-warning to-[#d97706] text-white hover:shadow-xl'
+-                  <CheckCircle2 className="w-5 h-5" />
+-  const [cardTheme, setCardTheme] = useState(() => localStorage.getItem('bieon_card_theme') || 'brand');
+-
+-  const getCardStyles = (theme) => {
+-    switch (theme) {
+-      case 'mint':
+-        return {
+-          comfort: 'from-[#E6F5EA] to-[#E6F5EA] theme-card-light',
+-          comfortDeco: 'bg-slate-400/20',
+-          security: 'from-[#E6F5EA] to-[#E6F5EA] theme-card-light',
+-          securityDeco: 'bg-slate-400/20',
+-          water: 'from-[#E6F5EA] to-[#E6F5EA] theme-card-light',
+-          waterDeco: 'bg-slate-400/20',
+-        };
+-      case 'monochrome':
+-        return {
+-          comfort: 'from-eco-500 to-emerald-600',
+-          comfortDeco: 'bg-white/20',
+-          security: 'from-eco-500 to-emerald-600',
+-          securityDeco: 'bg-white/20',
+-          water: 'from-eco-500 to-emerald-600',
+-          waterDeco: 'bg-white/20',
+-        };
+-      case 'legacy':
+-        return {
+-          comfort: 'from-eco-500 to-emerald-600',
+-          comfortDeco: 'bg-white/20',
+-          security: 'from-indigo-600 to-purple-600',
+-          securityDeco: 'bg-white/20',
+-          water: 'from-sense-500 to-cyan-600',
+-          waterDeco: 'bg-white/20',
+-        };
+-      case 'modern':
+-        return {
+-          comfort: 'from-eco-500 to-emerald-600',
+-          comfortDeco: 'bg-white/20',
+-          security: 'from-amber-500 to-orange-600',
+-          securityDeco: 'bg-white/20',
+-          water: 'from-sense-500 to-cyan-600',
+-          waterDeco: 'bg-white/20',
+-        };
+-      case 'duotone':
+-        return {
+-          comfort: 'from-eco-500 to-emerald-600',
+-          comfortDeco: 'bg-gradient-to-br from-sense-500/35 to-sense-900/10',
+-          security: 'from-eco-500 to-emerald-600',
+-          securityDeco: 'bg-gradient-to-br from-sense-500/35 to-sense-900/10',
+-          water: 'from-eco-500 to-emerald-600',
+-          waterDeco: 'bg-gradient-to-br from-sense-500/35 to-sense-900/10',
+-        };
+-      case 'brand':
+-      default:
+-        return {
+-          comfort: 'from-eco-500 to-emerald-600',
+-          comfortDeco: 'bg-white/20',
+-          security: 'from-eco-500 to-sense-500',
+-          securityDeco: 'bg-white/20',
+-          water: 'from-sense-500 to-cyan-600',
+-          waterDeco: 'bg-white/20',
+-        };
+-    }
+-  };
+-
+-  const cardStyles = getCardStyles(cardTheme);
+-      
+-      const mappedAlerts = mockNotifications.map(alert => {
+-        let iconType = Bell;
+-        let typeStr = 'info';
+-        
+-        const category = alert.category || '';
+-        const msg = (alert.message || '').toLowerCase();
+-        const type = alert.type || '';
+-
+-        if (category === 'Keamanan' || type === 'Danger' || type === 'Bahaya') {
+-          iconType = Lock;
+-          typeStr = 'danger';
+-        } else if (category === 'Energi' || type === 'Warning' || type === 'Waspada') {
+-          iconType = Zap;
+-          typeStr = 'warning';
+-        } else if (type === 'Success' || type === 'Berhasil' || msg.includes('berhasil') || msg.includes('selesai')) {
+-          iconType = CheckCircle2;
+-          typeStr = 'success';
+-        } else if (category === 'Air Sanitasi' || category === 'Kualitas Air') {
+-          iconType = Droplets;
+-          typeStr = 'info';
+-        }
+-        return {
+-          id: alert._id,
+-          type: typeStr,
+-          title: alert.title,
+-          category: alert.category,
+-          messageKey: alert.messageKey,
+-          metadata: alert.metadata,
+-          message: alert.message,
+-          date: alert.createdAt,
+-          icon: iconType,
+-          link: alert.link
+-        };
+-      });
+-      
+-      setRealNotifications(mappedAlerts);
+-      const resAlerts = await fetch('/api/alerts', { headers });
+-      if (resAlerts.ok) {
+-        const data = await resAlerts.json();
+-        const mappedAlerts = (data.data || []).map(alert => {
+-          let iconType = Bell;
+-          let typeStr = 'info';
+-
+-          const category = alert.category || '';
+-          const msg = (alert.message || '').toLowerCase();
+-          const type = alert.type || '';
+-
+-          if (category === 'Keamanan' || type === 'Danger' || type === 'Bahaya') {
+-            iconType = Lock;
+-            typeStr = 'danger';
+-          } else if (category === 'Energi' || type === 'Warning' || type === 'Waspada') {
+-            iconType = Zap;
+-            typeStr = 'warning';
+-          } else if (type === 'Success' || type === 'Berhasil' || msg.includes('berhasil') || msg.includes('selesai')) {
+-            iconType = CheckCircle2;
+-            typeStr = 'success';
+-          } else if (category === 'Air Sanitasi' || category === 'Kualitas Air') {
+-            iconType = Droplets;
+-            typeStr = 'info';
+-          }
+-
+-          return {
+-            id: alert._id,
+-            type: typeStr,
+-            title: alert.title,
+-            category: alert.category,
+-            messageKey: alert.messageKey,
+-            metadata: alert.metadata,
+-            message: alert.message,
+-            date: alert.date || alert.createdAt,
+-            icon: iconType,
+-            link: alert.link
+-          };
+-        });
+-        setRealNotifications(mappedAlerts);
+-  const hasComfort = currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));
+-  const hasSecurity = currentDevices.some(d => d.environmentAspect === 'Keamanan' || (d.category === 'sensor' && ['Sensor Keamanan', 'Door Sensor', 'Motion Sensor', 'CCTV'].some(t => d.type?.includes(t))));
+-  const hasWater = currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
+-  if (hasComfort) currentSensors.comfort = { temp: liveTemp, humidity: liveHumidity, comfortLevel: 82 };
+-    // Ambil status asli dari perangkat security jika ada
+-    const securityDevices = currentDevices.filter(d => d.environmentAspect === 'Keamanan');
+-    if (securityDevices.length > 0) {
+-      currentSensors.security = securityDevices.map(d => ({
+-        type: d.name,
+-        status: d.status === '1' ? 'Active' : d.status === '0' ? 'Inactive' : d.status,
+-        room: d.location
+-      }));
+-      currentSensors.security = ROOM_SENSORS.all.security;
+-  if (hasWater) currentSensors.waterQuality = { status: 'drinkable', ph: livePh, turbidity: liveTurbidity, tds: liveTds, temp: liveWaterTemp };
+-        {/* Sandbox Visual Switcher - Presentation Helper */}
+-        <div className="bg-surface-card/90 backdrop-blur-md rounded-2xl border border-slate-100 shadow-sm p-5 mb-6 flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-300">
+-          {/* Row 1: Theme Switcher */}
+-          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+-            <div className="flex items-center gap-3">
+-              <div className="w-10 h-10 rounded-xl bg-eco-50 flex items-center justify-center border border-eco-100/50">
+-                <Settings className="w-5 h-5 text-eco-500 animate-[spin_8s_linear_infinite]" />
+-              </div>
+-              <div>
+-                <h4 className="font-bold text-text-headline text-sm tracking-tight">Interactive Visual Sandbox</h4>
+-                <p className="text-xs text-text-dim mt-0.5">Bandingkan 5 opsi warna dasbor secara real-time untuk presentasi</p>
+-              </div>
+-            </div>
+-            <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+-              <button
+-                onClick={() => { setCardTheme('brand'); localStorage.setItem('bieon_card_theme', 'brand'); }}
+-                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'brand' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+-              >
+-                Brand (Eco & Sense)
+-              </button>
+-              <button
+-                onClick={() => { setCardTheme('monochrome'); localStorage.setItem('bieon_card_theme', 'monochrome'); }}
+-                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'monochrome' ? 'bg-eco-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+-              >
+-                Opsi 1: Semua Hijau
+-              </button>
+-              <button
+-                onClick={() => { setCardTheme('legacy'); localStorage.setItem('bieon_card_theme', 'legacy'); }}
+-                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'legacy' ? 'bg-indigo-600 text-white border-transparent shadow-sm shadow-indigo-600/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+-              >
+-                Opsi 2: Klasik (Hijau-Ungu-Biru)
+-              </button>
+-              <button
+-                onClick={() => { setCardTheme('modern'); localStorage.setItem('bieon_card_theme', 'modern'); }}
+-                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'modern' ? 'bg-amber-500 text-white border-transparent shadow-sm shadow-amber-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+-              >
+-                Opsi 3: Jingga Modern
+-              </button>
+-              <button
+-                onClick={() => { setCardTheme('duotone'); localStorage.setItem('bieon_card_theme', 'duotone'); }}
+-                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'duotone' ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white border-transparent shadow-sm shadow-eco-500/20' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+-              >
+-                Opsi 4: Duotone (Eco & Sense)
+-              </button>
+-              <button
+-                onClick={() => { setCardTheme('mint'); localStorage.setItem('bieon_card_theme', 'mint'); }}
+-                className={`flex-1 md:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${cardTheme === 'mint' ? 'bg-[#E6F5EA] text-[#064e3b] border-[#C2E7CB] shadow-sm shadow-eco-500/10' : 'bg-slate-50 text-text-dim border-slate-100 hover:bg-slate-100'}`}
+-              >
+-                Opsi 5: Mint & Abu-abu
+-              </button>
+-            </div>
+-          </div>
+-        </div>
+-
+-        <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm p-5 mb-8">
+-            <Home className="w-5 h-5 text-eco-500" />
+-            <h3 className="font-bold text-text-headline text-lg tracking-tight">{t('dashboard.select_room')}</h3>
+-                  ? 'bg-gradient-to-r from-eco-500 to-sense-500 text-white shadow-md hover:shadow-lg scale-[1.02]'
+-            {(currentSensors.comfort || (currentSensors.security && currentSensors.security.length > 0)) && (
+-              <div>
+-                  {currentSensors.comfort && currentSensors.security && currentSensors.security.length > 0
+-                    ? t('dashboard.comfort_security')
+-                    : currentSensors.comfort
+-                      ? t('dashboard.comfort')
+-                      : t('dashboard.security')}
+-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-flow-col gap-3 sm:gap-4 mb-6 lg:overflow-x-auto lg:pb-4 lg:scrollbar-none desktop-comfort-grid">
+-                  {currentSensors.comfort && (
+-                    <>
+-                      {currentSensors.comfort.humidity !== null && (
+-                        <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                          <div className="flex items-center justify-between mb-2">
+-                            <span className="text-sm font-bold text-text-headline">{t('dashboard.humidity')}</span>
+-                            <Droplets className="w-5 h-5 text-sense-500" />
+-                          </div>
+-                          <div className="mb-3">
+-                            <div className="text-4xl font-bold text-text-headline tracking-tight">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>
+-                            <div className="text-xs text-text-dim mt-1 font-medium">
+-                              {(selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) < 50 ? t('dashboard.status_humidity_dry', 'Kering') : (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80 ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_humidity_humid', 'Sangat Lembap')}
+-                            </div>
+-                          </div>
+-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-auto">
+-                            <div className="h-full bg-gradient-to-r from-sense-500 to-[#06b6d4]" style={{ width: `${selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%` }}></div>
+-                          </div>
+-                        </div>
+-                      )}
+-                      {currentSensors.comfort.temp && (
+-                        <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                          <div className="flex items-center justify-between mb-2">
+-                            <span className="text-sm font-bold text-text-headline">{t('dashboard.temperature')}</span>
+-                            <Thermometer className="w-5 h-5 text-alert-warning" />
+-                          <div className="mb-3">
+-                            <div className="text-4xl font-bold text-text-headline tracking-tight">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>
+-                            <div className="text-xs text-text-dim mt-1 font-medium">
+-                              {(selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) < 20.5 ? t('dashboard.status_cold', 'Dingin') : (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_hot', 'Panas')}
+-                            </div>
+-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-auto">
+-                            <div className="h-full bg-gradient-to-r from-alert-warning to-alert-danger" style={{ width: `${((selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) / 40) * 100}%` }}></div>
+-                      )}
+-
+-                      <div className={`row-span-2 bg-gradient-to-br ${cardStyles.comfort} rounded-2xl shadow-xl p-5 text-white relative overflow-hidden flex flex-col`}>
+-                        <div className={`absolute top-0 right-0 w-48 h-48 ${cardStyles.comfortDeco} rounded-full -mr-24 -mt-24`}></div>
+-                        <div className="relative flex flex-col h-full">
+-                          <div className="mb-1">
+-                            <h3 className="text-2xl font-bold mb-1 tracking-tight text-white">{t('dashboard.comfort')}</h3>
+-                            <p className="text-eco-100 text-sm">{t('dashboard.comfort_ref', 'Berdasarkan: suhu & kelembapan')}</p>
+-                            <p className="text-eco-100/70 text-xs mb-1">{t('dashboard.comfort_std', '(Permenkes No. 2 Tahun 2023)')}</p>
+-                          </div>
+-                          <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1 py-4 sm:py-0">
+-                            <div className="text-2xl font-bold mb-3 flex items-center gap-2">
+-                              {((selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) >= 20.5 && (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 &&
+-                                (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) >= 50 && (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80) ?
+-                                t('dashboard.status_comfort_ok', '😊 Nyaman') : t('dashboard.status_comfort_bad', '😕 Tidak Nyaman')}
+-                          </div>
+-                          <div className="grid grid-cols-2 gap-3 mt-auto">
+-                            <div className="bg-white/10 border border-white/5 backdrop-blur-sm rounded-lg p-3 text-center">
+-                              <div className="text-[10px] mb-1">{t('dashboard.temperature')}</div>
+-                              <div className="font-bold text-lg">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>
+-                            {currentSensors.comfort.humidity !== null && (
+-                              <div className="bg-white/10 border border-white/5 backdrop-blur-sm rounded-lg p-3 text-center">
+-                                <div className="text-[10px] mb-1">{t('dashboard.humidity')}</div>
+-                                <div className="font-bold text-lg">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>
+-                            )}
+-                          </div>
+-                        </div>
+-                      </div>
+-                    </>
+-                  )}
+-
+-                  {currentSensors.security && currentSensors.security.length > 0 && (
+-                    <div id="section-keamanan" className="contents">
+-                      {currentSensors.security.filter(s => s.type.includes('Motion')).map((sensor, idx) => (
+-                        <div key={'motion' + idx} className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                          <div className="flex items-center justify-between mb-2">
+-                            <span className="text-sm font-bold text-text-headline">Motion</span>
+-                            <Activity className="w-5 h-5 text-alert-special" />
+-                          </div>
+-                          <div className="mb-3">
+-                            <div className="text-4xl font-bold text-text-headline tracking-tight">{sensor.status === 'No Motion' ? t('dashboard.status_no_motion', 'Aman') : t('dashboard.status_motion', 'Gerak Terdeteksi')}</div>
+-                            <div className="text-xs text-text-dim mt-1 font-medium">{sensor.room}</div>
+-                          </div>
+-                          <div className={`mt-auto px-3 py-2 rounded-lg text-[10px] font-bold text-center ${sensor.status === 'No Motion' ? 'bg-eco-55 text-eco-900 bg-eco-50' : 'bg-alert-warning/10 text-alert-warning'}`}>
+-                            {sensor.status === 'No Motion' ? '✓ STANDBY' : '👁️ DETECTED'}
+-                          </div>
+-                        </div>
+-                      ))}
+-                      {currentSensors.security.filter(s => s.type.includes('Door')).map((sensor, idx) => (
+-                        <div key={'door' + idx} className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                          <div className="flex items-center justify-between mb-2">
+-                            <span className="text-sm font-bold text-text-headline">Door Sensor</span>
+-                            <Lock className="w-5 h-5 text-alert-special" />
+-                          </div>
+-                          <div className="mb-3">
+-                            <div className="text-4xl font-bold text-text-headline tracking-tight">{sensor.status === 'Closed' ? t('dashboard.status_door_closed', 'Tertutup') : t('dashboard.status_door_open', 'Terbuka')}</div>
+-                            <div className="text-xs text-text-dim mt-1 font-medium">{sensor.room}</div>
+-                          </div>
+-                          <div className={`mt-auto px-3 py-2 rounded-lg text-[10px] font-bold text-center ${sensor.status === 'Closed' ? 'bg-eco-55 text-eco-900 bg-eco-50' : 'bg-alert-danger/10 text-alert-danger'}`}>
+-                            {sensor.status === 'Closed' ? '🔒 SECURE' : '🚪 OPEN'}
+-                          </div>
+-                        </div>
+-                      ))}
+-
+-                      <div className={`row-span-2 bg-gradient-to-br flex flex-col ${cardStyles.security} rounded-2xl shadow-xl p-5 text-white relative overflow-hidden`}>
+-                        <div className={`absolute top-0 right-0 w-48 h-48 ${cardStyles.securityDeco} rounded-full -mr-24 -mt-24`}></div>
+-                        <div className="relative flex flex-col h-full">
+-                          <div className="mb-1">
+-                            <h3 id="section-keamanan" className="text-2xl font-bold mb-1 tracking-tight text-white">{t('dashboard.security')}</h3>
+-                            <p className="text-eco-100 text-xs">{currentSensors.security.length} sensor aktif</p>
+-                          <div className="flex-1 flex flex-col justify-center items-center text-center py-4 sm:py-1">
+-                            <div className="text-[60px] font-bold leading-none mb-2">
+-                              {currentSensors.security.every(s =>
+-                                s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
+-                              ) ? '✓' : '⚠️'}
+-                            <div className="text-xl font-semibold mt-1">
+-                              {currentSensors.security.every(s =>
+-                                s.status === 'Normal' || s.status === 'Recording' || s.status === 'Closed' || s.status === 'No Motion'
+-                              ) ? t('dashboard.status_all_safe', '🔒 Semua Aman') : t('dashboard.status_needs_attention', '⚠️ Perlu Perhatian')}
+-                          </div>
+-                          <div className="grid grid-cols-1 gap-2 mt-auto">
+-                            {currentSensors.security.slice(0, 2).map((sensor, idx) => (
+-                              <div key={idx} className="bg-white/10 border border-white/5 backdrop-blur-sm rounded-lg p-3 flex justify-between items-center">
+-                                <div className="text-xs font-semibold">{sensor.type} - {sensor.room}</div>
+-                                <div className="text-xs font-bold">{sensor.status}</div>
+-                            ))}
+-                        </div>
+-                      </div>
+-                  )}
+-            {currentSensors.waterQuality && (
+-              <div id="section-kualitas-air">
+-                <h2 className="text-xl font-bold text-text-headline mb-4 tracking-tight">{t('dashboard.water_health')}</h2>
+-
+-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-flow-col gap-3 sm:gap-4 mb-6 lg:overflow-x-auto lg:pb-4 lg:scrollbar-none desktop-water-grid">
+-                  {/* pH */}
+-                  <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                    <div className="flex items-center justify-between mb-2">
+-                      <span className="text-sm font-bold text-text-headline">{t('dashboard.ph_level')}</span>
+-                      <Beaker className="w-5 h-5 text-sense-500" />
+-                    </div>
+-                    <div className="mb-3">
+-                      <div className="text-4xl font-bold text-text-headline tracking-tight">{selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph}</div>
+-                      <div className="text-xs text-text-dim mt-1 font-medium">
+-                        {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak Pakai')}
+-                      </div>
+-                    </div>
+-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-auto">
+-                      <div className="h-full bg-gradient-to-r from-sense-500 to-[#06b6d4]" style={{ width: `${((selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) / 14) * 100}%` }}></div>
+-                    </div>
+-                  </div>
+-                  {/* Turbidity */}
+-                  <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                    <div className="flex items-center justify-between mb-2">
+-                      <span className="text-sm font-bold text-text-headline">{t('dashboard.turbidity')}</span>
+-                      <Droplets className="w-5 h-5 text-sense-500" />
+-                    </div>
+-                    <div className="mb-3">
+-                      <div className="text-4xl font-bold text-text-headline tracking-tight">{selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity}</div>
+-                      <div className="text-xs text-text-dim mt-1 font-medium">
+-                        {(selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak Pakai')}
+-                      </div>
+-                    </div>
+-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-auto">
+-                      <div className="h-full bg-gradient-to-r from-sense-500 to-[#06b6d4]" style={{ width: `${Math.min(((selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) / 10) * 100, 100)}%` }}></div>
+-                    </div>
+-                  </div>
+-                  {/* TDS */}
+-                  <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                    <div className="flex items-center justify-between mb-2">
+-                      <span className="text-sm font-bold text-text-headline">{t('dashboard.tds')}</span>
+-                      <Wind className="w-5 h-5 text-eco-500" />
+-                    </div>
+-                    <div className="mb-3">
+-                      <div className="text-4xl font-bold text-text-headline tracking-tight">{selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds}</div>
+-                      <div className="text-xs text-text-dim mt-1 font-medium">
+-                        {(selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak Pakai')}
+-                      </div>
+-                    </div>
+-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-auto">
+-                      <div className="h-full bg-gradient-to-r from-eco-500 to-eco-900" style={{ width: `${Math.min(((selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) / 500) * 100, 100)}%` }}></div>
+-                  </div>
+-                  {/* Water Temperature */}
+-                  <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
+-                    <div className="flex items-center justify-between mb-2">
+-                      <span className="text-sm font-bold text-text-headline">{t('dashboard.water_temperature')}</span>
+-                      <Thermometer className="w-5 h-5 text-alert-warning" />
+-                    </div>
+-                    <div className="mb-3">
+-                      <div className="text-4xl font-bold text-text-headline tracking-tight">{selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp}°C</div>
+-                      <div className="text-xs text-text-dim mt-1 font-medium">
+-                        {(selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 10 ? t('dashboard.status_water_cold', 'Dingin') : (selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) < 30 ? t('dashboard.status_water_normal', 'Normal') : t('dashboard.status_water_warm', 'Hangat')}
+-                      </div>
+-                    </div>
+-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-auto">
+-                      <div className="h-full bg-gradient-to-r from-alert-warning to-alert-danger" style={{ width: `${((selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp) / 50) * 100}%` }}></div>
+-                  {/* Big Card - Water Status - row-span-2 */}
+-                  <div className={`row-span-2 bg-gradient-to-br ${cardStyles.water} rounded-2xl shadow-xl p-5 text-white relative overflow-hidden flex flex-col min-w-[280px]`}>
+-                    <div className={`absolute top-0 right-0 w-64 h-64 ${cardStyles.waterDeco} rounded-full -mr-32 -mt-32`}></div>
+-                    <div className="relative h-full flex flex-col">
+-                      <div className="mb-1">
+-                        <h3 className="text-2xl font-bold mb-1 flex items-center gap-3 tracking-tight text-white">
+-                          <Beaker className="w-6 h-6" />
+-                          {t('dashboard.water_status_title', 'Status Air')}
+-                        </h3>
+-                        <p className="text-eco-100 text-sm">{t('dashboard.water_ref', 'Berdasarkan: pH, Turbidity, TDS, Suhu')}</p>
+-                        <p className="text-eco-100/70 text-xs mb-1">{t('dashboard.water_std', '(Permenkes No. 32 Tahun 2017)')}</p>
+-                      </div>
+-                      <div className="flex-1 flex flex-col justify-center items-center text-center mt-1 mb-1">
+-                        <div className="text-2xl font-semibold mb-3 flex items-center gap-2 text-white">
+-                          {(selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) >= 6.5 && (selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph) <= 8.5 && (selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity) <= 25 && (selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds) <= 1000 ? t('dashboard.status_water_ok', '💧 Layak Pakai') : t('dashboard.status_water_bad', '⚠️ Tidak Layak Pakai')}
+-                        </div>
+-                      </div>
+-                      <div className="grid grid-cols-2 gap-3 mt-auto">
+-                        <div className="bg-white/10 border border-white/5 backdrop-blur-sm rounded-lg p-3 text-center">
+-                          <div className="text-[10px] mb-1">{t('dashboard.ph_level')}</div>
+-                          <div className="font-bold text-lg">{selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph}</div>
+-                        </div>
+-                        <div className="bg-white/10 border border-white/5 backdrop-blur-sm rounded-lg p-3 text-center">
+-                          <div className="text-[10px] mb-1">{t('dashboard.water_temperature')}</div>
+-                          <div className="font-bold text-lg">{selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp}°C</div>
+-                      </div>
+-            <div id="section-energi" className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm p-5 sm:p-8">
+-              <div className="flex items-center justify-between mb-6">
+-                <div>
+-                  <h3 className="text-lg sm:text-xl font-bold text-text-headline tracking-tight">{t('dashboard.energy_consumption')}</h3>
+-                  <p className="text-xs text-text-dim mt-1">
+-                <div className="flex items-center gap-2.5">
+-                    className="flex items-center gap-1.5 sm:gap-2 px-4 py-2.5 bg-alert-warning text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-alert-warning/90 transition-all hover:shadow-md active:scale-95 group"
+-                    <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
+-                    <span>{t('dashboard.budget_management')}</span>
+-                    className="flex items-center gap-1.5 sm:gap-2 px-4 py-2.5 bg-eco-500 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-eco-900 transition-all hover:shadow-md active:scale-95 group"
+-                    <Eye className="w-4 h-4 group-hover:scale-110 transition-transform" />
+-                    <span>{t('dashboard.view_details')}</span>
+-                    <ChevronRight className="w-4 h-4 hidden sm:inline" />
+-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 p-6 bg-eco-50 rounded-2xl border border-eco-500/10 items-start">
+-                  <div className="text-[10px] sm:text-[11px] text-eco-900 font-bold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
+-                  <div className="text-2xl sm:text-3xl font-bold text-eco-500 flex items-baseline justify-center gap-1">
+-                    {energySummary?.currentLoad || 0} <span className="text-xs sm:text-sm font-semibold opacity-60">{chartType === 'daily' ? 'Watt' : 'kWh'}</span>
+-                  <div className="text-[10px] sm:text-[11px] text-eco-900 font-bold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
+-                  <div className="text-2xl sm:text-3xl font-bold text-eco-500 flex items-baseline justify-center gap-1">
+-                    {chartType === 'daily' ? energySummary?.runningConsumption || 0 : (energySummary?.monthlyData?.reduce((acc, m) => acc + m.kwh, 0) || 0).toFixed(1)} <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
+-                  <div className="text-[10px] sm:text-[11px] text-eco-900 font-bold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
+-                  <div className="text-2xl sm:text-3xl font-bold text-eco-500 flex items-baseline justify-center gap-1">
+-                    {chartType === 'daily' 
+-                      ? (energySummary?.avgHourly || 0) 
+-                      : (energySummary?.monthlyData?.length > 0 
+-                          ? (energySummary.monthlyData.reduce((acc, m) => acc + m.kwh, 0) / energySummary.monthlyData.length).toFixed(1) 
+-                          : 0)
+-                    } <span className="text-xs sm:text-sm font-semibold opacity-60">kWh</span>
+-                  <div className="text-[10px] sm:text-[11px] text-eco-900 font-bold mb-1 uppercase tracking-wider leading-snug h-[40px] flex items-center justify-center">
+-                  <div className="text-2xl sm:text-3xl font-bold text-eco-500 flex items-baseline justify-center gap-1">
+-                    <span className="text-sm sm:text-base font-semibold opacity-60">Rp</span> {
+-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+-                        label={{ value: t('dashboard.energy_consumption_label', 'Konsumsi (kWh)'), angle: -90, position: 'insideLeft', offset: 0, fill: '#6b7280', fontSize: 12, fontWeight: 600 }}
+-                        formatter={(value) => `${value} kWh`}
+-                        strokeWidth={3}
+-                        dot={{ fill: 'var(--color-eco-500)', r: 4, strokeWidth: 2, stroke: '#fff' }}
+-                        activeDot={{ r: 6 }}
+-            <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm p-6">
+-                <h3 className="font-bold text-text-headline flex items-center gap-2 tracking-tight">
+-                  <Bell className="w-5 h-5 text-sense-500" />
+-                <button onClick={() => setShowNotifications(true)} className="text-xs font-bold text-sense-500 hover:text-sense-900 transition-colors">{t('dashboard.view_all')}</button>
+-                    const Icon = notif.icon;
+-                        key={notif.id}
+-                        onClick={() => {
+-                          if (notif.link === 'pengaduan') navigate('/pengaduan');
+-                          else if (notif.link === 'kendali') {
+-                            if (notif.metadata?.deviceId) {
+-                              sessionStorage.setItem('pendingHighlight', notif.metadata.deviceId);
+-                            }
+-                            navigate('/kendali');
+-                          }
+-                          else if (notif.link === 'dashboard' || notif.link === 'history-energi') {
+-                            const target = notif.metadata?.scrollTarget || 'section-energi';
+-                            sessionStorage.setItem('pendingScroll', target);
+-                            navigate('/dashboard');
+-                            
+-                            setTimeout(() => {
+-                              const element = document.getElementById(target);
+-                              if (element) {
+-                                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+-                                sessionStorage.removeItem('pendingScroll');
+-                              }
+-                            }, 100);
+-                            
+-                            if (notif.link === 'history-energi') setShowDataModal(true);
+-                          }
+-                        }}
+-                      className={`p-3 sm:p-4 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition-all border-l-4 cursor-pointer active:scale-[0.98] ${notif.type === 'danger'
+-                        ? 'border-l-alert-danger'
+-                        : notif.type === 'warning'
+-                          ? 'border-l-alert-warning'
+-                          : notif.type === 'security'
+-                            ? 'border-l-alert-special'
+-                            : notif.type === 'success'
+-                              ? 'border-l-eco-500'
+-                              : 'border-l-sense-500'
+-                        }`}
+-                    >
+-                      <div className="flex items-start gap-3">
+-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+-                          notif.type === 'danger' ? 'bg-alert-danger/10' : 
+-                          notif.type === 'warning' ? 'bg-alert-warning/10' : 
+-                          notif.type === 'security' ? 'bg-alert-special/10' : 
+-                          notif.type === 'success' ? 'bg-eco-50' : 'bg-sense-50'
+-                        }`}>
+-                          <Icon className={`w-4 h-4 ${
+-                            notif.type === 'danger' ? 'text-alert-danger' : 
+-                            notif.type === 'warning' ? 'text-alert-warning' : 
+-                            notif.type === 'security' ? 'text-alert-special' : 
+-                            notif.type === 'success' ? 'text-eco-500' : 'text-sense-500'
+-                          }`} />
+-                        </div>
+-                        <div className="flex-1">
+-                          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+-                            {(() => {
+-                              const titleStr = (notif.title || "").toLowerCase();
+-                              const msgStr = (notif.message || "").toLowerCase();
+-                              let smartType = null;
+-                              if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
+-                                smartType = notif.type.toUpperCase();
+-                              } else {
+-                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+-                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+-                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+-                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+-                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+-                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+-                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+-                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+-                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+-                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+-                              }
+-                              const dynamicTitle = smartType && t(`notifications.dynamic.${smartType}.title`, { defaultValue: '' });
+-                              return dynamicTitle || getLocalizedTitle(notif.title, notif.category);
+-                            })()}
+-                          <div className="text-sm text-gray-800 leading-relaxed">
+-                            {(() => {
+-                              const titleStr = (notif.title || "").toLowerCase();
+-                              const msgStr = (notif.message || "").toLowerCase();
+-                              let smartType = null;
+-                              if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {
+-                                smartType = notif.type.toUpperCase();
+-                              } else {
+-                                // Detection Logic (Check Title first, then Message)
+-                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
+-                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
+-                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
+-                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
+-                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
+-                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
+-                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
+-                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
+-                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
+-                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
+-                              }
+-                              
+-                              const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
+-                              const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
+-                                  // Regex to find ticket ID in quotes or 8-char alphanumeric
+-                            <div className="text-[10px] text-gray-400 mt-1.5 font-medium">
+-                              {notif.date ? new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t('notification.ui.just_now')}
+-
+-            <div className="bg-surface-card rounded-2xl border border-slate-100 shadow-sm p-6">
+-                <Activity className="w-5 h-5 text-eco-500" />
+-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${
+-                        activity.color === 'emerald' ? 'bg-eco-50' : 'bg-slate-100'
+-                      }`}>
+-                        <Icon className={`w-5 h-5 ${activity.color === 'emerald' ? 'text-eco-500' : 'text-text-dim'}`} strokeWidth={2.5} />

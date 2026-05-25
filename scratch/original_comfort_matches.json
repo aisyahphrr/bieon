@@ -1,0 +1,182 @@
+[
+  {
+    "index": 697,
+    "content": "comfort: 'from-[#E6F5EA] to-[#E6F5EA] theme-card-light',"
+  },
+  {
+    "index": 698,
+    "content": "comfortDeco: 'bg-slate-400/20',"
+  },
+  {
+    "index": 706,
+    "content": "comfort: 'from-eco-500 to-emerald-600',"
+  },
+  {
+    "index": 707,
+    "content": "comfortDeco: 'bg-white/20',"
+  },
+  {
+    "index": 715,
+    "content": "comfort: 'from-eco-500 to-emerald-600',"
+  },
+  {
+    "index": 716,
+    "content": "comfortDeco: 'bg-white/20',"
+  },
+  {
+    "index": 724,
+    "content": "comfort: 'from-eco-500 to-emerald-600',"
+  },
+  {
+    "index": 725,
+    "content": "comfortDeco: 'bg-white/20',"
+  },
+  {
+    "index": 733,
+    "content": "comfort: 'from-eco-500 to-emerald-600',"
+  },
+  {
+    "index": 734,
+    "content": "comfortDeco: 'bg-gradient-to-br from-sense-500/35 to-sense-900/10',"
+  },
+  {
+    "index": 743,
+    "content": "comfort: 'from-eco-500 to-emerald-600',"
+  },
+  {
+    "index": 744,
+    "content": "comfortDeco: 'bg-white/20',"
+  },
+  {
+    "index": 999,
+    "content": "const hasComfort = currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));"
+  },
+  {
+    "index": 1006,
+    "content": "if (hasComfort) currentSensors.comfort = { temp: liveTemp, humidity: liveHumidity, comfortLevel: 82 };"
+  },
+  {
+    "index": 1066,
+    "content": "if (lower.includes('kenyamanan')) return t('notification.category.comfort', 'Kenyamanan');"
+  },
+  {
+    "index": 1185,
+    "content": "{(currentSensors.comfort || (currentSensors.security && currentSensors.security.length > 0)) && ("
+  },
+  {
+    "index": 1187,
+    "content": "<h2 id=\"section-kenyamanan\" className=\"text-xl font-bold text-text-headline mb-4 tracking-tight\">"
+  },
+  {
+    "index": 1188,
+    "content": "{currentSensors.comfort && currentSensors.security && currentSensors.security.length > 0"
+  },
+  {
+    "index": 1189,
+    "content": "? t('dashboard.comfort_security')"
+  },
+  {
+    "index": 1190,
+    "content": ": currentSensors.comfort"
+  },
+  {
+    "index": 1191,
+    "content": "? t('dashboard.comfort')"
+  },
+  {
+    "index": 1194,
+    "content": "<div className=\"grid grid-cols-1 sm:grid-cols-2 lg:grid-flow-col gap-3 sm:gap-4 mb-6 lg:overflow-x-auto lg:pb-4 lg:scrollbar-none desktop-comfort-grid\">"
+  },
+  {
+    "index": 1195,
+    "content": "{currentSensors.comfort && ("
+  },
+  {
+    "index": 1197,
+    "content": "{currentSensors.comfort.humidity !== null && ("
+  },
+  {
+    "index": 1204,
+    "content": "<div className=\"text-4xl font-bold text-text-headline tracking-tight\">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>"
+  },
+  {
+    "index": 1206,
+    "content": "{(selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) < 50 ? t('dashboard.status_humidity_dry', 'Kering') : (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80 ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_humidity_humid', 'Sangat Lembap')}"
+  },
+  {
+    "index": 1210,
+    "content": "<div className=\"h-full bg-gradient-to-r from-sense-500 to-[#06b6d4]\" style={{ width: `${selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%` }}></div>"
+  },
+  {
+    "index": 1215,
+    "content": "{currentSensors.comfort.temp && ("
+  },
+  {
+    "index": 1222,
+    "content": "<div className=\"text-4xl font-bold text-text-headline tracking-tight\">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>"
+  },
+  {
+    "index": 1224,
+    "content": "{(selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) < 20.5 ? t('dashboard.status_cold', 'Dingin') : (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_hot', 'Panas')}"
+  },
+  {
+    "index": 1228,
+    "content": "<div className=\"h-full bg-gradient-to-r from-alert-warning to-alert-danger\" style={{ width: `${((selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) / 40) * 100}%` }}></div>"
+  },
+  {
+    "index": 1233,
+    "content": "<div className={`row-span-2 bg-gradient-to-br ${cardStyles.comfort} rounded-2xl shadow-xl p-5 text-white relative overflow-hidden flex flex-col`}>"
+  },
+  {
+    "index": 1234,
+    "content": "<div className={`absolute top-0 right-0 w-48 h-48 ${cardStyles.comfortDeco} rounded-full -mr-24 -mt-24`}></div>"
+  },
+  {
+    "index": 1237,
+    "content": "<h3 className=\"text-2xl font-bold mb-1 tracking-tight text-white\">{t('dashboard.comfort')}</h3>"
+  },
+  {
+    "index": 1238,
+    "content": "<p className=\"text-eco-100 text-sm\">{t('dashboard.comfort_ref', 'Berdasarkan: suhu & kelembapan')}</p>"
+  },
+  {
+    "index": 1239,
+    "content": "<p className=\"text-eco-100/70 text-xs mb-1\">{t('dashboard.comfort_std', '(Permenkes No. 2 Tahun 2023)')}</p>"
+  },
+  {
+    "index": 1243,
+    "content": "{((selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) >= 20.5 && (selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp) <= 27.1 &&"
+  },
+  {
+    "index": 1244,
+    "content": "(selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) >= 50 && (selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity) <= 80) ?"
+  },
+  {
+    "index": 1245,
+    "content": "t('dashboard.status_comfort_ok', '😊 Nyaman') : t('dashboard.status_comfort_bad', '😕 Tidak Nyaman')}"
+  },
+  {
+    "index": 1251,
+    "content": "<div className=\"font-bold text-lg\">{selectedRoom === 'all' ? liveTemp : currentSensors.comfort.temp}°C</div>"
+  },
+  {
+    "index": 1253,
+    "content": "{currentSensors.comfort.humidity !== null && ("
+  },
+  {
+    "index": 1256,
+    "content": "<div className=\"font-bold text-lg\">{selectedRoom === 'all' ? liveHumidity : currentSensors.comfort.humidity}%</div>"
+  },
+  {
+    "index": 1714,
+    "content": "if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {"
+  },
+  {
+    "index": 1737,
+    "content": "if (notif.type && !['info', 'danger', 'warning', 'success', 'sistem', 'pengaduan', 'purple', 'water', 'kenyamanan'].includes(notif.type.toLowerCase())) {"
+  },
+  {
+    "index": 1834,
+    "content": ".desktop-comfort-grid {"
+  }
+]

@@ -2168,7 +2168,7 @@ export function DeviceControlPage({ onNavigate }) {
                   <div className="flex flex-wrap gap-3 mb-6">
                     <button
                       onClick={() => setSelectedRoom("all")}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${selectedRoom === "all" ? "bg-gradient-to-r from-bieon-eco to-bieon-sense text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${selectedRoom === "all" ? "bg-gradient-to-r from-bieon-eco to-green-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                     >
                       Semua Ruangan ({currentBieon?.hubs.flatMap(h => h.devices).length || 0})
                     </button>
@@ -2179,7 +2179,7 @@ export function DeviceControlPage({ onNavigate }) {
                         <button
                           key={room}
                           onClick={() => setSelectedRoom(room)}
-                          className={`px-4 py-2 rounded-lg transition-all font-semibold ${selectedRoom === room ? "bg-gradient-to-r from-bieon-eco to-bieon-sense text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                          className={`px-4 py-2 rounded-lg transition-all font-semibold ${selectedRoom === room ? "bg-gradient-to-r from-bieon-eco to-green-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                         >
                           {room} ({deviceCount})
                         </button>

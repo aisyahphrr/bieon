@@ -100,7 +100,7 @@
   --color-surface-main: #f8fafc;
   --color-surface-card: #ffffff;
   --color-text-dim: #64748b;
-  --color-text-headline: #0f172a;
+  --color-text-headline: #334155;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -285,23 +285,44 @@ html {
   background-image: none !important;
   color: #064e3b !important;
 }
+
 .theme-card-light h3,
 .theme-card-light .text-white {
   color: #064e3b !important;
 }
+
 .theme-card-light p,
 .theme-card-light .text-eco-100,
 .theme-card-light .text-eco-100\/70 {
   color: #047857 !important;
 }
+
 .theme-card-light .bg-white\/10 {
   background-color: rgba(6, 78, 59, 0.06) !important;
   border-color: rgba(6, 78, 59, 0.12) !important;
   color: #064e3b !important;
 }
+
 .theme-card-light .backdrop-blur-sm {
   color: #064e3b !important;
 }
+
 .theme-card-light svg {
   color: #059b27 !important;
-}
+}
+
+@keyframes bounceSlow {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounceSlow 3.5s ease-in-out infinite;
+}

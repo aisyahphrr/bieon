@@ -114,14 +114,14 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
-      <div className="relative bg-white/90 backdrop-blur-3xl rounded-[24px] sm:rounded-3xl shadow-eco/30 w-full sm:max-w-[420px] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in duration-500 border border-white/50">
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300 p-0 sm:p-4">
+      <div className="relative bg-white/95 backdrop-blur-3xl rounded-t-[32px] sm:rounded-[36px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full sm:max-w-[420px] overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-10 duration-300 border-0">
         
         {/* Ambient Top Glow */}
         <div className="absolute top-0 left-1/4 right-1/4 h-32 bg-eco/20 blur-[50px] rounded-full pointer-events-none"></div>
 
         {/* Header Section */}
-        <div className="px-8 pt-8 pb-4 relative z-10 shrink-0 border-b border-gray-100/50">
+        <div className="px-8 pt-8 pb-4 relative z-10 shrink-0 border-0">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
               {view === 'main' ? t('profile.title') : t('profile.edit_title')}
@@ -131,9 +131,9 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                 if (view !== 'main') setView('main');
                 else onClose();
               }} 
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-400"
+              className="p-2 hover:bg-slate-100 hover:text-slate-600 rounded-2xl transition-all duration-300 text-gray-400"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -151,15 +151,16 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
           {view === 'main' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 pt-6">
               {/* Avatar Section */}
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
                 <div className="relative mb-4 group cursor-pointer" onClick={() => setView('edit')}>
-                  <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-eco/25 bg-slate-50 relative group-hover:scale-105 transition-transform duration-300">
+                  <div className="absolute -inset-1.5 bg-gradient-to-r from-eco to-green-600 rounded-full blur opacity-45 group-hover:opacity-80 transition duration-500 group-hover:scale-105"></div>
+                  <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-xl bg-slate-50 relative group-hover:scale-105 transition-transform duration-300">
                     <img 
                       src={profilePic} 
                       alt="Avatar" 
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                        <Edit2 className="w-6 h-6 text-white" />
                     </div>
                   </div>
@@ -175,7 +176,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               </div>
 
               {/* Info Details Glass Card */}
-              <div className="space-y-4 p-5 bg-slate-50/50 rounded-2xl border border-slate-100/50 shadow-sm">
+              <div className="space-y-4 p-5 bg-slate-50/50 rounded-2xl border-0 shadow-sm">
                 <div className="flex justify-between items-center text-[13px]">
                   <span className="font-bold text-slate-500">{t('profile.phone')}</span>
                   <span className="font-bold text-slate-700">{formData.phoneNo}</span>
@@ -219,14 +220,14 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                           if (onNavigate) onNavigate('kendali');
                           else navigate('/kendali');
                         }}
-                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-eco hover:shadow-md transition-all group cursor-pointer"
+                        className="flex items-center gap-4 p-4 rounded-2xl border-0 bg-slate-50/50 hover:bg-white hover:shadow-[0_8px_30px_rgba(5,155,39,0.12)] transition-all duration-300 group cursor-pointer"
                       >
-                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-sm border border-eco/10 group-hover:bg-eco/5 transition-colors flex items-center justify-center bg-white">
-                          <Cpu className="w-6 h-6 text-eco" />
+                        <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 shadow-sm border-0 group-hover:bg-eco/5 transition-all duration-300 flex items-center justify-center bg-white">
+                          <Cpu className="w-6 h-6 text-eco group-hover:text-eco transition-colors duration-300" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-[14px] font-bold text-slate-800 tracking-tight group-hover:text-eco transition-colors">{sys.bieonId === userProfile.bieonId ? 'Master BIEON System' : 'BIEON System'}</div>
-                          <div className="text-[12px] font-bold text-eco font-mono mt-0.5">{sys.bieonId}</div>
+                          <div className="text-[14px] font-bold text-slate-800 tracking-tight group-hover:text-eco transition-colors duration-300">{sys.bieonId === userProfile.bieonId ? 'Master BIEON System' : 'BIEON System'}</div>
+                          <div className="text-[12px] font-bold text-eco group-hover:text-eco font-mono mt-0.5 transition-colors duration-300">{sys.bieonId}</div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${sys.status === 'Active' ? 'bg-eco/10 text-eco' : sys.status === 'Inactive' ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-600'}`}>
@@ -237,7 +238,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-slate-400 text-sm font-medium border border-dashed border-slate-200 rounded-xl">
+                    <div className="text-center py-8 text-slate-400 text-sm font-medium border-0 bg-slate-50/50 rounded-xl">
                       {t('profile.no_device')}
                     </div>
                   )}
@@ -251,23 +252,25 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                 <div className="relative">
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === 'language' ? null : 'language')}
-                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 ${
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border-0 transition-all duration-300 ${
                       openDropdown === 'language' 
-                      ? 'bg-white border-eco shadow-lg shadow-eco/10 ring-4 ring-eco/5' 
-                      : 'bg-slate-50/50 border-slate-200 hover:border-eco/30 hover:bg-white'
+                      ? 'bg-white shadow-lg shadow-eco/10 ring-4 ring-eco/5'
+                      : 'bg-slate-50/50 hover:bg-white'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-eco/10 text-eco flex items-center justify-center font-bold text-[10px]">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-[10px] bg-eco/10 text-eco">
                         {i18n.language === 'id' ? 'ID' : 'EN'}
                       </div>
                       <span className="text-[14px] font-bold text-slate-700">{i18n.language === 'id' ? t('profile.lang_id') : t('profile.lang_en')}</span>
                     </div>
-                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${openDropdown === 'language' ? 'rotate-180 text-eco' : ''}`} />
+                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${
+                      openDropdown === 'language' ? 'rotate-180 text-eco' : ''
+                    }`} />
                   </button>
 
                   {openDropdown === 'language' && (
-                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in slide-in-from-bottom-2 duration-200">
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border-0 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in slide-in-from-bottom-2 duration-200">
                       <div 
                         onClick={() => { 
                           i18n.changeLanguage('en');
@@ -285,7 +288,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                           localStorage.setItem('bieon_language', 'id');
                           setOpenDropdown(null); 
                         }}
-                        className="flex items-center justify-between p-3.5 hover:bg-eco/5 cursor-pointer group transition-colors border-t border-slate-50"
+                        className="flex items-center justify-between p-3.5 hover:bg-eco/5 cursor-pointer group transition-colors border-0"
                       >
                         <span className={`text-sm font-bold ${i18n.language === 'id' ? 'text-eco' : 'text-slate-600 group-hover:text-eco'}`}>{t('profile.lang_id')}</span>
                         {i18n.language === 'id' && <Check className="w-4 h-4 text-eco" />}
@@ -343,24 +346,25 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               {/* Editable Avatar */}
               <div className="flex flex-col items-center pt-2">
                 <div 
-                  className="relative mb-2 group cursor-pointer" 
+                  className="relative mb-3 group cursor-pointer" 
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-[0_4px_20px_rgba(0,155,124,0.15)] bg-slate-50 transition-transform duration-300 group-hover:scale-105">
+                  <div className="absolute -inset-1.5 bg-gradient-to-r from-eco to-green-600 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-500 group-hover:scale-105"></div>
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl bg-slate-50 transition-transform duration-300 group-hover:scale-105 relative">
                     <img 
                       src={profilePic} 
                       alt="Avatar" 
                       className="w-full h-full object-cover group-hover:opacity-60 transition-opacity"
                     />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Camera className="w-8 h-8 text-white" />
+                    <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Camera className="w-8 h-8 text-white animate-pulse" />
                     </div>
                   </div>
                   <div className="absolute bottom-0 right-0 bg-eco w-7 h-7 rounded-full flex items-center justify-center border-2 border-white text-white shadow-md">
                     <Plus className="w-4 h-4" />
                   </div>
                 </div>
-                <span className="text-[11px] font-bold text-eco">{t('profile.change_photo')}</span>
+                <span className="text-[11px] font-bold text-eco uppercase tracking-wider">{t('profile.change_photo')}</span>
               </div>
 
               <div className="space-y-4 flex-1 px-1">
@@ -378,7 +382,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                       name={field.name}
                       value={formData[field.name]}
                       onChange={handleChange}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-eco focus:ring-4 focus:ring-eco/10 transition-all font-semibold shadow-sm"
+                      className="w-full bg-slate-50 border-0 rounded-xl px-4 py-3 text-[13px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-eco/10 transition-all font-semibold shadow-sm"
                     />
                   </div>
                 ))}
@@ -387,7 +391,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
               <div className="pt-6">
                 <button 
                   onClick={handleSave}
-                  className="w-full py-3.5 bg-eco text-white font-bold text-[14px] rounded-xl hover:bg-eco-900 shadow-lg shadow-eco/25 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-gradient-to-r from-eco to-green-600 text-white font-bold text-[14px] rounded-2xl hover:opacity-95 shadow-lg shadow-eco/15 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
                 >
                   <Check className="w-5 h-5" />
                   {t('profile.save_changes')}

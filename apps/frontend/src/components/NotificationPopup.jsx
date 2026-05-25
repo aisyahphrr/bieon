@@ -3,20 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Bell, AlertTriangle, Briefcase, 
   User, Award, Hourglass, Server, Activity, 
-  Fan, Flame, Zap, Lock, LogIn, CheckCircle, CheckCheck, MessageSquare
+  Fan, Flame, Zap, Lock, LogIn, CheckCircle, CheckCheck, MessageSquare, Droplets
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { mockNotifications } from '../features/dashboard/homeownerMockData';
 
 const typeStyles = {
-  danger: { border: 'border-red-100', bg: 'bg-red-50/50', iconText: 'text-red-500', iconBg: 'bg-red-100/50', icon: AlertTriangle, accent: 'border-red-500' },
-  warning: { border: 'border-amber-100', bg: 'bg-amber-50/50', iconText: 'text-amber-600', iconBg: 'bg-amber-100/50', icon: Zap, accent: 'border-amber-500' },
-  info: { border: 'border-sense/20', bg: 'bg-sense/5', iconText: 'text-sense', iconBg: 'bg-sense/10', icon: LogIn, accent: 'border-sense' },
-  success: { border: 'border-eco/20', bg: 'bg-eco/5', iconText: 'text-eco', iconBg: 'bg-eco/10', icon: CheckCircle, accent: 'border-eco' },
-  purple: { border: 'border-purple-100', bg: 'bg-purple-50/50', iconText: 'text-purple-600', iconBg: 'bg-purple-100/50', icon: Lock, accent: 'border-purple-500' },
-  sistem: { border: 'border-slate-100', bg: 'bg-slate-50/50', iconText: 'text-slate-600', iconBg: 'bg-slate-100/50', icon: Server, accent: 'border-slate-500' },
-  pengaduan: { border: 'border-orange-100', bg: 'bg-orange-50/50', iconText: 'text-orange-600', iconBg: 'bg-orange-100/50', icon: MessageSquare, accent: 'border-orange-500' },
-  water: { border: 'border-indigo-100', bg: 'bg-indigo-50/50', iconText: 'text-indigo-600', iconBg: 'bg-indigo-100/50', icon: Activity, accent: 'border-indigo-500' },
-  kenyamanan: { border: 'border-sense/20', bg: 'bg-sense/5', iconText: 'text-sense', iconBg: 'bg-sense/10', icon: Fan, accent: 'border-sense' }
+  danger: { iconText: 'text-alert-danger', iconBg: 'bg-alert-danger/10', icon: AlertTriangle, accent: 'border-l-alert-danger' },
+  warning: { iconText: 'text-alert-warning', iconBg: 'bg-alert-warning/10', icon: Zap, accent: 'border-l-alert-warning' },
+  info: { iconText: 'text-eco', iconBg: 'bg-eco/10', icon: LogIn, accent: 'border-l-eco' },
+  success: { iconText: 'text-eco', iconBg: 'bg-eco/10', icon: CheckCircle, accent: 'border-l-eco' },
+  sistem: { iconText: 'text-slate-600', iconBg: 'bg-slate-100', icon: Server, accent: 'border-l-slate-400' }
 };
 
 const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange, onNavigate }) => {
@@ -56,21 +53,64 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
   }, [isOpen, onClose]);
 
   const fetchNotifications = async () => {
-    if (!token) return;
+    setIsLoading(true);
+    let apiData = [];
     try {
-      setIsLoading(true);
-      const response = await fetch('/api/alerts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setNotifications(result.data || []);
+      if (token) {
+        const response = await fetch('/api/alerts', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          apiData = result.data || [];
+        }
       }
     } catch (error) {
-      console.error("Gagal mengambil notifikasi:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("Gagal mengambil notifikasi dari API, menggunakan fallback mock data:", error);
     }
+
+    // Merge apiData and mockNotifications
+    const normalizedMock = mockNotifications.map(m => ({
+      _id: m._id,
+      title: m.title,
+      category: m.category,
+      message: m.message,
+      type: m.type,
+      isRead: m.isRead !== undefined ? m.isRead : (m.read !== undefined ? m.read : false),
+      isSeen: m.isSeen !== undefined ? m.isSeen : true,
+      date: m.createdAt || m.date || new Date().toISOString()
+    }));
+
+    const normalizedApi = apiData.map(a => ({
+      _id: a._id,
+      title: a.title,
+      category: a.category,
+      message: a.message,
+      type: a.type,
+      isRead: a.isRead !== undefined ? a.isRead : false,
+      isSeen: a.isSeen !== undefined ? a.isSeen : false,
+      date: a.date || a.createdAt || new Date().toISOString(),
+      metadata: a.metadata,
+      link: a.link
+    }));
+
+    // Deduplicate by title or _id
+    const merged = [...normalizedApi];
+    normalizedMock.forEach(mockItem => {
+      const exists = merged.some(apiItem => 
+        apiItem._id === mockItem._id || 
+        apiItem.title.toLowerCase().trim() === mockItem.title.toLowerCase().trim()
+      );
+      if (!exists) {
+        merged.push(mockItem);
+      }
+    });
+
+    // Sort chronologically (latest first)
+    merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    setNotifications(merged);
+    setIsLoading(false);
   };
 
   const markAllAsSeenSilent = async () => {
@@ -157,10 +197,12 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
       }
 
       // Update to backend
-      await fetch(`/api/alerts/${id}/read`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      if (token && id && !id.startsWith('notif-')) {
+        await fetch(`/api/alerts/${id}/read`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
     } catch (error) {
       console.error("Gagal menandai baca:", error);
     }
@@ -207,10 +249,10 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
           <h2 className="text-gray-900 font-bold text-[17px] tracking-tight">{t('notification.ui.title', 'Notifikasi')}</h2>
         </div>
         <div className="flex items-center gap-4">
-          <button onClick={resetReadStatus} className="text-[11px] text-gray-400 font-bold hover:text-gray-600 transition-colors uppercase tracking-wider">
+          <button onClick={resetReadStatus} className="text-[11px] text-gray-400 font-bold hover:text-gray-600 transition-colors tracking-wider">
             {t('notification.ui.reset', 'Reset')}
           </button>
-          <button onClick={markAllAsRead} className="text-[13px] text-eco font-bold hover:text-green-700 transition-colors">
+          <button onClick={markAllAsRead} className="text-[13px] text-eco font-bold hover:text-eco/80 transition-colors">
             {t('notification.ui.read_all', 'Baca Semua')}
           </button>
         </div>
@@ -226,26 +268,101 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
         ) : notifications.length > 0 ? (
           notifications.map((notif) => {
             const msg = (notif.message + " " + notif.title + " " + (notif.category || '')).toLowerCase();
-            let type = notif.type?.toLowerCase();
+            let resolvedType = 'info';
+            let Icon = Bell; // fallback if not found
 
             const category = notif.category?.toLowerCase();
-            if (category === 'keamanan') type = 'purple';
-            else if (category === 'air sanitasi' || category === 'kualitas air') type = 'water';
-            else if (category === 'kenyamanan') type = 'kenyamanan';
-            else if (category === 'energi') type = 'warning';
-            else if (category === 'pengaduan') type = 'pengaduan';
-            else if (category === 'sistem') type = 'sistem';
-            else if (!type || !typeStyles[type]) {
-               if (msg.includes('bahaya') || msg.includes('gas') || msg.includes('melebihi')) type = 'danger';
-               else if (msg.includes('waspada') || msg.includes('token') || msg.includes('peringatan')) type = 'warning';
-               else if (msg.includes('gerak') || msg.includes('pintu') || msg.includes('keamanan')) type = 'purple';
-               else if (msg.includes('berhasil') || msg.includes('selesai') || msg.includes('optimal')) type = 'success';
-               else type = 'info';
+
+            // 1. Dynamic category and keyword to typeStyles mapping
+            if (category === 'keamanan') {
+              if (msg.includes('bahaya') || msg.includes('akses tidak sah') || msg.includes('terobos') || msg.includes('kebocoran') || msg.includes('critical')) {
+                resolvedType = 'danger';
+              } else if (msg.includes('gerak') || msg.includes('terbuka') || msg.includes('waspada') || msg.includes('warning') || msg.includes('anomaly')) {
+                resolvedType = 'warning';
+              } else {
+                resolvedType = 'success';
+              }
+            } else if (category === 'air sanitasi' || category === 'kualitas air') {
+              if (msg.includes('tidak layak') || msg.includes('kritis') || msg.includes('bahaya') || msg.includes('ph') || msg.includes('extreme') || msg.includes('danger')) {
+                resolvedType = 'danger';
+              } else if (msg.includes('waspada') || msg.includes('warning')) {
+                resolvedType = 'warning';
+              } else {
+                resolvedType = 'info';
+              }
+            } else if (category === 'kenyamanan') {
+              if (msg.includes('bahaya') || msg.includes('extreme') || msg.includes('panas')) {
+                resolvedType = 'danger';
+              } else if (msg.includes('waspada') || msg.includes('warning')) {
+                resolvedType = 'warning';
+              } else {
+                resolvedType = 'info';
+              }
+            } else if (category === 'energi') {
+              if (msg.includes('melebihi') || msg.includes('limit') || msg.includes('kritis') || msg.includes('habis') || msg.includes('over capacity')) {
+                resolvedType = 'danger';
+              } else if (msg.includes('lemah') || msg.includes('waspada') || msg.includes('warning') || msg.includes('terlalu rendah')) {
+                resolvedType = 'warning';
+              } else if (msg.includes('berhasil') || msg.includes('diperbarui') || msg.includes('success')) {
+                resolvedType = 'success';
+              } else {
+                resolvedType = 'info';
+              }
+            } else if (category === 'pengaduan') {
+              if (msg.includes('selesai') || msg.includes('rating') || msg.includes('berhasil') || msg.includes('ditutup')) {
+                resolvedType = 'success';
+              } else if (msg.includes('overdue') || msg.includes('sla') || msg.includes('warning') || msg.includes('menunggu konfirmasi')) {
+                resolvedType = 'warning';
+              } else if (msg.includes('ditolak') || msg.includes('dibatalkan')) {
+                resolvedType = 'danger';
+              } else {
+                resolvedType = 'info';
+              }
+            } else if (category === 'sistem') {
+              if (msg.includes('offline') || msg.includes('terputus') || msg.includes('critical') || msg.includes('danger')) {
+                resolvedType = 'danger';
+              } else if (msg.includes('lemah') || msg.includes('baterai') || msg.includes('warning') || msg.includes('waspada')) {
+                resolvedType = 'warning';
+              } else {
+                resolvedType = 'sistem';
+              }
+            } else {
+              // Fallback based on message keywords
+              if (msg.includes('bahaya') || msg.includes('gas') || msg.includes('melebihi') || msg.includes('critical') || msg.includes('offline') || msg.includes('terputus')) {
+                resolvedType = 'danger';
+              } else if (msg.includes('waspada') || msg.includes('token') || msg.includes('peringatan') || msg.includes('warning') || msg.includes('baterai')) {
+                resolvedType = 'warning';
+              } else if (msg.includes('berhasil') || msg.includes('selesai') || msg.includes('optimal') || msg.includes('aman') || msg.includes('success')) {
+                resolvedType = 'success';
+              } else if (msg.includes('sistem') || msg.includes('update') || msg.includes('firmware')) {
+                resolvedType = 'sistem';
+              } else {
+                resolvedType = 'info';
+              }
             }
 
+            // 2. Dynamically assign tailored Lucide icons
+            if (category === 'keamanan') {
+              Icon = (resolvedType === 'danger' || resolvedType === 'warning') ? AlertTriangle : Lock;
+            } else if (category === 'air sanitasi' || category === 'kualitas air') {
+              Icon = Droplets;
+            } else if (category === 'kenyamanan') {
+              Icon = Fan;
+            } else if (category === 'energi') {
+              Icon = Zap;
+            } else if (category === 'pengaduan') {
+              Icon = (resolvedType === 'success') ? CheckCircle : MessageSquare;
+            } else if (category === 'sistem') {
+              Icon = (resolvedType === 'danger' || resolvedType === 'warning') ? AlertTriangle : Server;
+            } else {
+              if (resolvedType === 'danger') Icon = AlertTriangle;
+              else if (resolvedType === 'warning') Icon = Zap;
+              else if (resolvedType === 'success') Icon = CheckCircle;
+              else if (resolvedType === 'sistem') Icon = Server;
+              else Icon = Bell;
+            }
 
-            const style = typeStyles[type] || typeStyles.info;
-            const Icon = style.icon;
+            const style = typeStyles[resolvedType] || typeStyles.info;
 
             const getLocalizedCategory = (text) => {
               if (!text) return t('notification.ui.title', 'Notifikasi');
@@ -331,24 +448,24 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
               return text;
             };
 
-            return (
+             return (
               <div 
                 key={notif._id} 
                 onClick={() => handleRead(notif)}
-                className={`group relative rounded-[24px] p-4 border border-l-[6px] transition-all duration-300 cursor-pointer overflow-hidden
+                className={`group relative rounded-2xl p-4 border border-slate-100 border-l-4 transition-all duration-300 cursor-pointer overflow-hidden
                   ${notif.isRead 
-                    ? 'bg-gray-50/40 border-gray-100 opacity-60 grayscale-[0.5]' 
-                    : `${style.bg} ${style.border} ${style.accent} hover:scale-[1.02] shadow-sm hover:shadow-md active:scale-95`
+                    ? `bg-white border-l-slate-200` 
+                    : `bg-white ${style.accent} hover:scale-[1.02] shadow-sm hover:shadow-md active:scale-95`
                   }`}
               >
                 <div className="flex gap-4 relative z-10">
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-300
-                    ${notif.isRead ? 'bg-gray-200' : style.iconBg}`}>
-                    <Icon className={`w-5 h-5 ${notif.isRead ? 'text-gray-500' : style.iconText}`} strokeWidth={2.5} />
+                    ${notif.isRead ? 'bg-slate-100 text-slate-400' : `${style.iconBg} ${style.iconText}`}`}>
+                    <Icon className="w-5 h-5" strokeWidth={2.5} />
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h4 className={`text-sm font-bold truncate mb-0.5 ${notif.isRead ? 'text-gray-600' : 'text-gray-900'}`}>
+                    <h4 className={`text-sm font-bold truncate mb-0.5 ${notif.isRead ? 'text-slate-500' : 'text-gray-900'}`}>
                       {(() => {
                         const titleStr = (notif.title || "").toLowerCase();
                         let smartType = null;

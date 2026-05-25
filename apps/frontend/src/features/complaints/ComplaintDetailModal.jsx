@@ -554,18 +554,18 @@ export function ComplaintDetailModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
-            <div className="w-full max-w-[1200px] h-full max-h-[95vh] flex flex-col relative animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/60 backdrop-blur-md">
+            <div className="w-full sm:max-w-[1200px] h-full sm:max-h-[95vh] flex flex-col relative animate-in fade-in zoom-in duration-300">
 
                 {/* HEADER AREA */}
-                <div className="flex items-center gap-4 mb-8 shrink-0 mt-4 px-2 lg:px-4 hidden md:flex">
+                <div className="flex items-center gap-4 mb-4 md:mb-8 shrink-0 mt-4 px-4 lg:px-4">
                     <button
                         onClick={onClose}
-                        className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-bold border border-gray-200 hover:bg-gray-50 transition-all active:scale-95"
+                        className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-bold border border-gray-200 hover:bg-gray-50 transition-all active:scale-95 shrink-0"
                     >
                         <ArrowLeft className="w-4 h-4" /> Kembali
                     </button>
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <h2 className="text-base md:text-2xl font-bold text-white flex items-center gap-3 truncate">
                         {title}
                         {isRefreshing && (
                             <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
@@ -574,14 +574,6 @@ export function ComplaintDetailModal({
                             </div>
                         )}
                     </h2>
-                </div>
-
-                {/* MOBILE HEADER */}
-                <div className="flex justify-between items-center mb-6 shrink-0 md:hidden px-2">
-                    <button onClick={onClose} className="flex items-center gap-2 text-white font-bold">
-                        <ArrowLeft className="w-5 h-5" /> Kembali
-                    </button>
-                    <h2 className="text-xl font-bold text-white">{title}</h2>
                 </div>
 
                 <style>{`
@@ -661,19 +653,23 @@ export function ComplaintDetailModal({
                                     <div className="grid grid-cols-2 gap-y-6 gap-x-4 pb-6 border-b border-gray-50">
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">{t('complaint.detail_box.category', 'Kategori')}</p>
-                                            <p className="font-semibold text-sm text-gray-800">{localTicket.category}</p>
+                                            <p className="font-medium text-sm text-gray-800">{localTicket.category}</p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">{t('complaint.detail_box.device', 'Ruangan & Perangkat')}</p>
-                                            <p className="font-semibold text-sm text-gray-800">{localTicket.device}</p>
+                                            <p className="font-medium text-sm text-gray-800">{localTicket.device}</p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">{t('complaint.detail_box.date_in', 'Tanggal Masuk')}</p>
+                                            <p className="font-medium text-sm text-gray-800">
                                                 {formatDisplayTime(localTicket.timeline?.[localTicket.timeline.length - 1]?.time || localTicket.createdAt)}
+                                            </p>
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">{t('complaint.detail_box.last_update', 'Terakhir Update')}</p>
+                                            <p className="font-medium text-sm text-gray-800">
                                                 {formatDisplayTime(localTicket.timeline?.[0]?.time || localTicket.updatedAt || localTicket.createdAt)}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -1065,28 +1061,35 @@ export function ComplaintDetailModal({
             {/* MODAL: RATING (Homeowner) */}
             {isRatingModalOpen && (
                 <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-eco rounded-[2.5rem] p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-300">
-                        <button onClick={() => setIsRatingModalOpen(false)} className="absolute top-4 right-4 text-white/50 hover:text-white"><X className="w-6 h-6" /></button>
-                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 text-8xl drop-shadow-2xl animate-bounce">
-                            {ratingStars >= 5 ? '🤩' : ratingStars >= 4 ? '😊' : ratingStars >= 3 ? '😐' : ratingStars >= 1 ? '🙁' : '😍'}
+                    <div className="bg-eco-50 rounded-[2.5rem] p-8 max-w-lg w-full text-center relative shadow-2xl animate-in zoom-in duration-300">
+                        <button onClick={() => setIsRatingModalOpen(false)} className="absolute top-4 right-4 text-text-dim hover:text-text-headline"><X className="w-6 h-6" /></button>
+                        {/* Floating Emoji Badge */}
+                        <div className="absolute -top-16 sm:-top-24 left-1/2 -translate-x-1/2">
+                            <div className="w-32 h-32 sm:w-44 sm:h-44 bg-eco/5 backdrop-blur-md rounded-full flex items-center justify-center shadow-2xl border-4 border-eco/20 relative group transition-transform hover:scale-105 duration-500">
+                                <div className="absolute inset-0 bg-eco/5 rounded-full animate-pulse"></div>
+                                <span className="text-7xl sm:text-8xl drop-shadow-[0_20px_20px_rgba(0,0,0,0.15)] animate-bounce-slow relative z-10">
+                                    {ratingStars >= 5 ? '🤩' : ratingStars >= 4 ? '😊' : ratingStars >= 3 ? '😐' : ratingStars >= 1 ? '🙁' : '🤩'}
+                                </span>
+                            </div>
                         </div>
-                        <div className="pt-12">
-                            <h2 className="text-2xl font-black text-white mb-2 tracking-tight uppercase">{t('complaint.action.homeowner.rating_popup_title', 'Beri Penilaian Perbaikan')}</h2>
-                            <p className="text-white/80 text-sm mb-8 leading-relaxed font-medium">{t('complaint.action.homeowner.rating_popup_desc', 'Silakan beri bintang dan ulasan untuk teknisi kami yang menangani masalah Anda.')}</p>
+                        {/* Added large top padding to prevent the emoji from covering the text */}
+                        <div className="pt-20 sm:pt-28">
+                            <h2 className="text-xl font-bold text-text-headline mb-2 tracking-tight uppercase">{t('complaint.action.homeowner.rating_popup_title', 'Beri Penilaian Perbaikan')}</h2>
+                            <p className="text-text-dim text-sm mb-8 leading-relaxed font-medium">{t('complaint.action.homeowner.rating_popup_desc', 'Silakan beri bintang dan ulasan untuk teknisi kami yang menangani masalah Anda.')}</p>
                             <div className="flex justify-center gap-3 mb-8">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <button key={star} onMouseEnter={() => setHoverStars(star)} onMouseLeave={() => setHoverStars(0)} onClick={() => setRatingStars(star)} className="transition-all hover:scale-125 active:scale-95">
-                                        <Star className={`w-12 h-12 ${(hoverStars || ratingStars) >= star ? "fill-amber-300 text-amber-300" : "fill-white/20 text-white/20"} transition-colors duration-200`} />
+                                        <Star className={`w-12 h-12 ${(hoverStars || ratingStars) >= star ? "fill-alert-warning text-alert-warning" : "fill-slate-200 text-slate-200"} transition-colors duration-200`} />
                                     </button>
                                 ))}
                             </div>
-                            <div className="bg-white/10 rounded-3xl p-1 mb-8 border border-white/10">
-                                <textarea value={ratingReview} onChange={(e) => setRatingReview(e.target.value)} placeholder={t('complaint.action.homeowner.rating_placeholder', 'Tulis pengalaman Anda tentang perbaikan ini...')} className="w-full bg-transparent border-none rounded-2xl p-5 text-white text-sm h-32 focus:ring-0 placeholder:text-white/40" />
+                            <div className="bg-white rounded-3xl p-1 mb-8 shadow-sm">
+                                <textarea value={ratingReview} onChange={(e) => setRatingReview(e.target.value)} placeholder={t('complaint.action.homeowner.rating_placeholder', 'Tulis pengalaman Anda tentang perbaikan ini...')} className="w-full bg-transparent border-none rounded-2xl p-5 text-slate-800 text-sm h-32 focus:ring-0 placeholder:text-slate-400" />
                             </div>
                             <button 
                                 onClick={() => handleStatusUpdate('selesai', '', { stars: ratingStars, review: ratingReview })} 
                                 disabled={ratingStars === 0 || isSubmitting} 
-                                className="w-full py-4 bg-white text-eco font-black rounded-2xl shadow-xl hover:bg-eco/5 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale uppercase tracking-widest text-xs"
+                                className="w-full py-4 bg-eco text-white font-black rounded-2xl shadow-xl hover:bg-eco/90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale uppercase tracking-widest text-xs"
                             >
                                 {isSubmitting ? t('complaint.detail_box.sending', 'Mengirim...') : t('complaint.action.homeowner.submit_rating', 'Kirim Penilaian')}
                             </button>

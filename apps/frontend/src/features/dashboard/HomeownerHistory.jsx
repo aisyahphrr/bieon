@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
     Search,
     Filter,
@@ -10,6 +10,7 @@ import {
     ArrowUp,
     ArrowUpDown,
     ChevronDown,
+    ChevronUp,
     ChevronLeft,
     ChevronRight,
     Loader2,
@@ -27,26 +28,26 @@ import { mockHistoryData } from './homeownerMockData';
 
 // Helper to decode JWT token safely in browser
 function getEmailFromToken() {
-  try {
-    const localEmail = localStorage.getItem('email');
-    if (localEmail) return localEmail;
+    try {
+        const localEmail = localStorage.getItem('email');
+        if (localEmail) return localEmail;
 
-    const token = localStorage.getItem('token');
-    if (!token) return '';
+        const token = localStorage.getItem('token');
+        if (!token) return '';
 
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      window.atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    const decoded = JSON.parse(jsonPayload);
-    return decoded.email || '';
-  } catch (error) {
-    return '';
-  }
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            window.atob(base64)
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        const decoded = JSON.parse(jsonPayload);
+        return decoded.email || '';
+    } catch (error) {
+        return '';
+    }
 }
 
 export function HomeownerHistory({ onNavigate }) {
@@ -65,6 +66,26 @@ export function HomeownerHistory({ onNavigate }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [showRowsDropdown, setShowRowsDropdown] = useState(false);
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+    const tabsRef = useRef(null);
+    const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
+
+    // ---- Scroll handling for tabs ----
+    const handleTabsScroll = () => {
+        if (tabsRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = tabsRef.current;
+            // Use tolerance of 2px to handle rounding issues
+            setIsScrolledToEnd(Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2);
+        }
+    };
+
+    useEffect(() => {
+        handleTabsScroll();
+        window.addEventListener('resize', handleTabsScroll);
+        return () => window.removeEventListener('resize', handleTabsScroll);
+    }, []);
+
+
+
 
     const tabs = [
         { id: 'Kenyamanan', full: t('history.comfort'), short: t('history.comfort'), endpoint: '/api/history/environment' },
@@ -107,13 +128,13 @@ export function HomeownerHistory({ onNavigate }) {
         };
 
         if (tabId === 'Kenyamanan') {
-            return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity, rawStatus: item.status };
+            return { ...base, room: item.room, temp: item.avgTemperature, humidity: item.avgHumidity, status: item.status, rawStatus: item.status };
         }
         if (tabId === 'Keamanan') {
-            return { ...base, room: item.room, rawDoor: item.door, rawMotion: item.motion, rawStatus: item.status };
+            return { ...base, room: item.room, rawDoor: item.door, rawMotion: item.motion, status: item.status, rawStatus: item.status };
         }
         if (tabId === 'Kualitas Air') {
-            return { ...base, device: item.device, ph: item.ph, turbidity: item.turbidity, temp: item.temperature, tds: item.tds, rawStatus: item.status };
+            return { ...base, device: item.device, ph: item.ph, turbidity: item.turbidity, temp: item.temperature, tds: item.tds, status: item.status, rawStatus: item.status };
         }
         if (tabId === 'Konsumsi Energi') {
             return {
@@ -127,17 +148,21 @@ export function HomeownerHistory({ onNavigate }) {
             };
         }
         if (tabId === 'Log Perangkat') {
-            return { ...base, room: item.room, actuator: item.actuator, rawStatus: item.status, trigger: item.trigger };
+            return { ...base, room: item.room, actuator: item.actuator, status: item.status, rawStatus: item.status, trigger: item.trigger };
         }
         if (tabId === 'Notifikasi & Alert') {
-            return { 
-                ...base, 
+            return {
+                ...base,
                 device: item.room || item.deviceName || t('history.general', 'Umum'),
-                rawCategory: item.category, 
-                rawStatus: item.status || item.type, 
+                kategori: item.category,
+                rawCategory: item.category,
+                category: item.category,
+                tingkat_bahaya: item.status || item.type,
+                status: item.status || item.type,
+                rawStatus: item.status || item.type,
                 messageKey: item.messageKey,
                 metadata: item.metadata,
-                rawMessage: item.message 
+                rawMessage: item.message
             };
         }
         return item;
@@ -198,29 +223,48 @@ export function HomeownerHistory({ onNavigate }) {
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
             filtered = filtered.filter(item => {
-                const timeStr = item.time.toLowerCase();
-                const statusStr = item.status ? item.status.toLowerCase() : '';
+                const timeStr = String(item.time ?? '').toLowerCase();
+                const statusStr = String(item.status ?? '').toLowerCase();
+                const roomStr = String(item.room ?? '').toLowerCase();
+                const deviceStr = String(item.device ?? '').toLowerCase();
 
                 if (activeTab === 'Kenyamanan') {
-                    return timeStr.includes(q) || item.room.toLowerCase().includes(q) || statusStr.includes(q) ||
-                        item.temp.toString().toLowerCase().includes(q) || item.humidity.toLowerCase().includes(q);
+                    const tempStr = String(item.temp ?? '').toLowerCase();
+                    const humidityStr = String(item.humidity ?? '').toLowerCase();
+                    return timeStr.includes(q) || roomStr.includes(q) || statusStr.includes(q) ||
+                        tempStr.includes(q) || humidityStr.includes(q);
                 } else if (activeTab === 'Keamanan') {
-                    return timeStr.includes(q) || item.room.toLowerCase().includes(q) || statusStr.includes(q) ||
-                        item.door.toLowerCase().includes(q) || item.motion.toLowerCase().includes(q);
+                    const doorStr = String(item.door ?? '').toLowerCase();
+                    const motionStr = String(item.motion ?? '').toLowerCase();
+                    return timeStr.includes(q) || roomStr.includes(q) || statusStr.includes(q) ||
+                        doorStr.includes(q) || motionStr.includes(q);
                 } else if (activeTab === 'Kualitas Air') {
-                    return timeStr.includes(q) || item.device.toLowerCase().includes(q) || statusStr.includes(q) ||
-                        item.ph.toString().toLowerCase().includes(q) || item.turbidity.toLowerCase().includes(q) ||
-                        item.temp.toLowerCase().includes(q) || item.tds.toLowerCase().includes(q);
+                    const phStr = String(item.ph ?? '').toLowerCase();
+                    const turbidityStr = String(item.turbidity ?? '').toLowerCase();
+                    const tempStr = String(item.temp ?? '').toLowerCase();
+                    const tdsStr = String(item.tds ?? '').toLowerCase();
+                    return timeStr.includes(q) || deviceStr.includes(q) || statusStr.includes(q) ||
+                        phStr.includes(q) || turbidityStr.includes(q) ||
+                        tempStr.includes(q) || tdsStr.includes(q);
                 } else if (activeTab === 'Konsumsi Energi') {
-                    return timeStr.includes(q) || item.device.toLowerCase().includes(q) ||
-                        item.kwh.toLowerCase().includes(q) || item.voltage.toLowerCase().includes(q) ||
-                        item.current.toLowerCase().includes(q) || item.power.toLowerCase().includes(q) || item.pf.toLowerCase().includes(q);
+                    const kwhStr = String(item.kwh ?? '').toLowerCase();
+                    const voltageStr = String(item.voltage ?? '').toLowerCase();
+                    const currentStr = String(item.current ?? '').toLowerCase();
+                    const powerStr = String(item.power ?? '').toLowerCase();
+                    const pfStr = String(item.pf ?? '').toLowerCase();
+                    return timeStr.includes(q) || deviceStr.includes(q) ||
+                        kwhStr.includes(q) || voltageStr.includes(q) ||
+                        currentStr.includes(q) || powerStr.includes(q) || pfStr.includes(q);
                 } else if (activeTab === 'Log Perangkat') {
-                    return timeStr.includes(q) || item.room.toLowerCase().includes(q) || statusStr.includes(q) ||
-                        item.actuator.toLowerCase().includes(q) || item.trigger.toLowerCase().includes(q);
+                    const actuatorStr = String(item.actuator ?? '').toLowerCase();
+                    const triggerStr = String(item.trigger ?? '').toLowerCase();
+                    return timeStr.includes(q) || roomStr.includes(q) || statusStr.includes(q) ||
+                        actuatorStr.includes(q) || triggerStr.includes(q);
                 } else if (activeTab === 'Notifikasi & Alert') {
-                    return timeStr.includes(q) || item.rawCategory?.toLowerCase().includes(q) ||
-                        statusStr.includes(q) || (item.messageKey ? t(item.messageKey, item.metadata) : item.rawMessage || '').toLowerCase().includes(q);
+                    const rawCategoryStr = String(item.rawCategory ?? '').toLowerCase();
+                    const messageContent = (item.messageKey ? t(item.messageKey, item.metadata) : item.rawMessage || '').toString().toLowerCase();
+                    return timeStr.includes(q) || rawCategoryStr.includes(q) ||
+                        statusStr.includes(q) || messageContent.includes(q);
                 }
                 return false;
             });
@@ -230,6 +274,12 @@ export function HomeownerHistory({ onNavigate }) {
             filtered.sort((a, b) => {
                 let aVal = a[sortConfig.key];
                 let bVal = b[sortConfig.key];
+
+                if (['kategori', 'tingkat_bahaya', 'category', 'status', 'room', 'device', 'actuator', 'trigger'].includes(sortConfig.key)) {
+                    const aStr = String(aVal || '');
+                    const bStr = String(bVal || '');
+                    return sortConfig.direction === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+                }
 
                 if (sortConfig.key === 'temp' && activeTab === 'Kenyamanan') {
                     aVal = parseFloat(aVal);
@@ -283,6 +333,10 @@ export function HomeownerHistory({ onNavigate }) {
         setSortConfig({ key, direction });
     };
 
+    const handleSort = (key) => {
+        requestSort(key);
+    };
+
     const generateTableConfig = (tabId, data) => {
         let headers = [];
         let body = [];
@@ -308,7 +362,7 @@ export function HomeownerHistory({ onNavigate }) {
                 const titleStr = (e.rawStatus || "").toLowerCase();
                 const msgStr = (e.rawMessage || "").toLowerCase();
                 let smartType = null;
-                
+
                 // Detection Logic (Check Title first, then Message)
                 if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
                 else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
@@ -329,8 +383,8 @@ export function HomeownerHistory({ onNavigate }) {
                     // Regex to find ticket ID in quotes or 8-char alphanumeric
                     const ticketMatch = e.rawMessage.match(/"([^"]+)"/) || e.rawMessage.match(/\b[a-z0-9]{8}\b/);
                     const extractedTicket = e.metadata?.ticketId || e.metadata?.ticket || e.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
-                    
-                    localizedMsg = t(dynamicBodyKey, { 
+
+                    localizedMsg = t(dynamicBodyKey, {
                         ...e.metadata,
                         ticket: extractedTicket,
                         technician: e.metadata?.technicianName || e.metadata?.technician || e.metadata?.senderName || '',
@@ -343,11 +397,11 @@ export function HomeownerHistory({ onNavigate }) {
                         percent: e.metadata?.percent || ''
                     });
                 }
-                
+
                 return [
-                    formatDateTime(e.rawTime), 
-                    t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, e.rawCategory), 
-                    localizeStatus(e.rawStatus), 
+                    formatDateTime(e.rawTime),
+                    t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, e.rawCategory),
+                    localizeStatus(e.rawStatus),
                     localizedMsg
                 ];
             });
@@ -469,8 +523,12 @@ export function HomeownerHistory({ onNavigate }) {
     };
 
     const getSortIcon = (key) => {
-        if (sortConfig.key !== key) return <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />;
-        return sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-gray-600" /> : <ArrowDown className="w-3.5 h-3.5 text-gray-600" />;
+        if (sortConfig.key !== key) return <ArrowUpDown className="w-4 h-4 text-gray-400 inline-block ml-1" />;
+        return sortConfig.direction === 'asc' ? (
+            <ChevronUp className="w-4 h-4 text-gray-600 inline-block ml-1" />
+        ) : (
+            <ChevronDown className="w-4 h-4 text-gray-600 inline-block ml-1" />
+        );
     };
 
     return (
@@ -479,20 +537,20 @@ export function HomeownerHistory({ onNavigate }) {
             onNavigate={onNavigate}
             hideBottomNav={false}
         >
-            <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-6 md:py-8 font-sans">
+            <div className="max-w-[1900px] mx-auto px-4 sm:px-8 py-4 md:py-6 font-sans">
                 {/* Title Section */}
-                <div className="mb-8">
+                <div className="mb-4">
                     <h1 className="text-3xl font-bold text-text-headline">{t('history.title', 'Riwayat Aktivitas')}</h1>
                     <p className="text-gray-500 mt-1">{t('history.subtitle', 'Pantau log, aktivitas, dan notifikasi perangkat BIEON Anda')}</p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
-                    <div className="w-full lg:w-auto overflow-hidden">
+                <div className="flex flex-col lg:flex-row gap-5 w-full justify-between items-start lg:items-center mb-4">
+                    <div className="relative w-full lg:w-fit lg:max-w-[65%] xl:max-w-[70%] bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden p-0.5">
                         <style>{`
                             .tabs-scroll-container::-webkit-scrollbar { display: none; }
                             .tabs-scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
                         `}</style>
-                        <div className="flex bg-white rounded-xl border-t border-l border-gray-200 w-full lg:w-auto shadow-sm overflow-x-auto tabs-scroll-container flex-nowrap">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-0.5 w-full lg:flex lg:flex-row lg:overflow-x-auto lg:whitespace-nowrap scrollbar-hide tabs-scroll-container" ref={tabsRef} onScroll={handleTabsScroll}>
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
@@ -503,48 +561,51 @@ export function HomeownerHistory({ onNavigate }) {
                                         setSelectedRoomFilter('');
                                         setSortConfig({ key: 'time', direction: 'desc' });
                                     }}
-                                    className={`px-4 sm:px-6 py-3.5 text-[11px] sm:text-[13px] font-bold transition-all border-b border-r border-gray-200 shrink-0 whitespace-nowrap flex items-center justify-center ${activeTab === tab.id
-                                        ? 'bg-eco/5 text-eco border-b-2 border-b-eco'
+                                    className={`px-3 sm:px-6 py-2.5 md:py-3 text-[10px] sm:text-[13px] font-bold transition-all rounded-lg whitespace-nowrap flex items-center justify-center text-center ${activeTab === tab.id
+                                        ? 'bg-eco/10 text-eco border-b-2 border-eco'
                                         : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
-                                    <span className="hidden xl:inline">{tab.full}</span>
-                                    <span className="inline xl:hidden">{tab.short}</span>
+                                    {tab.id === 'Notifikasi & Alert' ? 'Notifikasi & Peringatan' : tab.full}
                                 </button>
 
                             ))}
                         </div>
+                        {/* Gradient Mask Presisi (Di dalam border kontainer) */}
+                        {!isScrolledToEnd && (
+                            <div className="hidden lg:block absolute right-0.5 top-0.5 bottom-0.5 w-20 bg-gradient-to-l from-white to-transparent pointer-events-none rounded-r-lg"></div>
+                        )}
                     </div>
 
 
-                    <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0 shrink-0">
-                        <div className="relative w-full sm:w-[150px] md:w-[220px] shrink group">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense transition-colors" />
+                    <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto shrink-0">
+                        <div className="relative flex-1 lg:w-[220px] group">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-eco transition-colors" />
                             <input
                                 type="text"
                                 placeholder={t('history.search')}
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-sense focus:ring-4 focus:ring-sense/15 bg-white transition-all"
+                                className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-eco focus:ring-4 focus:ring-eco/15 bg-white transition-all"
                             />
                         </div>
 
                         <div className="relative shrink-0">
                             <button
                                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                                className={`flex items-center justify-center gap-2 sm:px-4 py-2.5 w-10 sm:w-auto bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-sense ring-4 ring-sense/15' : 'border-gray-200 hover:bg-gray-50'}`}
+                                className={`flex items-center justify-center gap-2 sm:px-4 py-2.5 w-10 sm:w-auto bg-white border rounded-xl text-sm font-medium transition-all shadow-sm group ${showFilterDropdown ? 'border-eco ring-4 ring-eco/15' : 'border-gray-200 hover:bg-gray-50'}`}
                             >
-                                <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-sense' : 'text-gray-400'}`} />
+                                <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-eco' : 'text-gray-400'}`} />
                                 <span className={`hidden sm:inline ${selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}`}>
                                     {selectedRoomFilter ? (activeTab === 'Notifikasi & Alert' ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (
-                                        ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
-                                            ? t('history.all_devices') 
-                                            : activeTab === 'Notifikasi & Alert' 
-                                                ? t('history.all_categories') 
+                                        ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)
+                                            ? t('history.all_devices')
+                                            : activeTab === 'Notifikasi & Alert'
+                                                ? t('history.all_categories')
                                                 : t('history.all_rooms')
                                     )}
                                 </span>
-                                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-sense' : ''}`} />
+                                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showFilterDropdown ? 'rotate-180 text-eco' : ''}`} />
                             </button>
 
                             {showFilterDropdown && (
@@ -557,12 +618,12 @@ export function HomeownerHistory({ onNavigate }) {
                                                 setCurrentPage(1);
                                                 setShowFilterDropdown(false);
                                             }}
-                                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === '' ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedRoomFilter === '' ? 'text-eco bg-eco/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                         >
-                                            {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) 
-                                                ? t('history.all_devices') 
-                                                : activeTab === 'Notifikasi & Alert' 
-                                                    ? t('history.all_categories') 
+                                            {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)
+                                                ? t('history.all_devices')
+                                                : activeTab === 'Notifikasi & Alert'
+                                                    ? t('history.all_categories')
                                                     : t('history.all_rooms')}
                                         </button>
                                         {availableFilters.map(r => (
@@ -573,7 +634,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                     setCurrentPage(1);
                                                     setShowFilterDropdown(false);
                                                 }}
-                                                className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-eco bg-eco/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
                                                 {activeTab === 'Notifikasi & Alert' ? t(`notification.category.${r?.toLowerCase().replace(/\s+/g, '_')}`, r) : r}
                                             </button>
@@ -596,7 +657,7 @@ export function HomeownerHistory({ onNavigate }) {
                         <button
                             onClick={handleExportAllPDF}
                             disabled={isExportingAll}
-                            className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 bg-eco text-white rounded-xl hover:bg-eco-900 transition-all shadow-md font-semibold text-sm disabled:opacity-70 disabled:cursor-wait group"
+                            className="shrink-0 flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:px-5 sm:h-auto sm:py-2.5 bg-eco text-white rounded-xl hover:bg-eco-900 transition-all shadow-md font-semibold text-sm disabled:opacity-70 disabled:cursor-wait group"
                         >
                             {isExportingAll ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -620,38 +681,38 @@ export function HomeownerHistory({ onNavigate }) {
                         <table className="w-full text-left text-[13px] sm:text-[14px] text-gray-700 table-auto min-w-[600px] lg:min-w-[1000px]">
                             <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                                 <tr>
-                                    <th onClick={() => requestSort('time')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                    <th onClick={() => handleSort('time')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                         <div className="flex items-center gap-1">{t('history.columns.time')} {getSortIcon('time')}</div>
                                     </th>
 
                                     {activeTab === 'Notifikasi & Alert' && (
-                                        <th onClick={() => requestSort('category')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                            <div className="flex items-center gap-1">{t('history.columns.category')} {getSortIcon('category')}</div>
+                                        <th onClick={() => handleSort('kategori')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
+                                            <div className="flex items-center gap-1">{t('history.columns.category')} {getSortIcon('kategori')}</div>
                                         </th>
                                     )}
 
                                     {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
-                                        <th onClick={() => requestSort('device')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => handleSort('device')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">{t('history.columns.device')} {getSortIcon('device')}</div>
                                         </th>
                                     ) : activeTab === 'Notifikasi & Alert' ? null : (
-                                        <th onClick={() => requestSort('room')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => handleSort('room')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">{t('history.columns.room')} {getSortIcon('room')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Log Perangkat' && (
-                                        <th onClick={() => requestSort('actuator')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => handleSort('actuator')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">{t('history.columns.actuator')} {getSortIcon('actuator')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Kenyamanan' && (
                                         <>
-                                            <th onClick={() => requestSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.temperature')} {getSortIcon('temp')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('humidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('humidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.humidity')} {getSortIcon('humidity')}</div>
                                             </th>
                                         </>
@@ -659,10 +720,10 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Keamanan' && (
                                         <>
-                                            <th onClick={() => requestSort('door')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('door')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.door_sensor')} {getSortIcon('door')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('motion')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('motion')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.motion_sensor')} {getSortIcon('motion')}</div>
                                             </th>
                                         </>
@@ -670,16 +731,16 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Kualitas Air' && (
                                         <>
-                                            <th onClick={() => requestSort('ph')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('ph')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.ph')} {getSortIcon('ph')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('turbidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('turbidity')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.turbidity')} {getSortIcon('turbidity')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('temp')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.temperature')} {getSortIcon('temp')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('tds')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('tds')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.tds')} {getSortIcon('tds')}</div>
                                             </th>
                                         </>
@@ -687,36 +748,36 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Konsumsi Energi' && (
                                         <>
-                                            <th onClick={() => requestSort('kwh')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('kwh')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.energy')} {getSortIcon('kwh')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('voltage')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('voltage')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.voltage')} {getSortIcon('voltage')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('current')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('current')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.current')} {getSortIcon('current')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('power')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('power')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.power_load')} {getSortIcon('power')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('pf')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('pf')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.power_factor')} {getSortIcon('pf')}</div>
                                             </th>
                                         </>
                                     )}
 
                                     {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && activeTab !== 'Notifikasi & Alert' && (
-                                        <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                        <th onClick={() => handleSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                             <div className="flex items-center gap-1">{t('history.columns.status')} {getSortIcon('status')}</div>
                                         </th>
                                     )}
 
                                     {activeTab === 'Log Perangkat' && (
                                         <>
-                                            <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.status')} {getSortIcon('status')}</div>
                                             </th>
-                                            <th onClick={() => requestSort('trigger')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
+                                            <th onClick={() => handleSort('trigger')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
                                                 <div className="flex items-center gap-1">{t('history.columns.trigger')} {getSortIcon('trigger')}</div>
                                             </th>
                                         </>
@@ -724,8 +785,8 @@ export function HomeownerHistory({ onNavigate }) {
 
                                     {activeTab === 'Notifikasi & Alert' && (
                                         <>
-                                            <th onClick={() => requestSort('status')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                                                <div className="flex items-center gap-1">{t('history.columns.danger_level')} {getSortIcon('status')}</div>
+                                            <th onClick={() => handleSort('tingkat_bahaya')} className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal cursor-pointer hover:bg-slate-50 select-none transition-colors whitespace-nowrap">
+                                                <div className="flex items-center gap-1">{t('history.columns.danger_level')} {getSortIcon('tingkat_bahaya')}</div>
                                             </th>
                                             <th className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 font-normal whitespace-nowrap">
                                                 {t('history.columns.message_detail')}
@@ -813,7 +874,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                                 const titleStr = (item.rawStatus || "").toLowerCase();
                                                                 const msgStr = (item.rawMessage || "").toLowerCase();
                                                                 let smartType = null;
-                                                                
+
                                                                 // Detection Logic (Check Title first, then Message)
                                                                 if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
                                                                 else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
@@ -833,8 +894,8 @@ export function HomeownerHistory({ onNavigate }) {
                                                                     // Regex to find ticket ID in quotes or 8-char alphanumeric
                                                                     const ticketMatch = item.rawMessage.match(/"([^"]+)"/) || item.rawMessage.match(/\b[a-z0-9]{8}\b/);
                                                                     const extractedTicket = item.metadata?.ticketId || item.metadata?.ticket || item.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
-                                                                    
-                                                                    return t(dynamicBodyKey, { 
+
+                                                                    return t(dynamicBodyKey, {
                                                                         ...item.metadata,
                                                                         ticket: extractedTicket,
                                                                         technician: item.metadata?.technicianName || item.metadata?.technician || item.metadata?.senderName || '',
@@ -891,7 +952,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                             setCurrentPage(1);
                                                             setShowRowsDropdown(false);
                                                         }}
-                                                        className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-sense bg-sense/5 font-black' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                        className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${rowsPerPage === val ? 'text-eco bg-eco/5 font-black' : 'text-gray-600 hover:bg-gray-50'}`}
                                                     >
                                                         {val}
                                                     </button>
@@ -903,10 +964,10 @@ export function HomeownerHistory({ onNavigate }) {
                             </div>
 
                             <div className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap">
-                                {t('history.page_info', { 
-                                    current: totalItems > 0 ? startIndex + 1 : 0, 
-                                    last: Math.min(startIndex + rowsPerPage, totalItems), 
-                                    total: totalItems 
+                                {t('history.page_info', {
+                                    current: totalItems > 0 ? startIndex + 1 : 0,
+                                    last: Math.min(startIndex + rowsPerPage, totalItems),
+                                    total: totalItems
                                 })}
                             </div>
 

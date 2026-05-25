@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Home, Zap, Clock, MessageSquare, Bell, ChevronDown, ShieldAlert, CheckCircle2, SlidersHorizontal, History } from 'lucide-react';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerProfilePopup from './components/HomeownerProfilePopup';
 import { useTranslation } from 'react-i18next';
@@ -11,15 +11,15 @@ function TechReportModal({ isOpen, onClose, onSubmit }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center sm:p-4">
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-t-[32px] sm:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] max-w-md w-full p-6 sm:p-8 flex flex-col border-0 animate-in slide-in-from-bottom-10 duration-300">
         <h3 className="text-xl font-bold text-gray-900 mb-2">{t('nav.tech_mode')}</h3>
         <p className="text-gray-500 text-sm mb-4">{t('nav.warning_tech_mode')}</p>
         <textarea
           value={report}
           onChange={(e) => setReport(e.target.value)}
           placeholder="Tuliskan aktivitas dan status perangkat yang dikonfigurasi..."
-          className="w-full border-2 border-gray-300 rounded-xl p-4 focus:outline-none focus:border-orange-500 min-h-[120px] mb-4 text-sm"
+          className="w-full bg-slate-50 border-0 rounded-xl p-4 focus:outline-none focus:bg-white focus:ring-4 focus:ring-orange-500/15 min-h-[120px] mb-4 text-sm resize-none transition-all placeholder:text-gray-400"
         />
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 rounded-lg text-gray-500 font-semibold hover:bg-gray-100">{t('dashboard.cancel')}</button>
@@ -39,8 +39,9 @@ function TechReportModal({ isOpen, onClose, onSubmit }) {
 // Nav items shared between desktop navbar and mobile bottom nav
 const NAV_ITEMS = [
   { id: 'dashboard', labelKey: 'nav.dashboard', mobileIcon: Home },
-  { id: 'kendali', labelKey: 'nav.kendali', mobileIcon: Zap },
-  { id: 'history', labelKey: 'nav.history', mobileIcon: Clock },
+  { id: 'kendali', labelKey: 'nav.kendali', mobileIcon: SlidersHorizontal },
+  { id: 'pengaduan', labelKey: 'nav.complaint_tab', mobileIcon: MessageSquare },
+  { id: 'history', labelKey: 'nav.history', mobileIcon: History },
 ];
 
 export default function HomeownerLayout({ children, currentPage, onNavigate, hideBottomNav }) {
@@ -219,7 +220,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
     <div className="min-h-screen bg-surface-main flex flex-col font-sans">
 
       {/* Top Navbar */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm relative">
+      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border-0 relative">
         <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8">
           <div className="flex h-16 md:h-20 items-center justify-between gap-4">
 
@@ -230,13 +231,13 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 lg:gap-10">
-              {filteredNavItems.map(({ id, labelKey }) => (
+              {filteredNavItems.filter(item => item.id !== 'pengaduan').map(({ id, labelKey }) => (
                 <button
                   key={id}
                   onClick={() => navigate(`/${id}`)}
-                  className={`font-semibold pb-1 border-b-2 transition-all ${currentPage === id
-                      ? 'text-sense border-sense cursor-default'
-                      : 'text-gray-500 border-transparent hover:text-sense hover:border-sense'
+                  className={`font-semibold pb-1 border-b-2 transition-all text-sm ${currentPage === id
+                    ? 'text-[#0F172A] border-eco cursor-default font-bold'
+                    : 'text-[#0F172A]/70 border-transparent hover:text-[#0F172A] hover:border-eco'
                     }`}
                 >
                   {t(labelKey)}
@@ -251,19 +252,26 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               {!isTechnicianMode && (
                 <button
                   onClick={() => navigate('/pengaduan')}
-                  className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                  className="hidden md:flex relative p-[1.5px] bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 group font-bold"
                   title={t('nav.complaint')}
                 >
-                  <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
-                  <span className="hidden xl:block ml-2">{t('nav.complaint')}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-transparent text-white rounded-[10px] group-hover:bg-white group-hover:text-amber-600 transition-all duration-300 text-xs">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>{t('nav.complaint')}</span>
+                  </div>
                 </button>
               )}
 
+
+
               {!isTechnicianMode && (
                 <div className="relative flex">
-                  <button onClick={() => setShowNotif(!showNotif)} className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <Bell className="w-5 h-5 text-gray-600" />
-                    {hasUnread && <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
+                  <button
+                    onClick={() => setShowNotif(!showNotif)}
+                    className="relative p-2 text-eco hover:bg-eco/10 rounded-lg transition-all"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {hasUnread && <span className="absolute top-1 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}
                   </button>
                   <NotificationPopup
                     isOpen={showNotif}
@@ -276,25 +284,23 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
               )}
 
               {/* Premium Language Pill Toggle */}
-              <div className="flex items-center bg-sense/10 p-0.5 rounded-xl border border-sense/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
+              <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] shrink-0 select-none">
                 <button
                   onClick={() => handleLanguageChange('id')}
-                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
-                    currentLang === 'id'
-                      ? 'bg-white text-sense shadow-sm border border-sense/10 scale-100'
-                      : 'text-slate-400 hover:text-sense bg-transparent'
-                  }`}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${currentLang === 'id'
+                    ? 'bg-white text-eco shadow-sm border-0 scale-100'
+                    : 'text-slate-400 hover:text-eco bg-transparent'
+                    }`}
                   title="Bahasa Indonesia"
                 >
                   ID
                 </button>
                 <button
                   onClick={() => handleLanguageChange('en')}
-                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
-                    currentLang === 'en'
-                      ? 'bg-white text-sense shadow-sm border border-sense/10 scale-100'
-                      : 'text-slate-400 hover:text-sense bg-transparent'
-                  }`}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${currentLang === 'en'
+                    ? 'bg-white text-eco shadow-sm border-0 scale-100'
+                    : 'text-slate-400 hover:text-eco bg-transparent'
+                    }`}
                   title="English"
                 >
                   EN
@@ -307,7 +313,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                   onClick={() => !isTechnicianMode && setShowProfilePopup(true)}
                   className={`flex items-center gap-2 p-1 md:p-1.5 rounded-lg transition-all ${isTechnicianMode ? 'cursor-not-allowed opacity-80' : 'hover:bg-gray-50'}`}
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-eco to-sense rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold font-accent shadow-inner">
+                  <div className="w-8 h-8 bg-gradient-to-br from-eco to-green-600 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold font-sans shadow-inner">
                     {isTechnicianMode
                       ? (localStorage.getItem('bieon_active_homeowner_name') || 'HO').substring(0, 2).toUpperCase()
                       : (userProfile?.fullName || 'US').substring(0, 2).toUpperCase()}
@@ -340,7 +346,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       <main className={`flex-1 ${hideBottomNav ? '' : 'pb-20'} md:pb-0 relative`}>
         {isTechnicianMode && (
           <div className="max-w-[1900px] mx-auto px-4 sm:px-6 md:px-8 mt-6">
-            <div className="bg-orange-600 rounded-2xl p-4 text-white flex items-center justify-between shadow-lg animate-pulse border-b-4 border-orange-800">
+            <div className="bg-orange-600 rounded-[24px] p-4 text-white flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-pulse border-0">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-xl">
                   <ShieldAlert className="w-6 h-6" />
@@ -362,19 +368,27 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
         {children}
       </main>
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav: docked directly at the bottom with safe area padding */}
       {!hideBottomNav && (
-        <div className="md:hidden fixed bottom-6 left-4 right-4 z-40">
-          <div className="bg-white/90 backdrop-blur-lg border border-sense/25 shadow-2xl rounded-2xl flex items-center justify-around h-16 p-2 ring-4 ring-sense/10">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-0 shadow-[0_-8px_30px_rgb(0,0,0,0.04)] pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-center justify-around h-16 px-4">
             {filteredNavItems.map(({ id, labelKey, mobileIcon: Icon }) => (
               <button
                 key={id}
                 onClick={() => navigate(`/${id}`)}
-                className={`flex flex-col items-center justify-center transition-all ${currentPage === id ? 'text-sense scale-110' : 'text-gray-400 hover:text-sense/80'
-                  }`}
+                className={`flex-1 flex flex-col items-center justify-center h-full transition-colors duration-200 ${
+                  currentPage === id ? 'text-[#0F172A]' : 'text-gray-400 hover:text-slate-600'
+                }`}
               >
-                <Icon className={`w-6 h-6 ${currentPage === id ? 'fill-sense/10' : ''}`} strokeWidth={currentPage === id ? 2.5 : 2} />
-                <span className={`text-[10px] sm:text-xs font-bold mt-1 ${currentPage === id ? '' : 'text-gray-400'}`}>{t(labelKey)}</span>
+                <Icon 
+                  className="w-5.5 h-5.5 transition-all duration-200" 
+                  strokeWidth={currentPage === id ? 2.2 : 1.8} 
+                />
+                <span className={`text-[9px] sm:text-[10px] font-semibold mt-1 transition-colors duration-200 ${
+                  currentPage === id ? 'text-[#0F172A] font-bold' : 'text-gray-400'
+                }`}>
+                  {t(labelKey)}
+                </span>
               </button>
             ))}
           </div>

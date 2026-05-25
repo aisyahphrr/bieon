@@ -1,0 +1,30 @@
+diff --git a/apps/frontend/src/features/complaints/ComplaintDetailModal.jsx b/apps/frontend/src/features/complaints/ComplaintDetailModal.jsx
+index f7d0001..ce7e238 100644
+--- a/apps/frontend/src/features/complaints/ComplaintDetailModal.jsx
++++ b/apps/frontend/src/features/complaints/ComplaintDetailModal.jsx
+@@ -554,8 +554,8 @@ export function ComplaintDetailModal({
+     };
+ 
+     return (
+-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
+-            <div className="w-full max-w-[1200px] h-full max-h-[95vh] flex flex-col relative animate-in fade-in zoom-in duration-300">
++        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-black/60 backdrop-blur-md">
++            <div className="w-full sm:max-w-[1200px] h-full sm:max-h-[95vh] flex flex-col relative animate-in fade-in zoom-in duration-300">
+ 
+                 {/* HEADER AREA */}
+                 <div className="flex items-center gap-4 mb-8 shrink-0 mt-4 px-2 lg:px-4 hidden md:flex">
+@@ -577,11 +577,11 @@ export function ComplaintDetailModal({
+                 </div>
+ 
+                 {/* MOBILE HEADER */}
+-                <div className="flex justify-between items-center mb-6 shrink-0 md:hidden px-2">
+-                    <button onClick={onClose} className="flex items-center gap-2 text-white font-bold">
++                <div className="flex justify-between items-center shrink-0 md:hidden px-4 py-3 bg-black/20 backdrop-blur-sm rounded-b-xl mb-4 safe-area-top">
++                    <button onClick={onClose} className="flex items-center gap-2 text-white font-bold text-sm">
+                         <ArrowLeft className="w-5 h-5" /> Kembali
+                     </button>
+-                    <h2 className="text-xl font-bold text-white">{title}</h2>
++                    <h2 className="text-base font-bold text-white">{title}</h2>
+                 </div>
+ 
+                 <style>{`

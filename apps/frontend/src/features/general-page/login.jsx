@@ -73,6 +73,11 @@ const Login = () => {
       localStorage.setItem('userId', data.user.id);
       localStorage.setItem('role', data.user.role);
       localStorage.setItem('fullName', data.user.fullName);
+      localStorage.setItem('email', data.user.email);
+      
+      if (data.user.email?.toLowerCase() === 'asrisaras17@gmail.com') {
+        localStorage.setItem('USE_MOCK_DATA', 'true');
+      }
 
       const userRole = data.user?.role;
       if (userRole === 'SuperAdmin') {
@@ -126,6 +131,10 @@ const Login = () => {
       localStorage.setItem('role', data.user.role);
       localStorage.setItem('fullName', data.user.fullName);
       localStorage.setItem('email', data.user.email || email);
+
+      if ((data.user.email || email).toLowerCase() === 'asrisaras17@gmail.com') {
+        localStorage.setItem('USE_MOCK_DATA', 'true');
+      }
 
       // Arahkan berdasarkan role
       const userRole = data.user?.role;
