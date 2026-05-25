@@ -654,7 +654,7 @@ export function HomeownerDashboard() {
   const [simTurbidity, setSimTurbidity] = useState(2.1);
   const [simTds, setSimTds] = useState(78);
   const [simWaterTemp, setSimWaterTemp] = useState(24);
-  const [masterCardMode, setMasterCardMode] = useState(() => localStorage.getItem('masterCardMode') || 'eco-solid');
+  const [masterCardMode, setMasterCardMode] = useState(() => localStorage.getItem('masterCardMode') || 'eco-icon');
 
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
 
@@ -691,7 +691,7 @@ export function HomeownerDashboard() {
       };
     } else if (masterCardMode === 'eco-icon-soft') {
       return {
-        cardClass: 'bg-slate-50 border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
+        cardClass: 'bg-white border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
         headerClass: 'text-left pb-3',
         titleTextClass: 'text-left',
         dividerClass: 'border-0',
@@ -702,7 +702,7 @@ export function HomeownerDashboard() {
     } else {
       // 'eco-icon'
       return {
-        cardClass: 'bg-slate-50 border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
+        cardClass: 'bg-white border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-lg transition-all',
         headerClass: 'text-left pb-3',
         titleTextClass: 'text-left',
         dividerClass: 'border-0',
