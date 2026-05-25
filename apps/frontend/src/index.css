@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400,300&f[]=general-sans@500,600,400,700&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -82,7 +83,7 @@
 }
 
 @theme inline {
-  --font-sans: "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Satoshi", "General Sans", "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --color-eco: #059b27;
   --color-sense: #129cc0;
   --color-bieon-eco: #059b27;

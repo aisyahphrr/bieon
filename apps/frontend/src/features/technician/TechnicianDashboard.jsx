@@ -1046,50 +1046,50 @@ export function TechnicianDashboard({ onNavigate }) {
               <div className="mb-6">
                 <h4 className="font-bold text-gray-800 mb-4 text-lg">{t('tech_dashboard.client_modal.section_stats', 'Statistik Sistem')}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-eco/5 to-sense/10 rounded-2xl p-5 border border-eco/20">
+                  <div className="bg-gradient-to-br from-eco/5 to-white rounded-2xl p-5 border border-eco/10 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-eco/50 to-sense rounded-xl flex items-center justify-center">
-                        <Cpu className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 bg-eco/10 rounded-xl flex items-center justify-center border border-eco/20">
+                        <Cpu className="w-6 h-6 text-eco" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.total_bieon', 'Jumlah BIEON')}</p>
+                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.total_bieon', 'Jumlah BIEON')}</p>
                         <p className="text-3xl font-bold text-gray-800">{selectedClient.jumlahBieon}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-sense/5 to-cyan-50 rounded-2xl p-5 border border-sense/20">
+                  <div className="bg-gradient-to-br from-sense/5 to-white rounded-2xl p-5 border border-sense/10 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-sense/50 to-cyan-600 rounded-xl flex items-center justify-center">
-                        <Package className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 bg-sense/10 rounded-xl flex items-center justify-center border border-sense/20">
+                        <Package className="w-6 h-6 text-sense" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.total_devices', 'Total Perangkat')}</p>
+                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.total_devices', 'Total Perangkat')}</p>
                         <p className="text-3xl font-bold text-gray-800">{selectedClient.jumlahDevice}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-green-50 to-eco/10 rounded-2xl p-5 border border-green-100">
+                  <div className="bg-gradient-to-br from-green-50/50 to-white rounded-2xl p-5 border border-green-100 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-eco rounded-xl flex items-center justify-center">
-                        <Activity className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center border border-green-100">
+                        <Activity className="w-6 h-6 text-green-500" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.device_online', 'Device Online')}</p>
-                        <p className="text-3xl font-bold text-green-600">{selectedClient.devicesOnline || 0}</p>
+                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.device_online', 'Device Online')}</p>
+                        <p className="text-3xl font-bold text-gray-800">{selectedClient.devicesOnline || 0}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-5 border border-red-100">
+                  <div className="bg-gradient-to-br from-red-50/50 to-white rounded-2xl p-5 border border-red-100 shadow-sm">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-white" />
+                      <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center border border-red-100">
+                        <AlertCircle className="w-6 h-6 text-red-500" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-600 font-semibold">{t('tech_dashboard.client_modal.device_offline', 'Device Offline')}</p>
-                        <p className="text-3xl font-bold text-red-600">{selectedClient.devicesOffline || 0}</p>
+                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.device_offline', 'Device Offline')}</p>
+                        <p className="text-3xl font-bold text-gray-800">{selectedClient.devicesOffline || 0}</p>
                       </div>
                     </div>
                   </div>
@@ -1137,22 +1137,26 @@ export function TechnicianDashboard({ onNavigate }) {
                 {/* Right Column - Status & Dates */}
                 <div className="space-y-3">
                   <h4 className="font-bold text-gray-800 mb-3 text-lg">{t('tech_dashboard.client_modal.section_info', 'Status & Informasi')}</h4>
-                  <div className={`rounded-xl p-5 border-2 ${selectedClient.adaPengaduan ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 'bg-gradient-to-br from-green-50 to-eco/10 border-green-200'}`}>
+                  <div className={`rounded-xl p-5 border shadow-sm ${selectedClient.adaPengaduan ? 'bg-gradient-to-br from-red-50/50 to-white border-red-100' : 'bg-gradient-to-br from-green-50/50 to-white border-green-100'}`}>
                     <div className="flex items-center gap-3 mb-2">
-                      <AlertCircle className={`w-6 h-6 ${selectedClient.adaPengaduan ? 'text-red-600' : 'text-green-600'}`} />
-                      <p className="text-sm font-semibold text-gray-600">{t('tech_dashboard.client_modal.complaint_status', 'Status Pengaduan')}</p>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${selectedClient.adaPengaduan ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
+                        <AlertCircle className={`w-4 h-4 ${selectedClient.adaPengaduan ? 'text-red-500' : 'text-green-500'}`} />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-500">{t('tech_dashboard.client_modal.complaint_status', 'Status Pengaduan')}</p>
                     </div>
-                    <p className={`text-xl font-bold ${selectedClient.adaPengaduan ? 'text-red-700' : 'text-green-700'}`}>
+                    <p className={`text-xl font-bold ${selectedClient.adaPengaduan ? 'text-red-600' : 'text-green-600'}`}>
                       {renderComplaintStatus(selectedClient)}
                     </p>
                   </div>
 
-                  <div className={`rounded-xl p-5 border-2 ${selectedClient.status === 'online' ? 'bg-gradient-to-br from-green-50 to-eco/10 border-green-200' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'}`}>
+                  <div className={`rounded-xl p-5 border shadow-sm ${selectedClient.status === 'online' ? 'bg-gradient-to-br from-green-50/50 to-white border-green-100' : 'bg-gradient-to-br from-red-50/50 to-white border-red-100'}`}>
                     <div className="flex items-center gap-3 mb-2">
-                      <Activity className={`w-6 h-6 ${selectedClient.status === 'online' ? 'text-green-600' : 'text-red-600'}`} />
-                      <p className="text-sm font-semibold text-gray-600">{t('tech_dashboard.client_modal.system_active', 'System Active')}</p>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${selectedClient.status === 'online' ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                        <Activity className={`w-4 h-4 ${selectedClient.status === 'online' ? 'text-green-500' : 'text-red-500'}`} />
+                      </div>
+                      <p className="text-sm font-semibold text-gray-500">{t('tech_dashboard.client_modal.system_active', 'System Active')}</p>
                     </div>
-                    <p className={`text-xl font-bold ${selectedClient.status === 'online' ? 'text-green-700' : 'text-red-700'}`}>
+                    <p className={`text-xl font-bold ${selectedClient.status === 'online' ? 'text-green-600' : 'text-red-600'}`}>
                       {selectedClient.status === 'online' ? t('tech_dashboard.client_modal.status_active', 'Aktif') : selectedClient.status === 'offline' ? t('tech_dashboard.client_modal.status_inactive', 'Tidak Aktif') : t('tech_dashboard.client_modal.status_issue', 'Masalah')}
                     </p>
                   </div>
