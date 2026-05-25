@@ -113,7 +113,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
   };
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] font-inter text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-[#F8FAFC] font-sans text-gray-900 overflow-hidden">
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
@@ -124,7 +124,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
 
       {/* Sidebar - Gradasi EcoSense Hijau-Biru */}
       <aside
-        className={`fixed left-0 top-0 h-screen z-[60] flex flex-col text-white bg-gradient-to-b from-[#0C6A82]/90 to-emerald-600/90 backdrop-blur-3xl shadow-[4px_0_24px_rgba(0,0,0,0.05)] transition-all duration-300 
+        className={`fixed left-0 top-0 h-screen z-[60] flex flex-col text-white bg-gradient-to-b from-sense to-eco transition-all duration-300 
           ${isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'} 
           ${sidebarExpanded ? 'lg:w-64' : 'lg:w-20'}
         `}
@@ -168,7 +168,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                 )}
                 <item.icon className={`w-5 h-5 flex-shrink-0 transition-all ${isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`} />
                 {(sidebarExpanded || isMobileMenuOpen) && (
-                  <span className={`ml-4 text-[13px] tracking-wide whitespace-nowrap`}>{item.name}</span>
+                  <span className={`ml-4 text-[15px] font-medium tracking-wide whitespace-nowrap`}>{item.name}</span>
                 )}
               </button>
             );
@@ -182,7 +182,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
             className={`w-full flex items-center ${(sidebarExpanded || isMobileMenuOpen) ? 'px-4' : 'justify-center'} py-3 rounded-[1.25rem] hover:bg-rose-500/20 text-white/80 hover:text-rose-100 transition-all group font-bold hover:border-rose-500/30`}
           >
             <LogOut className="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" />
-            {(sidebarExpanded || isMobileMenuOpen) && <span className="ml-4 text-sm whitespace-nowrap">{t('admin_nav.logout')}</span>}
+            {(sidebarExpanded || isMobileMenuOpen) && <span className="ml-4 text-[15px] whitespace-nowrap">{t('admin_nav.logout')}</span>}
           </button>
         </div>
       </aside>
@@ -190,7 +190,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
       {/* Main Content Area */}
       <div className={`flex-1 min-w-0 flex flex-col h-screen transition-all duration-300 bg-[#F8FAFC] w-full max-w-full ${sidebarExpanded ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
         {/* Top Header - Gradasi EcoSense Hijau-Biru secara horizontal */}
-        <header className="h-[72px] shrink-0 bg-gradient-to-r from-[#0C6A82]/90 to-emerald-600/90 backdrop-blur-3xl text-white sticky top-0 z-40 flex items-center shadow-md">
+        <header className="h-[72px] shrink-0 bg-gradient-to-r from-sense to-eco text-white sticky top-0 z-40 flex items-center shadow-md">
           <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 sm:gap-4 overflow-hidden">
               <button
@@ -209,7 +209,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   onClick={() => handleLanguageChange('id')}
                   className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-300 ${
                     currentLang === 'id'
-                      ? 'bg-white text-[#0C6A82] shadow-md scale-100'
+                      ? 'bg-white text-sense shadow-md scale-100'
                       : 'text-white/60 hover:text-white bg-transparent'
                   }`}
                   title="Bahasa Indonesia"
@@ -220,7 +220,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
                   onClick={() => handleLanguageChange('en')}
                   className={`px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all duration-300 ${
                     currentLang === 'en'
-                      ? 'bg-white text-[#0C6A82] shadow-md scale-100'
+                      ? 'bg-white text-sense shadow-md scale-100'
                       : 'text-white/60 hover:text-white bg-transparent'
                   }`}
                   title="English"

@@ -538,7 +538,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
         {/* Stats Row 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {/* Card 1 (Total Pelanggan) */}
-            <div className="bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/80 border border-white shadow-sm rounded-[1.5rem] p-5 hover:shadow-md transition-all duration-300 flex flex-col relative overflow-hidden">
+            <div className="bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/80 border border-emerald-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
               {/* Corner Aesthetic Ornament */}
               <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-sense/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -586,7 +586,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
   
             {/* Card 2 (BIEON Nodes) */}
-            <div className="bg-gradient-to-br from-sky-100/80 via-white to-emerald-100/80 border border-white shadow-sm rounded-[1.5rem] p-5 hover:shadow-md transition-all duration-300 flex flex-col relative overflow-hidden">
+            <div className="bg-gradient-to-br from-sky-100/80 via-white to-emerald-100/80 border border-sky-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
               <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-eco/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="20" y="20" width="60" height="60" rx="12" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -615,7 +615,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
   
             {/* Card 3 (Smart Devices) */}
-            <div className="bg-gradient-to-br from-sky-100/80 via-white to-emerald-100/80 border border-white shadow-sm rounded-[1.5rem] p-5 hover:shadow-md transition-all duration-300 flex flex-col relative overflow-hidden">
+            <div className="bg-gradient-to-br from-sky-100/80 via-white to-emerald-100/80 border border-sky-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
               <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-sense/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M10 90 Q 50 10, 90 90" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -644,7 +644,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
   
             {/* Card 4 (Total Pengaduan) */}
-            <div className="bg-gradient-to-br from-white via-rose-50/80 to-rose-100 border border-white shadow-sm rounded-[1.5rem] p-5 hover:shadow-md transition-all duration-300 flex flex-col relative overflow-hidden">
+            <div className="bg-gradient-to-br from-white via-rose-50/80 to-rose-100 border border-rose-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
               <div className="absolute right-0 bottom-0 w-28 h-28 text-rose-500/[0.08] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M10 50 C 30 10, 70 90, 90 50" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -681,7 +681,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
         {/* Stats Row 2 */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Technician Overview Card */}
-          <div className="bg-white border border-emerald-100 shadow-sm rounded-[1.5rem] p-6 flex flex-col hover:shadow-md hover:border-emerald-200 transition-all duration-300 relative overflow-hidden group">
+          <div className="bg-white border border-emerald-100 shadow-sm rounded-[1.5rem] p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 relative overflow-hidden group">
             
             <div className="flex items-start justify-between mb-8 relative z-10">
               <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-bieon-eco shadow-sm border border-emerald-100 group-hover:scale-105 transition-transform duration-500 relative">
@@ -716,7 +716,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* PLN Tariff Management Center */}
-          <div className="lg:col-span-3 bg-white border border-sky-100 shadow-sm rounded-[1.5rem] p-6 flex flex-col hover:shadow-md hover:border-sky-200 transition-all duration-300 relative overflow-hidden group">
+          <div className="lg:col-span-3 bg-white border border-sky-100 shadow-sm rounded-[1.5rem] p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 relative overflow-hidden group">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6 relative z-10">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-sky-50 rounded-xl flex items-center justify-center text-bieon-sense shadow-sm border border-sky-100 shrink-0 group-hover:scale-105 transition-transform">

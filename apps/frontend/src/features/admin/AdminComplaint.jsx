@@ -170,13 +170,13 @@ const AdminComplaintRow = ({ item, getStatusBadge, handleDetail, handleAssign, h
                                 if (btn.action === 'reject') handleReject(item);
                                 if (btn.action === 'reassign') handleTransfer(item);
                             }}
-                            className={`px-4 py-2 rounded-lg text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1 whitespace-nowrap ${
-                                btn.action === 'detail' ? 'bg-gradient-to-r from-bieon-eco to-bieon-sense text-white' :
-                                btn.action === 'reject' ? 'bg-red-50 text-red-600 border border-red-100' :
-                                btn.action === 'ping' ? 'bg-red-500 text-white shadow-lg shadow-red-100' :
-                                btn.variant === 'primary' ? 'bg-blue-600 text-white' :
-                                btn.variant === 'secondary' ? 'bg-blue-500 text-white' :
-                                'bg-blue-600 text-white'
+                            className={`px-4 py-2.5 rounded-xl text-[11px] font-bold hover:shadow-lg transition-all active:scale-95 flex items-center gap-1.5 whitespace-nowrap ${
+                                btn.action === 'detail' ? 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100' :
+                                btn.action === 'reject' ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100' :
+                                btn.action === 'ping' ? 'bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100' :
+                                btn.variant === 'primary' ? 'bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100' :
+                                btn.variant === 'secondary' ? 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100' :
+                                'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
                             }`}
                         >
                             {btn.label} {btn.action === 'detail' && <ChevronRight className="w-3 h-3" />}
@@ -970,33 +970,105 @@ export default function AdminComplaint({ onNavigate }) {
                 `}
             </style>
             <div className="space-y-6">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
-                    {stats.map((stat, idx) => (
-                        <div key={idx} className={`bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] border transition-all hover:shadow-xl hover:-translate-y-1 group relative overflow-hidden flex flex-col justify-between min-h-[110px] md:min-h-[140px] ${stat.color === 'red' ? 'border-red-100 shadow-red-50/50' : 'border-gray-100 shadow-sm'}`}>
-                            <div className={`absolute top-0 right-0 w-16 h-16 md:w-24 md:h-24 blur-2xl md:blur-3xl opacity-10 transition-opacity group-hover:opacity-20 ${stat.color === 'red' ? 'bg-red-500' : stat.color === 'emerald' ? 'bg-bieon-eco' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'}`}></div>
-
-                            <div className="relative z-10 flex items-center gap-2 md:gap-3 mb-2 md:mb-0">
-                                <div className={`p-2 md:p-2.5 rounded-lg md:rounded-xl shrink-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600' : stat.color === 'emerald' ? 'bg-bieon-eco/10 text-bieon-eco' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
-                                    <stat.icon className="w-4 h-4 md:w-5 md:h-5" />
-                                </div>
-
-                                <p className="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight">{stat.label}</p>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {/* Active Tickets */}
+                    <div className="bg-gradient-to-br from-white via-sky-50/50 to-sky-100/80 border border-sky-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-sky-500/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" fill="none" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className="w-12 h-12 bg-white text-sky-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <Activity className="w-6 h-6 group-hover:rotate-6 transition-transform" />
                             </div>
-
-                            <div className="relative z-10 flex flex-col items-start md:flex-row md:items-end md:justify-between mt-auto gap-1 md:gap-0 mt-3 md:mt-0">
-                                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-none flex items-baseline gap-1">
-                                    {stat.value}
-                                    {stat.isRating && (
-                                        <Star className="w-5 h-5 md:w-6 md:h-6 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)] transition-transform group-hover:rotate-[15deg]" />
-                                    )}
-                                </h3>
-
-                                <div className={`inline-flex items-center gap-1.5 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold border transition-colors whitespace-nowrap mt-1 md:mt-0 ${stat.color === 'red' ? 'bg-red-50 text-red-600 border-red-100' : stat.color === 'emerald' ? 'bg-bieon-eco/10 text-bieon-eco border-bieon-eco/20' : stat.color === 'blue' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                                    {stat.trend}
-                                </div>
+                            <div className="text-right">
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{statsMetrics.active}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('complaint.admin_dashboard.total_active', 'Total Tiket Aktif (BIEON)')}</p>
                             </div>
                         </div>
-                    ))}
+                        <div className="relative z-10 mt-auto">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-sky-50 text-sky-600 border-sky-100">
+                                {t('complaint.admin_dashboard.total_active_desc', 'Tiket sedang berjalan')}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Overdue Tickets */}
+                    <div className="bg-gradient-to-br from-white via-rose-50/50 to-rose-100/80 border border-rose-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-rose-500/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M50 10 L90 50 L50 90 L10 50 Z" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <path d="M50 25 L75 50 L50 75 L25 50 Z" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" fill="none" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className="w-12 h-12 bg-white text-rose-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <AlertCircle className="w-6 h-6 group-hover:-rotate-6 transition-transform" />
+                            </div>
+                            <div className="text-right">
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{statsMetrics.overdue}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('complaint.admin_dashboard.total_overdue', 'Tiket Overdue (Batas SLA)')}</p>
+                            </div>
+                        </div>
+                        <div className="relative z-10 mt-auto">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-rose-50 text-rose-600 border-rose-100">
+                                {statsMetrics.overdue > 0 ? t('complaint.admin_dashboard.total_overdue_desc', 'Perlu tindakan segera') : 'Sesuai target SLA'}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Finished Tickets */}
+                    <div className="bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/80 border border-emerald-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-eco/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="20" y="20" width="60" height="60" rx="10" stroke="currentColor" strokeWidth="2" fill="none" transform="rotate(15 50 50)" />
+                                <rect x="30" y="30" width="40" height="40" rx="5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" fill="none" transform="rotate(30 50 50)" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className="w-12 h-12 bg-white text-bieon-eco rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <CheckCircle2 className="w-6 h-6 group-hover:rotate-6 transition-transform" />
+                            </div>
+                            <div className="text-right">
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{statsMetrics.finished}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('complaint.admin_dashboard.total_resolved', 'Total Diselesaikan')}</p>
+                            </div>
+                        </div>
+                        <div className="relative z-10 mt-auto">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-emerald-50 text-bieon-eco border-emerald-100">
+                                {t('complaint.admin_dashboard.total_resolved_desc', 'Tiket status selesai')}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Global CSAT */}
+                    <div className="bg-gradient-to-br from-white via-amber-50/50 to-amber-100/80 border border-amber-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-amber-500/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M50 15 L61 38 L85 41 L67 58 L72 82 L50 70 L28 82 L33 58 L15 41 L39 38 Z" stroke="currentColor" strokeWidth="2" fill="none" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className="w-12 h-12 bg-white text-amber-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <Star className="w-6 h-6 fill-amber-400 group-hover:rotate-6 transition-transform" />
+                            </div>
+                            <div className="text-right flex flex-col items-end">
+                                <h3 className="text-3xl font-bold text-slate-800 leading-none flex items-baseline gap-1">
+                                    {statsMetrics.avg}
+                                    <Star className="w-5 h-5 fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]" />
+                                </h3>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('complaint.admin_dashboard.global_csat', 'Global CSAT')}</p>
+                            </div>
+                        </div>
+                        <div className="relative z-10 mt-auto">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-amber-50 text-amber-600 border-amber-100">
+                                {t('complaint.admin_dashboard.global_csat_desc', 'Rata-rata kepuasan')}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
@@ -1084,7 +1156,7 @@ export default function AdminComplaint({ onNavigate }) {
 
                                 <button
                                     onClick={handleExport}
-                                    className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-[#e8f9fb] text-[#1E4D40] rounded-2xl text-sm font-bold hover:bg-[#d4ece3] transition-all shadow-sm shrink-0 group relative"
+                                    className="flex items-center justify-center gap-2 px-3.5 md:px-6 py-3.5 bg-slate-800 text-white rounded-2xl text-sm font-bold hover:bg-slate-700 transition-all shadow-md shrink-0 group relative"
                                 >
                                     <Download className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
                                     <span className="hidden md:block">{t('table.export', 'Ekspor')}</span>
@@ -1095,7 +1167,7 @@ export default function AdminComplaint({ onNavigate }) {
 
                     <div className="overflow-x-auto custom-scrollbar-x pb-2 min-h-[400px]">
                         <table className="w-full text-left min-w-[1000px] table-auto">
-                             <thead className="bg-[#F8FAFB]/50 border-b border-gray-100 text-gray-500 select-none">
+                             <thead className="bg-gradient-to-r from-emerald-50/80 to-sky-50/80 border-b border-emerald-100/60 text-slate-600 select-none">
                                 <tr>
                                     <th className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap outline-none" onClick={() => requestSort('id')}>
                                         <div className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] font-bold">{t('complaint.table_col.ticket_id', 'ID Tiket')} {getSortIcon('id')}</div>
@@ -1364,19 +1436,21 @@ export default function AdminComplaint({ onNavigate }) {
 
             {/* MODAL: ALIHKAN / TUGASKAN TEKNISI */}
             {isAssignModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
-                        <div className="p-6 md:p-8 border-b border-gray-50 shrink-0">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-6 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-500 border border-blue-100 rounded-xl flex items-center justify-center shadow-sm shrink-0">
                                     <Users className="w-6 h-6" />
                                 </div>
-                                <button onClick={() => setIsAssignModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
-                                    <X className="w-5 h-5 text-gray-400" />
-                                </button>
+                                <div>
+                                    <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight leading-tight">{t('complaint.action.admin.reassign_popup_title', 'Alihkan Teknisi')}</h2>
+                                    <p className="text-slate-500 text-[11px] sm:text-xs font-medium mt-1 leading-snug">{t('complaint.action.admin.assign_popup_desc', 'Pilih teknisi yang tersedia untuk menangani tiket pengaduan ini.')} <span className="font-bold text-slate-700">#{selectedTicket?.id}</span>.</p>
+                                </div>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight">{t('complaint.action.admin.reassign_popup_title', 'Alihkan Teknisi')}</h3>
-                            <p className="text-xs text-gray-500 mt-2">{t('complaint.action.admin.assign_popup_desc', 'Pilih teknisi yang tersedia untuk menangani tiket pengaduan ini.')} <span className="font-bold text-gray-700">#{selectedTicket?.id}</span>.</p>
+                            <button onClick={() => setIsAssignModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </button>
                         </div>
                         <div className="p-6 md:p-8 space-y-6 overflow-y-auto modal-custom-scrollbar">
                             <div className="space-y-3">
@@ -1431,19 +1505,21 @@ export default function AdminComplaint({ onNavigate }) {
 
             {/* MODAL: PING TEKNISI */}
             {isPingModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
-                        <div className="p-6 md:p-8 border-b border-gray-50 shrink-0">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-red-50 text-red-500 rounded-2xl">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-6 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-rose-50 text-rose-500 border border-rose-100 rounded-xl flex items-center justify-center shadow-sm shrink-0">
                                     <Bell className="w-6 h-6" />
                                 </div>
-                                <button onClick={() => setIsPingModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
-                                    <X className="w-5 h-5 text-gray-400" />
-                                </button>
+                                <div>
+                                    <h2 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight leading-tight">{t('complaint.action.admin.ping_popup_title', 'Kirim Peringatan PING!')}</h2>
+                                    <p className="text-slate-500 text-[11px] sm:text-xs font-medium mt-1 leading-snug">{t('complaint.action.admin.ping_popup_desc', 'Kirim notifikasi PING! kepada teknisi untuk mengingatkan batas waktu SLA.')}</p>
+                                </div>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 leading-tight">{t('complaint.action.admin.ping_popup_title', 'Kirim Peringatan PING!')}</h3>
-                            <p className="text-xs text-gray-500 mt-2">{t('complaint.action.admin.ping_popup_desc', 'Kirim notifikasi PING! kepada teknisi untuk mengingatkan batas waktu SLA perbaikan yang hampir habis atau telah terlewati.')}</p>
+                            <button onClick={() => setIsPingModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </button>
                         </div>
                         <div className="p-6 md:p-8 space-y-6 overflow-y-auto modal-custom-scrollbar">
                             <div className="space-y-3">

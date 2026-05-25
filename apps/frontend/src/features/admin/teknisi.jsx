@@ -796,91 +796,114 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-[#2563eb] rounded-3xl p-6 shadow-xl shadow-blue-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <Users className="w-6 h-6" />
+                    <div className="bg-gradient-to-br from-white via-sky-50/50 to-sky-100/80 border border-sky-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-sky-500/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" fill="none" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
+                            <div className="w-12 h-12 bg-white text-sky-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <Users className="w-6 h-6 group-hover:rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{totalTechnicians}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.total_tech', 'Total Teknisi')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{totalTechnicians}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_technician.cards.total_tech', 'Total Teknisi')}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-r from-bieon-eco to-bieon-sense rounded-3xl p-6 shadow-xl shadow-bieon-eco/20 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <UserCheck className="w-6 h-6" />
+                    <div className="bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/80 border border-emerald-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-eco/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="20" y="20" width="60" height="60" rx="10" stroke="currentColor" strokeWidth="2" fill="none" transform="rotate(15 50 50)" />
+                                <rect x="30" y="30" width="40" height="40" rx="5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" fill="none" transform="rotate(30 50 50)" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
+                            <div className="w-12 h-12 bg-white text-bieon-eco rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <UserCheck className="w-6 h-6 group-hover:-rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{activeTechnicians}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.active_tech', 'Teknisi Aktif')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{activeTechnicians}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_technician.cards.active_tech', 'Teknisi Aktif')}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#a855f7] rounded-3xl p-6 shadow-xl shadow-purple-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <Home className="w-6 h-6" />
+                    <div className="bg-gradient-to-br from-white via-violet-50/50 to-violet-100/80 border border-violet-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-violet-500/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M50 10 L90 50 L50 90 L10 50 Z" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <path d="M50 25 L75 50 L50 75 L25 50 Z" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" fill="none" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
+                            <div className="w-12 h-12 bg-white text-violet-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <Home className="w-6 h-6 group-hover:rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{totalClients}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.total_clients', 'Total Pelanggan Ditangani')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{totalClients}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_technician.cards.total_clients', 'Total Pelanggan Ditangani')}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-[#ff6600] rounded-3xl p-6 shadow-xl shadow-orange-200/50 text-white relative overflow-hidden group hover:scale-[1.02] transition-all">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
-                                <TrendingUp className="w-6 h-6" />
+                    <div className="bg-gradient-to-br from-white via-rose-50/50 to-rose-100/80 border border-rose-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+                        <div className="absolute right-0 bottom-0 w-28 h-28 text-rose-500/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 80 C 40 50, 60 20, 80 80" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <path d="M20 50 C 40 20, 60 80, 80 50" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mb-2 relative z-10">
+                            <div className="w-12 h-12 bg-white text-rose-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                                <TrendingUp className="w-6 h-6 group-hover:-rotate-6 transition-transform" />
                             </div>
                             <div className="text-right">
-                                <span className="text-4xl font-bold">{avgClientsPerTech}</span>
-                                <p className="text-[11px] font-medium text-white mt-1">{t('admin_technician.cards.avg_clients_per_tech', 'Rata-rata Pelanggan/Teknisi')}</p>
+                                <span className="text-3xl font-bold text-slate-800 leading-none">{avgClientsPerTech}</span>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">{t('admin_technician.cards.avg_clients_per_tech', 'Rata-rata Pelanggan/Teknisi')}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Table Card */}
-                <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-8 border-b border-gray-50 bg-gray-50/30">
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 md:p-8 border-b border-gray-50 bg-gray-50/30">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-800">{t('admin_technician.table.title')}</h2>
+                                <h2 className="text-xl font-bold text-gray-900 tracking-tight">{t('admin_technician.table.title')}</h2>
+                                <p className="text-sm font-medium text-gray-500 mt-1">{t('admin_technician.table.desc', 'Kelola data dan lokasi teknisi operasional BIEON.')}</p>
                             </div>
                             <div className="grid grid-cols-2 md:flex md:flex-row items-center gap-3 w-full lg:w-auto">
                                 <div className="col-span-2 flex items-center gap-2">
                                     <div className="relative group flex-1 lg:w-72">
-                                        <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-all" />
+                                        <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-bieon-eco transition-all" />
                                         <input
                                             type="text"
                                             placeholder={t('admin_technician.table.search_placeholder', 'Cari teknisi...')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-11 pr-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all shadow-sm group-focus-within:bg-white"
+                                            className="w-full pl-11 pr-5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-bieon-eco/10 focus:border-bieon-eco transition-all shadow-sm group-focus-within:bg-white"
                                         />
                                     </div>
 
                                     {/* Custom Dropdown Filter */}
-                                    <div className="relative shrink-0 flex items-center justify-center relative">
+                                    <div className="relative col-span-1">
                                         <button
+                                            type="button"
                                             onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                                            className="w-[42px] h-[42px] md:w-auto md:h-auto md:pl-11 md:pr-10 md:py-2.5 flex items-center justify-center bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-50 focus:border-gray-300 transition-all shadow-sm relative z-20"
+                                            className="flex items-center justify-between gap-4 px-4 py-2.5 w-full md:min-w-[160px] border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all text-sm font-semibold text-gray-600 focus:outline-none focus:ring-4 focus:ring-bieon-eco/10"
                                         >
-                                            <Filter className="w-[18px] md:w-4 h-[18px] md:h-4 text-gray-500 md:text-gray-400 md:absolute md:left-4 md:top-1/2 md:-translate-y-1/2" />
-                                            <span className="hidden md:inline-block">
-                                                {filterStatus === 'all' ? t('admin_technician.table.filter_all', 'Semua Status') : filterStatus === 'aktif' ? t('admin_technician.table.filter_active', 'Aktif') : t('admin_technician.table.filter_inactive', 'Nonaktif')}
-                                            </span>
-                                            <ChevronDown className={`w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 hidden md:block transition-transform duration-200 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
-
-                                            {/* Notification dot for mobile if filter is active */}
-                                            {filterStatus !== 'all' && (
-                                                <span className="md:hidden absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <Filter className="w-4 h-4 text-bieon-eco" />
+                                                <span className="capitalize">
+                                                    {filterStatus === 'all' ? t('admin_technician.table.filter_all', 'Semua Status') : filterStatus === 'aktif' ? t('admin_technician.table.filter_active', 'Aktif') : t('admin_technician.table.filter_inactive', 'Nonaktif')}
+                                                </span>
+                                            </div>
+                                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
                                         </button>
 
                                         {isFilterDropdownOpen && (
@@ -889,7 +912,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                     className="fixed inset-0 z-30"
                                                     onClick={() => setIsFilterDropdownOpen(false)}
                                                 ></div>
-                                                <div className="absolute right-0 top-[calc(100%+8px)] w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-40 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-2xl z-40 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl bg-white/95">
                                                     {[
                                                         { id: 'all', label: t('admin_technician.table.filter_all', 'Semua Status') },
                                                         { id: 'aktif', label: t('admin_technician.table.filter_active', 'Aktif') },
@@ -901,7 +924,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                                 setFilterStatus(item.id);
                                                                 setIsFilterDropdownOpen(false);
                                                             }}
-                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors flex items-center justify-between ${filterStatus === item.id ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-700 hover:bg-gray-50'}`}
+                                                            className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-all flex items-center justify-between ${filterStatus === item.id ? 'bg-bieon-eco/10 text-bieon-eco' : 'text-gray-600 hover:bg-gray-50 hover:pl-6'}`}
                                                         >
                                                             {item.label}
                                                             {filterStatus === item.id && <CheckCircle className="w-4 h-4 text-bieon-eco" />}
@@ -916,15 +939,15 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                 <div className="col-span-2 grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:flex-row">
                                     <button
                                         onClick={() => openMapModal('all')}
-                                        className="px-4 md:px-5 py-2.5 bg-[#1d4ed8] text-white rounded-xl text-xs md:text-sm font-semibold hover:bg-blue-800 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-blue-100"
+                                        className="px-4 md:px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs md:text-sm font-semibold hover:bg-gray-50 hover:text-blue-600 transition-all flex items-center justify-center gap-2 group shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-50"
                                     >
-                                        <MapIcon className="w-4 h-4 shrink-0" />
+                                        <MapIcon className="w-4 h-4 shrink-0 text-blue-500 group-hover:text-blue-600" />
                                         <span className="truncate">{t('admin_technician.table.btn_view_map', 'Lihat Peta')}</span>
                                     </button>
 
                                     <button
                                         onClick={() => setIsAddModalOpen(true)}
-                                        className="px-4 md:px-5 py-2.5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-xs md:text-sm font-semibold hover:brightness-105 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-bieon-eco/15"
+                                        className="px-4 md:px-5 py-2.5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl text-xs md:text-sm font-semibold hover:brightness-105 transition-all flex items-center justify-center gap-2 group shadow-sm shadow-bieon-eco/15"
                                     >
                                         <Plus className="w-4 h-4 shrink-0 transition-transform group-hover:rotate-90" />
                                         <span className="truncate">{t('admin_technician.table.btn_add_tech', 'Tambah Teknisi')}</span>
@@ -942,7 +965,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                         {/* Desktop Table View */}
                         <table className="w-full text-left table-auto hidden md:table">
                             <thead>
-                                <tr className="bg-gradient-to-r from-bieon-eco to-bieon-sense text-white text-[12px] font-black uppercase tracking-widest text-left">
+                                <tr className="bg-gradient-to-r from-emerald-50/80 to-sky-50/80 text-slate-600 text-[11px] font-black uppercase tracking-widest text-left border-b border-emerald-100/60">
                                     <th className="px-8 py-4 rounded-tl-xl">{t('admin_technician.table.col_id', 'ID Teknisi')}</th>
                                     <th className="px-8 py-4">{t('admin_technician.table.col_name', 'Nama Teknisi')}</th>
                                     <th className="px-8 py-4">{t('admin_technician.table.col_region', 'Lokasi Wilayah')}</th>
@@ -1095,13 +1118,18 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {/* MODALS */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
-                    <div className="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
-                        <div className="px-6 py-5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Plus className="w-6 h-6" /> {t('admin_technician.form_modal.title_add')}
-                            </h2>
-                            <button onClick={() => setIsAddModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
-                                <X className="w-5 h-5 text-white" />
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-emerald-50 text-bieon-eco border border-emerald-100 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                                    <Plus className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">
+                                    {t('admin_technician.form_modal.title_add')}
+                                </h2>
+                            </div>
+                            <button onClick={() => setIsAddModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
 
@@ -1386,17 +1414,17 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
             {isDetailModalOpen && selectedTechnician && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[500] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden max-h-[95vh]">
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-5xl w-full flex flex-col overflow-hidden max-h-[95vh] border border-white/20">
 
                         {/* Header */}
-                        <div className="p-6 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                    <UserCog className="w-8 h-8 text-white" />
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-start sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 sm:gap-5">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-50 text-bieon-eco border border-emerald-100 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center shadow-sm shrink-0">
+                                    <UserCog className="w-6 h-6 sm:w-8 sm:h-8" />
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-bold">{selectedTechnician.name}</h2>
-                                    <p className="text-xs font-medium text-white/80 mt-0.5">ID: {selectedTechnician.id}</p>
+                                <div className="pr-2">
+                                    <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">{selectedTechnician.name}</h2>
+                                    <p className="text-slate-500 text-[11px] sm:text-sm font-medium mt-1 leading-snug">ID: {selectedTechnician.id}</p>
                                     {selectedTechnician.deletionRequest && (
                                         <div className={`mt-3 inline-flex px-3 py-1.5 rounded-full text-[11px] font-bold ${getDeletionRequestBadgeClass(getDeletionRequestStatusMeta(selectedTechnician.deletionRequest).tone)}`}>
                                             {getDeletionRequestStatusMeta(selectedTechnician.deletionRequest).label}
@@ -1404,8 +1432,8 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     )}
                                 </div>
                             </div>
-                            <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
-                                <X className="w-5 h-5 text-white" />
+                            <button onClick={() => setIsDetailModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
 
@@ -1626,20 +1654,20 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {/* Map Modal */}
             {isMapModalOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-6xl w-full flex flex-col overflow-hidden border border-white/20 h-[85vh]">
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-6xl w-full flex flex-col overflow-hidden border border-white/20 h-[85vh]">
                         {/* Header */}
-                        <div className="p-5 md:p-6 bg-[#2563eb] text-white flex items-start md:items-center justify-between shrink-0 relative">
-                            <div className="flex flex-row items-start md:items-center gap-3 md:gap-4 pr-10 md:pr-0">
-                                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md shrink-0">
-                                    <MapIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-start sm:items-center justify-between gap-4 shrink-0 relative">
+                            <div className="flex items-center gap-4 sm:gap-5 pr-10 md:pr-0">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 text-blue-500 border border-blue-100 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center shadow-sm shrink-0">
+                                    <MapIcon className="w-6 h-6 sm:w-8 sm:h-8" />
                                 </div>
-                                <div className="mt-0.5 md:mt-0">
-                                    <h2 className="text-lg md:text-xl font-bold leading-tight">{t('admin_technician.map_modal.title')}</h2>
-                                    <p className="text-[11px] md:text-xs font-medium text-blue-100 mt-1 md:mt-1.5 leading-snug">{t('admin_technician.map_modal.desc')}</p>
+                                <div className="pr-2">
+                                    <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">{t('admin_technician.map_modal.title')}</h2>
+                                    <p className="text-slate-500 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{t('admin_technician.map_modal.desc')}</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsMapModalOpen(false)} className="absolute right-4 top-4 md:static md:w-10 md:h-10 w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-all shrink-0">
-                                <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                            <button onClick={() => setIsMapModalOpen(false)} className="absolute right-4 top-4 md:static w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
 
@@ -1834,14 +1862,19 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {/* Add Client To Technician Modal */}
             {isAddClientModalOpen && selectedTechnician && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[700] flex items-center justify-center p-6 animate-in zoom-in-95 duration-200">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
-                        <div className="p-6 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
-                            <div>
-                                <h2 className="text-xl font-bold">{t('admin_technician.detail_modal.btn_add_client')}</h2>
-                                <p className="text-xs font-medium text-white/90 opacity-90 mt-1">{t('admin_technician.detail_modal.desc_add_client', 'Tambahkan pelanggan ke delegasi tugas teknisi')}</p>
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-500 border border-blue-100 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                                    <Plus className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">{t('admin_technician.detail_modal.btn_add_client')}</h2>
+                                    <p className="text-slate-500 text-[11px] sm:text-sm font-medium mt-1 leading-snug">{t('admin_technician.detail_modal.desc_add_client', 'Tambahkan pelanggan ke delegasi tugas teknisi')}</p>
+                                </div>
                             </div>
-                            <button onClick={() => setIsAddClientModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
-                                <X className="w-5 h-5 text-white" />
+                            <button onClick={() => setIsAddClientModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
 
@@ -1892,13 +1925,18 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {/* Edit Modal (Reuse Add Modal UI) */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[600] flex items-center justify-center p-6 animate-in zoom-in-95 duration-300">
-                    <div className="bg-gray-50 rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
-                        <div className="px-6 py-5 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white flex items-center justify-between shrink-0">
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Edit3 className="w-6 h-6" /> {t('admin_technician.form_modal.title_edit')}
-                            </h2>
-                            <button onClick={() => setIsEditModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all">
-                                <X className="w-5 h-5 text-white" />
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden border border-white/20 max-h-[90vh]">
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-emerald-50 text-bieon-eco border border-emerald-100 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                                    <Edit3 className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">
+                                    {t('admin_technician.form_modal.title_edit')}
+                                </h2>
+                            </div>
+                            <button onClick={() => setIsEditModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
 
@@ -2183,13 +2221,18 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             {/* Custom Delete Modal */}
             {isDeleteModalOpen && selectedTechnician && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[800] flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
-                        <div className="px-8 py-6 bg-[#dc2626] flex items-center justify-between shrink-0">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Trash2 className="w-6 h-6" /> {t('admin_technician.delete_modal.title')}
-                            </h2>
-                            <button onClick={() => setIsDeleteModalOpen(false)} className="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all">
-                                <X className="w-5 h-5" />
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-white/20">
+                        <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-red-50 text-red-500 border border-red-100 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                                    <Trash2 className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-lg sm:text-2xl font-bold text-slate-800 tracking-tight leading-tight">
+                                    {t('admin_technician.delete_modal.title')}
+                                </h2>
+                            </div>
+                            <button onClick={() => setIsDeleteModalOpen(false)} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-xl flex items-center justify-center transition-all group shrink-0">
+                                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
                         <div className="p-8 space-y-6 overflow-y-auto">
