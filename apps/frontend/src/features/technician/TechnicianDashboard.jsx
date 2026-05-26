@@ -519,57 +519,58 @@ export function TechnicianDashboard({ onNavigate }) {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 gap-3 w-full md:grid-cols-2 lg:grid-cols-4 mb-8">
               {/* Card 1: Total Pelanggan */}
-              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(59,130,246,0.15)] hover:-translate-y-1 group">
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(59,130,246,0.15)] hover:-translate-y-1 group">
                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-blue-400/20 blur-3xl group-hover:bg-blue-400/30 transition-colors"></div>
-                <div className="relative w-14 h-14 bg-gradient-to-br from-blue-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-7 h-7 text-blue-600 drop-shadow-sm" />
+                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-blue-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-5 h-5 md:w-7 md:h-7 text-blue-600 drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalClients}</h3>
-                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
+                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalClients}</h3>
+                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
               </div>
 
               {/* Card 2: Akses Kendali Perangkat */}
-              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(5,155,39,0.15)] hover:-translate-y-1 group">
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(5,155,39,0.15)] hover:-translate-y-1 group">
                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-eco/20 blur-3xl group-hover:bg-eco/30 transition-colors"></div>
-                <div className="relative w-14 h-14 bg-gradient-to-br from-eco/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <ShieldCheck className="w-7 h-7 text-eco drop-shadow-sm" />
+                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-eco/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <ShieldCheck className="w-5 h-5 md:w-7 md:h-7 text-eco drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalAccessCodes || 0}</h3>
-                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.access_codes', 'Akses Kendali Perangkat')}</p>
+                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalAccessCodes || 0}</h3>
+                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.access_codes', 'Akses Kendali Perangkat')}</p>
               </div>
 
               {/* Card 3: Smart Device Aktif */}
-              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(18,156,192,0.15)] hover:-translate-y-1 group">
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(18,156,192,0.15)] hover:-translate-y-1 group">
                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-sense/20 blur-3xl group-hover:bg-sense/30 transition-colors"></div>
-                <div className="relative w-14 h-14 bg-gradient-to-br from-sense/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <HardDrive className="w-7 h-7 text-sense drop-shadow-sm" />
+                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-sense/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <HardDrive className="w-5 h-5 md:w-7 md:h-7 text-sense drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalDevices}</h3>
-                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_devices', 'Smart Device Aktif')}</p>
+                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalDevices}</h3>
+                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_devices', 'Smart Device Aktif')}</p>
               </div>
 
               {/* Card 4: Pengaduan Aktif */}
-              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2.5rem] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(239,68,68,0.15)] hover:-translate-y-1 group">
+              <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(239,68,68,0.15)] hover:-translate-y-1 group">
                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-red-400/20 blur-3xl group-hover:bg-red-400/30 transition-colors"></div>
-                <div className="relative w-14 h-14 bg-gradient-to-br from-red-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <AlertCircle className="w-7 h-7 text-red-500 drop-shadow-sm" />
+                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-red-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  <AlertCircle className="w-5 h-5 md:w-7 md:h-7 text-red-500 drop-shadow-sm" />
                 </div>
-                <h3 className="text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.activeComplaints}</h3>
-                <p className="text-gray-500 text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_complaints', 'Pengaduan Aktif')}</p>
+                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.activeComplaints}</h3>
+                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_complaints', 'Pengaduan Aktif')}</p>
               </div>
             </div>
 
             {/* Monitoring Status Klien Table */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="px-6 py-5 border-b border-gray-200 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 w-full mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">{t('tech_dashboard.table.title', 'Monitoring Status Pelanggan')}</h2>
                   <p className="text-gray-600 text-sm mt-1">{t('tech_dashboard.table.subtitle', 'Status Sistem Per Pelanggan')}</p>
                 </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                  <div className="relative flex-1 sm:w-64">
+                
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                  <div className="relative flex items-center w-full lg:w-auto lg:min-w-[250px] lg:max-w-[300px] group">
                     <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
@@ -579,23 +580,24 @@ export function TechnicianDashboard({ onNavigate }) {
                       className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-sense/100 focus:ring-4 focus:ring-sense/20 bg-white transition-all"
                     />
                   </div>
-                  <div className="grid grid-cols-2 sm:flex gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                    <div className="relative w-full sm:w-auto">
+                  
+                  <div className="flex flex-row items-center gap-1 sm:gap-2 shrink-0 w-full sm:w-auto justify-end">
+                    <div className="relative w-auto">
                       <button 
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all w-full sm:w-auto shadow-sm"
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all w-auto shadow-sm"
                       >
                         <Filter className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm font-semibold text-gray-700">
+                        <span className="hidden sm:inline text-sm font-semibold text-gray-700">
                           {statusFilter === 'all' ? t('tech_dashboard.table.filter_all', 'Semua Status Sistem') : 
                            statusFilter === 'online' ? t('tech_dashboard.table.status_online', 'Online') : 
                            statusFilter === 'offline' ? t('tech_dashboard.table.status_offline', 'Offline') : t('tech_dashboard.table.status_warning', 'Warning')}
                         </span>
-                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
                       </button>
 
                       {isFilterOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="absolute right-0 mt-2 w-auto max-w-[90vw] sm:max-w-md mx-2 sm:mx-0 min-w-[10rem] bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
                           <div className="py-1">
                             {[
                               { id: 'all', label: t('tech_dashboard.table.filter_all', 'Semua Status Sistem') },
@@ -609,7 +611,7 @@ export function TechnicianDashboard({ onNavigate }) {
                                   setStatusFilter(opt.id);
                                   setIsFilterOpen(false);
                                 }}
-                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-sense/5 ${statusFilter === opt.id ? 'text-sense bg-sense/5' : 'text-gray-600'}`}
+                                className="w-full text-left px-4 py-2.5 text-xs sm:text-sm font-medium transition-colors hover:bg-sense/5 text-gray-600"
                               >
                                 {opt.label}
                               </button>
@@ -620,10 +622,10 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
                     <button
                       onClick={handleExportPDF}
-                      className="flex items-center justify-center gap-2 px-4 py-2 bg-eco text-white hover:bg-green-700 rounded-xl transition-colors shadow-sm shadow-eco/20 w-full sm:w-auto"
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-eco text-white hover:bg-green-700 rounded-xl transition-colors shadow-sm shadow-eco/20 w-auto"
                     >
                       <FileText className="w-4 h-4" />
-                      <span className="text-sm font-semibold">{t('table.export', 'Export')}</span>
+                      <span className="hidden sm:inline text-sm font-semibold">{t('table.export', 'Export')}</span>
                     </button>
                   </div>
                 </div>
@@ -1045,51 +1047,51 @@ export function TechnicianDashboard({ onNavigate }) {
               {/* Statistik Sistem - Grid Responsive */}
               <div className="mb-6">
                 <h4 className="font-bold text-gray-800 mb-4 text-lg">{t('tech_dashboard.client_modal.section_stats', 'Statistik Sistem')}</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-eco/5 to-white rounded-2xl p-5 border border-eco/10 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-eco/10 rounded-xl flex items-center justify-center border border-eco/20">
-                        <Cpu className="w-6 h-6 text-eco" />
+                <div className="grid grid-cols-2 gap-3 w-full sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="bg-gradient-to-br from-eco/5 to-white rounded-2xl p-3 sm:p-5 border border-eco/10 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 mb-2 text-center sm:text-left">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-eco/10 rounded-xl flex items-center justify-center border border-eco/20 shrink-0">
+                        <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-eco" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.total_bieon', 'Jumlah BIEON')}</p>
-                        <p className="text-3xl font-bold text-gray-800">{selectedClient.jumlahBieon}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.total_bieon', 'Jumlah BIEON')}</p>
+                        <p className="text-xl sm:text-3xl font-bold text-gray-800">{selectedClient.jumlahBieon}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-sense/5 to-white rounded-2xl p-5 border border-sense/10 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-sense/10 rounded-xl flex items-center justify-center border border-sense/20">
-                        <Package className="w-6 h-6 text-sense" />
+                  <div className="bg-gradient-to-br from-sense/5 to-white rounded-2xl p-3 sm:p-5 border border-sense/10 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 mb-2 text-center sm:text-left">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-sense/10 rounded-xl flex items-center justify-center border border-sense/20 shrink-0">
+                        <Package className="w-5 h-5 sm:w-6 sm:h-6 text-sense" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.total_devices', 'Total Perangkat')}</p>
-                        <p className="text-3xl font-bold text-gray-800">{selectedClient.jumlahDevice}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.total_devices', 'Total Perangkat')}</p>
+                        <p className="text-xl sm:text-3xl font-bold text-gray-800">{selectedClient.jumlahDevice}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-green-50/50 to-white rounded-2xl p-5 border border-green-100 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center border border-green-100">
-                        <Activity className="w-6 h-6 text-green-500" />
+                  <div className="bg-gradient-to-br from-green-50/50 to-white rounded-2xl p-3 sm:p-5 border border-green-100 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 mb-2 text-center sm:text-left">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-xl flex items-center justify-center border border-green-100 shrink-0">
+                        <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.device_online', 'Device Online')}</p>
-                        <p className="text-3xl font-bold text-gray-800">{selectedClient.devicesOnline || 0}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.device_online', 'Device Online')}</p>
+                        <p className="text-xl sm:text-3xl font-bold text-gray-800">{selectedClient.devicesOnline || 0}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-red-50/50 to-white rounded-2xl p-5 border border-red-100 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center border border-red-100">
-                        <AlertCircle className="w-6 h-6 text-red-500" />
+                  <div className="bg-gradient-to-br from-red-50/50 to-white rounded-2xl p-3 sm:p-5 border border-red-100 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3 mb-2 text-center sm:text-left">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-xl flex items-center justify-center border border-red-100 shrink-0">
+                        <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.device_offline', 'Device Offline')}</p>
-                        <p className="text-3xl font-bold text-gray-800">{selectedClient.devicesOffline || 0}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 font-semibold">{t('tech_dashboard.client_modal.device_offline', 'Device Offline')}</p>
+                        <p className="text-xl sm:text-3xl font-bold text-gray-800">{selectedClient.devicesOffline || 0}</p>
                       </div>
                     </div>
                   </div>

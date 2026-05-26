@@ -48,7 +48,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                 }
             });
             const result = await response.json();
-            
+
             if (result.success) {
                 setProfile(result.data.profile);
                 setStats(result.data.stats);
@@ -245,101 +245,96 @@ export function TechnicianProfilePage({ onNavigate }) {
                 </div>
 
                 {/* Profile Header Card */}
-                <div className="bg-white rounded-3xl shadow-xl -mt-16 sm:-mt-24 mb-6 relative z-10">
-                    <div className="p-5 sm:p-8">
-                        <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
-                            {/* Photo */}
-                            <div className="relative group -mt-10 md:mt-0">
-                                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-white rounded-3xl flex items-center justify-center text-eco shadow-xl border-4 border-white overflow-hidden">
-                                    {profile.profileImage ? (
-                                        <img src={profile.profileImage} alt={profile.fullName} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="text-5xl sm:text-6xl font-bold">
-                                            {profile.fullName.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ').map(n => n[0]).join('').substring(0, 3).toUpperCase()}
-                                        </span>
+                <div className="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-6 w-full flex flex-col md:flex-row items-center md:items-stretch gap-6 -mt-16 sm:-mt-24 mb-6 relative z-10">
+                    {/* Photo */}
+                    <div className="relative group shrink-0 w-42 h-50 sm:w-42 sm:h-50 mx-auto md:mx-0">
+                        <div className="w-full h-full bg-slate-50 rounded-2xl flex items-center justify-center text-eco border border-slate-100 overflow-hidden font-bold">
+                            {profile.profileImage ? (
+                                <img src={profile.profileImage} alt={profile.fullName} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-3xl sm:text-4xl font-bold">
+                                    {profile.fullName.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ').map(n => n[0]).join('').substring(0, 3).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => document.getElementById('avatar-input').click()}
+                            className="absolute -bottom-1 -right-1 w-8 h-8 sm:w-10 sm:h-10 bg-eco rounded-full flex items-center justify-center text-white shadow-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        >
+                            <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                        <input
+                            id="avatar-input"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageChange}
+                        />
+                    </div>
+
+                    {/* Basic Info */}
+                    <div className="flex flex-col flex-1 w-full min-w-0 justify-between items-center md:items-start text-center md:text-left">
+                        <div className="flex flex-col md:flex-row items-center md:items-start justify-between w-full mb-4 gap-3">
+                            <div className="flex flex-col items-center md:items-start">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+                                    {profile.fullName.replace(/([a-z])([A-Z])/g, '$1 $2')}
+                                </h1>
+                                <p className="text-base sm:text-lg text-eco font-semibold mb-1">{profile.position || t('tech_profile.header.default_position', 'Teknisi BIEON')}</p>
+
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-gray-600 mb-2">
+                                    <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-lg">
+                                        <span className="text-xs font-bold">@{profile.username}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-lg">
+                                        <span className="text-xs font-bold">{profile.technicianId}</span>
+                                    </div>
+                                    {profile.workArea && (
+                                        <div className="flex items-center gap-1.5 text-eco font-bold">
+                                            <MapPin className="w-3.5 h-3.5" />
+                                            <span className="text-xs">{profile.workArea}</span>
+                                        </div>
                                     )}
                                 </div>
-                                <button 
-                                    onClick={() => document.getElementById('avatar-input').click()}
-                                    className="absolute bottom-2 right-2 w-8 h-8 sm:w-10 sm:h-10 bg-eco rounded-full flex items-center justify-center text-white shadow-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                                </button>
-                                <input 
-                                    id="avatar-input"
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleImageChange}
-                                />
                             </div>
+                            <div className={`px-4 py-1.5 rounded-full text-xs font-bold ${profile.status === 'aktif'
+                                ? 'bg-eco/10 text-eco'
+                                : 'bg-gray-100 text-gray-700'
+                                }`}>
+                                {profile.status === 'aktif' ? t('tech_profile.header.status_available', 'Available') : t('tech_profile.header.status_offline', 'Offline')}
+                            </div>
+                        </div>
 
-                             {/* Basic Info */}
-                             <div className="flex-1 w-full">
-                                 <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-4 gap-3">
-                                     <div className="flex flex-col items-center md:items-start">
-                                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-                                             {profile.fullName.replace(/([a-z])([A-Z])/g, '$1 $2')}
-                                         </h1>
-                                         <p className="text-base sm:text-lg text-eco font-semibold mb-1">{profile.position || t('tech_profile.header.default_position', 'Teknisi BIEON')}</p>
-                                         
-                                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-gray-600 mb-2">
-                                             <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-lg">
-                                                 <span className="text-xs font-bold">@{profile.username}</span>
-                                             </div>
-                                             <div className="flex items-center gap-1.5 bg-gray-100 px-2 py-1 rounded-lg">
-                                                 <span className="text-xs font-bold">{profile.technicianId}</span>
-                                             </div>
-                                             {profile.workArea && (
-                                                 <div className="flex items-center gap-1.5 text-eco font-bold">
-                                                     <MapPin className="w-3.5 h-3.5" />
-                                                     <span className="text-xs">{profile.workArea}</span>
-                                                 </div>
-                                             )}
-                                         </div>
-                                     </div>
-                                     <div className={`px-4 py-1.5 rounded-full text-xs font-bold ${profile.status === 'aktif'
-                                             ? 'bg-eco/10 text-eco'
-                                             : 'bg-gray-100 text-gray-700'
-                                         }`}>
-                                         {profile.status === 'aktif' ? t('tech_profile.header.status_available', 'Available') : t('tech_profile.header.status_offline', 'Offline')}
-                                     </div>
-                                 </div>
-
-                                 {/* Quick Stats */}
-                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                     <div className="bg-gradient-to-br from-eco/5 to-eco/10 rounded-2xl p-4 border border-eco/20">
-                                         <div className="flex items-center gap-2 mb-1">
-                                             <Star className="w-4 h-4 text-amber-500" />
-                                             <span className="text-2xl font-bold text-gray-900">{stats.avgRating}</span>
-                                         </div>
-                                         <p className="text-xs text-gray-600 font-medium tracking-tight">{t('tech_profile.header.rating', 'Rating')}</p>
-                                     </div>
-                                     <div className="bg-gradient-to-br from-sense/5 to-sense/10 rounded-2xl p-4 border border-sense/20">
-                                         <div className="flex items-center gap-2 mb-1">
-                                             <Wrench className="w-4 h-4 text-sense" />
-                                             <span className="text-2xl font-bold text-gray-900">{stats.totalRepairs}</span>
-                                         </div>
-                                         <p className="text-xs text-gray-600 font-medium tracking-tight">{t('tech_profile.header.repairs', 'Perbaikan')}</p>
-                                     </div>
-                                     <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-100/50">
-                                         <div className="flex items-center justify-between mb-1">
-                                             <div className="flex items-center gap-2">
-                                                 <TrendingUp className="w-4 h-4 text-orange-500" />
-                                                 <span className="text-2xl font-bold text-gray-900">{stats.complianceRate}%</span>
-                                             </div>
-                                             <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
-                                                 stats.complianceRate >= 80 
-                                                 ? 'bg-eco/10 text-eco border border-eco/20' 
-                                                 : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
-                                             }`}>
-                                                 {stats.complianceRate >= 80 ? t('tech_profile.header.safe', 'Aman') : t('tech_profile.header.warning', 'Warning')}
-                                             </div>
-                                         </div>
-                                         <p className="text-xs text-gray-600 font-medium tracking-tight">{t('tech_profile.header.compliance', 'Kepatuhan')}</p>
-                                     </div>
-                                 </div>
-                             </div>
+                        {/* Quick Stats */}
+                        <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full mt-4 md:mt-auto">
+                            <div className="bg-gradient-to-br from-eco/5 to-eco/10 rounded-2xl p-2 sm:p-4 border border-eco/20">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Star className="w-4 h-4 text-amber-500" />
+                                    <span className="text-sm sm:text-2xl font-bold text-gray-900">{stats.avgRating}</span>
+                                </div>
+                                <p className="text-[10px] sm:text-sm truncate text-slate-500 font-medium tracking-tight">{t('tech_profile.header.rating', 'Rating')}</p>
+                            </div>
+                            <div className="bg-gradient-to-br from-sense/5 to-sense/10 rounded-2xl p-2 sm:p-4 border border-sense/20">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Wrench className="w-4 h-4 text-sense" />
+                                    <span className="text-sm sm:text-2xl font-bold text-gray-900">{stats.totalRepairs}</span>
+                                </div>
+                                <p className="text-[10px] sm:text-sm truncate text-slate-500 font-medium tracking-tight">{t('tech_profile.header.repairs', 'Perbaikan')}</p>
+                            </div>
+                            <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-2 sm:p-4 border border-orange-100/50">
+                                <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 mt-1 mb-1">
+                                    <div className="flex items-center gap-2">
+                                        <TrendingUp className="w-4 h-4 text-orange-500" />
+                                        <span className="text-sm sm:text-2xl font-bold text-gray-900">{stats.complianceRate}%</span>
+                                    </div>
+                                    <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${stats.complianceRate >= 80
+                                        ? 'bg-eco/10 text-eco border border-eco/20'
+                                        : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
+                                        }`}>
+                                        {stats.complianceRate >= 80 ? t('tech_profile.header.safe', 'Aman') : t('tech_profile.header.warning', 'Warning')}
+                                    </div>
+                                </div>
+                                <p className="text-[10px] sm:text-sm truncate text-slate-500 font-medium tracking-tight">{t('tech_profile.header.compliance', 'Kepatuhan')}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -488,20 +483,20 @@ export function TechnicianProfilePage({ onNavigate }) {
                                 </div>
 
                                 <div>
-                                     <label className="block text-sm font-semibold text-gray-700 mb-2">{t('tech_profile.personal.join_date', 'Tanggal Bergabung')}</label>
-                                     {isEditingPersonal ? (
-                                         <input
-                                             type="date"
-                                             value={editedProfile.joinDate?.split('T')[0] || ''}
-                                             onChange={(e) => setEditedProfile({ ...editedProfile, joinDate: e.target.value })}
-                                             className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                         />
-                                     ) : (
-                                         <div className="flex items-center gap-2 text-gray-900 font-medium">
-                                             <Calendar className="w-4 h-4 text-gray-500" />
-                                             {formatDate(profile.joinDate)}
-                                         </div>
-                                     )}
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t('tech_profile.personal.join_date', 'Tanggal Bergabung')}</label>
+                                    {isEditingPersonal ? (
+                                        <input
+                                            type="date"
+                                            value={editedProfile.joinDate?.split('T')[0] || ''}
+                                            onChange={(e) => setEditedProfile({ ...editedProfile, joinDate: e.target.value })}
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        />
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-gray-900 font-medium">
+                                            <Calendar className="w-4 h-4 text-gray-500" />
+                                            {formatDate(profile.joinDate)}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>
@@ -630,11 +625,10 @@ export function TechnicianProfilePage({ onNavigate }) {
                                         <span className="text-sm font-semibold text-gray-700">{t('tech_profile.stats.sla_status', 'Status SLA')}</span>
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider w-fit ${
-                                            stats.complianceRate >= 80 
-                                            ? 'bg-eco/10 text-eco border border-eco/20' 
+                                        <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider w-fit ${stats.complianceRate >= 80
+                                            ? 'bg-eco/10 text-eco border border-eco/20'
                                             : 'bg-rose-50 text-rose-600 border border-rose-100 animate-pulse'
-                                        }`}>
+                                            }`}>
                                             {stats.complianceRate >= 80 ? t('tech_profile.stats.sla_safe', 'Aman') : t('tech_profile.stats.sla_attention', 'Butuh Perhatian')}
                                         </div>
                                         <p className="text-[10px] text-gray-400 font-medium italic">{t('tech_profile.stats.sla_based_on', 'Berdasarkan kepatuhan waktu')}</p>
@@ -754,11 +748,10 @@ export function TechnicianProfilePage({ onNavigate }) {
                                             i18n.changeLanguage('id');
                                             localStorage.setItem('bieon_language', 'id');
                                         }}
-                                        className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-300 font-bold text-xs ${
-                                            i18n.language === 'id' 
-                                                ? 'bg-eco/5 border-eco text-eco shadow-sm ring-2 ring-eco/10' 
-                                                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50/50'
-                                        }`}
+                                        className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-300 font-bold text-xs ${i18n.language === 'id'
+                                            ? 'bg-eco/5 border-eco text-eco shadow-sm ring-2 ring-eco/10'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50/50'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-2.5">
                                             <span className="text-base">🇮🇩</span>
@@ -774,11 +767,10 @@ export function TechnicianProfilePage({ onNavigate }) {
                                             i18n.changeLanguage('en');
                                             localStorage.setItem('bieon_language', 'en');
                                         }}
-                                        className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-300 font-bold text-xs ${
-                                            i18n.language === 'en' 
-                                                ? 'bg-eco/5 border-eco text-eco shadow-sm ring-2 ring-eco/10' 
-                                                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50/50'
-                                        }`}
+                                        className={`flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all duration-300 font-bold text-xs ${i18n.language === 'en'
+                                            ? 'bg-eco/5 border-eco text-eco shadow-sm ring-2 ring-eco/10'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50/50'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-2.5">
                                             <span className="text-base">🇺🇸</span>
@@ -943,7 +935,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                     <div className="space-y-4">
                                         {editedProfile.certifications.map((cert, idx) => (
                                             <div key={idx} className="p-4 bg-gray-50 rounded-2xl space-y-3 relative group border-2 border-transparent hover:border-amber-200 transition-all">
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         const newCerts = editedProfile.certifications.filter((_, i) => i !== idx);
                                                         setEditedProfile({ ...editedProfile, certifications: newCerts });
@@ -1098,7 +1090,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                     <div className="space-y-4">
                                         {editedProfile.trainingHistory.map((training, index) => (
                                             <div key={index} className="p-4 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-teal-200 transition-all relative group">
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         const newTrainings = editedProfile.trainingHistory.filter((_, i) => i !== index);
                                                         setEditedProfile({ ...editedProfile, trainingHistory: newTrainings });
@@ -1110,9 +1102,9 @@ export function TechnicianProfilePage({ onNavigate }) {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div className="md:col-span-2">
                                                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">{t('tech_profile.trainings.name_label', 'Nama Training')}</label>
-                                                        <input 
-                                                            type="text" 
-                                                            value={training.name} 
+                                                        <input
+                                                            type="text"
+                                                            value={training.name}
                                                             onChange={(e) => {
                                                                 const newTrainings = [...editedProfile.trainingHistory];
                                                                 newTrainings[index].name = e.target.value;
@@ -1124,9 +1116,9 @@ export function TechnicianProfilePage({ onNavigate }) {
                                                     </div>
                                                     <div>
                                                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">{t('tech_profile.trainings.instructor_label', 'Instruktur')}</label>
-                                                        <input 
-                                                            type="text" 
-                                                            value={training.instructor} 
+                                                        <input
+                                                            type="text"
+                                                            value={training.instructor}
                                                             onChange={(e) => {
                                                                 const newTrainings = [...editedProfile.trainingHistory];
                                                                 newTrainings[index].instructor = e.target.value;
@@ -1138,9 +1130,9 @@ export function TechnicianProfilePage({ onNavigate }) {
                                                     </div>
                                                     <div>
                                                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">{t('tech_profile.trainings.end_date', 'Tgl Selesai')}</label>
-                                                        <input 
-                                                            type="date" 
-                                                            value={training.endDate?.split('T')[0] || ''} 
+                                                        <input
+                                                            type="date"
+                                                            value={training.endDate?.split('T')[0] || ''}
                                                             onChange={(e) => {
                                                                 const newTrainings = [...editedProfile.trainingHistory];
                                                                 newTrainings[index].endDate = e.target.value;
@@ -1152,11 +1144,11 @@ export function TechnicianProfilePage({ onNavigate }) {
                                                 </div>
                                             </div>
                                         ))}
-                                        <button 
+                                        <button
                                             onClick={() => {
-                                                setEditedProfile({ 
-                                                    ...editedProfile, 
-                                                    trainingHistory: [...editedProfile.trainingHistory, { name: '', instructor: '', endDate: '' }] 
+                                                setEditedProfile({
+                                                    ...editedProfile,
+                                                    trainingHistory: [...editedProfile.trainingHistory, { name: '', instructor: '', endDate: '' }]
                                                 });
                                             }}
                                             className="w-full py-3 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 font-bold hover:border-teal-500 hover:text-teal-500 transition-all flex items-center justify-center gap-2"
@@ -1215,7 +1207,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                             localStorage.removeItem('userId');
                                             localStorage.removeItem('role');
                                             localStorage.removeItem('fullName');
-                                            
+
                                             if (onNavigate) {
                                                 onNavigate('');
                                                 setTimeout(() => {
