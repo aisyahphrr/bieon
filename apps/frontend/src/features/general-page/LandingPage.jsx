@@ -462,46 +462,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* Dampak Section */}
-        <section id="dampak" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
-          <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
-            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
-              Platform Benefit
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
-              DAMPAK
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-            {/* Impact Card 1 */}
-            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
-                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/5 30BIAYA.png" alt="- 30% Biaya" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-              </div>
-            </Reveal>
-
-            {/* Impact Card 2 */}
-            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
-                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/6EFISIENSI.png" alt="+ 50% Efisiensi" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-              </div>
-            </Reveal>
-
-            {/* Impact Card 3 */}
-            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
-                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/7SUSTAINBILITY.png" alt="Sustainability Ready" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-              </div>
-            </Reveal>
-
-          </div>
-        </section>
-
         {/* Products Line Section */}
         <section id="products" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
           <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
@@ -657,6 +617,46 @@ const LandingPage = () => {
                 className="w-full max-w-5xl mx-auto h-auto object-contain"
               />
             </Reveal>
+          </div>
+        </section>
+
+        {/* Dampak Section */}
+        <section id="dampak" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
+          <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
+            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+              Platform Benefit
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
+              DAMPAK
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+            {/* Impact Card 1 */}
+            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/5 30BIAYA.png" alt="- 30% Biaya" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
+            {/* Impact Card 2 */}
+            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/6EFISIENSI.png" alt="+ 50% Efisiensi" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
+            {/* Impact Card 3 */}
+            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
+                <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                <img src="/7SUSTAINBILITY.png" alt="Sustainability Ready" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+              </div>
+            </Reveal>
+
           </div>
         </section>
 
