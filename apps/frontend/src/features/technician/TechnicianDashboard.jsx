@@ -563,14 +563,14 @@ export function TechnicianDashboard({ onNavigate }) {
 
             {/* Monitoring Status Klien Table */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-200 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 w-full mb-6">
+              <div className="px-6 py-5 border-b border-gray-200 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 w-full mb-0">
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">{t('tech_dashboard.table.title', 'Monitoring Status Pelanggan')}</h2>
                   <p className="text-gray-600 text-sm mt-1">{t('tech_dashboard.table.subtitle', 'Status Sistem Per Pelanggan')}</p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                  <div className="relative flex items-center w-full lg:w-auto lg:min-w-[250px] lg:max-w-[300px] group">
+                <div className="flex flex-row items-center justify-between gap-2 w-full lg:w-auto mb-0">
+                  <div className="relative flex-1 min-w-0 md:w-[250px] md:shrink-0 group">
                     <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
@@ -581,11 +581,11 @@ export function TechnicianDashboard({ onNavigate }) {
                     />
                   </div>
                   
-                  <div className="flex flex-row items-center gap-1 sm:gap-2 shrink-0 w-full sm:w-auto justify-end">
-                    <div className="relative w-auto">
+                  <div className="flex flex-row items-center gap-1 sm:gap-2 shrink-0">
+                    <div className="relative w-auto shrink-0">
                       <button 
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all w-auto shadow-sm"
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all w-auto shadow-sm shrink-0"
                       >
                         <Filter className="w-4 h-4 text-gray-500" />
                         <span className="hidden sm:inline text-sm font-semibold text-gray-700">
@@ -622,7 +622,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
                     <button
                       onClick={handleExportPDF}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-eco text-white hover:bg-green-700 rounded-xl transition-colors shadow-sm shadow-eco/20 w-auto"
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-eco text-white hover:bg-green-700 rounded-xl transition-colors shadow-sm shadow-eco/20 w-auto shrink-0"
                     >
                       <FileText className="w-4 h-4" />
                       <span className="hidden sm:inline text-sm font-semibold">{t('table.export', 'Export')}</span>
@@ -1012,7 +1012,7 @@ export function TechnicianDashboard({ onNavigate }) {
             <div className="sticky top-0 bg-gradient-to-r from-eco to-sense text-white p-6 rounded-t-3xl flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-1">{t('tech_dashboard.client_modal.title', 'Detail Pelanggan')}</h2>
-                <p className="text-eco/50">{t('tech_dashboard.client_modal.subtitle', 'Informasi Lengkap Sistem Smart Home')}</p>
+                <p className="text-sm font-medium text-white/90 mt-1">{t('tech_dashboard.client_modal.subtitle', 'Informasi Lengkap Sistem Smart Home')}</p>
               </div>
               <button
                 onClick={() => setSelectedClient(null)}

@@ -573,10 +573,9 @@ export function RiwayatPerbaikanPage() {
             <p className="text-gray-500 mt-1">{t('history.subtitle', 'Pantau log, aktivitas, dan riwayat perbaikan pelanggan')}</p>
           </div>
 
-          {/* Action Bar */}
-          <div className="flex flex-row items-center gap-2 w-full lg:w-auto overflow-x-auto lg:overflow-visible scrollbar-hide pb-2 lg:pb-0">
+          <div className="flex flex-row items-center justify-between gap-2 w-full lg:w-auto">
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[150px] lg:min-w-[250px] lg:flex-none group">
+            <div className="relative flex-1 min-w-0 md:w-[250px] md:shrink-0 group">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense/500 transition-colors pointer-events-none" />
               <input
                 type="text"
