@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const registeredProductSchema = new mongoose.Schema({
     productId: { type: String, required: true, unique: true }, // ID di stiker produk
@@ -9,5 +10,7 @@ const registeredProductSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // PEMILIK BARANG
     registeredAt: { type: Date, default: Date.now }
 }, { timestamps: true });
+
+registeredProductSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('RegisteredProduct', registeredProductSchema);

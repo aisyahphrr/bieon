@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const waterQualityLogSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -17,5 +18,7 @@ const waterQualityLogSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 waterQualityLogSchema.index({ owner: 1, date: -1 });
+
+waterQualityLogSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('WaterQualityLog', waterQualityLogSchema);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const activitySchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -17,5 +18,7 @@ const activitySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 activitySchema.index({ user: 1, timestamp: -1 });
+
+activitySchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('Activity', activitySchema);

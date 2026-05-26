@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const PdmMeterSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -17,5 +18,7 @@ const PdmMeterSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+PdmMeterSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('PdmMeter', PdmMeterSchema);

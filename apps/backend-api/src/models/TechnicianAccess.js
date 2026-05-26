@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const technicianAccessSchema = new mongoose.Schema({
     homeownerId: { 
@@ -35,5 +36,7 @@ const technicianAccessSchema = new mongoose.Schema({
 }, { 
     timestamps: true 
 });
+
+technicianAccessSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('TechnicianAccess', technicianAccessSchema);

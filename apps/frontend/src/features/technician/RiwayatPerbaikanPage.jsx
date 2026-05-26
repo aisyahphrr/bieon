@@ -30,48 +30,48 @@ import { useTranslation } from 'react-i18next';
 
 // Helper function to calculate duration between ticket creation and completion
 const calculateDuration = (start, end, t) => {
-    if (!start || !end) return '-';
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const diffMs = endDate - startDate;
-    if (diffMs < 0) return `0 ${t ? t('time.minutes', 'Menit') : 'Menit'}`;
-    
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    const remainingHours = diffHours % 24;
-    const remainingMins = diffMins % 60;
-    
-    let result = '';
-    const hari = t ? t('time.days', 'Hari') : 'Hari';
-    const jam = t ? t('time.hours', 'Jam') : 'Jam';
-    const menit = t ? t('time.minutes', 'Menit') : 'Menit';
+  if (!start || !end) return '-';
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const diffMs = endDate - startDate;
+  if (diffMs < 0) return `0 ${t ? t('time.minutes', 'Menit') : 'Menit'}`;
 
-    if (diffDays > 0) result += `${diffDays} ${hari} `;
-    if (remainingHours > 0) result += `${remainingHours} ${jam} `;
-    if (remainingMins > 0 || result === '') result += `${remainingMins} ${menit}`;
-    
-    return result.trim();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  const remainingHours = diffHours % 24;
+  const remainingMins = diffMins % 60;
+
+  let result = '';
+  const hari = t ? t('time.days', 'Hari') : 'Hari';
+  const jam = t ? t('time.hours', 'Jam') : 'Jam';
+  const menit = t ? t('time.minutes', 'Menit') : 'Menit';
+
+  if (diffDays > 0) result += `${diffDays} ${hari} `;
+  if (remainingHours > 0) result += `${remainingHours} ${jam} `;
+  if (remainingMins > 0 || result === '') result += `${remainingMins} ${menit}`;
+
+  return result.trim();
 };
 
 export const getLocalizedTopic = (topic, t) => {
-    if (!topic || !t) return topic || '-';
-    const tLower = topic.toLowerCase();
-    if (tLower.includes('tidak merespon') || tLower.includes('not responding')) return t('dashboard.issue_not_responding', topic);
-    if (tLower.includes('tidak akurat') || tLower.includes('inaccurate')) return t('dashboard.issue_inaccurate', topic);
-    if (tLower.includes('koneksi terputus') || tLower.includes('disconnected')) return t('dashboard.issue_disconnected', topic);
-    if (tLower.includes('kerusakan fisik') || tLower.includes('physical damage')) return t('dashboard.issue_physical_damage', topic);
-    if (tLower.includes('error response')) return t('dashboard.issue_error_response', topic);
-    return topic;
+  if (!topic || !t) return topic || '-';
+  const tLower = topic.toLowerCase();
+  if (tLower.includes('tidak merespon') || tLower.includes('not responding')) return t('dashboard.issue_not_responding', topic);
+  if (tLower.includes('tidak akurat') || tLower.includes('inaccurate')) return t('dashboard.issue_inaccurate', topic);
+  if (tLower.includes('koneksi terputus') || tLower.includes('disconnected')) return t('dashboard.issue_disconnected', topic);
+  if (tLower.includes('kerusakan fisik') || tLower.includes('physical damage')) return t('dashboard.issue_physical_damage', topic);
+  if (tLower.includes('error response')) return t('dashboard.issue_error_response', topic);
+  return topic;
 };
 
 export function RiwayatPerbaikanPage() {
-    const { t, i18n } = useTranslation();
-    // States
-    const [complaints, setComplaints] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
+  const { t, i18n } = useTranslation();
+  // States
+  const [complaints, setComplaints] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua Kategori');
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -87,11 +87,11 @@ export function RiwayatPerbaikanPage() {
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [showYearDropdown, setShowYearDropdown] = useState(false);
 
-    const monthNames = [
-        t('dashboard.month_jan'), t('dashboard.month_feb'), t('dashboard.month_mar'), t('dashboard.month_apr'),
-        t('dashboard.month_may'), t('dashboard.month_jun'), t('dashboard.month_jul'), t('dashboard.month_aug'),
-        t('dashboard.month_sep'), t('dashboard.month_oct'), t('dashboard.month_nov'), t('dashboard.month_dec')
-    ];
+  const monthNames = [
+    t('dashboard.month_jan'), t('dashboard.month_feb'), t('dashboard.month_mar'), t('dashboard.month_apr'),
+    t('dashboard.month_may'), t('dashboard.month_jun'), t('dashboard.month_jul'), t('dashboard.month_aug'),
+    t('dashboard.month_sep'), t('dashboard.month_oct'), t('dashboard.month_nov'), t('dashboard.month_dec')
+  ];
 
   const calendarDays = useMemo(() => {
     const firstDay = new Date(viewYear, viewMonth, 1).getDay();
@@ -153,11 +153,11 @@ export function RiwayatPerbaikanPage() {
         const response = await fetch('/api/complaints/technician?isHistory=true', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (response.ok) {
           const result = await response.json();
           const data = result.data || [];
-          
+
           // Filter 'selesai' and 'ditolak' statuses
           const historyData = data
             .filter(item => ['selesai', 'ditolak'].includes(item.status?.toLowerCase()))
@@ -172,14 +172,14 @@ export function RiwayatPerbaikanPage() {
                 client: item.homeowner?.fullName || 'Pelanggan Bieon',
                 location: item.homeowner?.address || '-',
                 duration: calculateDuration(item.createdAt, item.completedAt || item.updatedAt, t),
-                rating: { 
-                    stars: item.rating?.stars || 0, 
-                    review: item.rating?.note || "Tidak ada ulasan." 
+                rating: {
+                  stars: item.rating?.stars || 0,
+                  review: item.rating?.note || "Tidak ada ulasan."
                 },
                 category: item.category || 'Umum',
                 device: item.device || 'Perangkat Bieon',
                 topic: getLocalizedTopic(item.topic, t)
-            };
+              };
             });
           setComplaints(historyData);
         }
@@ -269,19 +269,19 @@ export function RiwayatPerbaikanPage() {
     doc.setFontSize(18);
     doc.setTextColor(5, 155, 39); // #059b27 (BIEON Eco)
     doc.text(t('export.history_tech_title', 'Riwayat Aktivitas Teknisi'), 14, 22);
-        
+
     doc.setFontSize(11);
     doc.setTextColor(100);
     doc.text(`${t('export.printed_at', 'Dicetak pada')}: ${new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`, 14, 30);
 
     // Columns matching the UI table order
     const tableColumn = [
-      t('export.col_ticket_id', 'ID Tiket'), 
-      t('export.col_created', 'Dibuat'), 
-      t('export.col_customer', 'Pelanggan'), 
-      t('export.col_location', 'Lokasi'), 
-      t('export.col_topic', 'Topik Kendala'), 
-      t('export.col_duration', 'Durasi'), 
+      t('export.col_ticket_id', 'ID Tiket'),
+      t('export.col_created', 'Dibuat'),
+      t('export.col_customer', 'Pelanggan'),
+      t('export.col_location', 'Lokasi'),
+      t('export.col_topic', 'Topik Kendala'),
+      t('export.col_duration', 'Durasi'),
       t('export.col_rating', 'Rating')
     ];
     const tableRows = processedData.map(item => [
@@ -309,99 +309,99 @@ export function RiwayatPerbaikanPage() {
 
   // Helper Parser: Map string database log progres ke i18n
   const getLocalizedTimelineDesc = (desc) => {
-      if (!desc) return '';
-      
-      // Clean up potentially messy strings
-      const cleaned = desc.trim();
-      
-      // Basic Patterns (Synchronized with Backend & Admin)
-      if (cleaned.includes('Laporan pengaduan berhasil dibuat') || cleaned.includes('Complaint report successfully created')) {
-          return t('complaint.timeline_events.created', 'Laporan pengaduan berhasil dibuat. Menunggu penugasan teknisi.');
-      }
-      if (cleaned.includes('Tiket dialihkan dari') || cleaned.includes('Ticket reassigned from')) {
-          const match = cleaned.match(/(?:dari|from)\s+(.*?)\s+(?:ke|to)\s+(.*?)\s+(?:karena|due to)/i);
-          const oldTech = match ? match[1].trim() : '-';
-          const newTech = match ? match[2].trim() : '-';
-          return t('complaint.timeline_events.reassigned_from_to', 'Tiket dialihkan dari {{oldTech}} ke {{newTech}} karena melewati batas waktu.', { oldTech, newTech });
-      }
-      if (cleaned.includes('Tiket telah ditugaskan ke teknisi') || cleaned.includes('Ticket has been assigned to technician')) {
-          const match = cleaned.match(/(?:teknisi|technician):\s*(.*?)\.\s*(?:Menunggu|Waiting)/i);
-          const techName = match ? match[1].trim() : cleaned.split(':')[1]?.split('.')[0]?.trim() || '-';
-          return t('complaint.timeline_events.assigned', 'Tiket telah ditugaskan ke teknisi: {{tech}}. Menunggu respon teknisi.', { tech: techName });
-      }
-      if (cleaned.includes('Teknisi mulai memproses pengaduan') || cleaned.includes('Technician started processing')) {
-          return t('complaint.timeline_events.process_started', 'Teknisi mulai memproses pengaduan.');
-      }
-      
-      // Progress options from Technician dropdown
-      if (cleaned.startsWith('Sedang Menuju Lokasi') || cleaned.startsWith('On the way to location')) {
-          const notes = cleaned.replace(/Sedang Menuju Lokasi|On the way to location/gi, '').trim();
-          return t('complaint.timeline_events.prog_heading_location', 'Sedang Menuju Lokasi{{notes}}', { notes: notes ? ` ${notes}` : '' });
-      }
-      if (cleaned.startsWith('Mendiagnosa Masalah') || cleaned.startsWith('Diagnosing problem')) {
-          const notes = cleaned.replace(/Mendiagnosa Masalah|Diagnosing problem/gi, '').trim();
-          return t('complaint.timeline_events.prog_diagnosing', 'Mendiagnosa Masalah{{notes}}', { notes: notes ? ` ${notes}` : '' });
-      }
-      if (cleaned.startsWith('Menunggu Suku Cadang') || cleaned.startsWith('Waiting for spare parts')) {
-          const notes = cleaned.replace(/Menunggu Suku Cadang|Waiting for spare parts/gi, '').trim();
-          return t('complaint.timeline_events.prog_waiting_parts', 'Menunggu Suku Cadang{{notes}}', { notes: notes ? ` ${notes}` : '' });
-      }
-      if (cleaned.startsWith('Proses Perbaikan') || cleaned.startsWith('Repair in progress')) {
-          const notes = cleaned.replace(/Proses Perbaikan|Repair in progress/gi, '').trim();
-          return t('complaint.timeline_events.prog_repairing', 'Proses Perbaikan{{notes}}', { notes: notes ? ` ${notes}` : '' });
-      }
-      
-      // Log Access
-      if (cleaned.includes('Teknisi meminta akses data log') || cleaned.includes('Technician requested log data access')) {
-          const reasonMatch = cleaned.match(/(?:Alasan|Reason):\s*(.*)/i);
-          const reason = reasonMatch ? reasonMatch[1].trim() : '';
-          return t('complaint.timeline_events.log_requested', 'Teknisi meminta akses data log perangkat.{{reason}}', { reason: reason ? ` Alasan: ${reason}` : '' });
-      }
-      if (cleaned.includes('SuperAdmin memberikan izin akses data log') || cleaned.includes('SuperAdmin granted log data access')) {
-          return t('complaint.timeline_events.log_approved', 'SuperAdmin memberikan izin akses data log perangkat.');
-      }
-      if (cleaned.includes('SuperAdmin menolak akses data log') || cleaned.includes('SuperAdmin denied log data access')) {
-          return t('complaint.timeline_events.log_rejected', 'SuperAdmin menolak akses data log perangkat.');
-      }
-      
-      // PING
-      if (cleaned.includes('SuperAdmin mengirimkan PING') || cleaned.includes('SuperAdmin sent a PING')) {
-          const matchCount = cleaned.match(/(?:Teguran ke-|Warning #)(\d+)/i);
-          const count = matchCount ? matchCount[1] : '1';
-          const matchUrg = cleaned.match(/(?:menjadi|to):\s*(.*)/i);
-          const urgency = matchUrg ? matchUrg[1].replace(/\.$/, '').trim() : 'MEDIUM';
-          return t('complaint.timeline_events.ping_sent', 'SuperAdmin mengirimkan PING (Teguran ke-{{count}}). Urgensi ditingkatkan menjadi: {{urgency}}.', { count, urgency });
-      }
-      
-      // Completing & Rejection
-      if (cleaned.includes('Teknisi menyatakan perbaikan selesai') || cleaned.includes('Technician declared repair complete')) {
-          return t('complaint.timeline_events.tech_completed', 'Teknisi menyatakan perbaikan selesai.');
-      }
-      if (cleaned.includes('Homeowner telah mengonfirmasi tiket selesai') || cleaned.includes('Customer confirmed ticket completion')) {
-          const ratingMatch = cleaned.match(/\(Rating:\s*(\d+)(?:&|\*)?\)/i);
-          const ratingScore = ratingMatch ? ratingMatch[1] : '';
-          const ratingStr = ratingScore ? ` (Rating: ${ratingScore}*)` : '';
-          return t('complaint.timeline_events.homeowner_confirmed', 'Homeowner telah mengonfirmasi tiket selesai{{rating}}.', { rating: ratingStr });
-      }
-      if (cleaned.includes('Tiket ditolak oleh SuperAdmin') || cleaned.includes('Ticket rejected by SuperAdmin')) {
-          return t('complaint.timeline_events.rejected', 'Tiket ditolak oleh SuperAdmin.');
-      }
-      
-      // Overdues
-      if (cleaned.includes('Batas waktu respon terlampaui') || cleaned.includes('Response deadline exceeded')) {
-          return t('complaint.timeline_events.response_overdue', 'Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.');
-      }
-      if (cleaned.includes('Batas waktu perbaikan terlampaui') || cleaned.includes('Repair deadline exceeded')) {
-          return t('complaint.timeline_events.repair_overdue', 'Batas waktu perbaikan terlampaui (56 jam). Status otomatis berubah menjadi Overdue Perbaikan.');
-      }
-      
-      // Fallback status/note matching
-      if (cleaned.includes('Status diperbarui menjadi') || cleaned.includes('Status updated to')) {
-          const statusStr = cleaned.split(/(?:menjadi|to)\s+/i)[1]?.replace(/\.$/, '').trim() || '';
-          return t('complaint.timeline_events.status_updated_to', 'Status diperbarui menjadi {{status}}.', { status: statusStr });
-      }
+    if (!desc) return '';
 
-      return cleaned;
+    // Clean up potentially messy strings
+    const cleaned = desc.trim();
+
+    // Basic Patterns (Synchronized with Backend & Admin)
+    if (cleaned.includes('Laporan pengaduan berhasil dibuat') || cleaned.includes('Complaint report successfully created')) {
+      return t('complaint.timeline_events.created', 'Laporan pengaduan berhasil dibuat. Menunggu penugasan teknisi.');
+    }
+    if (cleaned.includes('Tiket dialihkan dari') || cleaned.includes('Ticket reassigned from')) {
+      const match = cleaned.match(/(?:dari|from)\s+(.*?)\s+(?:ke|to)\s+(.*?)\s+(?:karena|due to)/i);
+      const oldTech = match ? match[1].trim() : '-';
+      const newTech = match ? match[2].trim() : '-';
+      return t('complaint.timeline_events.reassigned_from_to', 'Tiket dialihkan dari {{oldTech}} ke {{newTech}} karena melewati batas waktu.', { oldTech, newTech });
+    }
+    if (cleaned.includes('Tiket telah ditugaskan ke teknisi') || cleaned.includes('Ticket has been assigned to technician')) {
+      const match = cleaned.match(/(?:teknisi|technician):\s*(.*?)\.\s*(?:Menunggu|Waiting)/i);
+      const techName = match ? match[1].trim() : cleaned.split(':')[1]?.split('.')[0]?.trim() || '-';
+      return t('complaint.timeline_events.assigned', 'Tiket telah ditugaskan ke teknisi: {{tech}}. Menunggu respon teknisi.', { tech: techName });
+    }
+    if (cleaned.includes('Teknisi mulai memproses pengaduan') || cleaned.includes('Technician started processing')) {
+      return t('complaint.timeline_events.process_started', 'Teknisi mulai memproses pengaduan.');
+    }
+
+    // Progress options from Technician dropdown
+    if (cleaned.startsWith('Sedang Menuju Lokasi') || cleaned.startsWith('On the way to location')) {
+      const notes = cleaned.replace(/Sedang Menuju Lokasi|On the way to location/gi, '').trim();
+      return t('complaint.timeline_events.prog_heading_location', 'Sedang Menuju Lokasi{{notes}}', { notes: notes ? ` ${notes}` : '' });
+    }
+    if (cleaned.startsWith('Mendiagnosa Masalah') || cleaned.startsWith('Diagnosing problem')) {
+      const notes = cleaned.replace(/Mendiagnosa Masalah|Diagnosing problem/gi, '').trim();
+      return t('complaint.timeline_events.prog_diagnosing', 'Mendiagnosa Masalah{{notes}}', { notes: notes ? ` ${notes}` : '' });
+    }
+    if (cleaned.startsWith('Menunggu Suku Cadang') || cleaned.startsWith('Waiting for spare parts')) {
+      const notes = cleaned.replace(/Menunggu Suku Cadang|Waiting for spare parts/gi, '').trim();
+      return t('complaint.timeline_events.prog_waiting_parts', 'Menunggu Suku Cadang{{notes}}', { notes: notes ? ` ${notes}` : '' });
+    }
+    if (cleaned.startsWith('Proses Perbaikan') || cleaned.startsWith('Repair in progress')) {
+      const notes = cleaned.replace(/Proses Perbaikan|Repair in progress/gi, '').trim();
+      return t('complaint.timeline_events.prog_repairing', 'Proses Perbaikan{{notes}}', { notes: notes ? ` ${notes}` : '' });
+    }
+
+    // Log Access
+    if (cleaned.includes('Teknisi meminta akses data log') || cleaned.includes('Technician requested log data access')) {
+      const reasonMatch = cleaned.match(/(?:Alasan|Reason):\s*(.*)/i);
+      const reason = reasonMatch ? reasonMatch[1].trim() : '';
+      return t('complaint.timeline_events.log_requested', 'Teknisi meminta akses data log perangkat.{{reason}}', { reason: reason ? ` Alasan: ${reason}` : '' });
+    }
+    if (cleaned.includes('SuperAdmin memberikan izin akses data log') || cleaned.includes('SuperAdmin granted log data access')) {
+      return t('complaint.timeline_events.log_approved', 'SuperAdmin memberikan izin akses data log perangkat.');
+    }
+    if (cleaned.includes('SuperAdmin menolak akses data log') || cleaned.includes('SuperAdmin denied log data access')) {
+      return t('complaint.timeline_events.log_rejected', 'SuperAdmin menolak akses data log perangkat.');
+    }
+
+    // PING
+    if (cleaned.includes('SuperAdmin mengirimkan PING') || cleaned.includes('SuperAdmin sent a PING')) {
+      const matchCount = cleaned.match(/(?:Teguran ke-|Warning #)(\d+)/i);
+      const count = matchCount ? matchCount[1] : '1';
+      const matchUrg = cleaned.match(/(?:menjadi|to):\s*(.*)/i);
+      const urgency = matchUrg ? matchUrg[1].replace(/\.$/, '').trim() : 'MEDIUM';
+      return t('complaint.timeline_events.ping_sent', 'SuperAdmin mengirimkan PING (Teguran ke-{{count}}). Urgensi ditingkatkan menjadi: {{urgency}}.', { count, urgency });
+    }
+
+    // Completing & Rejection
+    if (cleaned.includes('Teknisi menyatakan perbaikan selesai') || cleaned.includes('Technician declared repair complete')) {
+      return t('complaint.timeline_events.tech_completed', 'Teknisi menyatakan perbaikan selesai.');
+    }
+    if (cleaned.includes('Homeowner telah mengonfirmasi tiket selesai') || cleaned.includes('Customer confirmed ticket completion')) {
+      const ratingMatch = cleaned.match(/\(Rating:\s*(\d+)(?:&|\*)?\)/i);
+      const ratingScore = ratingMatch ? ratingMatch[1] : '';
+      const ratingStr = ratingScore ? ` (Rating: ${ratingScore}*)` : '';
+      return t('complaint.timeline_events.homeowner_confirmed', 'Homeowner telah mengonfirmasi tiket selesai{{rating}}.', { rating: ratingStr });
+    }
+    if (cleaned.includes('Tiket ditolak oleh SuperAdmin') || cleaned.includes('Ticket rejected by SuperAdmin')) {
+      return t('complaint.timeline_events.rejected', 'Tiket ditolak oleh SuperAdmin.');
+    }
+
+    // Overdues
+    if (cleaned.includes('Batas waktu respon terlampaui') || cleaned.includes('Response deadline exceeded')) {
+      return t('complaint.timeline_events.response_overdue', 'Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.');
+    }
+    if (cleaned.includes('Batas waktu perbaikan terlampaui') || cleaned.includes('Repair deadline exceeded')) {
+      return t('complaint.timeline_events.repair_overdue', 'Batas waktu perbaikan terlampaui (56 jam). Status otomatis berubah menjadi Overdue Perbaikan.');
+    }
+
+    // Fallback status/note matching
+    if (cleaned.includes('Status diperbarui menjadi') || cleaned.includes('Status updated to')) {
+      const statusStr = cleaned.split(/(?:menjadi|to)\s+/i)[1]?.replace(/\.$/, '').trim() || '';
+      return t('complaint.timeline_events.status_updated_to', 'Status diperbarui menjadi {{status}}.', { status: statusStr });
+    }
+
+    return cleaned;
   };
 
   // Export Detail Single Ticket (PDF)
@@ -409,7 +409,7 @@ export function RiwayatPerbaikanPage() {
     if (!ticket) return;
     const doc = new jsPDF('portrait');
     const primaryColor = [5, 155, 39]; // BIEON Teal
-    
+
     // Header & Logo Branding
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.rect(0, 0, 210, 40, 'F');
@@ -429,24 +429,24 @@ export function RiwayatPerbaikanPage() {
 
     doc.setFontSize(10);
     const infoData = [
-        [t('export.row_customer_name', 'Nama Pelanggan'), `: ${ticket.client}`],
-        [t('export.row_address', 'Alamat'), `: ${ticket.location}`],
-        [t('export.row_topic', 'Topik Kendala'), `: ${ticket.topic}`],
-        [t('export.row_category', 'Kategori'), `: ${ticket.category}`],
-        [t('export.row_tech_rating', 'Rating Layanan'), `: ${ticket.rating?.stars !== '-' ? ticket.rating.stars + '/5' : t('export.val_no_rating', 'Belum dinilai')}`],
-        [t('export.row_desc', 'Deskripsi Masalah'), `: ${ticket.desc || ticket.description || '-'}`],
-        [t('export.row_created_at', 'Waktu Dibuat'), `: ${ticket.date}`],
-        [t('export.row_completed_at', 'Waktu Selesai'), `: ${ticket.finishedDate || '-'}`],
-        [t('export.row_duration', 'Durasi Pengerjaan'), `: ${ticket.duration || '-'}`]
+      [t('export.row_customer_name', 'Nama Pelanggan'), `: ${ticket.client}`],
+      [t('export.row_address', 'Alamat'), `: ${ticket.location}`],
+      [t('export.row_topic', 'Topik Kendala'), `: ${ticket.topic}`],
+      [t('export.row_category', 'Kategori'), `: ${ticket.category}`],
+      [t('export.row_tech_rating', 'Rating Layanan'), `: ${ticket.rating?.stars !== '-' ? ticket.rating.stars + '/5' : t('export.val_no_rating', 'Belum dinilai')}`],
+      [t('export.row_desc', 'Deskripsi Masalah'), `: ${ticket.desc || ticket.description || '-'}`],
+      [t('export.row_created_at', 'Waktu Dibuat'), `: ${ticket.date}`],
+      [t('export.row_completed_at', 'Waktu Selesai'), `: ${ticket.finishedDate || '-'}`],
+      [t('export.row_duration', 'Durasi Pengerjaan'), `: ${ticket.duration || '-'}`]
     ];
 
     autoTable(doc, {
-        startY: 65,
-        body: infoData,
-        theme: 'plain',
-        styles: { fontSize: 10, cellPadding: 2 },
-        columnStyles: { 0: { fontStyle: 'bold', width: 38 }, 1: { cellWidth: 'auto' } },
-        margin: { bottom: 25 }
+      startY: 65,
+      body: infoData,
+      theme: 'plain',
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: { 0: { fontStyle: 'bold', width: 38 }, 1: { cellWidth: 'auto' } },
+      margin: { bottom: 25 }
     });
 
     // Section 2: SLA Performance Metrics
@@ -456,14 +456,14 @@ export function RiwayatPerbaikanPage() {
     doc.line(14, currentY + 3, 60, currentY + 3);
 
     const timeline = ticket.timeline || [];
-    
+
     // Use pre-calculated durations from ticket if available
-    const responseTime = ticket.responseDuration && ticket.responseDuration !== '00:00:00' 
-        ? ticket.responseDuration 
-        : '-';
-    const repairTime = ticket.repairDuration && ticket.repairDuration !== '00:00:00' 
-        ? ticket.repairDuration 
-        : '-';
+    const responseTime = ticket.responseDuration && ticket.responseDuration !== '00:00:00'
+      ? ticket.responseDuration
+      : '-';
+    const repairTime = ticket.repairDuration && ticket.repairDuration !== '00:00:00'
+      ? ticket.repairDuration
+      : '-';
 
     // Calculate Points for Internal Status Logic
     const resPts = ticket.responsePoints || 0;
@@ -477,25 +477,25 @@ export function RiwayatPerbaikanPage() {
     const statusOntime = t('export.status_ontime', 'SESUAI SLA');
 
     const slaData = [
-        [t('export.sla_response', 'Respon Teknisi'), '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime],
-        [t('export.sla_repair', 'Perbaikan Unit'), '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime]
+      [t('export.sla_response', 'Respon Teknisi'), '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime],
+      [t('export.sla_repair', 'Perbaikan Unit'), '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime]
     ];
 
     autoTable(doc, {
-        startY: currentY + 8,
-        head: [[t('export.col_sla_aspect', 'Aspek SLA'), t('export.col_target', 'Target'), t('export.col_achieved', 'Capaian'), t('export.col_status', 'Status')]],
-        body: slaData,
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 3 },
-        headStyles: { fillColor: [240, 240, 240], textColor: [40, 40, 40], fontStyle: 'bold' },
-        columnStyles: { 3: { fontStyle: 'bold' } },
-        margin: { bottom: 25 },
-        didParseCell: (data) => {
-            if (data.column.index === 3 && data.cell.section === 'body') {
-                if (data.cell.text[0] === statusOverdue) data.cell.styles.textColor = [220, 38, 38];
-                if (data.cell.text[0] === statusOntime) data.cell.styles.textColor = [16, 185, 129];
-            }
+      startY: currentY + 8,
+      head: [[t('export.col_sla_aspect', 'Aspek SLA'), t('export.col_target', 'Target'), t('export.col_achieved', 'Capaian'), t('export.col_status', 'Status')]],
+      body: slaData,
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [240, 240, 240], textColor: [40, 40, 40], fontStyle: 'bold' },
+      columnStyles: { 3: { fontStyle: 'bold' } },
+      margin: { bottom: 25 },
+      didParseCell: (data) => {
+        if (data.column.index === 3 && data.cell.section === 'body') {
+          if (data.cell.text[0] === statusOverdue) data.cell.styles.textColor = [220, 38, 38];
+          if (data.cell.text[0] === statusOntime) data.cell.styles.textColor = [16, 185, 129];
         }
+      }
     });
 
     // Section Summary (Overall Status)
@@ -516,46 +516,46 @@ export function RiwayatPerbaikanPage() {
     doc.line(14, currentY + 3, 85, currentY + 3);
 
     const timelineData = timeline.length > 0 ? timeline.map(t => [
-        t.time || '-',
-        (t.status || 'UPDATE').toUpperCase(),
-        getLocalizedTimelineDesc(t.desc || t.note || t.notes || '-')
+      t.time || '-',
+      (t.status || 'UPDATE').toUpperCase(),
+      getLocalizedTimelineDesc(t.desc || t.note || t.notes || '-')
     ]) : [['-', t('export.val_no_data_progress', 'TIDAK ADA DATA PROGRES'), '-']];
 
     autoTable(doc, {
-        startY: currentY + 8,
-        head: [[t('export.col_date_time', 'Tanggal & Waktu'), t('export.col_activity', 'Aktivitas'), t('export.col_notes', 'Catatan/Keterangan')]],
-        body: timelineData,
-        theme: 'striped',
-        styles: { 
-            fontSize: 8, 
-            cellPadding: 3,
-            overflow: 'linebreak',
-            halign: 'left',
-            valign: 'middle'
-        },
-        headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold' },
-        columnStyles: { 
-            0: { cellWidth: 35 }, 
-            1: { cellWidth: 40, fontStyle: 'bold' },
-            2: { cellWidth: 'auto' }
-        },
-        margin: { bottom: 25, left: 14, right: 14 }
+      startY: currentY + 8,
+      head: [[t('export.col_date_time', 'Tanggal & Waktu'), t('export.col_activity', 'Aktivitas'), t('export.col_notes', 'Catatan/Keterangan')]],
+      body: timelineData,
+      theme: 'striped',
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        halign: 'left',
+        valign: 'middle'
+      },
+      headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold' },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 40, fontStyle: 'bold' },
+        2: { cellWidth: 'auto' }
+      },
+      margin: { bottom: 25, left: 14, right: 14 }
     });
 
     // Footer & Page Numbers (Adopted from SA)
     const pageCount = doc.internal.getNumberOfPages();
-    for(let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        
-        // Separator Line
-        doc.setDrawColor(230, 230, 230);
-        doc.setLineWidth(0.2);
-        doc.line(14, 282, 196, 282);
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
 
-        doc.setFontSize(7);
-        doc.setTextColor(180);
-        doc.text(t('export.auto_generated_note', 'Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON Smart Green Living.'), 105, 287, { align: 'center' });
-        doc.text(t('export.page_indicator', 'Halaman {{current}} dari {{total}}', { current: i, total: pageCount }), 105, 292, { align: 'center' });
+      // Separator Line
+      doc.setDrawColor(230, 230, 230);
+      doc.setLineWidth(0.2);
+      doc.line(14, 282, 196, 282);
+
+      doc.setFontSize(7);
+      doc.setTextColor(180);
+      doc.text(t('export.auto_generated_note', 'Dokumen ini dihasilkan secara otomatis oleh Sistem Monitoring BIEON Smart Green Living.'), 105, 287, { align: 'center' });
+      doc.text(t('export.page_indicator', 'Halaman {{current}} dari {{total}}', { current: i, total: pageCount }), 105, 292, { align: 'center' });
     }
 
     doc.save(`BIEON_Detail_Teknisi_${ticket.id.replace('+P', '')}.pdf`);
@@ -564,18 +564,20 @@ export function RiwayatPerbaikanPage() {
   // getStatusBadge replaced by shared TicketStatusBadge component
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-eco/5 to-sense/10/10 p-4 md:p-8">
+    <div className="min-h-screen bg-transparent p-4 md:p-8 font-sans">
       <div className="max-w-[1900px] mx-auto">
-        <h1 className="text-4xl font-bold text-center text-green-900 mb-8">Riwayat Aktivitas</h1>
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 w-full mb-6">
+          {/* Judul */}
+          <div>
+            <h1 className="text-3xl font-bold text-green-900">{t('history.title', 'Riwayat Aktivitas')}</h1>
+            <p className="text-gray-500 mt-1">{t('history.subtitle', 'Pantau log, aktivitas, dan riwayat perbaikan pelanggan')}</p>
+          </div>
 
-
-
-        {/* FILTERS & ACTIONS */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 w-full">
-          <div className="flex flex-row w-full lg:w-auto mt-2 lg:mt-0 gap-2 items-center">
+          {/* Action Bar */}
+          <div className="flex flex-row items-center gap-2 w-full lg:w-auto overflow-x-auto lg:overflow-visible scrollbar-hide pb-2 lg:pb-0">
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[100px] sm:w-[240px] group">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense/500 transition-colors" />
+            <div className="relative flex-1 min-w-[150px] lg:min-w-[250px] lg:flex-none group">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense/500 transition-colors pointer-events-none" />
               <input
                 type="text"
                 placeholder={t('table.search_placeholder', 'Cari tiket...')}
@@ -584,31 +586,31 @@ export function RiwayatPerbaikanPage() {
                 className="w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] font-medium focus:outline-none focus:border-sense/100 focus:ring-4 focus:ring-sense/20 bg-white transition-all shadow-sm"
               />
             </div>
-            
+
             {/* Kategori Dropdown */}
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                 className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showCategoryDropdown ? 'border-sense/100 ring-4 ring-sense/20' : 'border-gray-200 hover:bg-gray-50'}`}
               >
-                <Filter className={`w-4 h-4 transition-colors ${selectedCategory !== 'Semua Kategori' ? 'text-sense/500' : 'text-gray-400'}`} />
-                <span className={`hidden min-[400px]:inline-block ${selectedCategory !== 'Semua Kategori' ? 'text-gray-900' : 'text-gray-500'}`}>
+                <Filter className={`w-4 h-4 pointer-events-none transition-colors ${selectedCategory !== 'Semua Kategori' ? 'text-sense/500' : 'text-gray-400'}`} />
+                <span className={`hidden sm:inline ml-1 ${selectedCategory !== 'Semua Kategori' ? 'text-gray-900' : 'text-gray-500'}`}>
                   {selectedCategory === 'Semua Kategori' ? t('history.filters.category', 'Kategori') : selectedCategory}
                 </span>
-                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`hidden sm:block w-4 h-4 pointer-events-none text-gray-400 transition-all ${showCategoryDropdown ? 'rotate-180' : ''}`} />
               </button>
               {showCategoryDropdown && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowCategoryDropdown(false)}></div>
-                  <div className="absolute top-full mt-2 right-0 sm:left-0 w-[220px] bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="fixed sm:absolute top-[180px] sm:top-full left-4 right-4 sm:left-auto sm:right-0 mt-0 sm:mt-2 w-auto sm:w-[280px] bg-white border border-gray-100 sm:border-0 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-4 sm:slide-in-from-top-2 max-h-[60vh] sm:max-h-none overflow-y-auto custom-scrollbar-y">
                     {['', 'Sensor', 'Control Actuator System', 'Lainnya'].map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => { setSelectedCategory(cat === '' ? 'Semua Kategori' : cat); setShowCategoryDropdown(false); setCurrentPage(1); }}
-                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedCategory === (cat === '' ? 'Semua Kategori' : cat) ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
-                        >
-                            {cat ? t(`complaint.category_${cat.toLowerCase().replace(/\s+/g, '_')}`, cat) : t('history.all_categories', 'Semua Kategori')}
-                        </button>
+                      <button
+                        key={cat}
+                        onClick={() => { setSelectedCategory(cat === '' ? 'Semua Kategori' : cat); setShowCategoryDropdown(false); setCurrentPage(1); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedCategory === (cat === '' ? 'Semua Kategori' : cat) ? 'text-sense bg-sense/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                      >
+                        {cat ? t(`complaint.category_${cat.toLowerCase().replace(/\s+/g, '_')}`, cat) : t('history.all_categories', 'Semua Kategori')}
+                      </button>
                     ))}
                   </div>
                 </>
@@ -621,17 +623,17 @@ export function RiwayatPerbaikanPage() {
                 onClick={() => setShowDateDropdown(!showDateDropdown)}
                 className={`flex items-center justify-center gap-2.5 px-4 py-2.5 bg-white border rounded-xl text-[13px] font-medium transition-all shadow-sm group ${showDateDropdown || dateRange.start || dateRange.end ? 'border-sense/100 ring-4 ring-sense/20' : 'border-gray-200 hover:bg-gray-50'}`}
               >
-                <Calendar className={`w-4 h-4 transition-colors ${dateRange.start || dateRange.end ? 'text-sense/500' : 'text-gray-400'}`} />
-                <span className={`hidden min-[400px]:inline-block ${dateRange.start || dateRange.end ? 'text-gray-900' : 'text-gray-500'}`}>
+                <Calendar className={`w-4 h-4 pointer-events-none transition-colors ${dateRange.start || dateRange.end ? 'text-sense/500' : 'text-gray-400'}`} />
+                <span className={`hidden sm:inline ml-1 ${dateRange.start || dateRange.end ? 'text-gray-900' : 'text-gray-500'}`}>
                   {dateRange.start || dateRange.end ? `${formatDateDisplay(dateRange.start)} - ${formatDateDisplay(dateRange.end)}` : t('history.filters.date_range', 'Rentang Tanggal')}
                 </span>
-                <ChevronDown className={`hidden sm:block w-4 h-4 text-gray-400 transition-all ${showDateDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`hidden sm:block w-4 h-4 pointer-events-none text-gray-400 transition-all ${showDateDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showDateDropdown && (
                 <>
                   <div className="fixed inset-0 z-[15]" onClick={() => { setShowDateDropdown(false); setActivePicker(null); }}></div>
-                  <div className="absolute top-full mt-2 right-[-48px] sm:right-0 w-[calc(100vw-32px)] max-w-[320px] sm:w-[320px] bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 sm:p-5 z-[20] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <div className="fixed sm:absolute top-[180px] sm:top-full left-4 right-4 sm:left-auto sm:right-0 mt-0 sm:mt-2 w-auto sm:w-[320px] bg-white border border-gray-100 sm:border-0 rounded-2xl shadow-2xl p-4 sm:p-5 z-50 animate-in fade-in slide-in-from-top-4 sm:slide-in-from-top-2 max-h-[70vh] sm:max-h-none overflow-y-auto custom-scrollbar-y">
                     <div className="space-y-5">
                       {/* Input Trigger Start */}
                       <div>
@@ -700,9 +702,9 @@ export function RiwayatPerbaikanPage() {
 
                           <div className="grid grid-cols-7 gap-1 mb-2">
                             {['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'].map(d => (
-                                <span key={d} className="text-[9px] font-black text-gray-300 text-center uppercase tracking-widest">
-                                    {t(`calendar.days.${d}`)}
-                                </span>
+                              <span key={d} className="text-[9px] font-black text-gray-300 text-center uppercase tracking-widest">
+                                {t(`calendar.days.${d}`)}
+                              </span>
                             ))}
                           </div>
 
@@ -745,21 +747,21 @@ export function RiwayatPerbaikanPage() {
                 </>
               )}
             </div>
-            
+
             <button
-                onClick={handleExportPDF}
-                className="flex lg:hidden items-center justify-center px-3 sm:px-4 py-2.5 bg-eco text-white rounded-xl hover:bg-green-700 transition-all shadow-sm active:scale-95 shrink-0"
+              onClick={handleExportPDF}
+              className="flex lg:hidden items-center justify-center px-3 sm:px-4 py-2.5 bg-eco text-white rounded-xl hover:bg-green-700 transition-all shadow-sm active:scale-95 shrink-0"
             >
-                <Download className="w-4 h-4" />
+              <Download className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={handleExportPDF}
+              className="hidden lg:flex items-center gap-2 px-6 py-2.5 bg-eco text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            >
+              <Download className="w-4 h-4" /> {t('table.export', 'Export')}
             </button>
           </div>
-
-          <button
-            onClick={handleExportPDF}
-            className="hidden lg:flex items-center gap-2 px-6 py-2.5 bg-eco text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-all shadow-sm active:scale-95 whitespace-nowrap"
-          >
-            <Download className="w-4 h-4" /> {t('table.export', 'Export')}
-          </button>
         </div>
 
         <style>{`
@@ -767,10 +769,14 @@ export function RiwayatPerbaikanPage() {
           .custom-scrollbar-x::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
           .custom-scrollbar-x::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
           .custom-scrollbar-x::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+          .custom-scrollbar-y::-webkit-scrollbar { width: 6px; }
+          .custom-scrollbar-y::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 6px; }
+          .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+          .custom-scrollbar-y::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         `}</style>
 
         {/* TABLE AREA */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-0 overflow-hidden">
           <div className="hidden md:block w-full overflow-x-auto pb-4 custom-scrollbar-x">
             <table className="w-full text-left text-[14px] text-gray-700 table-auto min-w-max">
               <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
@@ -931,9 +937,9 @@ export function RiwayatPerbaikanPage() {
 
             <div className="text-xs sm:text-sm font-medium text-gray-600">
               {t('table.pagination_info', '{{start}}-{{end}} dari {{total}} item', {
-                  start: totalItems === 0 ? 0 : startIndex + 1,
-                  end: Math.min(startIndex + rowsPerPage, totalItems),
-                  total: totalItems
+                start: totalItems === 0 ? 0 : startIndex + 1,
+                end: Math.min(startIndex + rowsPerPage, totalItems),
+                total: totalItems
               })}
             </div>
 

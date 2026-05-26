@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const bieonSystemSchema = new mongoose.Schema({
     bieonId: { 
@@ -23,5 +24,7 @@ const bieonSystemSchema = new mongoose.Schema({
         default: 'Active' 
     }
 }, { timestamps: true });
+
+bieonSystemSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('BieonSystem', bieonSystemSchema);
