@@ -118,6 +118,12 @@ export function DeviceControlPage({ onNavigate }) {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [activeSensorAspect, setActiveSensorAspect] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  
+  // Hub Node Addition/Removal States
+  const [isScanningHub, setIsScanningHub] = useState(false);
+  const [scanCountdown, setScanCountdown] = useState(60);
+  const [removingHubId, setRemovingHubId] = useState(null);
+  const [removingCountdown, setRemovingCountdown] = useState(30);
   const [unassignedDevices, setUnassignedDevices] = useState([
     { id: "ud-1", name: "Soket Pintar A1" },
     { id: "ud-2", name: "Saklar Dinding 2-Gang" },
@@ -327,90 +333,170 @@ export function DeviceControlPage({ onNavigate }) {
     return 'Mode Manual';
   };
 
+  // Countdown Timer for Hub Node Scanning
+  useEffect(() => {
+    let timer = null;
+    if (isScanningHub && scanCountdown > 0) {
+      timer = setInterval(() => {
+        setScanCountdown((prev) => {
+          if (prev <= 1) {
+            setIsScanningHub(false);
+            alert("Waktu pairing habis (Timeout). Silakan coba lagi.");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isScanningHub, scanCountdown]);
+
+  const handleRemovingTimeout = async (hubId) => {
+    setRemovingHubId(null);
+    
+    const hub = currentBieon?.hubs?.find(h => String(h.id) === String(hubId) || String(h._id) === String(hubId));
+    const hubName = hub ? hub.name : "Hub Node";
+
+    const confirmForceDelete = window.confirm(`Gateway tidak merespons pelepasan Hub "${hubName}" dalam 30 detik. Apakah Anda ingin menghapusnya secara paksa (Force Delete) dari database?`);
+    if (!confirmForceDelete) {
+      fetchData();
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/hubs/${hubId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal menghapus paksa Hub');
+      }
+
+      fetchData();
+      alert("Hub Node berhasil dihapus secara paksa dari database.");
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  };
+
+  // Countdown Timer untuk Pelepasan Hub Node (Removing status)
+  useEffect(() => {
+    let timer = null;
+    if (removingHubId && removingCountdown > 0) {
+      timer = setInterval(() => {
+        setRemovingCountdown((prev) => {
+          if (prev <= 1) {
+            handleRemovingTimeout(removingHubId);
+            return 30;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [removingHubId, removingCountdown]);
+
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      // 1. Get Me
+      const meRes = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!meRes.ok) throw new Error("Gagal fetch profil");
+      const user = await meRes.json();
+      setUserProfile(user);
+
+      // Tentukan apakah kita dalam mode teknisi (cek localStorage langsung untuk menghindari stale state)
+      const techAccess = localStorage.getItem('bieon_tech_access') === 'true';
+      const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
+
+      const targetId = (techAccess && activeHomeownerId)
+        ? activeHomeownerId
+        : user._id;
+
+      // Update state agar UI sinkron
+      setIsTechnicianMode(techAccess);
+
+      // 2. Get Systems (Disesuaikan untuk target ID)
+      const sysRes = await fetch(`/api/hubs/systems/${targetId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const systemsData = await sysRes.json();
+
+      // 3. Get Devices (Disesuaikan untuk target ID)
+      const devRes = await fetch(`/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const devicesData = await devRes.json();
+      const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
+      const uniqueDevicesData = Array.from(
+        new Map(devicesData.map((device) => {
+          const key = normalizeIeee(device.device_ieee) || String(device._id || device.id || '');
+          return [key, device];
+        }))
+      ).map(([, device]) => device);
+
+      // Join devices into hubs in systems
+      const joinedSystems = systemsData.map(sys => ({
+        id: sys._id,
+        bieonId: sys.bieonId,
+        name: sys.bieonId, // Fallback name
+        totalHubs: sys.hubCount || sys.hubs?.length || 0,
+        hubs: sys.hubs.map(hub => ({
+          ...hub,
+          devices: uniqueDevicesData
+            .filter(d => String(d.hubId) === String(hub.id))
+            .map(d => ({
+              ...d,
+              id: d._id,
+              installedDate: d.createdAt,
+              currentValues: d.currentValues || {},
+              sensorParams: d.thresholds || {},
+              controls: d.remoteState || {}
+            }))
+        })),
+        createdAt: sys.createdAt
+      }));
+
+      setBieonSystems(joinedSystems);
+
+      // Restore removing status countdown if a hub has 'Removing' status in the DB
+      const removingHub = joinedSystems.flatMap(sys => sys.hubs).find(h => h.status === 'Removing');
+      if (removingHub) {
+        setRemovingHubId(removingHub.id || removingHub._id);
+        setRemovingCountdown(30);
+      }
+
+      if (joinedSystems.length > 0) {
+        setStep("view-bieon");
+      } else {
+        setStep("idle");
+      }
+    } catch (err) {
+      console.error("Error loading data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load User and Systems from Backend
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setIsLoading(false);
-          return;
-        }
-
-        // 1. Get Me
-        const meRes = await fetch('/api/auth/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!meRes.ok) throw new Error("Gagal fetch profil");
-        const user = await meRes.json();
-        setUserProfile(user);
-
-        // Tentukan apakah kita dalam mode teknisi (cek localStorage langsung untuk menghindari stale state)
-        const techAccess = localStorage.getItem('bieon_tech_access') === 'true';
-        const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
-
-        const targetId = (techAccess && activeHomeownerId)
-          ? activeHomeownerId
-          : user._id;
-
-        // Update state agar UI sinkron
-        setIsTechnicianMode(techAccess);
-
-        // 2. Get Systems (Disesuaikan untuk target ID)
-        const sysRes = await fetch(`/api/hubs/systems/${targetId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const systemsData = await sysRes.json();
-
-        // 3. Get Devices (Disesuaikan untuk target ID)
-        const devRes = await fetch(`/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const devicesData = await devRes.json();
-        const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
-        const uniqueDevicesData = Array.from(
-          new Map(devicesData.map((device) => {
-            const key = normalizeIeee(device.device_ieee) || String(device._id || device.id || '');
-            return [key, device];
-          }))
-        ).map(([, device]) => device);
-
-        // Join devices into hubs in systems
-        const joinedSystems = systemsData.map(sys => ({
-          id: sys._id,
-          bieonId: sys.bieonId,
-          name: sys.bieonId, // Fallback name
-          totalHubs: sys.hubCount || sys.hubs?.length || 0,
-          hubs: sys.hubs.map(hub => ({
-            ...hub,
-            devices: uniqueDevicesData
-              .filter(d => String(d.hubId) === String(hub.id))
-              .map(d => ({
-                ...d,
-                id: d._id,
-                installedDate: d.createdAt,
-                currentValues: d.currentValues || {},
-                sensorParams: d.thresholds || {},
-                controls: d.remoteState || {}
-              }))
-          })),
-          createdAt: sys.createdAt
-        }));
-
-        setBieonSystems(joinedSystems);
-        if (joinedSystems.length > 0) {
-          setStep("view-bieon");
-        } else {
-          setStep("idle");
-        }
-      } catch (err) {
-        console.error("Error loading data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
 
     // SOCKET.IO REAL-TIME MONITORING
@@ -513,6 +599,24 @@ export function DeviceControlPage({ onNavigate }) {
       });
     });
 
+    // Real-time Hub socket listeners
+    socket.on('hub_added', ({ bieonId, hub }) => {
+      fetchData();
+      setIsScanningHub(false);
+      alert(`Hub Node "${hub.name}" berhasil ditambahkan!`);
+    });
+
+    socket.on('hub_add_failed', ({ bieonId, hubId, payload }) => {
+      setIsScanningHub(false);
+      alert(`Gagal menambahkan Hub Node: ${payload?.reason || 'Timeout'}`);
+    });
+
+    socket.on('hub_removed', ({ bieonId, hubId }) => {
+      fetchData();
+      setRemovingHubId(null);
+      alert("Hub Node berhasil dihapus dari jaringan.");
+    });
+
     const techAccess = localStorage.getItem('bieon_tech_access');
     if (techAccess === 'true') {
       setIsTechnicianMode(true);
@@ -522,6 +626,9 @@ export function DeviceControlPage({ onNavigate }) {
       socket.off('device_telemetry');
       socket.off('new_unassigned_device');
       socket.off('device_discovered');
+      socket.off('hub_added');
+      socket.off('hub_add_failed');
+      socket.off('hub_removed');
       socket.disconnect();
     };
   }, []); // Hapus userProfile dari dependency agar tidak infinite loop
@@ -716,21 +823,81 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
 
-  const handleAddHub = () => {
+  const handleAddHub = async () => {
     if (!currentBieon) return;
-    const newHub = {
-      id: `hub-${Date.now()}`,
-      name: `Hub ${currentBieon.hubs.length + 1}`,
-      devices: [],
-      status: "active"
-    };
-    const updatedBieon = {
-      ...currentBieon,
-      totalHubs: currentBieon.totalHubs + 1,
-      hubs: [...currentBieon.hubs, newHub]
-    };
-    setBieonSystems(bieonSystems.map((b) => b.id === currentBieon.id ? updatedBieon : b));
-    setCurrentBieon(updatedBieon);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/hubs/open_join', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bieonId: currentBieon.bieonId,
+          duration: 60
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal memulai mode open join Hub');
+      }
+
+      setScanCountdown(60);
+      setIsScanningHub(true);
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  };
+
+  const handleRemoveHub = async (hub) => {
+    if (!hub || !currentBieon) return;
+    const confirmDelete = window.confirm(`Apakah Anda yakin ingin menghapus Hub "${hub.name}"? Tindakan ini akan menghapus seluruh perangkat yang terhubung ke Hub ini.`);
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      setRemovingHubId(hub.id || hub._id);
+      setRemovingCountdown(30);
+
+      const response = await fetch(`/api/hubs/${hub.id || hub._id}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ remove_children: true })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal menghapus Hub');
+      }
+
+      // Optimally update hub status to 'Removing'
+      setBieonSystems(prevSystems => {
+        return prevSystems.map(sys => {
+          if (sys.id === currentBieon.id) {
+            return {
+              ...sys,
+              hubs: sys.hubs.map(h => {
+                if (String(h.id) === String(hub.id || hub._id)) {
+                  return { ...h, status: 'Removing' };
+                }
+                return h;
+              })
+            };
+          }
+          return sys;
+        });
+      });
+
+      alert(data.message || 'Permintaan penghapusan Hub berhasil dikirim.');
+    } catch (error) {
+      setRemovingHubId(null);
+      alert("Error: " + error.message);
+    }
   };
   const handleSelectHub = async (hub) => {
     resetForm();
@@ -2131,14 +2298,29 @@ export function DeviceControlPage({ onNavigate }) {
                         className="bg-gradient-to-br from-bieon-eco/5 to-bieon-sense/5 border-2 border-bieon-eco/30 rounded-xl p-4 sm:p-6 hover:shadow-xl transition-all text-left flex flex-col justify-between"
                       >
                         <div>
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-bieon-eco to-bieon-sense rounded-lg flex items-center justify-center">
-                              <Wifi className="w-6 h-6 text-white" />
+                          <div className="flex justify-between items-start gap-3 mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-bieon-eco to-bieon-sense rounded-lg flex items-center justify-center">
+                                <Wifi className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-gray-900">{hub.name}</h3>
+                                <p className="text-xs text-gray-600 font-medium">{hub.id}</p>
+                              </div>
                             </div>
-                            <div>
-                              <h3 className="font-bold text-gray-900">{hub.name}</h3>
-                              <p className="text-xs text-gray-600 font-medium">{hub.id}</p>
-                            </div>
+                            {!isTechnicianMode && (
+                              (hub.status === 'Removing' || removingHubId === hub.id || removingHubId === hub._id) ? (
+                                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg animate-spin border-2 border-amber-600 border-t-transparent w-9 h-9 flex items-center justify-center shrink-0" />
+                              ) : (
+                                <button
+                                  onClick={() => handleRemoveHub(hub)}
+                                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                                  title="Hapus Hub"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              )
+                            )}
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
@@ -2147,15 +2329,47 @@ export function DeviceControlPage({ onNavigate }) {
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-gray-600 font-semibold">Status:</span>
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${hub.status === "active" ? "bg-bieon-eco/10 text-bieon-eco/90" : "bg-gray-100 text-gray-600"}`}>
-                                {hub.status}
-                              </span>
+                              {hub.status === "Removing" ? (
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-200 rounded-full text-xs font-bold animate-pulse flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping"></span>
+                                    Removing {removingHubId === (hub.id || hub._id) ? `(${removingCountdown}s)` : ""}
+                                  </span>
+                                  <button
+                                    onClick={() => handleRemovingTimeout(hub.id || hub._id)}
+                                    className="text-[10px] text-red-500 hover:underline cursor-pointer font-bold"
+                                    title="Hapus paksa Hub dari database"
+                                  >
+                                    Force Delete Now
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${
+                                  (hub.status === "active" || hub.status === "Online") ? "bg-emerald-50 text-emerald-600 border border-emerald-200" :
+                                  "bg-red-50 text-red-600 border border-red-200"
+                                }`}>
+                                  {hub.status}
+                                </span>
+                              )}
                             </div>
+                            {hub.firmware_version && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600 font-semibold">Firmware:</span>
+                                <span className="font-bold text-gray-900 text-xs">{hub.firmware_version}</span>
+                              </div>
+                            )}
+                            {hub.last_seen && (
+                              <div className="flex items-center justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
+                                <span>Aktif Terakhir:</span>
+                                <span>{new Date(hub.last_seen).toLocaleString('id-ID')}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button
                           onClick={() => handleSelectHub(hub)}
-                          className="mt-6 w-full py-2.5 bg-bieon-eco text-white font-bold rounded-lg hover:bg-bieon-eco/90 transition-colors flex justify-center items-center gap-2 shadow-sm"
+                          disabled={hub.status === 'Removing' || removingHubId === hub.id || removingHubId === hub._id}
+                          className="mt-6 w-full py-2.5 bg-bieon-eco text-white font-bold rounded-lg hover:bg-bieon-eco/90 transition-colors flex justify-center items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           <Plus className="w-4 h-4" /> Add Device
                         </button>
@@ -5202,6 +5416,58 @@ export function DeviceControlPage({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Modal: Add Hub Node Scanner */}
+      {isScanningHub && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-[200] p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 flex flex-col p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900">Menghubungkan Hub Node</h3>
+              <button
+                onClick={() => setIsScanningHub(false)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="py-8 flex flex-col items-center justify-center text-center">
+              <div className="relative w-24 h-24 mb-6">
+                <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 animate-ping" />
+                <div className="absolute inset-2 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+                <div className="absolute inset-4 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
+                  <Wifi className="w-8 h-8 text-white animate-pulse" />
+                </div>
+              </div>
+
+              <h4 className="text-lg font-bold text-gray-950 mb-2">Mencari Hub Node...</h4>
+              <p className="text-sm text-gray-600 max-w-sm mb-6 leading-relaxed">
+                Silakan tekan tombol pairing pada perangkat Hub Node baru Anda dan dekatkan ke gateway.
+              </p>
+
+              <div className="w-full bg-gray-100 rounded-full h-2.5 mb-2 relative overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2.5 rounded-full transition-all duration-1000 ease-linear"
+                  style={{ width: `${(scanCountdown / 60) * 100}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold text-emerald-600 font-mono">
+                {scanCountdown} detik tersisa
+              </span>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setIsScanningHub(false)}
+                className="w-full py-3.5 bg-gray-50 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                Batalkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ==================== MODAL: DEVICE SCANNER ==================== */}
     </HomeownerLayout>
   );

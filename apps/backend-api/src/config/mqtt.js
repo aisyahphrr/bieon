@@ -244,17 +244,24 @@ const connectMQTT = (io) => {
             try {
               const hubName = evt.hub_id || evt.hubId || hubId || `hub_${Date.now()}`;
               const ieee = String(evt.ieee || evt.device_ieee || evt.ieee_address || '').replace(/[:\-\s]/g, '').toUpperCase() || undefined;
+              
+              // Resolve owner dari BieonSystem
+              const bieonRegex = buildFlexibleBieonIdRegex(bieonId);
+              const systemRec = bieonRegex ? await BieonSystem.findOne({ bieonId: bieonRegex }).select('owner').lean() : null;
+              const ownerId = systemRec ? systemRec.owner : undefined;
+
               // Upsert hub by name or ieee
               let hubRec = null;
               if (ieee) hubRec = await Hub.findOne({ bieonId, device_ieee: ieee }).lean();
               if (!hubRec) hubRec = await Hub.findOne({ bieonId, name: hubName }).lean();
               if (!hubRec) {
-                const created = await Hub.create({ name: hubName, bieonId, device_ieee: ieee, status: 'Online' });
+                const created = await Hub.create({ name: hubName, bieonId, device_ieee: ieee, status: 'Online', owner: ownerId });
                 hubRec = created.toObject ? created.toObject() : created;
                 console.log('[HUB] Created new hub record:', hubRec._id || hubRec.name);
               } else {
-                // Update status/ieee if missing
-                await Hub.findByIdAndUpdate(hubRec._id, { $set: { status: 'Online', device_ieee: ieee || hubRec.device_ieee } }).catch(() => {});
+                // Update status/ieee/owner if missing
+                await Hub.findByIdAndUpdate(hubRec._id, { $set: { status: 'Online', device_ieee: ieee || hubRec.device_ieee, owner: ownerId || hubRec.owner } }).catch(() => {});
+                hubRec = await Hub.findById(hubRec._id).lean();
               }
 
               if (ioInstance) ioInstance.emit('hub_added', { bieonId, hub: hubRec, payload: evt });
@@ -263,6 +270,18 @@ const connectMQTT = (io) => {
             }
           } else if (eventName === 'hub_add_failed' || evt.event === 'hub_add_failed') {
             if (ioInstance) ioInstance.emit('hub_add_failed', { bieonId, hubId, payload: evt });
+          } else if (eventName === 'hub_removed' || eventName === 'hub_left' || eventName === 'left' || evt.event === 'hub_removed') {
+            try {
+              const ieee = String(evt.ieee || evt.device_ieee || '').replace(/[:\-\s]/g, '').toUpperCase() || undefined;
+              let hubRec = null;
+              if (ieee) hubRec = await Hub.findOneAndDelete({ bieonId, device_ieee: ieee });
+              if (!hubRec) hubRec = await Hub.findOneAndDelete({ bieonId, name: hubId });
+              
+              console.log('[HUB] Removed hub record:', hubRec ? hubRec.name : hubId);
+              if (ioInstance) ioInstance.emit('hub_removed', { bieonId, hubId: hubRec ? hubRec._id : hubId, payload: evt });
+            } catch (err) {
+              console.warn('[HUB] Failed to persist hub_removed event:', err.message);
+            }
           }
           return;
         }
@@ -1187,12 +1206,15 @@ const publishOpenJoin = (bieonDeviceId, duration = 30, meta = {}) => {
     command: 'open_permit_join',
     duration,
     ...(meta.hubId ? { hub_id: meta.hubId } : {}),
-    ...(meta.requestedBy ? { requested_by: meta.requestedBy } : {})
+    ...(meta.requestedBy ? { requested_by: meta.requestedBy } : {}),
+    ...(meta.mode ? { mode: meta.mode } : {}),
+    ...(meta.hub_only !== undefined ? { hub_only: meta.hub_only } : {})
   };
   setOpenJoinSession(bieonDeviceId, {
     duration,
     hubId: meta.hubId || null,
-    requestedBy: meta.requestedBy || null
+    requestedBy: meta.requestedBy || null,
+    hubOnly: Boolean(meta.mode === 'add_hub_node' || meta.hub_only)
   });
   console.log(`[MQTT] publish open_join -> ${topic}`, payload);
   publishCommand(topic, payload);
