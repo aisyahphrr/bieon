@@ -534,9 +534,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
       {/* Dashboard Content */}
       <main className="space-y-12 animate-fade-in-up relative z-10">
         {/* Stats Row 1 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             {/* Card 1 (Total Pelanggan) */}
-            <div className="bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/80 border border-emerald-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+            <div className="bg-gradient-to-br from-white via-emerald-50/50 to-emerald-100/80 border border-emerald-100 shadow-sm rounded-[1.25rem] md:rounded-[1.5rem] p-3 md:p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
               {/* Corner Aesthetic Ornament */}
               <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-sense/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -545,15 +545,15 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </svg>
               </div>
 
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="w-12 h-12 bg-white text-bieon-sense rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform duration-300">
-                  <Users className="w-6 h-6 group-hover:-rotate-6 transition-transform" />
+              <div className="flex items-center justify-between mb-3 md:mb-4 relative z-10">
+                <div className="w-9 h-9 md:w-12 md:h-12 bg-white text-bieon-sense rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform duration-300">
+                  <Users className="w-4 h-4 md:w-6 md:h-6 group-hover:-rotate-6 transition-transform" />
                 </div>
                 <div className="text-right">
-                  <h3 className="text-3xl font-bold text-slate-800 leading-none mb-0.5">
+                  <h3 className="text-xl md:text-3xl font-bold text-slate-800 leading-none mb-0.5">
                     {homeownersLoading ? <ShimmerSkeleton className="h-8 w-16 ml-auto" /> : totalHomeownersCount}
                   </h3>
-                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{t('admin_dashboard.metrics.total_customers')}</p>
+                  <p className="text-slate-500 text-[8px] md:text-[10px] font-bold uppercase tracking-widest">{t('admin_dashboard.metrics.total_customers')}</p>
                 </div>
               </div>
               
@@ -592,12 +592,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </svg>
               </div>
 
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="w-12 h-12 bg-white text-bieon-eco rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform duration-300">
-                  <Box className="w-6 h-6 group-hover:rotate-6 transition-transform" />
+              <div className="flex items-center justify-between mb-3 md:mb-4 relative z-10">
+                <div className="w-9 h-9 md:w-12 md:h-12 bg-white text-bieon-eco rounded-xl flex items-center justify-center shadow-sm border border-slate-100 group-hover:scale-105 transition-transform duration-300">
+                  <Box className="w-4 h-4 md:w-6 md:h-6 group-hover:rotate-6 transition-transform" />
                 </div>
                 <div className="text-right">
-                  <h3 className="text-3xl font-bold text-slate-800 leading-none mb-0.5">
+                  <h3 className="text-xl md:text-3xl font-bold text-slate-800 leading-none mb-0.5">
                     {metricsLoading ? <ShimmerSkeleton className="h-8 w-16 ml-auto" /> : metrics.totalHubs}
                   </h3>
                   <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{t('admin_dashboard.metrics.bieon_nodes')}</p>
@@ -607,13 +607,13 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <div className="mt-auto relative z-10 pt-1 text-right flex justify-end">
                 <div className="bg-emerald-50/80 border border-emerald-100 px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 shadow-sm">
                   {metrics.hubTrend >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
-                  {metrics.hubTrend >= 0 ? '+' : ''}{t('admin_dashboard.metrics.trend_monthly', { percent: metrics.hubTrend })}
+                  {metrics.deviceTrend >= 0 ? '+' : ''}{t('admin_dashboard.metrics.trend_monthly', { percent: metrics.hubTrend })}
                 </div>
               </div>
             </div>
   
             {/* Card 3 (Smart Devices) */}
-            <div className="bg-gradient-to-br from-sky-100/80 via-white to-emerald-100/80 border border-sky-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+            <div className="bg-gradient-to-br from-sky-100/80 via-white to-emerald-100/80 border border-sky-100 shadow-sm rounded-[1.25rem] md:rounded-[1.5rem] p-3 md:p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
               <div className="absolute right-0 bottom-0 w-28 h-28 text-bieon-sense/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M10 90 Q 50 10, 90 90" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -621,12 +621,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </svg>
               </div>
 
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="w-12 h-12 bg-white text-bieon-sense rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
-                  <Monitor className="w-6 h-6 group-hover:-rotate-6 transition-transform" />
+              <div className="flex items-center justify-between mb-3 md:mb-4 relative z-10">
+                <div className="w-9 h-9 md:w-12 md:h-12 bg-white text-bieon-sense rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                  <Monitor className="w-4 h-4 md:w-6 md:h-6 group-hover:-rotate-6 transition-transform" />
                 </div>
                 <div className="text-right">
-                  <h3 className="text-3xl font-bold text-slate-800 leading-none mb-0.5">
+                  <h3 className="text-xl md:text-3xl font-bold text-slate-800 leading-none mb-0.5">
                     {metricsLoading ? <ShimmerSkeleton className="h-8 w-16 ml-auto" /> : metrics.totalDevices}
                   </h3>
                   <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{t('admin_dashboard.metrics.smart_devices')}</p>
@@ -642,7 +642,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
             </div>
   
             {/* Card 4 (Total Pengaduan) */}
-            <div className="bg-gradient-to-br from-white via-rose-50/80 to-rose-100 border border-rose-100 shadow-sm rounded-[1.5rem] p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
+            <div className="bg-gradient-to-br from-white via-rose-50/80 to-rose-100 border border-rose-100 shadow-sm rounded-[1.25rem] md:rounded-[1.5rem] p-3 md:p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group">
               <div className="absolute right-0 bottom-0 w-28 h-28 text-rose-500/[0.08] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
                 <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M10 50 C 30 10, 70 90, 90 50" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -650,12 +650,12 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </svg>
               </div>
 
-              <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className="w-12 h-12 bg-white text-rose-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
-                  <AlertTriangle className="w-6 h-6 group-hover:rotate-6 transition-transform" />
+              <div className="flex items-center justify-between mb-3 md:mb-4 relative z-10">
+                <div className="w-9 h-9 md:w-12 md:h-12 bg-white text-rose-500 rounded-xl flex items-center justify-center shadow-sm border border-white group-hover:scale-105 transition-transform duration-300">
+                  <AlertTriangle className="w-4 h-4 md:w-6 md:h-6 group-hover:rotate-6 transition-transform" />
                 </div>
                 <div className="text-right">
-                  <h3 className="text-3xl font-bold text-slate-800 leading-none mb-0.5">
+                  <h3 className="text-xl md:text-3xl font-bold text-slate-800 leading-none mb-0.5">
                     {metricsLoading ? <ShimmerSkeleton className="h-8 w-16 ml-auto" /> : metrics.totalComplaints}
                   </h3>
                   <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{t('admin_dashboard.metrics.total_complaints')}</p>
@@ -677,9 +677,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
         {/* Stats Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Technician Overview Card */}
-          <div className="bg-white border border-emerald-100 shadow-sm rounded-[1.5rem] p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 relative overflow-hidden group">
+          <div className="bg-white border border-emerald-100 shadow-sm rounded-[1.5rem] p-4 md:p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 relative overflow-hidden group">
             
             <div className="flex items-start justify-between mb-8 relative z-10">
               <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-bieon-eco shadow-sm border border-emerald-100 group-hover:scale-105 transition-transform duration-500 relative">
@@ -714,7 +714,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* PLN Tariff Management Center */}
-          <div className="lg:col-span-3 bg-white border border-sky-100 shadow-sm rounded-[1.5rem] p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 relative overflow-hidden group">
+          <div className="lg:col-span-3 bg-white border border-sky-100 shadow-sm rounded-[1.5rem] p-4 md:p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 relative overflow-hidden group">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6 relative z-10">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-sky-50 rounded-xl flex items-center justify-center text-bieon-sense shadow-sm border border-sky-100 shrink-0 group-hover:scale-105 transition-transform">
@@ -804,7 +804,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
         {/* Charts Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
           {/* Chart 1: Bar */}
-          <div className="bg-white border border-emerald-100 hover:border-emerald-200 shadow-sm rounded-3xl p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+          <div className="bg-white border border-emerald-100 hover:border-emerald-200 shadow-sm rounded-3xl p-4 md:p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
             
             <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-4">
@@ -825,7 +825,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Download className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
               </button>
             </div>
-            <div className="h-72 relative z-10">
+            <div className="h-44 md:h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={instalasiChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                   <defs>
@@ -845,7 +845,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* Chart 2: Bar */}
-          <div className="bg-white border border-sky-100 hover:border-sky-200 shadow-sm rounded-3xl p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+          <div className="bg-white border border-sky-100 hover:border-sky-200 shadow-sm rounded-3xl p-4 md:p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
             
             <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-4">
@@ -866,7 +866,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Download className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
               </button>
             </div>
-            <div className="h-72 relative z-10">
+            <div className="h-44 md:h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={hubNodeChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                   <defs>
@@ -886,7 +886,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* Chart 3: Area */}
-          <div className="bg-white border border-sky-100 hover:border-sky-200 shadow-sm rounded-3xl p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+          <div className="bg-white border border-sky-100 hover:border-sky-200 shadow-sm rounded-3xl p-4 md:p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
             
             <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-4">
@@ -907,7 +907,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Download className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
               </button>
             </div>
-            <div className="h-72 relative z-10">
+            <div className="h-44 md:h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={smartDeviceChartData}>
                   <defs>
@@ -952,7 +952,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Download className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
               </button>
             </div>
-            <div className="h-72 relative z-10">
+            <div className="h-44 md:h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={pelangganChartData}>
                   <defs>
@@ -972,7 +972,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* Chart 5: Line */}
-          <div className="bg-white border border-emerald-100 hover:border-emerald-200 shadow-sm rounded-3xl p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+          <div className="bg-white border border-emerald-100 hover:border-emerald-200 shadow-sm rounded-3xl p-4 md:p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
             
             <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-4">
@@ -993,7 +993,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Download className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
               </button>
             </div>
-            <div className="h-72 relative z-10">
+            <div className="h-44 md:h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={teknisiChartData}>
                   <defs>
@@ -1013,7 +1013,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           </div>
 
           {/* Chart 6: Line */}
-          <div className="bg-white border border-rose-100 hover:border-rose-200 shadow-sm rounded-3xl p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+          <div className="bg-white border border-rose-100 hover:border-rose-200 shadow-sm rounded-3xl p-4 md:p-6 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
             
             <div className="flex items-center justify-between w-full relative z-10 mb-8">
               <div className="flex items-center gap-4">
@@ -1034,7 +1034,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 <Download className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
               </button>
             </div>
-            <div className="h-72 relative z-10">
+            <div className="h-44 md:h-72 relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={pengaduanChartData}>
                   <defs>
@@ -1061,7 +1061,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
           {/* SVG Background Ornament */}
           
           
-          <div className="p-6 md:p-10 border-b border-slate-100/60 flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-30">
+          <div className="p-4 md:p-10 border-b border-slate-100/60 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 relative z-30">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-bieon-sense mb-2 inline-block bg-bieon-sense/10 px-2 py-0.5 rounded-md">ECO SENSE</p>
               <h2 className="text-2xl font-bold text-slate-800 tracking-tight leading-none">{t('admin_dashboard.table.title')}</h2>
