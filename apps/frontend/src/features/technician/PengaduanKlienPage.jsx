@@ -56,17 +56,16 @@ const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Topik Kendala</span>
                 </div>
                 <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
-                <div className="flex justify-between items-center mt-2">
-                    <div>
-                        <TicketStatusBadge
-                            status={item.status}
-                            rating={item.rating}
-                            assignedAt={item.assignedAt}
-                            processStartedAt={item.processStartedAt}
-                            isEscalated={item.isEscalated}
-                        />
-                    </div>
-                    <div className="flex gap-2">
+                <div className="flex flex-row items-stretch justify-between gap-2 w-full mt-2">
+                    <TicketStatusBadge
+                        status={item.status}
+                        rating={item.rating}
+                        assignedAt={item.assignedAt}
+                        processStartedAt={item.processStartedAt}
+                        isEscalated={item.isEscalated}
+                        className="w-fit max-w-[60%] h-auto py-1.5 whitespace-normal break-words text-left leading-tight"
+                    />
+                    <div className="flex gap-2 shrink-0">
                         {actions.map((btn, idx) => (
                             <button
                                 key={idx}
@@ -74,7 +73,7 @@ const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }
                                     if (btn.action === 'process') handleStartProcess(item);
                                     else setSelectedTicket(item);
                                 }}
-                                className={`px-4 py-2 rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition-all ${btn.variant === 'primary' ? 'bg-sense/10 text-sense hover:bg-sense hover:text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                                className={`px-4 py-2 rounded-lg text-[11px] font-extrabold shadow-sm active:scale-95 transition-all shrink-0 whitespace-normal break-words h-auto py-2 leading-tight ${btn.variant === 'primary' ? 'bg-sense/10 text-sense hover:bg-sense hover:text-white' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
                                     }`}
                             >
                                 {btn.label}
@@ -504,8 +503,8 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                                 <p className="text-xs text-gray-500 mt-0.5 italic">{t('complaint.tech_dashboard.history_desc', 'Pantau status perbaikan Anda secara real-time.')}</p>
                             </div>
 
-                            <div className="flex flex-row items-center gap-2 md:gap-3 w-full lg:w-auto shrink-0">
-                                <div className="relative flex-1 sm:w-auto md:w-64 group">
+                            <div className="flex flex-row items-center justify-between gap-2 w-full lg:w-auto">
+                                <div className="relative flex-1 min-w-0 md:w-[250px] md:shrink-0 group">
                                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-sense transition-colors" />
                                     <input
                                         type="text"

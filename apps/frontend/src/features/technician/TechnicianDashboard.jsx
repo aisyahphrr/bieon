@@ -519,58 +519,92 @@ export function TechnicianDashboard({ onNavigate }) {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-3 w-full md:grid-cols-2 lg:grid-cols-4 mb-8">
+            {/* Resolved conflict: menggunakan ornamen SVG + icon horizontal (HEAD) + responsive sizing mobile (remote) */}
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-6 mb-8">
               {/* Card 1: Total Pelanggan */}
               <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(59,130,246,0.15)] hover:-translate-y-1 group">
-                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-blue-400/20 blur-3xl group-hover:bg-blue-400/30 transition-colors"></div>
-                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-blue-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <Users className="w-5 h-5 md:w-7 md:h-7 text-blue-600 drop-shadow-sm" />
+                {/* Corner Aesthetic Ornament */}
+                <div className="absolute right-0 bottom-0 w-24 md:w-28 h-24 md:h-28 text-blue-500/[0.08] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" fill="none" />
+                    <circle cx="50" cy="50" r="25" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                  </svg>
                 </div>
-                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalClients}</h3>
-                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-blue-400/20 blur-3xl group-hover:bg-blue-400/30 transition-colors z-0"></div>
+                <div className="relative z-10 flex items-center gap-2 md:gap-4 mb-3 md:mb-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-blue-50 to-white border border-white/60 rounded-xl md:rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                    <Users className="w-5 h-5 md:w-7 md:h-7 text-blue-600 drop-shadow-sm" />
+                  </div>
+                  <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900">{metrics.totalClients}</h3>
+                </div>
+                <p className="text-gray-500 text-xs md:text-sm font-bold relative z-10">{t('tech_dashboard.metrics.total_clients', 'Total Pelanggan Ditangani')}</p>
               </div>
 
               {/* Card 2: Akses Kendali Perangkat */}
               <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(5,155,39,0.15)] hover:-translate-y-1 group">
-                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-eco/20 blur-3xl group-hover:bg-eco/30 transition-colors"></div>
-                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-eco/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <ShieldCheck className="w-5 h-5 md:w-7 md:h-7 text-eco drop-shadow-sm" />
+                <div className="absolute right-0 bottom-0 w-24 md:w-28 h-24 md:h-28 text-eco/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="20" width="60" height="60" rx="12" stroke="currentColor" strokeWidth="2" fill="none" />
+                    <rect x="35" y="35" width="30" height="30" rx="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
+                  </svg>
                 </div>
-                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalAccessCodes || 0}</h3>
-                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.access_codes', 'Akses Kendali Perangkat')}</p>
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-eco/20 blur-3xl group-hover:bg-eco/30 transition-colors z-0"></div>
+                <div className="relative z-10 flex items-center gap-2 md:gap-4 mb-3 md:mb-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-eco/5 to-white border border-white/60 rounded-xl md:rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                    <ShieldCheck className="w-5 h-5 md:w-7 md:h-7 text-eco drop-shadow-sm" />
+                  </div>
+                  <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900">{metrics.totalAccessCodes || 0}</h3>
+                </div>
+                <p className="text-gray-500 text-xs md:text-sm font-bold relative z-10">{t('tech_dashboard.metrics.access_codes', 'Akses Kendali Perangkat')}</p>
               </div>
 
               {/* Card 3: Smart Device Aktif */}
               <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(18,156,192,0.15)] hover:-translate-y-1 group">
-                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-sense/20 blur-3xl group-hover:bg-sense/30 transition-colors"></div>
-                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-sense/5 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <HardDrive className="w-5 h-5 md:w-7 md:h-7 text-sense drop-shadow-sm" />
+                <div className="absolute right-0 bottom-0 w-24 md:w-28 h-24 md:h-28 text-sense/[0.1] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 90 Q 50 10, 90 90" stroke="currentColor" strokeWidth="2" fill="none" />
+                    <path d="M20 90 Q 50 30, 80 90" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
+                  </svg>
                 </div>
-                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.totalDevices}</h3>
-                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_devices', 'Smart Device Aktif')}</p>
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-sense/20 blur-3xl group-hover:bg-sense/30 transition-colors z-0"></div>
+                <div className="relative z-10 flex items-center gap-2 md:gap-4 mb-3 md:mb-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-sense/5 to-white border border-white/60 rounded-xl md:rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                    <HardDrive className="w-5 h-5 md:w-7 md:h-7 text-sense drop-shadow-sm" />
+                  </div>
+                  <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900">{metrics.totalDevices}</h3>
+                </div>
+                <p className="text-gray-500 text-xs md:text-sm font-bold relative z-10">{t('tech_dashboard.metrics.active_devices', 'Smart Device Aktif')}</p>
               </div>
 
               {/* Card 4: Pengaduan Aktif */}
               <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(239,68,68,0.15)] hover:-translate-y-1 group">
-                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-red-400/20 blur-3xl group-hover:bg-red-400/30 transition-colors"></div>
-                <div className="relative w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-red-50 to-white border border-white/60 rounded-2xl flex items-center justify-center mb-3 md:mb-5 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <AlertCircle className="w-5 h-5 md:w-7 md:h-7 text-red-500 drop-shadow-sm" />
+                <div className="absolute right-0 bottom-0 w-24 md:w-28 h-24 md:h-28 text-red-500/[0.08] pointer-events-none translate-x-4 translate-y-4 transition-transform duration-700 group-hover:scale-110 z-0">
+                  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 50 C 30 10, 70 90, 90 50" stroke="currentColor" strokeWidth="2" fill="none" />
+                    <path d="M20 50 C 40 20, 60 80, 80 50" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" fill="none" />
+                  </svg>
                 </div>
-                <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900 mb-2 relative z-10">{metrics.activeComplaints}</h3>
-                <p className="text-gray-500 text-xs md:text-sm font-bold pt-1 relative z-10">{t('tech_dashboard.metrics.active_complaints', 'Pengaduan Aktif')}</p>
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-red-400/20 blur-3xl group-hover:bg-red-400/30 transition-colors z-0"></div>
+                <div className="relative z-10 flex items-center gap-2 md:gap-4 mb-3 md:mb-4">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-br from-red-50 to-white border border-white/60 rounded-xl md:rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300 shrink-0">
+                    <AlertCircle className="w-5 h-5 md:w-7 md:h-7 text-red-500 drop-shadow-sm" />
+                  </div>
+                  <h3 className="text-2xl md:text-[2.5rem] leading-none font-black text-gray-900">{metrics.activeComplaints}</h3>
+                </div>
+                <p className="text-gray-500 text-xs md:text-sm font-bold relative z-10">{t('tech_dashboard.metrics.active_complaints', 'Pengaduan Aktif')}</p>
               </div>
             </div>
 
             {/* Monitoring Status Klien Table */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-200 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 w-full mb-6">
+              <div className="px-6 py-5 border-b border-gray-200 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 w-full mb-0">
                 <div>
                   <h2 className="text-xl font-bold text-gray-800">{t('tech_dashboard.table.title', 'Monitoring Status Pelanggan')}</h2>
                   <p className="text-gray-600 text-sm mt-1">{t('tech_dashboard.table.subtitle', 'Status Sistem Per Pelanggan')}</p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                  <div className="relative flex items-center w-full lg:w-auto lg:min-w-[250px] lg:max-w-[300px] group">
+                <div className="flex flex-row items-center justify-between gap-2 w-full lg:w-auto mb-0">
+                  <div className="relative flex-1 min-w-0 md:w-[250px] md:shrink-0 group">
                     <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
@@ -581,11 +615,11 @@ export function TechnicianDashboard({ onNavigate }) {
                     />
                   </div>
                   
-                  <div className="flex flex-row items-center gap-1 sm:gap-2 shrink-0 w-full sm:w-auto justify-end">
-                    <div className="relative w-auto">
+                  <div className="flex flex-row items-center gap-1 sm:gap-2 shrink-0">
+                    <div className="relative w-auto shrink-0">
                       <button 
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all w-auto shadow-sm"
+                        className="flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl transition-all w-auto shadow-sm shrink-0"
                       >
                         <Filter className="w-4 h-4 text-gray-500" />
                         <span className="hidden sm:inline text-sm font-semibold text-gray-700">
@@ -622,7 +656,7 @@ export function TechnicianDashboard({ onNavigate }) {
                     </div>
                     <button
                       onClick={handleExportPDF}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-eco text-white hover:bg-green-700 rounded-xl transition-colors shadow-sm shadow-eco/20 w-auto"
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-eco text-white hover:bg-green-700 rounded-xl transition-colors shadow-sm shadow-eco/20 w-auto shrink-0"
                     >
                       <FileText className="w-4 h-4" />
                       <span className="hidden sm:inline text-sm font-semibold">{t('table.export', 'Export')}</span>
@@ -1012,7 +1046,7 @@ export function TechnicianDashboard({ onNavigate }) {
             <div className="sticky top-0 bg-gradient-to-r from-eco to-sense text-white p-6 rounded-t-3xl flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-1">{t('tech_dashboard.client_modal.title', 'Detail Pelanggan')}</h2>
-                <p className="text-eco/50">{t('tech_dashboard.client_modal.subtitle', 'Informasi Lengkap Sistem Smart Home')}</p>
+                <p className="text-sm font-medium text-white/90 mt-1">{t('tech_dashboard.client_modal.subtitle', 'Informasi Lengkap Sistem Smart Home')}</p>
               </div>
               <button
                 onClick={() => setSelectedClient(null)}

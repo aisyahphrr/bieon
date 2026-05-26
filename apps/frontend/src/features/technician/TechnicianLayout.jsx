@@ -161,11 +161,13 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
               {/* Pengaduan Button */}
               <button
                 onClick={() => setActiveMenu('pengaduan')}
-                className="hidden md:flex items-center justify-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 text-xs rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-semibold transition-all border border-red-100"
+                className="hidden md:flex relative p-[1.5px] bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 group font-bold"
                 title={t('nav.complaint_tab', 'Pengaduan')}
               >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>{t('nav.complaint_tab', 'Pengaduan')}</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 bg-transparent text-white rounded-[10px] group-hover:bg-white group-hover:text-amber-600 transition-all duration-300 text-xs">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>{t('nav.complaint_tab', 'Pengaduan')}</span>
+                </div>
               </button>
 
               {/* Notification */}
