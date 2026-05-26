@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const hubSchema = new mongoose.Schema({
     name: { type: String, required: true }, // misal: "Hub 1", "Hub 2"
@@ -8,5 +9,7 @@ const hubSchema = new mongoose.Schema({
     tenantId: { type: String }, // For multi-tenant isolation
     status: { type: String, enum: ['Online', 'Offline'], default: 'Offline' }
 }, { timestamps: true });
+
+hubSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('Hub', hubSchema);

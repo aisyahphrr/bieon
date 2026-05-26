@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const authEventSchema = new mongoose.Schema({
     type: { type: String, enum: ['auth_request', 'auth_response'], required: true },
@@ -24,5 +25,7 @@ authEventSchema.index({ alias: 1 });
 authEventSchema.index({ status: 1 });
 authEventSchema.index({ ts: 1 });
 authEventSchema.index({ master_ieee: 1, status: 1, ts: 1 });
+
+authEventSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('AuthEvent', authEventSchema);

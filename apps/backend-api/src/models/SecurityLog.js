@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const securityLogSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -16,5 +17,7 @@ const securityLogSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 securityLogSchema.index({ owner: 1, date: -1 });
+
+securityLogSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('SecurityLog', securityLogSchema);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const scheduleSchema = new mongoose.Schema({
     device: { type: mongoose.Schema.Types.ObjectId, ref: 'Device', required: true },
@@ -8,5 +9,7 @@ const scheduleSchema = new mongoose.Schema({
     days: [{ type: String }], // Array of days, e.g. ["Monday", "Wednesday"]
     isActive: { type: Boolean, default: true }
 }, { timestamps: true });
+
+scheduleSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('Schedule', scheduleSchema);

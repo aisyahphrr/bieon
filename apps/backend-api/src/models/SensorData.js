@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const sensorDataSchema = new mongoose.Schema({
     topic: { type: String, required: true },
@@ -7,5 +8,7 @@ const sensorDataSchema = new mongoose.Schema({
 }, {
     collection: 'sensordatas'
 });
+
+sensorDataSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('SensorData', sensorDataSchema);

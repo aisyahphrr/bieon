@@ -436,9 +436,9 @@ export function DeviceControlPage({ onNavigate }) {
           hubs: sys.hubs.map(hub => ({
             ...hub,
             devices: hub.devices.map(dev => {
-                      const devIeee = normalizeIeee(dev.device_ieee || dev.id || dev._id || '');
-                      const updIeee = normalizeIeee(updatedDevice.device_ieee || updatedDevice._id || updatedDevice.id || '');
-                      const isMatch = devIeee && updIeee ? devIeee === updIeee : (String(dev._id) === String(updatedDevice._id) || String(dev.id) === String(updatedDevice._id));
+              const devIeee = normalizeIeee(dev.device_ieee || dev.id || dev._id || '');
+              const updIeee = normalizeIeee(updatedDevice.device_ieee || updatedDevice._id || updatedDevice.id || '');
+              const isMatch = devIeee && updIeee ? devIeee === updIeee : (String(dev._id) === String(updatedDevice._id) || String(dev.id) === String(updatedDevice._id));
               if (isMatch) {
                 return {
                   ...dev,
@@ -1285,7 +1285,8 @@ export function DeviceControlPage({ onNavigate }) {
       const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
 
       const productIdValue = selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || null;
-      if (!productIdValue) {
+      // Jangan blokir jika kita sedang mengedit perangkat (karena device sudah punya ID di database)
+      if (!productIdValue && !isEditingDevice) {
         throw new Error('Product ID tidak tersedia untuk perangkat ini');
       }
 
@@ -2231,24 +2232,7 @@ export function DeviceControlPage({ onNavigate }) {
                       </div>
                     </div>
                   </div>
-                  {/* --- WIDGET RINGKASAN DATA REAL-TIME --- */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    {getAllDevices()
-                      .filter(d => d.category?.toLowerCase() === "sensor" && d.currentValues?.temperature !== undefined)
-                      .slice(0, 3) // Ambil maksimal 3 sensor suhu saja
-                      .map((sensor) => (
-                        <div key={sensor.id} className="bg-white p-4 rounded-xl border border-bieon-eco/20 shadow-sm flex items-center justify-between">
-                          <div>
-                            <p className="text-xs text-gray-400 font-bold uppercase">{sensor.name}</p>
-                            <p className="text-xl font-black text-gray-900">{sensor.currentValues.temperature}°C</p>
-                          </div>
-                          <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
-                            <Thermometer className="w-5 h-5 text-orange-500" />
-                          </div>
-                        </div>
-                      ))
-                    }
-                  </div>
+
 
                   {getFilteredDevices().length === 0 && (
                     <div className="text-center py-12">
@@ -2274,11 +2258,10 @@ export function DeviceControlPage({ onNavigate }) {
                             {/* Slim Header - Always visible */}
                             <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}>
                               <div className="flex items-start gap-3">
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-                                  device.category?.toLowerCase() === "sensor"
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${device.category?.toLowerCase() === "sensor"
                                     ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]"
                                     : (isActuallyOn ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-gray-900")
-                                }`}>
+                                  }`}>
                                   {device.category?.toLowerCase() === "sensor" ? (
                                     <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                   ) : (
@@ -2332,13 +2315,13 @@ export function DeviceControlPage({ onNavigate }) {
                                 {/* NEW: HASIL MONITORING REAL-TIME SECTION */}
                                 {(device.category?.toLowerCase() === 'sensor' || device.type?.toLowerCase() === 'sensor') && (() => {
                                   const hasParams = device.sensorParams && Object.keys(device.sensorParams).length > 0;
-                                  
+
                                   if (isWaterQuality) {
                                     const showPh = !hasParams || device.sensorParams?.ph !== undefined;
                                     const showTurbidity = !hasParams || device.sensorParams?.turbidity !== undefined;
                                     const showTds = !hasParams || device.sensorParams?.tds !== undefined;
                                     const showWaterTemp = !hasParams || device.sensorParams?.temperature !== undefined;
-                                    
+
                                     return (
                                       <div className="mb-8 animate-in fade-in duration-500">
                                         <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
@@ -2356,7 +2339,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                             </div>
                                           )}
-                                          
+
                                           {showTurbidity && (
                                             <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                               <div className="flex items-center gap-2 mb-2">
@@ -2371,7 +2354,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                             </div>
                                           )}
-                                          
+
                                           {showTds && (
                                             <div className="bg-gradient-to-br from-teal-50 to-white p-4 rounded-2xl border border-teal-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                               <div className="flex items-center gap-2 mb-2">
@@ -2386,7 +2369,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                             </div>
                                           )}
-                                          
+
                                           {showWaterTemp && (
                                             <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                               <div className="flex items-center gap-2 mb-2">
@@ -2395,17 +2378,17 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                               <div className="flex items-baseline gap-1">
                                                 <span className="text-2xl font-black text-gray-900">
-                                                  {device.currentValues?.waterTemp !== undefined 
-                                                    ? parseFloat(device.currentValues.waterTemp).toFixed(1) 
-                                                    : (device.currentValues?.temperature !== undefined 
-                                                        ? parseFloat(device.currentValues.temperature).toFixed(1) 
-                                                        : '--.-')}
+                                                  {device.currentValues?.waterTemp !== undefined
+                                                    ? parseFloat(device.currentValues.waterTemp).toFixed(1)
+                                                    : (device.currentValues?.temperature !== undefined
+                                                      ? parseFloat(device.currentValues.temperature).toFixed(1)
+                                                      : '--.-')}
                                                 </span>
                                                 <span className="text-sm font-bold text-gray-400 font-bold ml-1">°C</span>
                                               </div>
                                             </div>
                                           )}
-                                          
+
                                           <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                               <Zap className="w-4 h-4 text-bieon-eco" />
@@ -2422,11 +2405,11 @@ export function DeviceControlPage({ onNavigate }) {
                                       </div>
                                     );
                                   }
-                                  
+
                                   // Default for Comfort or other sensors
-                                  const showTemp = !hasParams || device.sensorParams?.temperature !== undefined;
-                                  const showHumid = !hasParams || device.sensorParams?.humidity !== undefined;
-                                  
+                                  const showTemp = !hasParams || device.sensorParams?.temperature !== undefined || device.currentValues?.temperature !== undefined;
+                                  const showHumid = !hasParams || device.sensorParams?.humidity !== undefined || device.currentValues?.humidity !== undefined;
+
                                   return (
                                     <div className="mb-8 animate-in fade-in duration-500">
                                       <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
@@ -2445,7 +2428,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             </div>
                                           </div>
                                         )}
-                                        
+
                                         {showHumid && (
                                           <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
@@ -2460,7 +2443,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             </div>
                                           </div>
                                         )}
-                                        
+
                                         <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                           <div className="flex items-center gap-2 mb-2">
                                             <Zap className="w-4 h-4 text-bieon-eco" />
@@ -2557,7 +2540,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 )}
 
                                 {/* Quick Controls Section - Hidden for Technicians (TIDAK BISA EDIT) */}
-                                {!isTechnicianMode && (
+                                {!isTechnicianMode && device.category?.toLowerCase() !== "sensor" && (
                                   <div className="mb-6">
                                     <p className="text-xs  text-gray-400 uppercase tracking-wider mb-3">
                                       {device.category?.toLowerCase() === "sensor" ? "Status Monitoring" :
@@ -2789,42 +2772,63 @@ export function DeviceControlPage({ onNavigate }) {
 
 
                                 {/* Sensor Only Data Block - Single Row Compact Version */}
-                                {device.category?.toLowerCase() === "sensor" && device.status === "1" && device.currentValues && (
+                                {device.category?.toLowerCase() === "sensor" && device.currentValues && (
                                   <div className="mb-6 flex flex-wrap items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-gray-100">
                                     {/* Compact Eligibility Badge */}
                                     {(() => {
-                                      const enabledParams = Object.entries(device.sensorParams || {}).filter(([_, cfg]) => cfg.enabled);
-                                      let isAbnormal = false;
-                                      enabledParams.forEach(([key, cfg]) => {
-                                        const currentVal = parseFloat(device.currentValues[key]);
-                                        const threshold = parseFloat(cfg.value);
-                                        if (!isNaN(currentVal) && !isNaN(threshold)) {
-                                          if (currentVal > threshold) isAbnormal = true;
-                                        }
-                                      });
-
-                                      const StatusIcon = isAbnormal ? AlertCircle : Check;
-
                                       // Contextual Status Text
                                       let statusTextNormal = "LAYAK PAKAI";
                                       let statusTextAbnormal = "TIDAK LAYAK";
 
-                                      const type = device.deviceType;
-                                      if (type === "Sensor Kenyamanan" || type === "Humidity Sensor") {
+                                      const type = device.type || device.deviceType || "";
+                                      const aspect = device.environmentAspect || "";
+                                      
+                                      // Deteksi jenis sensor agar lebih tangguh (robust)
+                                      const isKenyamanan = type.includes("Kenyamanan") || type.includes("Humidity") || aspect === "Kenyamanan" || (device.currentValues?.temperature !== undefined && device.currentValues?.humidity !== undefined && device.currentValues?.ph === undefined);
+                                      const isKeamanan = type.includes("Keamanan") || type.includes("Door") || aspect === "Keamanan";
+                                      const isAir = type.includes("Air") || aspect === "Kualitas Air" || device.currentValues?.ph !== undefined;
+
+                                      if (isKenyamanan) {
                                         statusTextNormal = "NYAMAN";
                                         statusTextAbnormal = "TIDAK NYAMAN";
-                                      } else if (type === "Sensor Keamanan" || type === "Door Sensor") {
+                                      } else if (isKeamanan) {
                                         statusTextNormal = "AMAN";
                                         statusTextAbnormal = "TIDAK AMAN";
-                                      } else if (type === "Sensor Kualitas Air") {
+                                      } else if (isAir) {
                                         statusTextNormal = "LAYAK PAKAI";
                                         statusTextAbnormal = "TIDAK LAYAK PAKAI";
                                       }
 
+                                      let isAbnormal = false;
+
+                                      if (isKenyamanan) {
+                                        // Validasi standar baku mutu Kenyamanan Termal (Suhu 20.5-31, Kelembapan 50-80)
+                                        const temp = parseFloat(device.currentValues?.temperature);
+                                        const hum = parseFloat(device.currentValues?.humidity);
+                                        if (!isNaN(temp) && (temp < 20.5 || temp > 31)) {
+                                          isAbnormal = true;
+                                        }
+                                        if (!isNaN(hum) && (hum < 50 || hum > 80)) {
+                                          isAbnormal = true;
+                                        }
+                                      } else {
+                                        // Default logika parameter dinamis
+                                        const enabledParams = Object.entries(device.sensorParams || {}).filter(([_, cfg]) => cfg?.enabled);
+                                        enabledParams.forEach(([key, cfg]) => {
+                                          const currentVal = parseFloat(device.currentValues[key]);
+                                          const threshold = parseFloat(cfg.value);
+                                          if (!isNaN(currentVal) && !isNaN(threshold)) {
+                                            if (currentVal > threshold) isAbnormal = true;
+                                          }
+                                        });
+                                      }
+
+                                      const StatusIcon = isAbnormal ? AlertCircle : Check;
+
                                       return (
                                         <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2 shadow-sm transition-all ${isAbnormal ? 'bg-red-600 border-red-700 text-white animate-pulse' : 'bg-bieon-eco border-bieon-eco/80 text-white'}`}>
                                           <StatusIcon className="w-5 h-5" />
-                                          <span className="text-sm  tracking-tight whitespace-nowrap">
+                                          <span className="text-sm font-black tracking-tight whitespace-nowrap">
                                             STATUS: {isAbnormal ? statusTextAbnormal : statusTextNormal}
                                           </span>
                                         </div>
@@ -3052,8 +3056,8 @@ export function DeviceControlPage({ onNavigate }) {
                             (hub?.devices || []).some(d => {
                               const dbIeee = normalizeIeee(d?.device_ieee || d?.id || '');
                               return d?.modelId === dev?.id ||
-                                     d?.productId === dev?.id ||
-                                     (devIeee && dbIeee && devIeee === dbIeee);
+                                d?.productId === dev?.id ||
+                                (devIeee && dbIeee && devIeee === dbIeee);
                             })
                           );
                           return !isAlreadyInDb;
@@ -3137,18 +3141,16 @@ export function DeviceControlPage({ onNavigate }) {
                             <div className="grid gap-3">
                               {allCandidates.map((dev) => {
                                 const isJoined = joinedDevicesPool.includes(dev.id) || dev.isFromDb;
-                                const isSensor = (dev.type || "").toLowerCase().includes("sensor") || 
-                                                 dev.category === 'sensor' ||
-                                                 registeredProducts.find(p => p.productId === dev.id)?.category === 'sensor';
-                                
+                                const isSensor = (dev.type || "").toLowerCase().includes("sensor") ||
+                                  dev.category === 'sensor' ||
+                                  registeredProducts.find(p => p.productId === dev.id)?.category === 'sensor';
+
                                 return (
                                   <div
                                     key={dev.id}
-                                    className={`w-full flex items-center justify-between p-3 bg-white border ${
-                                      isJoined ? 'border-bieon-eco shadow-md ring-1 ring-bieon-eco/20' : 'border-gray-100'
-                                    } ${
-                                      isSensor ? 'hover:bg-[#f0fdf4] hover:border-bieon-eco/20' : 'hover:bg-blue-50/50 hover:border-blue-200'
-                                    } rounded-2xl transition-all group animate-in fade-in slide-in-from-bottom-4 duration-500`}
+                                    className={`w-full flex items-center justify-between p-3 bg-white border ${isJoined ? 'border-bieon-eco shadow-md ring-1 ring-bieon-eco/20' : 'border-gray-100'
+                                      } ${isSensor ? 'hover:bg-[#f0fdf4] hover:border-bieon-eco/20' : 'hover:bg-blue-50/50 hover:border-blue-200'
+                                      } rounded-2xl transition-all group animate-in fade-in slide-in-from-bottom-4 duration-500`}
                                   >
                                     <div className="min-w-0 pr-3 flex-1 text-left">
                                       <div className="flex items-center gap-2 mb-0.5">
@@ -3156,7 +3158,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         {(() => {
                                           const registeredMatch = registeredProducts.find(p => p.productId === dev.id || p.productId === dev.originalDevice?.productId || p.productId === dev.originalProduct?.productId);
                                           const aspect = registeredMatch?.aspect || dev.originalDevice?.aspect || dev.originalProduct?.aspect;
-                                          
+
                                           let aspectLabel = aspect;
                                           if (isSensor) {
                                             aspectLabel = "sensor";
@@ -3164,7 +3166,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             const nameLower = (dev.name || "").toLowerCase();
                                             const typeLower = (dev.type || "").toLowerCase();
                                             const isControl = nameLower.includes("plug") || nameLower.includes("control") || typeLower.includes("control") || typeLower.includes("plug") ||
-                                                              (registeredMatch && registeredMatch.category === 'control') || dev.originalProduct?.category === 'control';
+                                              (registeredMatch && registeredMatch.category === 'control') || dev.originalProduct?.category === 'control';
                                             if (isControl) {
                                               aspectLabel = "controll";
                                             } else if (typeLower.includes("air") || typeLower.includes("water") || typeLower.includes("bluecheck")) {
@@ -3175,15 +3177,14 @@ export function DeviceControlPage({ onNavigate }) {
                                               aspectLabel = "keamanan";
                                             }
                                           }
-                                          
+
                                           if (!aspectLabel) return null;
                                           return (
-                                            <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
-                                              (aspectLabel === 'kenyamanan' || aspectLabel === 'sensor') ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' : 
-                                              aspectLabel === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
-                                              aspectLabel === 'controll' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
-                                              'text-orange-500 border-orange-100 bg-orange-50'
-                                            }`}>
+                                            <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${(aspectLabel === 'kenyamanan' || aspectLabel === 'sensor') ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' :
+                                                aspectLabel === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' :
+                                                  aspectLabel === 'controll' ? 'text-blue-500 border-blue-100 bg-blue-50' :
+                                                    'text-orange-500 border-orange-100 bg-orange-50'
+                                              }`}>
                                               {aspectLabel}
                                             </span>
                                           );
@@ -3219,9 +3220,8 @@ export function DeviceControlPage({ onNavigate }) {
                                                 handleEditDevice(dev.originalDevice);
                                               }
                                             }}
-                                            className={`px-3 py-2 ${
-                                              isSensor ? 'bg-bieon-eco hover:bg-bieon-eco/90 shadow-bieon-eco/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
-                                            } text-white text-[9px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap shadow-sm`}
+                                            className={`px-3 py-2 ${isSensor ? 'bg-bieon-eco hover:bg-bieon-eco/90 shadow-bieon-eco/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                                              } text-white text-[9px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap shadow-sm`}
                                           >
                                             Atur Sekarang
                                           </button>
@@ -3241,83 +3241,83 @@ export function DeviceControlPage({ onNavigate }) {
                                           </button>
                                         </>
                                       ) : (
-                                    <>
-                                      {/* TOMBOL + (JOIN) */}
-                                      <button
-                                        onClick={() => !isJoined && discardingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
-                                        disabled={isJoined || discardingDevices[dev.id] !== undefined}
-                                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isJoined
-                                          ? 'bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20 cursor-default'
-                                          : discardingDevices[dev.id] !== undefined
-                                            ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
-                                            : 'bg-bieon-eco/5 text-bieon-eco hover:bg-bieon-eco hover:text-white border border-bieon-eco/20'
-                                          }`}
-                                        title={isJoined ? "Sudah masuk antrean" : discardingDevices[dev.id] !== undefined ? "Tidak bisa menambah saat proses hapus" : "Tambahkan ke antrean"}
-                                      >
-                                        {isJoined ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                                      </button>
+                                        <>
+                                          {/* TOMBOL + (JOIN) */}
+                                          <button
+                                            onClick={() => !isJoined && discardingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
+                                            disabled={isJoined || discardingDevices[dev.id] !== undefined}
+                                            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isJoined
+                                              ? 'bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20 cursor-default'
+                                              : discardingDevices[dev.id] !== undefined
+                                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
+                                                : 'bg-bieon-eco/5 text-bieon-eco hover:bg-bieon-eco hover:text-white border border-bieon-eco/20'
+                                              }`}
+                                            title={isJoined ? "Sudah masuk antrean" : discardingDevices[dev.id] !== undefined ? "Tidak bisa menambah saat proses hapus" : "Tambahkan ke antrean"}
+                                          >
+                                            {isJoined ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                          </button>
 
-                                      {/* TOMBOL - (DISCARD) WITH CIRCULAR TIMER */}
-                                      <div className="relative w-10 h-10 flex items-center justify-center">
-                                        <button
-                                          onClick={() => {
-                                            if (discardingDevices[dev.id] === undefined) {
-                                              setDiscardingDevices(prev => ({ ...prev, [dev.id]: 50 }));
-                                            }
-                                          }}
-                                          disabled={discardingDevices[dev.id] !== undefined}
-                                          className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${discardingDevices[dev.id] !== undefined
-                                            ? 'bg-transparent border-transparent'
-                                            : 'bg-pink-50 text-pink-500 hover:bg-pink-500 hover:text-white border-pink-100'
-                                            }`}
-                                        >
-                                          {discardingDevices[dev.id] !== undefined ? (
-                                            <>
-                                              {/* CIRCULAR PROGRESS SVG */}
-                                              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                                <circle
-                                                  cx="20"
-                                                  cy="20"
-                                                  r="18"
-                                                  stroke="currentColor"
-                                                  strokeWidth="3.5"
-                                                  fill="transparent"
-                                                  className="text-pink-100"
-                                                />
-                                                <circle
-                                                  cx="20"
-                                                  cy="20"
-                                                  r="18"
-                                                  stroke="currentColor"
-                                                  strokeWidth="3.5"
-                                                  fill="transparent"
-                                                  strokeDasharray={113.1}
-                                                  strokeDashoffset={113.1 - (discardingDevices[dev.id] / 50) * 113.1}
-                                                  strokeLinecap="round"
-                                                  className="text-pink-500 transition-all duration-1000 ease-linear"
-                                                />
-                                              </svg>
-                                              <span className="relative z-10 text-[10px] font-black text-pink-600">
-                                                {discardingDevices[dev.id]}
-                                              </span>
-                                            </>
-                                          ) : (
-                                            <Minus className="w-5 h-5" />
-                                          )}
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                                          {/* TOMBOL - (DISCARD) WITH CIRCULAR TIMER */}
+                                          <div className="relative w-10 h-10 flex items-center justify-center">
+                                            <button
+                                              onClick={() => {
+                                                if (discardingDevices[dev.id] === undefined) {
+                                                  setDiscardingDevices(prev => ({ ...prev, [dev.id]: 50 }));
+                                                }
+                                              }}
+                                              disabled={discardingDevices[dev.id] !== undefined}
+                                              className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${discardingDevices[dev.id] !== undefined
+                                                ? 'bg-transparent border-transparent'
+                                                : 'bg-pink-50 text-pink-500 hover:bg-pink-500 hover:text-white border-pink-100'
+                                                }`}
+                                            >
+                                              {discardingDevices[dev.id] !== undefined ? (
+                                                <>
+                                                  {/* CIRCULAR PROGRESS SVG */}
+                                                  <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                                    <circle
+                                                      cx="20"
+                                                      cy="20"
+                                                      r="18"
+                                                      stroke="currentColor"
+                                                      strokeWidth="3.5"
+                                                      fill="transparent"
+                                                      className="text-pink-100"
+                                                    />
+                                                    <circle
+                                                      cx="20"
+                                                      cy="20"
+                                                      r="18"
+                                                      stroke="currentColor"
+                                                      strokeWidth="3.5"
+                                                      fill="transparent"
+                                                      strokeDasharray={113.1}
+                                                      strokeDashoffset={113.1 - (discardingDevices[dev.id] / 50) * 113.1}
+                                                      strokeLinecap="round"
+                                                      className="text-pink-500 transition-all duration-1000 ease-linear"
+                                                    />
+                                                  </svg>
+                                                  <span className="relative z-10 text-[10px] font-black text-pink-600">
+                                                    {discardingDevices[dev.id]}
+                                                  </span>
+                                                </>
+                                              ) : (
+                                                <Minus className="w-5 h-5" />
+                                              )}
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
-                  {/* ACTION BOX: POOL ACTIONS [NEW REFINED] */}
+                      {/* ACTION BOX: POOL ACTIONS [NEW REFINED] */}
                       {joinedDevicesPool.length === 0 ? null : (
                         <div className="mt-8 p-6 bg-bieon-eco rounded-[2rem] shadow-xl shadow-bieon-eco/20 animate-in zoom-in-95 duration-300">
                           <div className="flex items-center justify-between mb-5">
@@ -4693,11 +4693,11 @@ export function DeviceControlPage({ onNavigate }) {
                                               checked={sensorConfig.humidity.useDefault}
                                               onChange={() => setSensorConfig({
                                                 ...sensorConfig,
-                                                humidity: { ...sensorConfig.humidity, useDefault: true, value: 80 }
+                                                humidity: { ...sensorConfig.humidity, useDefault: true, value: 70 }
                                               })}
                                               className="w-4 h-4"
                                             />
-                                            <span className="text-sm  text-gray-700">Default (80%)</span>
+                                            <span className="text-sm  text-gray-700">Default (70%)</span>
                                           </label>
                                           <label className="flex items-center gap-2">
                                             <input

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const complaintTimelineSchema = new mongoose.Schema({
     time: { type: String, required: true },
@@ -43,5 +44,7 @@ const complaintSchema = new mongoose.Schema({
     urgencyLevel: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'low' },
     pingCount: { type: Number, default: 0 }
 }, { timestamps: true });
+
+complaintTimelineSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('Complaint', complaintSchema);

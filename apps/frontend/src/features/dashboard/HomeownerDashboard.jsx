@@ -1033,12 +1033,66 @@ export function HomeownerDashboard() {
   const hasWater = isSimulating || currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
 
   let currentSensors = {};
+
+  // Extract real values from connected devices to override mock data
+  let realTemp = liveTemp;
+  let realHumidity = liveHumidity;
+  let realPh = livePh;
+  let realTurbidity = liveTurbidity;
+  let realTds = liveTds;
+  let realWaterTemp = liveWaterTemp;
+
+  if (!isSimulating && currentDevices && currentDevices.length > 0) {
+    let totalTemp = 0, countTemp = 0;
+    let totalHum = 0, countHum = 0;
+    let totalPh = 0, countPh = 0;
+    let totalTurb = 0, countTurb = 0;
+    let totalTds = 0, countTds = 0;
+    let totalWaterTemp = 0, countWaterTemp = 0;
+
+    currentDevices.forEach(d => {
+      if (d.currentValues) {
+        if (d.currentValues.temperature !== undefined && !isNaN(d.currentValues.temperature)) {
+          totalTemp += parseFloat(d.currentValues.temperature);
+          countTemp++;
+        }
+        if (d.currentValues.humidity !== undefined && !isNaN(d.currentValues.humidity)) {
+          totalHum += parseFloat(d.currentValues.humidity);
+          countHum++;
+        }
+        if (d.currentValues.ph !== undefined && !isNaN(d.currentValues.ph)) {
+          totalPh += parseFloat(d.currentValues.ph);
+          countPh++;
+        }
+        if (d.currentValues.turbidity !== undefined && !isNaN(d.currentValues.turbidity)) {
+          totalTurb += parseFloat(d.currentValues.turbidity);
+          countTurb++;
+        }
+        if (d.currentValues.tds !== undefined && !isNaN(d.currentValues.tds)) {
+          totalTds += parseFloat(d.currentValues.tds);
+          countTds++;
+        }
+        if (d.currentValues.waterTemp !== undefined && !isNaN(d.currentValues.waterTemp)) {
+          totalWaterTemp += parseFloat(d.currentValues.waterTemp);
+          countWaterTemp++;
+        }
+      }
+    });
+
+    if (countTemp > 0) realTemp = (totalTemp / countTemp).toFixed(1);
+    if (countHum > 0) realHumidity = (totalHum / countHum).toFixed(1);
+    if (countPh > 0) realPh = (totalPh / countPh).toFixed(1);
+    if (countTurb > 0) realTurbidity = (totalTurb / countTurb).toFixed(1);
+    if (countTds > 0) realTds = (totalTds / countTds).toFixed(1);
+    if (countWaterTemp > 0) realWaterTemp = (totalWaterTemp / countWaterTemp).toFixed(1);
+  }
+
   // Gunakan data mock untuk visual, tapi hanya jika kategorinya relevan dengan perangkat user
   // Gunakan data real-time jika ada
   if (hasComfort) {
     currentSensors.comfort = {
-      temp: isSimulating ? simTemp : liveTemp,
-      humidity: isSimulating ? simHumidity : liveHumidity,
+      temp: isSimulating ? simTemp : realTemp,
+      humidity: isSimulating ? simHumidity : realHumidity,
       comfortLevel: 82
     };
   }
@@ -1067,7 +1121,7 @@ export function HomeownerDashboard() {
       currentSensors.security = securityList.slice(0, 3);
     }
   }
-  if (hasWater) currentSensors.waterQuality = { status: 'drinkable', ph: isSimulating ? simPh : livePh, turbidity: isSimulating ? simTurbidity : liveTurbidity, tds: isSimulating ? simTds : liveTds, temp: isSimulating ? simWaterTemp : liveWaterTemp };
+  if (hasWater) currentSensors.waterQuality = { status: 'drinkable', ph: isSimulating ? simPh : realPh, turbidity: isSimulating ? simTurbidity : realTurbidity, tds: isSimulating ? simTds : realTds, temp: isSimulating ? simWaterTemp : realWaterTemp };
   const dailyData = energySummary?.dailyData || [];
   const monthlyData = energySummary?.monthlyData || [];
   const notifications = realNotifications;
@@ -1231,9 +1285,9 @@ export function HomeownerDashboard() {
                   {/* Kiri (Master - Status) */}
                   <div className="w-full md:w-1/3">
                     {(() => {
-                      const tempVal = selectedRoom === 'all' ? (isSimulating ? simTemp : liveTemp) : currentSensors.comfort.temp;
-                      const humVal = selectedRoom === 'all' ? (isSimulating ? simHumidity : liveHumidity) : currentSensors.comfort.humidity;
-                      const isComfortable = tempVal >= 18 && tempVal <= 30 && humVal >= 40 && humVal <= 60;
+                      const tempVal = currentSensors.comfort.temp;
+                      const humVal = currentSensors.comfort.humidity;
+                      const isComfortable = tempVal >= 20.5 && tempVal <= 31 && humVal >= 50 && humVal <= 80;
 
                       const styles = getMasterCardStyles(isComfortable);
                       const statusText = isComfortable ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_comfort_bad_text', 'Tidak Nyaman');
@@ -1265,7 +1319,7 @@ export function HomeownerDashboard() {
                   <div className="w-full md:w-2/3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
                       {currentSensors.comfort.temp != null && (() => {
-                        const tempVal = selectedRoom === 'all' ? (isSimulating ? simTemp : liveTemp) : currentSensors.comfort.temp;
+                        const tempVal = currentSensors.comfort.temp;
                         // Range for visual progress dot: 15°C to 35°C (20 units)
                         const tempPercent = (tempVal != null && !isNaN(tempVal)) ? Math.min(100, Math.max(0, ((tempVal - 15) / 20) * 100)) : 0;
 
@@ -1275,12 +1329,12 @@ export function HomeownerDashboard() {
                         let borderClass = '';
                         let iconColorClass = 'text-eco';
                         let isPulse = false;
-                        if (tempVal < 18) {
+                        if (tempVal < 20.5) {
                           statusLabel = t('dashboard.status_cold', 'Dingin');
                           textClass = 'text-amber-600';
                           borderClass = 'border-amber-500/30';
                           iconColorClass = 'text-amber-500';
-                        } else if (tempVal <= 30) {
+                        } else if (tempVal <= 31) {
                           statusLabel = t('dashboard.status_comfortable', 'Nyaman');
                           textClass = 'text-eco';
                           borderClass = 'border-eco-500/30';
@@ -1321,9 +1375,9 @@ export function HomeownerDashboard() {
 
                               {/* Color zones bar */}
                               <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                <div className="h-full bg-amber-200" style={{ width: '15%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<18°C)`}></div>
-                                <div className="h-full bg-emerald-400" style={{ width: '60%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (18°C - 30°C)`}></div>
-                                <div className="h-full bg-amber-200" style={{ width: '25%' }} title={`${t('dashboard.status_hot', 'Panas')} (>30°C)`}></div>
+                                <div className="h-full bg-amber-200" style={{ width: '27.5%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<20.5°C)`}></div>
+                                <div className="h-full bg-emerald-400" style={{ width: '52.5%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (20.5°C - 31°C)`}></div>
+                                <div className="h-full bg-amber-200" style={{ width: '20%' }} title={`${t('dashboard.status_hot', 'Panas')} (>31°C)`}></div>
                               </div>
 
                               {/* Indicator dot */}
@@ -1343,7 +1397,7 @@ export function HomeownerDashboard() {
                       })()}
 
                       {currentSensors.comfort.humidity != null && (() => {
-                        const humVal = selectedRoom === 'all' ? (isSimulating ? simHumidity : liveHumidity) : currentSensors.comfort.humidity;
+                        const humVal = currentSensors.comfort.humidity;
                         // Range for visual progress dot: 30% to 90% (60 units)
                         const humPercent = (humVal != null && !isNaN(humVal)) ? Math.min(100, Math.max(0, ((humVal - 30) / 60) * 100)) : 0;
 
@@ -1352,12 +1406,12 @@ export function HomeownerDashboard() {
                         let textClass = '';
                         let borderClass = '';
                         let iconColorClass = 'text-eco';
-                        if (humVal < 40) {
+                        if (humVal < 50) {
                           statusLabel = t('dashboard.status_humidity_dry', 'Kering');
                           textClass = 'text-amber-600';
                           borderClass = 'border-amber-500/30';
                           iconColorClass = 'text-amber-500';
-                        } else if (humVal <= 60) {
+                        } else if (humVal <= 80) {
                           statusLabel = t('dashboard.status_comfortable', 'Nyaman');
                           textClass = 'text-eco';
                           borderClass = 'border-eco-500/30';
@@ -1397,9 +1451,9 @@ export function HomeownerDashboard() {
 
                               {/* Color zones bar */}
                               <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<40%)`}></div>
-                                <div className="h-full bg-emerald-400" style={{ width: '33.33%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (40% - 60%)`}></div>
-                                <div className="h-full bg-amber-200" style={{ width: '50%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>60%)`}></div>
+                                <div className="h-full bg-amber-200" style={{ width: '33.33%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<50%)`}></div>
+                                <div className="h-full bg-emerald-400" style={{ width: '50%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (50% - 80%)`}></div>
+                                <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>80%)`}></div>
                               </div>
 
                               {/* Indicator dot */}

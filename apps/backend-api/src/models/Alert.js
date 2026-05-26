@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const alertSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -25,5 +26,7 @@ const alertSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 alertSchema.index({ owner: 1, date: -1 });
+
+alertSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('Alert', alertSchema);
