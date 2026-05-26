@@ -1436,7 +1436,7 @@ export default function AdminComplaint({ onNavigate }) {
 
             {/* MODAL: ALIHKAN / TUGASKAN TEKNISI */}
             {isAssignModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-6 animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-6 animate-in zoom-in-95 duration-200">
                     <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
                         <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
                             <div className="flex items-center gap-4">
@@ -1505,7 +1505,7 @@ export default function AdminComplaint({ onNavigate }) {
 
             {/* MODAL: PING TEKNISI */}
             {isPingModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-6 animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-6 animate-in zoom-in-95 duration-200">
                     <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden border border-white/20 flex flex-col max-h-[80vh]">
                         <div className="px-6 md:px-8 py-6 bg-white border-b border-gray-100 flex items-center justify-between shrink-0 gap-4">
                             <div className="flex items-center gap-4">

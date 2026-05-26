@@ -675,7 +675,7 @@ export function ComplaintDetailModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/60 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/60 backdrop-blur-md">
             <div className="w-full sm:max-w-[1200px] h-full sm:max-h-[95vh] flex flex-col relative animate-in fade-in zoom-in duration-300">
 
                 {/* HEADER AREA */}
