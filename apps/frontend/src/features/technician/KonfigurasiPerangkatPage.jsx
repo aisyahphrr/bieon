@@ -122,9 +122,9 @@ export function KonfigurasiPerangkatPage({ onNavigate, triggerToast }) {
 
                 <button
                   type="submit"
-                  className="w-full py-5 bg-eco text-white rounded-2xl font-black text-lg shadow-xl shadow-eco/30 hover:bg-eco/90 hover:shadow-eco/40 transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-8"
+                  className="w-full py-3.5 md:py-5 bg-eco text-white rounded-2xl font-black text-sm md:text-lg shadow-xl shadow-eco/30 hover:bg-eco/90 hover:shadow-eco/40 transition-all active:scale-[0.98] flex items-center justify-center gap-3 mt-8"
                 >
-                  <ShieldCheck className="w-6 h-6" />
+                  <ShieldCheck className="w-5 h-5 md:w-6 md:h-6" />
                   {t('tech_device_control.verification.btn_submit')}
                 </button>
               </form>

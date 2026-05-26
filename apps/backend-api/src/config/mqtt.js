@@ -78,6 +78,7 @@ const connectMQTT = (io) => {
     mqttClient.subscribe('bieon/+/admin/open_join');
     mqttClient.subscribe('bieon/+/admin/device_announce');
     mqttClient.subscribe('bieon/+/log/system');
+    mqttClient.subscribe('bieon/+/hub/+/lifecycle');
     mqttClient.subscribe('bieon/+/energi/pdm/telemetry');
     mqttClient.subscribe('bieon/+/hub/+/zigbee_devices/+/telemetry');
   });
@@ -115,40 +116,49 @@ const connectMQTT = (io) => {
           const openJoinSession = getOpenJoinSession(bieonId);
           let claimedDevice = null;
 
+          // Determine whether this announce looks like a hub node
+          const isHubCandidate = (deviceModel || '').toLowerCase().includes('hub') || (deviceModel || '').toLowerCase().includes('hub node') || (deviceManufacturer || '').toLowerCase().includes('bieon');
+
           if (openJoinSession && deviceIeee) {
-            try {
-              const sessionHub = openJoinSession.hubId ? await Hub.findById(openJoinSession.hubId).lean() : await Hub.findOne({ bieonId }).lean();
-              if (sessionHub) {
-                const now = new Date();
-                claimedDevice = await KendaliPerangkat.findOneAndUpdate(
-                  { device_ieee: deviceIeee, bieonId },
-                  {
-                    $set: {
-                      name: announce.display_name || displayName,
-                      location: announce.location || sessionHub.name || 'Pending',
-                      notes: announce.notes || undefined,
-                      hubId: sessionHub._id,
-                      category: announce.category || normalizeDeviceCategory(announce.type || announce.model),
-                      type: announce.type || announce.model || 'Unknown',
-                      status: 'Active',
-                      lifecycleState: 'AUTHORIZED',
-                      isAuthorized: true,
-                      tenantId: sessionHub.tenantId || undefined,
-                      bieonId,
-                      device_ieee: deviceIeee,
-                      modelId: announce.model || announce.model_id || undefined,
-                      owner: sessionHub.owner || undefined,
-                      lastSeen: now
+            if (openJoinSession.hubOnly && !isHubCandidate) {
+              // Ignore non-hub device announces when hub-only mode is active
+              console.log('[DISCOVERY] Ignored non-hub announce during hub-only open-join for', bieonId, deviceIeee, deviceModel, deviceManufacturer);
+              if (ioInstance) ioInstance.emit('device_discovered', { bieonId, ieee: deviceIeee, model: deviceModel, manufacturer: deviceManufacturer, openJoin: { active: true, hubOnly: true } });
+            } else {
+              try {
+                const sessionHub = openJoinSession.hubId ? await Hub.findById(openJoinSession.hubId).lean() : await Hub.findOne({ bieonId }).lean();
+                if (sessionHub) {
+                  const now = new Date();
+                  claimedDevice = await KendaliPerangkat.findOneAndUpdate(
+                    { device_ieee: deviceIeee, bieonId },
+                    {
+                      $set: {
+                        name: announce.display_name || displayName,
+                        location: announce.location || sessionHub.name || 'Pending',
+                        notes: announce.notes || undefined,
+                        hubId: sessionHub._id,
+                        category: announce.category || normalizeDeviceCategory(announce.type || announce.model),
+                        type: announce.type || announce.model || 'Unknown',
+                        status: 'Active',
+                        lifecycleState: 'AUTHORIZED',
+                        isAuthorized: true,
+                        tenantId: sessionHub.tenantId || undefined,
+                        bieonId,
+                        device_ieee: deviceIeee,
+                        modelId: announce.model || announce.model_id || undefined,
+                        owner: sessionHub.owner || undefined,
+                        lastSeen: now
+                      },
+                      $setOnInsert: {
+                        thresholds: {}
+                      }
                     },
-                    $setOnInsert: {
-                      thresholds: {}
-                    }
-                  },
-                  { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
-                );
+                    { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
+                  );
+                }
+              } catch (err) {
+                console.warn('[DISCOVERY] Failed to auto-claim device announce:', err && err.message ? err.message : err);
               }
-            } catch (err) {
-              console.warn('[DISCOVERY] Failed to auto-claim device announce:', err && err.message ? err.message : err);
             }
           }
           const discoveredPayload = {
@@ -167,6 +177,29 @@ const connectMQTT = (io) => {
             raw: announce,
             topics: announce.topics || undefined
           };
+
+          // If this announce looks like a hub node and we're in hub-only open-join,
+          // create or update the Hub record so the master registers the new hub.
+          if (openJoinSession && openJoinSession.hubOnly && isHubCandidate && deviceIeee) {
+            try {
+              const hubName = announce.display_name || displayName || (openJoinSession.hubId || `hub_${Date.now()}`);
+              const ieeeCanonical = deviceIeee;
+              // Try find by ieee first
+              let hubRec = await Hub.findOne({ bieonId, device_ieee: ieeeCanonical }).lean();
+              if (!hubRec) hubRec = await Hub.findOne({ bieonId, name: hubName }).lean();
+              if (!hubRec) {
+                const created = await Hub.create({ name: hubName, bieonId, device_ieee: ieeeCanonical, status: 'Online' });
+                hubRec = created.toObject ? created.toObject() : created;
+                console.log('[HUB] Auto-created hub from announce:', hubRec.name || hubRec._id);
+              } else {
+                await Hub.findByIdAndUpdate(hubRec._id, { $set: { status: 'Online', device_ieee: hubRec.device_ieee || ieeeCanonical } }).catch(() => {});
+              }
+              // Notify UI
+              if (ioInstance) ioInstance.emit('hub_added', { bieonId, hub: hubRec, discovered: discoveredPayload });
+            } catch (err) {
+              console.warn('[HUB] Failed to auto-create hub from announce:', err && err.message ? err.message : err);
+            }
+          }
 
           console.log('[DISCOVERY] device_announce received:', discoveredPayload);
           if (ioInstance) {
@@ -198,6 +231,42 @@ const connectMQTT = (io) => {
           return;
         }
 
+        // Handle hub lifecycle events from ESP (bieon/{bieonId}/hub/{hubId}/lifecycle)
+        if (parts.length >= 5 && parts[2] === 'hub' && parts[4] === 'lifecycle') {
+          const bieonId = parts[1];
+          const hubId = parts[3];
+          const evt = typeof payload === 'object' && payload !== null ? payload : { event: String(payload) };
+          const eventName = String(evt.event || evt.type || evt.status || '').toLowerCase();
+
+          console.log('[HUB] lifecycle event received:', { bieonId, hubId, event: eventName, payload: evt });
+
+          if (eventName === 'hub_added' || evt.event === 'hub_added') {
+            try {
+              const hubName = evt.hub_id || evt.hubId || hubId || `hub_${Date.now()}`;
+              const ieee = String(evt.ieee || evt.device_ieee || evt.ieee_address || '').replace(/[:\-\s]/g, '').toUpperCase() || undefined;
+              // Upsert hub by name or ieee
+              let hubRec = null;
+              if (ieee) hubRec = await Hub.findOne({ bieonId, device_ieee: ieee }).lean();
+              if (!hubRec) hubRec = await Hub.findOne({ bieonId, name: hubName }).lean();
+              if (!hubRec) {
+                const created = await Hub.create({ name: hubName, bieonId, device_ieee: ieee, status: 'Online' });
+                hubRec = created.toObject ? created.toObject() : created;
+                console.log('[HUB] Created new hub record:', hubRec._id || hubRec.name);
+              } else {
+                // Update status/ieee if missing
+                await Hub.findByIdAndUpdate(hubRec._id, { $set: { status: 'Online', device_ieee: ieee || hubRec.device_ieee } }).catch(() => {});
+              }
+
+              if (ioInstance) ioInstance.emit('hub_added', { bieonId, hub: hubRec, payload: evt });
+            } catch (err) {
+              console.warn('[HUB] Failed to persist hub_added event:', err && err.message ? err.message : err);
+            }
+          } else if (eventName === 'hub_add_failed' || evt.event === 'hub_add_failed') {
+            if (ioInstance) ioInstance.emit('hub_add_failed', { bieonId, hubId, payload: evt });
+          }
+          return;
+        }
+
         // Handle open join from backend/admin tools: bieon/{bieonId}/admin/open_join
         if (parts.length >= 4 && parts[2] === 'admin' && parts[3] === 'open_join') {
           const bieonId = parts[1];
@@ -206,7 +275,8 @@ const connectMQTT = (io) => {
           setOpenJoinSession(bieonId, {
             duration,
             hubId: openJoin.hub_id || openJoin.hubId || null,
-            requestedBy: openJoin.requested_by || openJoin.requestedBy || null
+            requestedBy: openJoin.requested_by || openJoin.requestedBy || null,
+            hubOnly: Boolean(openJoin.mode === 'add_hub_node' || openJoin.hub_only || openJoin.hubOnly || openJoin.filter === 'hub_node_only')
           });
           console.log('[JOIN] admin/open_join received:', { bieonId, topic, payload: openJoin });
           if (ioInstance) {
@@ -223,8 +293,16 @@ const connectMQTT = (io) => {
         // Handle system log from ESP-B: bieon/{bieonId}/log/system
         if (parts.length >= 4 && parts[2] === 'log' && parts[3] === 'system') {
           const bieonId = parts[1];
-          const systemLog = typeof payload === 'object' && payload !== null ? payload : { message: String(payload) };
-          const eventType = String(systemLog.type || systemLog.event || systemLog.status || systemLog.message || '').toLowerCase();
+          const rawSystemLog = typeof payload === 'object' && payload !== null ? payload : { message: String(payload) };
+          const normalizedTs = Number(rawSystemLog.ts || rawSystemLog.timestamp || Date.now());
+          const systemLog = {
+            ...rawSystemLog,
+            type: String(rawSystemLog.type || rawSystemLog.event || rawSystemLog.status || 'system_event'),
+            event: String(rawSystemLog.event || rawSystemLog.type || rawSystemLog.status || 'system_event'),
+            message: String(rawSystemLog.message || rawSystemLog.detail || rawSystemLog.type || rawSystemLog.event || 'system event'),
+            ts: Number.isFinite(normalizedTs) ? normalizedTs : Date.now()
+          };
+          const eventType = String(systemLog.type || systemLog.event || systemLog.status || 'system_event').toLowerCase();
 
           if (eventType.includes('zigbee_permit_') || eventType.includes('permit_join')) {
             if (eventType.includes('close')) {
@@ -380,7 +458,8 @@ const connectMQTT = (io) => {
                   }
                   if (!hubId) hubId = 'hubnode_001';
 
-                  const deviceTopic = `bieon/${bieonId}/hub/${hubId}/zigbee_devices/telemetry`;
+                  const routedIeee = String(payload.device_ieee || payload.ieee || payload.device_ieee_raw || '').replace(/[:\-\s]/g, '').toUpperCase() || 'UNKNOWN';
+                  const deviceTopic = `bieon/${bieonId}/hub/${hubId}/zigbee_devices/${routedIeee}/telemetry`;
                   const publishPayload = typeof payload === 'object' ? JSON.stringify(payload) : String(payload);
                   if (mqttClient) {
                     // Use publishCommand to ensure topic normalization and consistent publishes
@@ -1190,4 +1269,27 @@ const publishHierarchicalCommand = (tenantId, bieonId, hubId, deviceId, command,
     }
 };
 
-module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin };
+/**
+ * Instruct gateway to request a Zigbee leave for a device (or hub).
+ * Publishes to `bieon/{bieonId}/admin/leave` which ESP-B forwards to ESP-A UART.
+ * Options: { remove_children: bool, rejoin: bool, requested_by: string, reason: string }
+ */
+const publishLeave = (bieonDeviceId, deviceIeee, options = {}) => {
+  if (!bieonDeviceId || (!deviceIeee && !options.short_addr)) return false;
+  if (!mqttClient) return false;
+  const topic = `bieon/${String(bieonDeviceId).toLowerCase()}/admin/leave`;
+  const payload = {
+    command: 'leave_device',
+    device_ieee: deviceIeee || undefined,
+    short_addr: options.short_addr || undefined,
+    remove_children: options.remove_children === undefined ? 1 : (options.remove_children ? 1 : 0),
+    rejoin: options.rejoin ? 1 : 0,
+    requested_by: options.requested_by || 'api',
+    reason: options.reason || 'requested_from_ui'
+  };
+  publishCommand(topic, payload);
+  console.log(`[MQTT] publish leave -> ${topic}`, payload);
+  return true;
+};
+
+module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin, publishLeave };

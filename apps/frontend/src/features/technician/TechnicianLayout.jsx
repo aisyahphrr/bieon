@@ -161,11 +161,11 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
               {/* Pengaduan Button */}
               <button
                 onClick={() => setActiveMenu('pengaduan')}
-                className="flex items-center justify-center p-2 lg:px-4 lg:py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-semibold transition-all border border-red-100"
+                className="hidden md:flex items-center justify-center gap-1.5 px-3 py-1.5 md:px-4 md:py-2 text-xs rounded-xl bg-red-50 text-red-600 hover:bg-red-100 font-semibold transition-all border border-red-100"
                 title={t('nav.complaint_tab', 'Pengaduan')}
               >
-                <MessageSquare className="w-5 h-5 lg:w-4 lg:h-4" />
-                <span className="hidden lg:block ml-2">{t('nav.complaint_tab', 'Pengaduan')}</span>
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>{t('nav.complaint_tab', 'Pengaduan')}</span>
               </button>
 
               {/* Notification */}
@@ -241,27 +241,34 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
         {children}
       </main>
 
-      {/* Mobile Bottom Navigation Bar - Floating Pill Design */}
-      <nav className="md:hidden fixed bottom-6 left-4 right-4 bg-white/90 backdrop-blur-xl border border-gray-200/50 z-[60] flex justify-between items-center px-2 py-2 shadow-[0_10px_30px_-5px_rgba(0,0,0,0.1)] rounded-[2.5rem] pb-safe">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeMenu === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveMenu(item.id)}
-              className={`flex-1 flex flex-col items-center justify-center transition-all duration-300 ${isActive ? 'text-eco scale-105' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-              <div className={`p-2 rounded-2xl mb-1 transition-all duration-300 ${isActive ? 'bg-eco/10 shadow-sm' : 'bg-transparent'}`}>
-                <Icon className={`w-5 h-5 stroke-[2.5] ${isActive ? 'text-eco' : ''}`} />
-              </div>
-              <span className={`text-[10px] font-bold tracking-tight ${isActive ? 'text-eco' : 'text-gray-400'}`}>
-                {t(item.tKey, item.label)}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+      {/* Mobile Bottom Navigation Bar: docked directly at the bottom with safe area padding */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-0 shadow-[0_-8px_30px_rgb(0,0,0,0.04)] pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around h-16 px-4">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeMenu === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveMenu(item.id)}
+                className={`flex-1 flex flex-col items-center justify-center h-full transition-colors duration-200 ${
+                  isActive ? 'text-eco' : 'text-gray-400 hover:text-slate-600'
+                }`}
+              >
+                <Icon 
+                  className="w-5.5 h-5.5 transition-all duration-200" 
+                  strokeWidth={isActive ? 2.2 : 1.8} 
+                />
+                <span className={`text-[9px] sm:text-[10px] font-semibold mt-1 transition-colors duration-200 ${
+                  isActive ? 'text-eco font-bold' : 'text-gray-400'
+                }`}>
+                  {t(item.tKey, item.label)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
