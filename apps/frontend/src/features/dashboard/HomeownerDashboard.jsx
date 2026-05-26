@@ -157,7 +157,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
           <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 className="w-10 h-10 text-eco" strokeWidth={1.5} />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('dashboard.complaint_sent', 'Pengaduan Terkirim!')}</h3>
+          <h3 className="text-xl font-bold text-slate-700 mb-2">{t('dashboard.complaint_sent', 'Pengaduan Terkirim!')}</h3>
           <p className="text-gray-500 text-sm">{t('dashboard.complaint_sent_desc', 'Tim kami akan segera menindaklanjuti pengaduan Anda.')}</p>
         </div>
       </div>
@@ -241,7 +241,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
                         : level === 'medium'
                           ? 'bg-alert-warning text-white hover:bg-alert-warning/90'
                           : 'bg-alert-special text-white hover:bg-alert-special/90'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 text-slate-500 hover:bg-gray-200'
                       }`}
                   >
                     {level === 'high' ? t('dashboard.priority_high', 'Tinggi') : level === 'medium' ? t('dashboard.priority_medium', 'Sedang') : t('dashboard.priority_low', 'Rendah')}
@@ -402,7 +402,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
                     key={index}
                     className="hover:bg-slate-50 transition-colors"
                   >
-                    <td className="px-6 py-4 font-semibold text-gray-900">
+                    <td className="px-6 py-4 font-semibold text-slate-700">
                       {'time' in item ? item.time : item.month}
                     </td>
                     <td className="px-6 py-4 text-gray-700">
@@ -670,12 +670,10 @@ export function HomeownerDashboard() {
           ? 'bg-[#E6F5E9] border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
           : 'bg-[#FEF9C3] border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
         headerClass: 'text-center pb-3',
-        titleTextClass: 'text-center',
+        titleTextClass: 'text-left',
         dividerClass: 'border-0',
         titleClass: 'text-slate-400',
-        statusClass: isSafe
-          ? 'text-[#059b27] font-extrabold text-xl md:text-2xl tracking-wide'
-          : 'text-[#D97706] font-extrabold text-xl md:text-2xl tracking-wide',
+        statusClass: 'text-slate-800 font-extrabold text-xl md:text-2xl tracking-wide',
         iconClass: 'w-14 h-14 text-white'
       };
     } else if (masterCardMode === 'eco-solid-soft') {
@@ -684,7 +682,7 @@ export function HomeownerDashboard() {
           ? 'bg-[#E6F5E9] border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
           : 'bg-amber-50 border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
         headerClass: 'text-center pb-3',
-        titleTextClass: 'text-center',
+        titleTextClass: 'text-left',
         dividerClass: 'border-0',
         titleClass: 'text-slate-500',
         statusClass: 'text-slate-800 font-extrabold text-xl md:text-2xl tracking-wide',
@@ -697,7 +695,7 @@ export function HomeownerDashboard() {
         titleTextClass: 'text-left',
         dividerClass: 'border-0',
         titleClass: 'text-slate-400',
-        statusClass: 'text-text-headline font-extrabold text-xl md:text-2xl tracking-wide',
+        statusClass: 'text-slate-800 font-extrabold text-xl md:text-2xl tracking-wide',
         iconClass: 'w-14 h-14 text-white'
       };
     } else {
@@ -1280,201 +1278,204 @@ export function HomeownerDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           <div className="lg:col-span-9 space-y-6 md:space-y-8">
             {currentSensors.comfort && (
-              <div id="section-kenyamanan" className="mb-6">
-                <div className="flex flex-col md:flex-row gap-4 w-full">
-                  {/* Kiri (Master - Status) */}
-                  <div className="w-full md:w-1/3">
-                    {(() => {
-                      const tempVal = currentSensors.comfort.temp;
-                      const humVal = currentSensors.comfort.humidity;
-                      const isComfortable = tempVal >= 20.5 && tempVal <= 31 && humVal >= 50 && humVal <= 80;
-
-                      const styles = getMasterCardStyles(isComfortable);
-                      const statusText = isComfortable ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_comfort_bad_text', 'Tidak Nyaman');
-
-                      return (
-                        <div className={`${styles.cardClass} rounded-2xl p-6 flex flex-col justify-between h-full min-h-[200px] transition-all duration-500 hover:scale-[1.01] relative overflow-hidden`}>
-                          {/* 1. Judul Status */}
-                          <div className={`${styles.headerClass} z-10`}>
-                            <div className={`font-semibold text-sm text-text-headline ${styles.titleTextClass} tracking-tight`}>{t('dashboard.comfort_status', 'Status Kenyamanan')}</div>
-                          </div>
-
-                          {/* 2. Icon */}
-                          <div className="flex-1 flex items-center justify-center text-center py-3 z-10">
-                            {isComfortable ? renderCardIcon(ThermometerSun, true) : renderCardIcon(AlertTriangle, false)}
-                          </div>
-
-                          {/* 3. Input Statusnya */}
-                          <div className="text-center z-10">
-                            <span className={styles.statusClass}>
-                              {statusText}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Kanan (Detail - Parameter) */}
-                  <div className="w-full md:w-2/3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
-                      {currentSensors.comfort.temp != null && (() => {
+              <>
+                <h2 className="text-lg font-bold text-slate-900 mb-3 mt-6 first:mt-0">Kenyamanan</h2>
+                <div id="section-kenyamanan" className="mb-6">
+                  <div className="flex flex-col md:flex-row gap-4 w-full">
+                    {/* Kiri (Master - Status) */}
+                    <div className="w-full md:w-1/3">
+                      {(() => {
                         const tempVal = currentSensors.comfort.temp;
-                        // Range for visual progress dot: 15°C to 35°C (20 units)
-                        const tempPercent = (tempVal != null && !isNaN(tempVal)) ? Math.min(100, Math.max(0, ((tempVal - 15) / 20) * 100)) : 0;
-
-                        // Status styling based on value
-                        let statusLabel = '';
-                        let textClass = '';
-                        let borderClass = '';
-                        let iconColorClass = 'text-eco';
-                        let isPulse = false;
-                        if (tempVal < 20.5) {
-                          statusLabel = t('dashboard.status_cold', 'Dingin');
-                          textClass = 'text-amber-600';
-                          borderClass = 'border-amber-500/30';
-                          iconColorClass = 'text-amber-500';
-                        } else if (tempVal <= 31) {
-                          statusLabel = t('dashboard.status_comfortable', 'Nyaman');
-                          textClass = 'text-eco';
-                          borderClass = 'border-eco-500/30';
-                          iconColorClass = 'text-eco';
-                        } else {
-                          statusLabel = t('dashboard.status_hot', 'Panas');
-                          textClass = 'text-amber-600';
-                          borderClass = 'border-amber-500/30';
-                          iconColorClass = 'text-amber-500';
-                          isPulse = true;
-                        }
-
-                        return (
-                          <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.temperature')}</span>
-                              <ThermometerSun className={`w-5.5 h-5.5 ${iconColorClass} ${isPulse ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
-                            </div>
-
-                            <div className="flex-1 py-1">
-                              <div className="text-3xl font-extrabold text-text-headline tracking-tight">
-                                {tempVal}°C
-                              </div>
-                            </div>
-
-                            {/* Segmented Range Indicator */}
-                            <div className="relative mt-auto pt-2">
-                              {/* Opsi A: Floating Tooltip (Opaque) */}
-                              <div
-                                className="absolute bottom-full mb-0.5 transform -translate-x-1/2 transition-all duration-500 flex flex-col items-center z-10"
-                                style={{ left: `${tempPercent}%` }}
-                              >
-                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-md border bg-white ${textClass} ${borderClass}`}>
-                                  {statusLabel}
-                                </span>
-                                <div className="w-1.5 h-1.5 bg-white rotate-45 -mt-1 border-r border-b border-slate-200"></div>
-                              </div>
-
-                              {/* Color zones bar */}
-                              <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                <div className="h-full bg-amber-200" style={{ width: '27.5%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<20.5°C)`}></div>
-                                <div className="h-full bg-emerald-400" style={{ width: '52.5%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (20.5°C - 31°C)`}></div>
-                                <div className="h-full bg-amber-200" style={{ width: '20%' }} title={`${t('dashboard.status_hot', 'Panas')} (>31°C)`}></div>
-                              </div>
-
-                              {/* Indicator dot */}
-                              <div
-                                className="absolute top-1.5 w-4 h-4 bg-white border-2 border-slate-700 rounded-full shadow-md transform -translate-x-1/2 transition-all duration-500 hover:scale-110 z-10"
-                                style={{ left: `${tempPercent}%` }}
-                              ></div>
-
-                              {/* Labels */}
-                              <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-3">
-                                <span className="absolute -translate-x-1/2" style={{ left: '15%' }}>18°C</span>
-                                <span className="absolute -translate-x-1/2" style={{ left: '75%' }}>30°C</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {currentSensors.comfort.humidity != null && (() => {
                         const humVal = currentSensors.comfort.humidity;
-                        // Range for visual progress dot: 30% to 90% (60 units)
-                        const humPercent = (humVal != null && !isNaN(humVal)) ? Math.min(100, Math.max(0, ((humVal - 30) / 60) * 100)) : 0;
+                        const isComfortable = tempVal >= 20.5 && tempVal <= 31 && humVal >= 50 && humVal <= 80;
 
-                        // Status styling based on value
-                        let statusLabel = '';
-                        let textClass = '';
-                        let borderClass = '';
-                        let iconColorClass = 'text-eco';
-                        if (humVal < 50) {
-                          statusLabel = t('dashboard.status_humidity_dry', 'Kering');
-                          textClass = 'text-amber-600';
-                          borderClass = 'border-amber-500/30';
-                          iconColorClass = 'text-amber-500';
-                        } else if (humVal <= 80) {
-                          statusLabel = t('dashboard.status_comfortable', 'Nyaman');
-                          textClass = 'text-eco';
-                          borderClass = 'border-eco-500/30';
-                          iconColorClass = 'text-eco';
-                        } else {
-                          statusLabel = t('dashboard.status_humidity_humid', 'Lembap');
-                          textClass = 'text-amber-600';
-                          borderClass = 'border-amber-500/30';
-                          iconColorClass = 'text-amber-500';
-                        }
+                        const styles = getMasterCardStyles(isComfortable);
+                        const statusText = isComfortable ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_comfort_bad_text', 'Tidak Nyaman');
 
                         return (
-                          <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.humidity')}</span>
-                              <Droplet className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                          <div className={`${styles.cardClass} rounded-2xl p-6 flex flex-col justify-between h-full min-h-[200px] transition-all duration-500 hover:scale-[1.01] relative overflow-hidden`}>
+                            {/* 1. Judul Status */}
+                            <div className={`${styles.headerClass} z-10`}>
+                              <div className={`font-semibold text-sm text-text-headline ${styles.titleTextClass} tracking-tight`}>{t('dashboard.comfort_status', 'Status Kenyamanan')}</div>
                             </div>
 
-                            <div className="flex-1 py-1">
-                              <div className="text-3xl font-extrabold text-text-headline tracking-tight">
-                                {humVal}%
-                              </div>
+                            {/* 2. Icon */}
+                            <div className="flex-1 flex items-center justify-center text-center py-3 z-10">
+                              {isComfortable ? renderCardIcon(ThermometerSun, true) : renderCardIcon(AlertTriangle, false)}
                             </div>
 
-                            {/* Segmented Range Indicator */}
-                            <div className="relative mt-auto pt-2">
-                              {/* Opsi A: Floating Tooltip (Opaque) */}
-                              <div
-                                className="absolute bottom-full mb-0.5 transform -translate-x-1/2 transition-all duration-500 flex flex-col items-center z-10"
-                                style={{ left: `${humPercent}%` }}
-                              >
-                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-md border bg-white ${textClass} ${borderClass}`}>
-                                  {statusLabel}
-                                </span>
-                                <div className="w-1.5 h-1.5 bg-white rotate-45 -mt-1 border-r border-b border-slate-200"></div>
-                              </div>
-
-                              {/* Color zones bar */}
-                              <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                <div className="h-full bg-amber-200" style={{ width: '33.33%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<50%)`}></div>
-                                <div className="h-full bg-emerald-400" style={{ width: '50%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (50% - 80%)`}></div>
-                                <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>80%)`}></div>
-                              </div>
-
-                              {/* Indicator dot */}
-                              <div
-                                className="absolute top-1.5 w-4 h-4 bg-white border-2 border-slate-700 rounded-full shadow-md transform -translate-x-1/2 transition-all duration-500 hover:scale-110 z-10"
-                                style={{ left: `${humPercent}%` }}
-                              ></div>
-
-                              {/* Labels */}
-                              <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-3">
-                                <span className="absolute -translate-x-1/2" style={{ left: '16.67%' }}>40%</span>
-                                <span className="absolute -translate-x-1/2" style={{ left: '50%' }}>60%</span>
-                              </div>
+                            {/* 3. Input Statusnya */}
+                            <div className="text-center z-10">
+                              <span className={styles.statusClass}>
+                                {statusText}
+                              </span>
                             </div>
                           </div>
                         );
                       })()}
                     </div>
+
+                    {/* Kanan (Detail - Parameter) */}
+                    <div className="w-full md:w-2/3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
+                        {currentSensors.comfort.temp != null && (() => {
+                          const tempVal = currentSensors.comfort.temp;
+                          // Range for visual progress dot: 15°C to 35°C (20 units)
+                          const tempPercent = (tempVal != null && !isNaN(tempVal)) ? Math.min(100, Math.max(0, ((tempVal - 15) / 20) * 100)) : 0;
+
+                          // Status styling based on value
+                          let statusLabel = '';
+                          let textClass = '';
+                          let borderClass = '';
+                          let iconColorClass = 'text-eco';
+                          let isPulse = false;
+                          if (tempVal < 20.5) {
+                            statusLabel = t('dashboard.status_cold', 'Dingin');
+                            textClass = 'text-amber-600';
+                            borderClass = 'border-amber-500/30';
+                            iconColorClass = 'text-amber-500';
+                          } else if (tempVal <= 31) {
+                            statusLabel = t('dashboard.status_comfortable', 'Nyaman');
+                            textClass = 'text-eco';
+                            borderClass = 'border-eco-500/30';
+                            iconColorClass = 'text-eco';
+                          } else {
+                            statusLabel = t('dashboard.status_hot', 'Panas');
+                            textClass = 'text-amber-600';
+                            borderClass = 'border-amber-500/30';
+                            iconColorClass = 'text-amber-500';
+                            isPulse = true;
+                          }
+
+                          return (
+                            <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.temperature')}</span>
+                                <ThermometerSun className={`w-5.5 h-5.5 ${iconColorClass} ${isPulse ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
+                              </div>
+
+                              <div className="flex-1 py-1">
+                                <div className="text-3xl font-extrabold text-text-headline tracking-tight">
+                                  {tempVal}°C
+                                </div>
+                              </div>
+
+                              {/* Segmented Range Indicator */}
+                              <div className="relative mt-auto pt-2">
+                                {/* Opsi A: Floating Tooltip (Opaque) */}
+                                <div
+                                  className="absolute bottom-full mb-0.5 transform -translate-x-1/2 transition-all duration-500 flex flex-col items-center z-10"
+                                  style={{ left: `${tempPercent}%` }}
+                                >
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-md border bg-white ${textClass} ${borderClass}`}>
+                                    {statusLabel}
+                                  </span>
+                                  <div className="w-1.5 h-1.5 bg-white rotate-45 -mt-1 border-r border-b border-slate-200"></div>
+                                </div>
+
+                                {/* Color zones bar */}
+                                <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
+                                  <div className="h-full bg-amber-200" style={{ width: '27.5%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<20.5°C)`}></div>
+                                  <div className="h-full bg-emerald-400" style={{ width: '52.5%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (20.5°C - 31°C)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '20%' }} title={`${t('dashboard.status_hot', 'Panas')} (>31°C)`}></div>
+                                </div>
+
+                                {/* Indicator dot */}
+                                <div
+                                  className="absolute top-1.5 w-4 h-4 bg-white border-2 border-slate-700 rounded-full shadow-md transform -translate-x-1/2 transition-all duration-500 hover:scale-110 z-10"
+                                  style={{ left: `${tempPercent}%` }}
+                                ></div>
+
+                                {/* Labels */}
+                                <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-3">
+                                  <span className="absolute -translate-x-1/2" style={{ left: '15%' }}>18°C</span>
+                                  <span className="absolute -translate-x-1/2" style={{ left: '75%' }}>30°C</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {currentSensors.comfort.humidity != null && (() => {
+                          const humVal = currentSensors.comfort.humidity;
+                          // Range for visual progress dot: 30% to 90% (60 units)
+                          const humPercent = (humVal != null && !isNaN(humVal)) ? Math.min(100, Math.max(0, ((humVal - 30) / 60) * 100)) : 0;
+
+                          // Status styling based on value
+                          let statusLabel = '';
+                          let textClass = '';
+                          let borderClass = '';
+                          let iconColorClass = 'text-eco';
+                          if (humVal < 50) {
+                            statusLabel = t('dashboard.status_humidity_dry', 'Kering');
+                            textClass = 'text-amber-600';
+                            borderClass = 'border-amber-500/30';
+                            iconColorClass = 'text-amber-500';
+                          } else if (humVal <= 80) {
+                            statusLabel = t('dashboard.status_comfortable', 'Nyaman');
+                            textClass = 'text-eco';
+                            borderClass = 'border-eco-500/30';
+                            iconColorClass = 'text-eco';
+                          } else {
+                            statusLabel = t('dashboard.status_humidity_humid', 'Lembap');
+                            textClass = 'text-amber-600';
+                            borderClass = 'border-amber-500/30';
+                            iconColorClass = 'text-amber-500';
+                          }
+
+                          return (
+                            <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.humidity')}</span>
+                                <Droplet className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                              </div>
+
+                              <div className="flex-1 py-1">
+                                <div className="text-3xl font-extrabold text-text-headline tracking-tight">
+                                  {humVal}%
+                                </div>
+                              </div>
+
+                              {/* Segmented Range Indicator */}
+                              <div className="relative mt-auto pt-2">
+                                {/* Opsi A: Floating Tooltip (Opaque) */}
+                                <div
+                                  className="absolute bottom-full mb-0.5 transform -translate-x-1/2 transition-all duration-500 flex flex-col items-center z-10"
+                                  style={{ left: `${humPercent}%` }}
+                                >
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-md border bg-white ${textClass} ${borderClass}`}>
+                                    {statusLabel}
+                                  </span>
+                                  <div className="w-1.5 h-1.5 bg-white rotate-45 -mt-1 border-r border-b border-slate-200"></div>
+                                </div>
+
+                                {/* Color zones bar */}
+                                <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
+                                  <div className="h-full bg-amber-200" style={{ width: '33.33%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<50%)`}></div>
+                                  <div className="h-full bg-emerald-400" style={{ width: '50%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (50% - 80%)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>80%)`}></div>
+                                </div>
+
+                                {/* Indicator dot */}
+                                <div
+                                  className="absolute top-1.5 w-4 h-4 bg-white border-2 border-slate-700 rounded-full shadow-md transform -translate-x-1/2 transition-all duration-500 hover:scale-110 z-10"
+                                  style={{ left: `${humPercent}%` }}
+                                ></div>
+
+                                {/* Labels */}
+                                <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-3">
+                                  <span className="absolute -translate-x-1/2" style={{ left: '16.67%' }}>40%</span>
+                                  <span className="absolute -translate-x-1/2" style={{ left: '50%' }}>60%</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
             {currentSensors.security && currentSensors.security.length > 0 && (() => {
@@ -1506,32 +1507,144 @@ export function HomeownerDashboard() {
               });
 
               return (
-                <div id="section-keamanan" className="mb-6">
+                <>
+                  <h2 className="text-lg font-bold text-slate-900 mb-3 mt-6 first:mt-0">Keamanan</h2>
+                  <div id="section-keamanan" className="mb-6">
+                    <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
+                      {/* Kiri (Master - Status) */}
+                      <div className="w-full md:w-1/3">
+                        {(() => {
+                          const isAllSafe = currentSensors.security.every(s =>
+                            s.status === 'Normal' || s.status === 'Closed' || s.status === 'No Motion'
+                          );
+
+                          const styles = getMasterCardStyles(isAllSafe);
+                          const statusText = isAllSafe ? t('dashboard.status_all_safe_text', 'Semua Aman') : t('dashboard.status_needs_attention_text', 'Perlu Perhatian');
+
+                          return (
+                            <div className={`${styles.cardClass} rounded-2xl p-6 flex flex-col justify-between h-full min-h-[200px] transition-all duration-500 hover:scale-[1.01] relative overflow-hidden`}>
+                              {/* 1. Judul Status */}
+                              <div className={`${styles.headerClass} z-10`}>
+                                <div className={`font-semibold text-sm text-text-headline ${styles.titleTextClass} tracking-tight`}>{t('dashboard.security_status', 'Status Keamanan')}</div>
+                              </div>
+
+                              {/* 2. Icon */}
+                              <div className="flex-1 flex items-center justify-center text-center py-3 z-10">
+                                {isAllSafe ? renderCardIcon(ShieldCheck, true) : renderCardIcon(AlertTriangle, false)}
+                              </div>
+
+                              {/* 3. Input Statusnya */}
+                              <div className="text-center z-10">
+                                <span className={styles.statusClass}>
+                                  {statusText}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Kanan (Detail - Sensor Dinamis) */}
+                      <div className="w-full md:w-2/3 flex flex-col gap-4">
+                        {rows.map((row, rIdx) => {
+                          let gridClass = "grid gap-4 w-full";
+                          if (row.size === 1) gridClass += " grid-cols-1";
+                          else if (row.size === 2) gridClass += " grid-cols-1 sm:grid-cols-2";
+                          else if (row.size === 3) gridClass += " grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+
+                          // If single row, use flex-1 to stretch the grid to match the master card height
+                          const rowClass = rows.length === 1 ? `${gridClass} flex-1` : gridClass;
+
+                          return (
+                            <div key={rIdx} className={rowClass}>
+                              {row.items.map((sensor, idx) => {
+                                const sensorType = (sensor.type || '').toString().toLowerCase();
+                                const isMotion = sensorType.includes('motion');
+                                const isDoor = sensorType.includes('door');
+                                const isSafe = isMotion
+                                  ? sensor.status === 'No Motion'
+                                  : sensor.status === 'Closed';
+
+                                return (
+                                  <div key={idx} className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full min-h-[140px]">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <span className="font-semibold text-sm text-text-headline tracking-tight">
+                                        {isMotion ? t('dashboard.motion_sensor', 'Sensor Gerak') : isDoor ? t('dashboard.door_sensor', 'Sensor Pintu') : sensor.type}
+                                      </span>
+                                      {isMotion ? (
+                                        isSafe ? (
+                                          <Activity className="w-5.5 h-5.5 text-eco" strokeWidth={1.5} />
+                                        ) : (
+                                          <Activity className="w-5.5 h-5.5 text-amber-500 animate-pulse" strokeWidth={1.5} />
+                                        )
+                                      ) : (
+                                        isSafe ? (
+                                          <DoorClosed className="w-5.5 h-5.5 text-eco" strokeWidth={1.5} />
+                                        ) : (
+                                          <DoorOpen className="w-5.5 h-5.5 text-amber-500 animate-pulse" strokeWidth={1.5} />
+                                        )
+                                      )}
+                                    </div>
+
+                                    <div className="flex-1 py-1 flex flex-col justify-between">
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-3xl font-extrabold text-text-headline tracking-tight">
+                                          {isMotion
+                                            ? (sensor.status === 'No Motion' ? t('dashboard.status_no_motion', 'Aman') : t('dashboard.status_motion', 'Gerak Terdeteksi'))
+                                            : (sensor.status === 'Closed' ? t('dashboard.status_door_closed', 'Tertutup') : t('dashboard.status_door_open', 'Terbuka'))
+                                          }
+                                        </span>
+                                      </div>
+
+                                      <span className="text-[11px] text-text-dim mt-2 font-bold tracking-tight">
+                                        {sensor.room}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+
+            {currentSensors.waterQuality && (
+              <>
+                <h2 className="text-lg font-bold text-slate-900 mb-3 mt-6 first:mt-0">Kualitas Air</h2>
+                <div id="section-kualitas-air" className="mb-6">
                   <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
-                    {/* Kiri (Master - Status) */}
+                    {/* Kiri (Master - Status Air) */}
                     <div className="w-full md:w-1/3">
                       {(() => {
-                        const isAllSafe = currentSensors.security.every(s =>
-                          s.status === 'Normal' || s.status === 'Closed' || s.status === 'No Motion'
-                        );
+                        const ph = selectedRoom === 'all' ? (isSimulating ? simPh : livePh) : currentSensors.waterQuality.ph;
+                        const turbidity = selectedRoom === 'all' ? (isSimulating ? simTurbidity : liveTurbidity) : currentSensors.waterQuality.turbidity;
+                        const tds = selectedRoom === 'all' ? (isSimulating ? simTds : liveTds) : currentSensors.waterQuality.tds;
+                        const waterTemp = selectedRoom === 'all' ? (isSimulating ? simWaterTemp : liveWaterTemp) : currentSensors.waterQuality.temp;
 
-                        const styles = getMasterCardStyles(isAllSafe);
-                        const statusText = isAllSafe ? t('dashboard.status_all_safe_text', 'Semua Aman') : t('dashboard.status_needs_attention_text', 'Perlu Perhatian');
+                        const isWaterSafe = ph >= 6.5 && ph <= 8.5 && turbidity <= 25 && tds <= 1000 && waterTemp >= 10 && waterTemp <= 30;
+
+                        const styles = getMasterCardStyles(isWaterSafe);
+                        const statusText = isWaterSafe ? t('dashboard.status_water_ok', 'Layak Pakai') : t('dashboard.status_water_bad', 'Tidak Layak');
 
                         return (
                           <div className={`${styles.cardClass} rounded-2xl p-6 flex flex-col justify-between h-full min-h-[200px] transition-all duration-500 hover:scale-[1.01] relative overflow-hidden`}>
                             {/* 1. Judul Status */}
                             <div className={`${styles.headerClass} z-10`}>
-                              <div className={`font-semibold text-sm text-text-headline ${styles.titleTextClass} tracking-tight`}>{t('dashboard.security_status', 'Status Keamanan')}</div>
+                              <div className={`font-semibold text-sm text-text-headline ${styles.titleTextClass} tracking-tight`}>{t('dashboard.water_status_title', 'Status Air')}</div>
                             </div>
 
                             {/* 2. Icon */}
                             <div className="flex-1 flex items-center justify-center text-center py-3 z-10">
-                              {isAllSafe ? renderCardIcon(ShieldCheck, true) : renderCardIcon(AlertTriangle, false)}
+                              {isWaterSafe ? renderCardIcon(Droplets, true) : renderCardIcon(AlertTriangle, false)}
                             </div>
 
                             {/* 3. Input Statusnya */}
-                            <div className="text-center z-10">
+                            <div className="text-center z-10 flex flex-col items-center">
                               <span className={styles.statusClass}>
                                 {statusText}
                               </span>
@@ -1541,243 +1654,137 @@ export function HomeownerDashboard() {
                       })()}
                     </div>
 
-                    {/* Kanan (Detail - Sensor Dinamis) */}
-                    <div className="w-full md:w-2/3 flex flex-col gap-4">
-                      {rows.map((row, rIdx) => {
-                        let gridClass = "grid gap-4 w-full";
-                        if (row.size === 1) gridClass += " grid-cols-1";
-                        else if (row.size === 2) gridClass += " grid-cols-1 sm:grid-cols-2";
-                        else if (row.size === 3) gridClass += " grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+                    {/* Kanan (Detail - 4 Parameter Air) */}
+                    <div className="w-full md:w-2/3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
+                        {/* pH */}
+                        {(() => {
+                          const phVal = selectedRoom === 'all' ? (isSimulating ? simPh : livePh) : currentSensors.waterQuality.ph;
+                          const isPhSafe = phVal >= 6.5 && phVal <= 8.5;
+                          const statusLabel = isPhSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
+                          const textClass = isPhSafe ? 'text-eco' : 'text-amber-600';
+                          const iconColorClass = isPhSafe ? 'text-eco' : 'text-amber-500 animate-pulse';
 
-                        // If single row, use flex-1 to stretch the grid to match the master card height
-                        const rowClass = rows.length === 1 ? `${gridClass} flex-1` : gridClass;
-
-                        return (
-                          <div key={rIdx} className={rowClass}>
-                            {row.items.map((sensor, idx) => {
-                              const sensorType = (sensor.type || '').toString().toLowerCase();
-                              const isMotion = sensorType.includes('motion');
-                              const isDoor = sensorType.includes('door');
-                              const isSafe = isMotion
-                                ? sensor.status === 'No Motion'
-                                : sensor.status === 'Closed';
-
-                              return (
-                                <div key={idx} className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full min-h-[140px]">
-                                  <div className="flex items-center justify-between mb-3">
-                                    <span className="font-semibold text-sm text-text-headline tracking-tight">
-                                      {isMotion ? t('dashboard.motion_sensor', 'Sensor Gerak') : isDoor ? t('dashboard.door_sensor', 'Sensor Pintu') : sensor.type}
-                                    </span>
-                                    {isMotion ? (
-                                      isSafe ? (
-                                        <Activity className="w-5.5 h-5.5 text-eco" strokeWidth={1.5} />
-                                      ) : (
-                                        <Activity className="w-5.5 h-5.5 text-amber-500 animate-pulse" strokeWidth={1.5} />
-                                      )
-                                    ) : (
-                                      isSafe ? (
-                                        <DoorClosed className="w-5.5 h-5.5 text-eco" strokeWidth={1.5} />
-                                      ) : (
-                                        <DoorOpen className="w-5.5 h-5.5 text-amber-500 animate-pulse" strokeWidth={1.5} />
-                                      )
-                                    )}
-                                  </div>
-
-                                  <div className="flex-1 py-1 flex flex-col justify-between">
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <span className="text-3xl font-extrabold text-text-headline tracking-tight">
-                                        {isMotion
-                                          ? (sensor.status === 'No Motion' ? t('dashboard.status_no_motion', 'Aman') : t('dashboard.status_motion', 'Gerak Terdeteksi'))
-                                          : (sensor.status === 'Closed' ? t('dashboard.status_door_closed', 'Tertutup') : t('dashboard.status_door_open', 'Terbuka'))
-                                        }
-                                      </span>
-                                    </div>
-
-                                    <span className="text-[11px] text-text-dim mt-2 font-bold tracking-tight">
-                                      {sensor.room}
-                                    </span>
-                                  </div>
+                          return (
+                            <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.ph_level')}</span>
+                                <Beaker className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 py-1">
+                                <div className="text-3xl font-extrabold text-text-headline tracking-tight">{phVal}</div>
+                              </div>
+                              <div className="mt-4 relative pt-1">
+                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className={`h-full ${isPhSafe ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${(phVal / 14) * 100}%` }}></div>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
+                                <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
+                                  <span>0</span>
+                                  <span className={textClass}>{statusLabel}</span>
+                                  <span>14</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Turbidity */}
+                        {(() => {
+                          const turbVal = selectedRoom === 'all' ? (isSimulating ? simTurbidity : liveTurbidity) : currentSensors.waterQuality.turbidity;
+                          const isTurbSafe = turbVal <= 25;
+                          const statusLabel = isTurbSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
+                          const textClass = isTurbSafe ? 'text-eco' : 'text-amber-600';
+                          const iconColorClass = isTurbSafe ? 'text-eco' : 'text-amber-500 animate-pulse';
+
+                          return (
+                            <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.turbidity')}</span>
+                                <Droplets className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 py-1">
+                                <div className="text-3xl font-extrabold text-text-headline tracking-tight">{turbVal} NTU</div>
+                              </div>
+                              <div className="mt-4 relative pt-1">
+                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className={`h-full ${isTurbSafe ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${Math.min((turbVal / 50) * 100, 100)}%` }}></div>
+                                </div>
+                                <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
+                                  <span>0 NTU</span>
+                                  <span className={textClass}>{statusLabel}</span>
+                                  <span>50 NTU</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* TDS */}
+                        {(() => {
+                          const tdsVal = selectedRoom === 'all' ? (isSimulating ? simTds : liveTds) : currentSensors.waterQuality.tds;
+                          const isTdsSafe = tdsVal <= 1000;
+                          const statusLabel = isTdsSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
+                          const textClass = isTdsSafe ? 'text-eco' : 'text-amber-600';
+                          const iconColorClass = isTdsSafe ? 'text-eco' : 'text-amber-500 animate-pulse';
+
+                          return (
+                            <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.tds')}</span>
+                                <Wind className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 py-1">
+                                <div className="text-3xl font-extrabold text-text-headline tracking-tight">{tdsVal} ppm</div>
+                              </div>
+                              <div className="mt-4 relative pt-1">
+                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className={`h-full ${isTdsSafe ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${Math.min((tdsVal / 1500) * 100, 100)}%` }}></div>
+                                </div>
+                                <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
+                                  <span>0 ppm</span>
+                                  <span className={textClass}>{statusLabel}</span>
+                                  <span>1500 ppm</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Water Temperature */}
+                        {(() => {
+                          const waterTempVal = selectedRoom === 'all' ? (isSimulating ? simWaterTemp : liveWaterTemp) : currentSensors.waterQuality.temp;
+                          const isTempNormal = waterTempVal >= 10 && waterTempVal <= 30;
+                          const statusLabel = isTempNormal ? t('dashboard.status_water_normal', 'Normal') : t('dashboard.status_water_not_normal', 'Tidak Normal');
+                          const textClass = isTempNormal ? 'text-eco' : 'text-amber-600';
+                          const iconColorClass = isTempNormal ? 'text-eco' : 'text-amber-500 animate-pulse';
+
+                          return (
+                            <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.water_temperature')}</span>
+                                <Thermometer className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                              </div>
+                              <div className="flex-1 py-1">
+                                <div className="text-3xl font-extrabold text-text-headline tracking-tight">{waterTempVal}°C</div>
+                              </div>
+                              <div className="mt-4 relative pt-1">
+                                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className={`h-full ${isTempNormal ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${Math.min((waterTempVal / 50) * 100, 100)}%` }}></div>
+                                </div>
+                                <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
+                                  <span>0°C</span>
+                                  <span className={textClass}>{statusLabel}</span>
+                                  <span>50°C</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
-              );
-            })()}
-
-            {currentSensors.waterQuality && (
-              <div id="section-kualitas-air" className="mb-6">
-                <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
-                  {/* Kiri (Master - Status Air) */}
-                  <div className="w-full md:w-1/3">
-                    {(() => {
-                      const ph = selectedRoom === 'all' ? (isSimulating ? simPh : livePh) : currentSensors.waterQuality.ph;
-                      const turbidity = selectedRoom === 'all' ? (isSimulating ? simTurbidity : liveTurbidity) : currentSensors.waterQuality.turbidity;
-                      const tds = selectedRoom === 'all' ? (isSimulating ? simTds : liveTds) : currentSensors.waterQuality.tds;
-                      const waterTemp = selectedRoom === 'all' ? (isSimulating ? simWaterTemp : liveWaterTemp) : currentSensors.waterQuality.temp;
-
-                      const isWaterSafe = ph >= 6.5 && ph <= 8.5 && turbidity <= 25 && tds <= 1000 && waterTemp >= 10 && waterTemp <= 30;
-
-                      const styles = getMasterCardStyles(isWaterSafe);
-                      const statusText = isWaterSafe ? t('dashboard.status_water_ok', 'Layak Pakai') : t('dashboard.status_water_bad', 'Tidak Layak');
-
-                      return (
-                        <div className={`${styles.cardClass} rounded-2xl p-6 flex flex-col justify-between h-full min-h-[200px] transition-all duration-500 hover:scale-[1.01] relative overflow-hidden`}>
-                          {/* 1. Judul Status */}
-                          <div className={`${styles.headerClass} z-10`}>
-                            <div className={`font-semibold text-sm text-text-headline ${styles.titleTextClass} tracking-tight`}>{t('dashboard.water_status_title', 'Status Air')}</div>
-                          </div>
-
-                          {/* 2. Icon */}
-                          <div className="flex-1 flex items-center justify-center text-center py-3 z-10">
-                            {isWaterSafe ? renderCardIcon(Droplets, true) : renderCardIcon(AlertTriangle, false)}
-                          </div>
-
-                          {/* 3. Input Statusnya */}
-                          <div className="text-center z-10 flex flex-col items-center">
-                            <span className={styles.statusClass}>
-                              {statusText}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Kanan (Detail - 4 Parameter Air) */}
-                  <div className="w-full md:w-2/3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
-                      {/* pH */}
-                      {(() => {
-                        const phVal = selectedRoom === 'all' ? (isSimulating ? simPh : livePh) : currentSensors.waterQuality.ph;
-                        const isPhSafe = phVal >= 6.5 && phVal <= 8.5;
-                        const statusLabel = isPhSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
-                        const textClass = isPhSafe ? 'text-eco' : 'text-amber-600';
-                        const iconColorClass = isPhSafe ? 'text-eco' : 'text-amber-500 animate-pulse';
-
-                        return (
-                          <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.ph_level')}</span>
-                              <Beaker className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
-                            </div>
-                            <div className="flex-1 py-1">
-                              <div className="text-3xl font-extrabold text-text-headline tracking-tight">{phVal}</div>
-                            </div>
-                            <div className="mt-4 relative pt-1">
-                              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className={`h-full ${isPhSafe ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${(phVal / 14) * 100}%` }}></div>
-                              </div>
-                              <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
-                                <span>0</span>
-                                <span className={textClass}>{statusLabel}</span>
-                                <span>14</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Turbidity */}
-                      {(() => {
-                        const turbVal = selectedRoom === 'all' ? (isSimulating ? simTurbidity : liveTurbidity) : currentSensors.waterQuality.turbidity;
-                        const isTurbSafe = turbVal <= 25;
-                        const statusLabel = isTurbSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
-                        const textClass = isTurbSafe ? 'text-eco' : 'text-amber-600';
-                        const iconColorClass = isTurbSafe ? 'text-eco' : 'text-amber-500 animate-pulse';
-
-                        return (
-                          <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.turbidity')}</span>
-                              <Droplets className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
-                            </div>
-                            <div className="flex-1 py-1">
-                              <div className="text-3xl font-extrabold text-text-headline tracking-tight">{turbVal} NTU</div>
-                            </div>
-                            <div className="mt-4 relative pt-1">
-                              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className={`h-full ${isTurbSafe ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${Math.min((turbVal / 50) * 100, 100)}%` }}></div>
-                              </div>
-                              <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
-                                <span>0 NTU</span>
-                                <span className={textClass}>{statusLabel}</span>
-                                <span>50 NTU</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* TDS */}
-                      {(() => {
-                        const tdsVal = selectedRoom === 'all' ? (isSimulating ? simTds : liveTds) : currentSensors.waterQuality.tds;
-                        const isTdsSafe = tdsVal <= 1000;
-                        const statusLabel = isTdsSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
-                        const textClass = isTdsSafe ? 'text-eco' : 'text-amber-600';
-                        const iconColorClass = isTdsSafe ? 'text-eco' : 'text-amber-500 animate-pulse';
-
-                        return (
-                          <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.tds')}</span>
-                              <Wind className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
-                            </div>
-                            <div className="flex-1 py-1">
-                              <div className="text-3xl font-extrabold text-text-headline tracking-tight">{tdsVal} ppm</div>
-                            </div>
-                            <div className="mt-4 relative pt-1">
-                              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className={`h-full ${isTdsSafe ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${Math.min((tdsVal / 1500) * 100, 100)}%` }}></div>
-                              </div>
-                              <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
-                                <span>0 ppm</span>
-                                <span className={textClass}>{statusLabel}</span>
-                                <span>1500 ppm</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Water Temperature */}
-                      {(() => {
-                        const waterTempVal = selectedRoom === 'all' ? (isSimulating ? simWaterTemp : liveWaterTemp) : currentSensors.waterQuality.temp;
-                        const isTempNormal = waterTempVal >= 10 && waterTempVal <= 30;
-                        const statusLabel = isTempNormal ? t('dashboard.status_water_normal', 'Normal') : t('dashboard.status_water_not_normal', 'Tidak Normal');
-                        const textClass = isTempNormal ? 'text-eco' : 'text-amber-600';
-                        const iconColorClass = isTempNormal ? 'text-eco' : 'text-amber-500 animate-pulse';
-
-                        return (
-                          <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.water_temperature')}</span>
-                              <Thermometer className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
-                            </div>
-                            <div className="flex-1 py-1">
-                              <div className="text-3xl font-extrabold text-text-headline tracking-tight">{waterTempVal}°C</div>
-                            </div>
-                            <div className="mt-4 relative pt-1">
-                              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div className={`h-full ${isTempNormal ? 'bg-eco' : 'bg-amber-500'}`} style={{ width: `${Math.min((waterTempVal / 50) * 100, 100)}%` }}></div>
-                              </div>
-                              <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
-                                <span>0°C</span>
-                                <span className={textClass}>{statusLabel}</span>
-                                <span>50°C</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </>
             )}
 
             <div id="section-energi" className="bg-white rounded-3xl border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-8">
@@ -1804,7 +1811,7 @@ export function HomeownerDashboard() {
                     className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 sm:px-4 sm:py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-200 transition-all active:scale-95 group border border-slate-200/20 shadow-sm"
                     title={t('dashboard.view_details')}
                   >
-                    <Eye className="w-4 h-4 text-slate-600 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                    <Eye className="w-4 h-4 text-slate-500 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
                     <span className="hidden sm:inline">{t('dashboard.view_details')}</span>
                     <ChevronRight className="w-4 h-4 text-slate-500 hidden sm:inline" strokeWidth={1.5} />
                   </button>
@@ -2113,7 +2120,7 @@ export function HomeownerDashboard() {
                         : resolvedType === 'success'
                           ? 'bg-eco/10 text-eco'
                           : resolvedType === 'sistem'
-                            ? 'bg-slate-100 text-slate-600'
+                            ? 'bg-slate-100 text-slate-500'
                             : 'bg-eco/10 text-eco';
 
                     return (
@@ -2126,7 +2133,7 @@ export function HomeownerDashboard() {
                             <Icon className="w-4 h-4" strokeWidth={2.5} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-bold text-gray-900 mb-0.5">
+                            <div className="text-sm font-bold text-slate-700 mb-0.5">
                               {(() => {
                                 const titleStr = (notif.title || "").toLowerCase();
                                 const msgStr = (notif.message || "").toLowerCase();
@@ -2149,7 +2156,7 @@ export function HomeownerDashboard() {
                                 return dynamicTitle || getLocalizedTitle(notif.title, notif.category);
                               })()}
                             </div>
-                            <div className="text-[13px] leading-relaxed text-gray-600">
+                            <div className="text-[13px] leading-relaxed text-slate-500">
                               {(() => {
                                 const titleStr = (notif.title || "").toLowerCase();
                                 const msgStr = (notif.message || "").toLowerCase();
@@ -2265,7 +2272,7 @@ export function HomeownerDashboard() {
                 <span className="font-extrabold text-sm text-text-headline tracking-tight">🛠️ BIEON Status Simulator</span>
                 <button
                   onClick={() => setIsSimulatorOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 transition-all text-sm font-bold"
+                  className="text-slate-400 hover:text-slate-500 transition-all text-sm font-bold"
                 >
                   ✕
                 </button>
@@ -2288,25 +2295,25 @@ export function HomeownerDashboard() {
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => setMasterCardMode('eco-solid')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-solid' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-solid' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                   >
                     <span>🌿</span> Eco Solid
                   </button>
                   <button
                     onClick={() => setMasterCardMode('eco-solid-soft')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-solid-soft' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-solid-soft' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                   >
                     <span>🌱</span> Eco Solid Soft
                   </button>
                   <button
                     onClick={() => setMasterCardMode('eco-icon')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-icon' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-icon' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                   >
                     <span>🟢</span> Eco Icon
                   </button>
                   <button
                     onClick={() => setMasterCardMode('eco-icon-soft')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-icon-soft' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-icon-soft' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                   >
                     <span>❇️</span> Eco Icon Soft
                   </button>
@@ -2319,7 +2326,7 @@ export function HomeownerDashboard() {
                   {/* Temp Control */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-600">Suhu (Temperature)</span>
+                      <span className="text-slate-500">Suhu (Temperature)</span>
                       <span className="text-eco">{simTemp}°C</span>
                     </div>
                     <input
@@ -2341,7 +2348,7 @@ export function HomeownerDashboard() {
                   {/* Humidity Control */}
                   <div className="space-y-1.5 mb-3">
                     <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-600">Kelembapan (Humidity)</span>
+                      <span className="text-slate-500">Kelembapan (Humidity)</span>
                       <span className="text-eco">{simHumidity}%</span>
                     </div>
                     <input
@@ -2367,7 +2374,7 @@ export function HomeownerDashboard() {
                     {/* pH Control */}
                     <div className="space-y-1.5 mb-3">
                       <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-600">Derajat Keasaman (pH)</span>
+                        <span className="text-slate-500">Derajat Keasaman (pH)</span>
                         <span className="text-eco">{simPh}</span>
                       </div>
                       <input
@@ -2389,7 +2396,7 @@ export function HomeownerDashboard() {
                     {/* Turbidity Control */}
                     <div className="space-y-1.5 mb-3">
                       <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-600">Kekeruhan (Turbidity)</span>
+                        <span className="text-slate-500">Kekeruhan (Turbidity)</span>
                         <span className="text-eco">{simTurbidity} NTU</span>
                       </div>
                       <input
@@ -2411,7 +2418,7 @@ export function HomeownerDashboard() {
                     {/* TDS Control */}
                     <div className="space-y-1.5 mb-3">
                       <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-600">Zat Terlarut (TDS)</span>
+                        <span className="text-slate-500">Zat Terlarut (TDS)</span>
                         <span className="text-eco">{simTds} ppm</span>
                       </div>
                       <input
@@ -2433,7 +2440,7 @@ export function HomeownerDashboard() {
                     {/* Water Temp Control */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-600">Suhu Air</span>
+                        <span className="text-slate-500">Suhu Air</span>
                         <span className="text-eco">{simWaterTemp}°C</span>
                       </div>
                       <input
