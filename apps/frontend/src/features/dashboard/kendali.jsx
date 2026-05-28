@@ -55,7 +55,7 @@ const CATEGORY_DEVICES = {
   "sensor": ["Sensor Kenyamanan", "Humidity Sensor", "Sensor Kualitas Air", "Sensor Keamanan", "Light Sensor"],
   "smart-switch": ["Light", "Fan", "Exhaust Fan", "Ceiling Fan"],
   "smart-plug": ["AC", "TV", "Heater", "Water Heater", "Refrigerator", "Washing Machine"],
-  "remote": ["AC", "TV", "Kipas Angin"],
+  "remote": ["AC", "TV", "Kipas Angin", "Air Purifier", "Proyektor", "Soundbar"],
   "other": ["Custom Device"]
 };
 export function DeviceControlPage({ onNavigate }) {
@@ -153,6 +153,7 @@ export function DeviceControlPage({ onNavigate }) {
   const [remoteRooms, setRemoteRooms] = useState({});
   const [remoteBrands, setRemoteBrands] = useState({});
   const [remoteCustomNames, setRemoteCustomNames] = useState({});
+  const [remoteNotes, setRemoteNotes] = useState({});
   const [editingRemoteNameFor, setEditingRemoteNameFor] = useState(null);
   const [customNameInput, setCustomNameInput] = useState("");
   const [customSubTargets, setCustomSubTargets] = useState([]); // Array of { id: string, type: 'AC'|'TV'|'Kipas Angin'|'Lainnya' }
@@ -172,6 +173,109 @@ export function DeviceControlPage({ onNavigate }) {
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
   const [discardingDevices, setDiscardingDevices] = useState({}); // { deviceId: seconds }
+  const [managingRemoteDevice, setManagingRemoteDevice] = useState(null);
+  const [localSubDevices, setLocalSubDevices] = useState([]);
+
+  const isRemote = Boolean(selectedProduct?.aspect === 'remote' || (selectedDeviceType && selectedDeviceType.toLowerCase().includes('remote')));
+  const target = activeConfigTarget || remoteTargets[0];
+  const config = targetConfigs[target] || { mode: 'manual' };
+
+
+  useEffect(() => {
+    if (managingRemoteDevice) {
+      const rawTargets = typeof managingRemoteDevice.controlledDevice === 'string'
+        ? managingRemoteDevice.controlledDevice.split(",").map(t => t.trim()).filter(Boolean)
+        : (Array.isArray(managingRemoteDevice.controlledDevice) ? managingRemoteDevice.controlledDevice : []);
+
+      const parsed = rawTargets.map((t, index) => {
+        const trimmed = t.trim();
+        const match = trimmed.match(/^(.+?)\s*\((.*)\)$/) || trimmed.match(/^(.+)$/);
+        const type = match ? match[1].trim() : trimmed;
+        const room = match && match[2] ? match[2].trim() : "";
+        
+        return {
+          id: `${type}_${index}_${Date.now()}`,
+          type,
+          room,
+          brand: managingRemoteDevice.controls?.[`${type}_brand`] || "",
+          customName: managingRemoteDevice.controls?.[`${type}_customName`] || type,
+          notes: managingRemoteDevice.controls?.[`${type}_notes`] || ""
+        };
+      });
+      setLocalSubDevices(parsed);
+    } else {
+      setLocalSubDevices([]);
+    }
+  }, [managingRemoteDevice]);
+
+  const handleAddLocalSubDevice = (type) => {
+    setLocalSubDevices(prev => [
+      ...prev,
+      {
+        id: `${type}_${prev.length}_${Date.now()}`,
+        type,
+        room: rooms[0] || "",
+        brand: "",
+        customName: type,
+        notes: ""
+      }
+    ]);
+  };
+
+  const handleRemoveLocalSubDevice = (id) => {
+    setLocalSubDevices(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleSaveRemoteSubDevices = async () => {
+    if (!managingRemoteDevice) return;
+
+    const missingBrand = localSubDevices.find(item => !item.brand);
+    if (missingBrand) {
+      alert(`Mohon pilih merk untuk ${missingBrand.type}!`);
+      return;
+    }
+    const missingRoom = localSubDevices.find(item => !item.room);
+    if (missingRoom) {
+      alert(`Mohon pilih ruangan untuk ${missingRoom.type}!`);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const newControlledDevice = localSubDevices.map(item => item.room ? `${item.type} (${item.room})` : item.type).join(", ");
+      
+      const newRemoteState = {};
+      localSubDevices.forEach(item => {
+        newRemoteState[`${item.type}_brand`] = item.brand;
+        newRemoteState[`${item.type}_customName`] = item.customName || item.type;
+        newRemoteState[`${item.type}_notes`] = item.notes;
+      });
+
+      const response = await fetch(`/api/kendaliperangkat/configure/${managingRemoteDevice.id || managingRemoteDevice._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          controlledDevice: newControlledDevice,
+          remoteState: newRemoteState
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Gagal menyimpan sub-device");
+      }
+
+      alert("Sub-device remote berhasil diperbarui!");
+      setManagingRemoteDevice(null);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert("Error: " + err.message);
+    }
+  };
   const [pendingOpenJoinDevice, setPendingOpenJoinDevice] = useState(null);
   const [pendingOpenJoinAction, setPendingOpenJoinAction] = useState(null); // 'save' | 'configure'
   const openJoinSubmitLockRef = useRef(false);
@@ -275,6 +379,24 @@ export function DeviceControlPage({ onNavigate }) {
       setJoinedDevicesPool([]);
       setDiscardingDevices({});
       setScanTimer(30);
+
+      // Inject dummy remote after 2 seconds
+      setTimeout(() => {
+        setDiscoveredDevices(prev => {
+          const dummyId = "BIEON-REMOTE-01";
+          const alreadyExists = prev.some(d => d.id === dummyId);
+          if (alreadyExists) return prev;
+          return [...prev, {
+            id: dummyId,
+            device_ieee: "00124B001CE29B0A",
+            manufacturer: "Bieon",
+            model: "Universal Remote v1",
+            name: "Bieon Universal Remote",
+            type: "remote",
+            status: "DISCOVERED"
+          }];
+        });
+      }, 2000);
     } catch (err) {
       alert('Gagal membuka Open Join: ' + err.message);
       setIsOpenJoinRequestPending(false);
@@ -291,7 +413,10 @@ export function DeviceControlPage({ onNavigate }) {
   const DEVICE_BRANDS = {
     "AC": ["Samsung", "LG", "Daikin", "Panasonic", "Sharp", "Gree", "Midea", "TCL"],
     "TV": ["Samsung", "LG", "Sony", "Panasonic", "Sharp", "Polytron", "Xiaomi", "Hisense", "TCL"],
-    "Kipas Angin": ["Miyako", "Maspion", "Cosmos", "Sekai", "Panasonic", "KDK", "Turbo"]
+    "Kipas Angin": ["Miyako", "Maspion", "Cosmos", "Sekai", "Panasonic", "KDK", "Turbo"],
+    "Air Purifier": ["Sharp", "Xiaomi", "Daikin", "Philips", "Levoit", "Blueair", "Bieon"],
+    "Proyektor": ["Epson", "BenQ", "Sony", "Optoma", "Xiaomi", "ViewSonic", "Acer"],
+    "Soundbar": ["Samsung", "Sony", "JBL", "Bose", "LG", "Yamaha", "Polytron"]
   };
 
   const getTargetSummary = (target) => {
@@ -1163,7 +1288,7 @@ export function DeviceControlPage({ onNavigate }) {
         newConfig.motion.enabled = true;
       }
       else if (isDoor) {
-        aspect = "keamananPintu";
+        aspect = "keamanan";
         newConfig.door.enabled = true;
       }
 
@@ -1271,6 +1396,13 @@ export function DeviceControlPage({ onNavigate }) {
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
       const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
 
+      const remoteState = {};
+      remoteTargets.forEach(t => {
+        remoteState[`${t}_brand`] = remoteBrands[t] || "";
+        remoteState[`${t}_customName`] = remoteCustomNames[t] || t;
+        remoteState[`${t}_notes`] = remoteNotes[t] || "";
+      });
+
       const deviceData = {
         name: deviceForm.name,
         deviceType: backendType,
@@ -1284,6 +1416,7 @@ export function DeviceControlPage({ onNavigate }) {
         environmentAspect: backendAspect,
         productId: selectedProduct?.productId || null,
         controlledDevice: remoteTargets.map(t => remoteRooms[t] ? `${t} (${remoteRooms[t]})` : t).join(", "),
+        remoteState,
         sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
         sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null,
         remoteConfig: targetConfigs
@@ -1457,6 +1590,13 @@ export function DeviceControlPage({ onNavigate }) {
         throw new Error('Product ID tidak tersedia untuk perangkat ini');
       }
 
+      const remoteState = {};
+      remoteTargets.forEach(t => {
+        remoteState[`${t}_brand`] = remoteBrands[t] || "";
+        remoteState[`${t}_customName`] = remoteCustomNames[t] || t;
+        remoteState[`${t}_notes`] = remoteNotes[t] || "";
+      });
+
       const deviceData = {
         name: deviceForm.name,
         productId: productIdValue,
@@ -1470,8 +1610,9 @@ export function DeviceControlPage({ onNavigate }) {
         controlMode: backendControl,
         environmentAspect: backendAspect,
         controlledDevice: remoteTargets.map(t => remoteRooms[t] ? `${t} (${remoteRooms[t]})` : t).join(", "),
-        sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
-        scheduleSettings: configMode === "schedule" ? scheduleConfig : null,
+        remoteState,
+        sensorParams: (selectedCategory === "sensor" || isRemote || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
+        scheduleSettings: isRemote ? scheduleConfig : (configMode === "schedule" ? scheduleConfig : null),
         sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null,
         remoteConfig: targetConfigs
       };
@@ -1576,8 +1717,13 @@ export function DeviceControlPage({ onNavigate }) {
     setConfigMode("sensor");
     setRemoteTargets([]);
     setRemoteRooms({});
+    setRemoteBrands({});
+    setRemoteCustomNames({});
+    setRemoteNotes({});
     setTargetConfigs({});
     setIsEditingDevice(null);
+    setActiveSensorAspect(null);
+    setIsRemoteDetailView(false);
   };
   const findDeviceById = (deviceId) => {
     let found = null;
@@ -1798,9 +1944,37 @@ export function DeviceControlPage({ onNavigate }) {
       setRemoteTargets(targets);
       setRemoteRooms(roomsMap);
 
+      // Populate Brands, Custom Names, Notes
+      const brands = {};
+      const customNames = {};
+      const notes = {};
+      targets.forEach(t => {
+        brands[t] = device.controls?.[`${t}_brand`] || "";
+        customNames[t] = device.controls?.[`${t}_customName`] || t;
+        notes[t] = device.controls?.[`${t}_notes`] || "";
+      });
+      setRemoteBrands(brands);
+      setRemoteCustomNames(customNames);
+      setRemoteNotes(notes);
+
       // Populate Target Configs if exists
       if (device.remoteConfig) {
         setTargetConfigs(device.remoteConfig);
+        const firstTarget = targets[0];
+        if (firstTarget) {
+          setActiveConfigTarget(firstTarget);
+          const firstConfig = device.remoteConfig[firstTarget];
+          if (firstConfig) {
+            const nextMode = firstConfig.mode || 'manual';
+            setConfigMode(nextMode);
+            if (nextMode === 'sensor' || nextMode === 'schedule') {
+              setIsRemoteDetailView(true);
+              if (nextMode === 'sensor' && firstConfig.aspect && firstConfig.aspect !== 'none') {
+                setActiveSensorAspect(firstConfig.aspect);
+              }
+            }
+          }
+        }
       } else {
         // Fallback or default
         const initialConfigs = {};
@@ -1808,6 +1982,21 @@ export function DeviceControlPage({ onNavigate }) {
           initialConfigs[t] = { mode: device.controlMethod === 'manual' ? 'manual' : (device.controlMethod === 'sensor' || device.controlMethod === 'Lingkungan' ? 'sensor' : 'schedule'), aspect: device.environmentAspect || 'none' };
         });
         setTargetConfigs(initialConfigs);
+        const firstTarget = targets[0];
+        if (firstTarget) {
+          setActiveConfigTarget(firstTarget);
+          const firstConfig = initialConfigs[firstTarget];
+          if (firstConfig) {
+            const nextMode = firstConfig.mode || 'manual';
+            setConfigMode(nextMode);
+            if (nextMode === 'sensor' || nextMode === 'schedule') {
+              setIsRemoteDetailView(true);
+              if (nextMode === 'sensor' && firstConfig.aspect && firstConfig.aspect !== 'none') {
+                setActiveSensorAspect(firstConfig.aspect);
+              }
+            }
+          }
+        }
       }
     }
 
@@ -1851,14 +2040,14 @@ export function DeviceControlPage({ onNavigate }) {
         if (actualDeviceType === "Sensor Kualitas Air" || actualDeviceType === "Kualitas Air") setActiveSensorAspect("kualitasAir");
         else if (actualDeviceType === "Sensor Kenyamanan" || actualDeviceType === "Humidity Sensor" || actualDeviceType === "Kenyamanan") setActiveSensorAspect("kenyamanan");
         else if (actualDeviceType === "Sensor Keamanan" || actualDeviceType === "Motion Sensor" || actualDeviceType === "Keamanan") setActiveSensorAspect("keamanan");
-        else if (actualDeviceType === "Door Sensor") setActiveSensorAspect("keamananPintu");
+        else if (actualDeviceType === "Door Sensor") setActiveSensorAspect("keamanan");
       }
       // Untuk Actuator di mode sensor, buka aspek yang sedang aktif tapi tetap izinkan ganti aspek
       else if ((device.controlMethod === "sensor" || device.controlMethod === "Lingkungan") && device.sensorParams) {
         const p = device.sensorParams;
         if (p.temperature !== undefined || p.humidity !== undefined) setActiveSensorAspect("kenyamanan");
         else if (p.isMotionEnabled === true) setActiveSensorAspect("keamanan");
-        else if (p.isDoorEnabled === true) setActiveSensorAspect("keamananPintu");
+        else if (p.isDoorEnabled === true) setActiveSensorAspect("keamanan");
         else if (p.ph !== undefined || p.turbidity !== undefined || p.tds !== undefined) setActiveSensorAspect("kualitasAir");
       }
 
@@ -2675,8 +2864,8 @@ export function DeviceControlPage({ onNavigate }) {
                                   );
                                 })()}
 
-                                {/* Configuration Context Section - Hidden for Technicians or if no mode */}
-                                {!isTechnicianMode && device.controlMethod && (
+                                {/* Configuration Context Section - Hidden for Technicians or if no mode or if Remote */}
+                                {!isTechnicianMode && device.controlMethod && !isRemote && (
                                   <div className="mb-6">
                                     <div className="flex items-center gap-3 mb-4">
                                       <p className="text-sm  text-gray-700 flex items-center gap-2">
@@ -2756,10 +2945,22 @@ export function DeviceControlPage({ onNavigate }) {
                                 {/* Quick Controls Section - Hidden for Technicians (TIDAK BISA EDIT) */}
                                 {!isTechnicianMode && device.category?.toLowerCase() !== "sensor" && (
                                   <div className="mb-6">
-                                    <p className="text-xs  text-gray-400 uppercase tracking-wider mb-3">
-                                      {device.category?.toLowerCase() === "sensor" ? "Status Monitoring" :
-                                        (device.controlMethod === "Lingkungan" ? "Kontrol Lingkungan" :
-                                          (device.controlMethod === "Jadwal" ? "Kontrol Jadwal" : "Kontrol Manual"))}
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+                                      <span>
+                                        {device.category?.toLowerCase() === "sensor" ? "Status Monitoring" :
+                                          (isRemote ? "Kontrol Sub-Device" :
+                                            (device.controlMethod === "Lingkungan" ? "Kontrol Lingkungan" :
+                                              (device.controlMethod === "Jadwal" ? "Kontrol Jadwal" : "Kontrol Manual")))}
+                                      </span>
+                                      {(device.controlledDevice && device.controlledDevice.trim() !== "") && (
+                                        <button
+                                          onClick={() => setManagingRemoteDevice(device)}
+                                          className="text-xs font-bold text-bieon-eco hover:text-bieon-eco/80 flex items-center gap-1 bg-bieon-eco/5 px-3 py-1 rounded-full border border-bieon-eco/20 transition-all active:scale-95 cursor-pointer"
+                                        >
+                                          <Settings className="w-3.5 h-3.5" />
+                                          Kelola Perangkat
+                                        </button>
+                                      )}
                                     </p>
                                     <div className={`flex flex-col gap-4 p-3 ${(device.controlledDevice && device.controlledDevice.trim() !== "") ? 'bg-transparent border-none' : 'bg-blue-50/50 rounded-xl border border-blue-50/50'}`}>
                                       {(device.controlledDevice && device.controlledDevice.trim() !== "") ? (
@@ -2780,117 +2981,227 @@ export function DeviceControlPage({ onNavigate }) {
 
                                             if (targets.length === 0) return <p className="text-xs text-gray-500 italic p-4 text-center bg-white rounded-xl border border-dashed border-gray-200">Belum ada perangkat yang dikonfigurasi pada remote ini.</p>;
 
-                                            return targets.map((target, idx) => (
-                                              <div key={idx} className="bg-white p-5 rounded-[1.5rem] border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                                                <div className="flex items-center justify-between mb-4">
-                                                  <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${device.controls?.[`${target.type}_power`] === 1 ? 'bg-blue-500 text-white' : 'bg-gray-50 text-gray-400'}`}>
-                                                      {target.type === "AC" && <Thermometer className="w-5 h-5" />}
-                                                      {target.type === "TV" && <Volume2 className="w-5 h-5" />}
-                                                      {(target.type === "Kipas Angin" || target.type === "Fan") && <Wind className="w-5 h-5" />}
-                                                    </div>
-                                                    <div>
-                                                      <p className="text-sm font-black text-gray-900">{target.type}</p>
-                                                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-[0.1em]">{target.room || "No Room"}</p>
-                                                    </div>
-                                                  </div>
-                                                  <button
-                                                    onClick={() => {
-                                                      const currentPower = device.controls?.[`${target.type}_power`] || 0;
-                                                      updateDeviceControl(device.id, `${target.type}_power`, currentPower === 1 ? 0 : 1);
-                                                    }}
-                                                    className={`p-2.5 rounded-xl transition-all active:scale-90 ${device.controls?.[`${target.type}_power`] === 1 ? "bg-bieon-eco/5 text-bieon-eco border border-bieon-eco/20" : "bg-gray-50 text-gray-300 border border-gray-100"}`}
-                                                  >
-                                                    <Power className="w-4 h-4" />
-                                                  </button>
-                                                </div>
+                                            return targets.map((target, idx) => {
+                                              const customName = device.controls?.[`${target.type}_customName`] || target.type;
+                                              const brand = device.controls?.[`${target.type}_brand`] || "";
+                                              const notes = device.controls?.[`${target.type}_notes`] || "";
 
-                                                {device.controls?.[`${target.type}_power`] === 1 ? (
-                                                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                                    {target.type === "AC" && (
-                                                      <div className="flex items-center justify-between bg-blue-50/50 p-3 rounded-2xl border border-blue-100/50">
-                                                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest ml-2">Temperature</span>
-                                                        <div className="flex items-center gap-3">
-                                                          <button
-                                                            onClick={() => updateDeviceControl(device.id, `${target.type}_temp`, (device.controls?.[`${target.type}_temp`] || 24) - 1)}
-                                                            className="w-9 h-9 flex items-center justify-center bg-white border-2 border-blue-100 rounded-xl text-blue-600 hover:border-blue-400 transition-all font-bold"
-                                                          >-</button>
-                                                          <div className="flex items-center">
-                                                            <input
-                                                              type="number"
-                                                              value={device.controls?.[`${target.type}_temp`] || 24}
-                                                              onChange={(e) => updateDeviceControl(device.id, `${target.type}_temp`, parseInt(e.target.value) || 0)}
-                                                              className="w-10 text-lg font-black text-gray-800 bg-transparent text-center focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                            />
-                                                            <span className="text-lg font-black text-gray-800">°</span>
-                                                          </div>
-                                                          <button
-                                                            onClick={() => updateDeviceControl(device.id, `${target.type}_temp`, (device.controls?.[`${target.type}_temp`] || 24) + 1)}
-                                                            className="w-9 h-9 flex items-center justify-center bg-white border-2 border-blue-100 rounded-xl text-blue-600 hover:border-blue-400 transition-all font-bold"
-                                                          >+</button>
+                                              return (
+                                                <div key={idx} className="bg-white p-5 rounded-[1.5rem] border border-blue-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                                                  <div>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${device.controls?.[`${target.type}_power`] === 1 ? 'bg-blue-500 text-white' : 'bg-gray-50 text-gray-400'}`}>
+                                                          {target.type === "AC" && <Thermometer className="w-5 h-5" />}
+                                                          {(target.type === "TV" || target.type === "Soundbar") && <Volume2 className="w-5 h-5" />}
+                                                          {(target.type === "Kipas Angin" || target.type === "Fan" || target.type === "Air Purifier") && <Wind className="w-5 h-5" />}
+                                                          {target.type === "Proyektor" && <Eye className="w-5 h-5" />}
+                                                          {target.type === "Set-top Box" && <Radio className="w-5 h-5" />}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                          <p className="text-sm font-black text-gray-900 truncate" title={customName}>{customName}</p>
+                                                          <p className="text-[10px] text-gray-400 font-bold truncate">
+                                                            {brand && `${brand} • `}{target.room || "No Room"}
+                                                          </p>
                                                         </div>
                                                       </div>
-                                                    )}
-                                                    {target.type === "TV" && (
-                                                      <div className="flex flex-col gap-2 bg-purple-50/50 p-3 rounded-2xl border border-purple-100/50">
-                                                        <div className="flex items-center justify-between px-2">
-                                                          <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Volume</span>
-                                                          <div className="flex items-center gap-0.5">
+                                                      <button
+                                                        onClick={() => {
+                                                          const currentPower = device.controls?.[`${target.type}_power`] || 0;
+                                                          updateDeviceControl(device.id, `${target.type}_power`, currentPower === 1 ? 0 : 1);
+                                                        }}
+                                                        className={`p-2.5 rounded-xl transition-all active:scale-90 shrink-0 ${device.controls?.[`${target.type}_power`] === 1 ? "bg-bieon-eco/5 text-bieon-eco border border-bieon-eco/20" : "bg-gray-50 text-gray-300 border border-gray-100"}`}
+                                                      >
+                                                        <Power className="w-4 h-4" />
+                                                      </button>
+                                                    </div>
+
+                                                    {/* Sub-device Mode Badge & active config parameters */}
+                                                    {(() => {
+                                                      const subConfig = device.remoteConfig?.[target.type] || { mode: 'manual', aspect: 'none' };
+                                                      return (
+                                                        <div className="mb-4 flex flex-col gap-1.5 bg-gray-50/50 p-3 rounded-2xl border border-gray-100/50">
+                                                          <div className="flex items-center gap-1.5">
+                                                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Mode Perangkat:</span>
+                                                            <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                                                              subConfig.mode === 'sensor' ? 'text-bieon-eco bg-bieon-eco/10 border border-bieon-eco/20' :
+                                                              subConfig.mode === 'schedule' ? 'text-purple-600 bg-purple-100/70 border border-purple-200/50' :
+                                                              'text-blue-600 bg-blue-100/70 border border-blue-200/50'
+                                                            }`}>
+                                                              {subConfig.mode === 'sensor' ? 'Lingkungan' : subConfig.mode === 'schedule' ? 'Jadwal Otomatis' : 'Manual'}
+                                                            </span>
+                                                          </div>
+                                                          
+                                                          {/* Sub-device Config Summary details */}
+                                                          {subConfig.mode === 'sensor' && device.sensorParams && (
+                                                            <div className="flex flex-wrap gap-1.5 mt-1 border-t border-gray-150/40 pt-2">
+                                                              {Object.entries(device.sensorParams)
+                                                                .filter(([k, v]) => v !== null && v !== undefined && k !== "_id" && !((k === "isMotionEnabled" || k === "isDoorEnabled") && v === false))
+                                                                .map(([key, val], sIdx) => (
+                                                                  <span key={sIdx} className="text-[10px] text-gray-700 font-bold bg-white px-2 py-1 rounded-xl border border-gray-200 shadow-inner flex items-center gap-1">
+                                                                    {(key === "temperature" || key === "waterTemp") && <Thermometer className="w-3.5 h-3.5 text-orange-500" />}
+                                                                    {key === "humidity" && <Droplets className="w-3.5 h-3.5 text-blue-500" />}
+                                                                    {key === "isMotionEnabled" && <Eye className="w-3.5 h-3.5 text-purple-500" />}
+                                                                    {key === "isDoorEnabled" && <Lock className="w-3.5 h-3.5 text-red-500" />}
+                                                                    {["ph", "turbidity", "tds"].includes(key) && <Waves className="w-3.5 h-3.5 text-cyan-500" />}
+                                                                    <span>
+                                                                      {key === "temperature" ? (isWaterQuality ? "Suhu Air" : "Suhu") :
+                                                                        key === "humidity" ? "Lembap" :
+                                                                          key === "isMotionEnabled" ? "Gerakan" :
+                                                                            key === "isDoorEnabled" ? "Pintu" :
+                                                                              key === "ph" ? "pH" :
+                                                                                key === "turbidity" ? "Kekeruhan" :
+                                                                                  key === "tds" ? "TDS" : "Suhu Air"}:
+                                                                      {val !== undefined ? ` > ${val}${(key === "temperature" || key === "waterTemp") ? "°C" : key === "humidity" ? "%" : ""}` : " Aktif"}
+                                                                    </span>
+                                                                  </span>
+                                                                ))}
+                                                            </div>
+                                                          )}
+
+                                                          {subConfig.mode === 'schedule' && device.scheduleSettings && (
+                                                            <div className="flex flex-col gap-1.5 mt-1 border-t border-gray-150/40 pt-2">
+                                                              {device.scheduleSettings
+                                                                .filter(sched => sched.target === target.type)
+                                                                .map((sched, sIdx) => (
+                                                                  <div key={sIdx} className="text-[10px] text-purple-700 font-bold bg-purple-50/30 px-2 py-1.5 rounded-xl border border-purple-100 flex flex-col gap-1">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                      <Calendar className="w-3.5 h-3.5 text-purple-500" />
+                                                                      <span>Jam {sched.startTime} - {sched.endTime} ({sched.action})</span>
+                                                                    </div>
+                                                                    <div className="flex gap-1">
+                                                                      {sched.days.map((day, dIdx) => (
+                                                                        <span key={dIdx} className="text-[9px] bg-purple-100/50 text-purple-600 px-1 rounded-md">{day.substring(0,3)}</span>
+                                                                      ))}
+                                                                    </div>
+                                                                  </div>
+                                                                ))}
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      );
+                                                    })()}
+
+                                                    {device.controls?.[`${target.type}_power`] === 1 ? (
+                                                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                                        {(target.type === "AC" || target.type.toLowerCase().includes("kipas") || target.type.toLowerCase().includes("fan")) && (
+                                                          <div className="flex flex-col gap-3 bg-blue-50/50 p-3 rounded-2xl border border-blue-100/50">
+                                                            <div className="flex items-center justify-between px-2">
+                                                              <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">Suhu / Temp</span>
+                                                              <span className="text-xs font-black text-blue-700">{device.controls?.[`${target.type}_temperature`] || 24}°C</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-center gap-4">
+                                                              <button
+                                                                onClick={() => {
+                                                                  const currentTemp = device.controls?.[`${target.type}_temperature`] || 24;
+                                                                  updateDeviceControl(device.id, `${target.type}_temperature`, Math.max(16, currentTemp - 1));
+                                                                }}
+                                                                className="w-10 h-10 bg-white border border-blue-150 hover:border-blue-300 text-blue-600 rounded-xl flex items-center justify-center transition-all active:scale-90 font-bold"
+                                                              >
+                                                                <Minus className="w-4 h-4" />
+                                                              </button>
+                                                              <div className="text-lg font-black text-gray-800 w-16 text-center font-mono">
+                                                                {device.controls?.[`${target.type}_temperature`] || 24}°C
+                                                              </div>
+                                                              <button
+                                                                onClick={() => {
+                                                                  const currentTemp = device.controls?.[`${target.type}_temperature`] || 24;
+                                                                  updateDeviceControl(device.id, `${target.type}_temperature`, Math.min(30, currentTemp + 1));
+                                                                }}
+                                                                className="w-10 h-10 bg-white border border-blue-150 hover:border-blue-300 text-blue-600 rounded-xl flex items-center justify-center transition-all active:scale-90 font-bold"
+                                                              >
+                                                                <Plus className="w-4 h-4" />
+                                                              </button>
+                                                            </div>
+                                                          </div>
+                                                        )}
+                                                        {(target.type === "TV" || target.type === "Soundbar") && (
+                                                          <div className="flex flex-col gap-2 bg-purple-50/50 p-3 rounded-2xl border border-purple-100/50">
+                                                            <div className="flex items-center justify-between px-2">
+                                                              <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Volume</span>
+                                                              <div className="flex items-center gap-0.5">
+                                                                <input
+                                                                  type="number"
+                                                                  min="0"
+                                                                  max="100"
+                                                                  value={device.controls?.[`${target.type}_volume`] || 50}
+                                                                  onChange={(e) => updateDeviceControl(device.id, `${target.type}_volume`, parseInt(e.target.value) || 0)}
+                                                                  className="w-8 text-xs font-black text-purple-700 bg-transparent text-right focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                                />
+                                                                <span className="text-xs font-black text-purple-700">%</span>
+                                                              </div>
+                                                            </div>
                                                             <input
-                                                              type="number"
+                                                              type="range"
                                                               min="0"
                                                               max="100"
                                                               value={device.controls?.[`${target.type}_volume`] || 50}
-                                                              onChange={(e) => updateDeviceControl(device.id, `${target.type}_volume`, parseInt(e.target.value) || 0)}
-                                                              className="w-8 text-xs font-black text-purple-700 bg-transparent text-right focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                              onChange={(e) => updateDeviceControl(device.id, `${target.type}_volume`, parseInt(e.target.value))}
+                                                              className="w-full h-1.5 bg-purple-100 rounded-lg appearance-none cursor-pointer accent-purple-600"
                                                             />
-                                                            <span className="text-xs font-black text-purple-700">%</span>
                                                           </div>
-                                                        </div>
-                                                        <input
-                                                          type="range"
-                                                          min="0"
-                                                          max="100"
-                                                          value={device.controls?.[`${target.type}_volume`] || 50}
-                                                          onChange={(e) => updateDeviceControl(device.id, `${target.type}_volume`, parseInt(e.target.value))}
-                                                          className="w-full h-1.5 bg-purple-100 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                                                        />
+                                                        )}
+                                                        {target.type === "Air Purifier" && (
+                                                          <div className="flex flex-col gap-3 bg-bieon-eco/5 p-3 rounded-2xl border border-bieon-eco/10">
+                                                            <div className="flex items-center justify-between px-2">
+                                                              <span className="text-[10px] font-black text-bieon-eco uppercase tracking-widest">Speed Level</span>
+                                                              <input
+                                                                type="number"
+                                                                min="1"
+                                                                max="3"
+                                                                value={device.controls?.[`${target.type}_speed`] || 1}
+                                                                onChange={(e) => updateDeviceControl(device.id, `${target.type}_speed`, parseInt(e.target.value) || 1)}
+                                                                className="w-6 text-[10px] font-black text-bieon-eco bg-bieon-eco/5 rounded text-center focus:outline-none border border-bieon-eco/20"
+                                                              />
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                              {[1, 2, 3].map(speed => (
+                                                                <button
+                                                                  key={speed}
+                                                                  onClick={() => updateDeviceControl(device.id, `${target.type}_speed`, speed)}
+                                                                  className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${device.controls?.[`${target.type}_speed`] === speed ? "bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20" : "bg-white border-2 border-bieon-eco/10 border-bieon-eco/20 text-bieon-eco/60 hover:border-bieon-eco/50"}`}
+                                                                >
+                                                                  {speed}
+                                                                </button>
+                                                              ))}
+                                                            </div>
+                                                          </div>
+                                                        )}
+                                                        {target.type === "Proyektor" && (
+                                                          <div className="flex flex-col gap-3 bg-teal-50/50 p-3 rounded-2xl border border-teal-100/50">
+                                                            <div className="flex items-center justify-between px-2">
+                                                              <span className="text-[10px] font-black text-teal-600 uppercase tracking-widest">Input Source</span>
+                                                              <span className="text-xs font-black text-teal-700">{device.controls?.[`${target.type}_source`] || "HDMI 1"}</span>
+                                                            </div>
+                                                            <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                                                              {["HDMI 1", "HDMI 2", "VGA", "USB"].map(src => (
+                                                                <button
+                                                                  key={src}
+                                                                  onClick={() => updateDeviceControl(device.id, `${target.type}_source`, src)}
+                                                                  className={`flex-shrink-0 px-2.5 py-2 rounded-xl text-[10px] font-black transition-all ${device.controls?.[`${target.type}_source`] === src ? "bg-teal-500 text-white shadow-md shadow-teal-500/20" : "bg-white border border-teal-200 text-teal-600 hover:bg-teal-50"}`}
+                                                                >
+                                                                  {src}
+                                                                </button>
+                                                              ))}
+                                                            </div>
+                                                          </div>
+                                                        )}
                                                       </div>
-                                                    )}
-                                                    {(target.type.toLowerCase().includes("kipas") || target.type.toLowerCase().includes("fan")) && (
-                                                      <div className="flex flex-col gap-3 bg-bieon-eco/5 p-3 rounded-2xl border border-bieon-eco/10">
-                                                        <div className="flex items-center justify-between px-2">
-                                                          <span className="text-[10px] font-black text-bieon-eco uppercase tracking-widest">Fan Speed</span>
-                                                          <input
-                                                            type="number"
-                                                            min="1"
-                                                            max="3"
-                                                            value={device.controls?.[`${target.type}_speed`] || 1}
-                                                            onChange={(e) => updateDeviceControl(device.id, `${target.type}_speed`, parseInt(e.target.value) || 1)}
-                                                            className="w-6 text-[10px] font-black text-bieon-eco bg-bieon-eco/5 rounded text-center focus:outline-none border border-bieon-eco/20"
-                                                          />
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                          {[1, 2, 3].map(speed => (
-                                                            <button
-                                                              key={speed}
-                                                              onClick={() => updateDeviceControl(device.id, `${target.type}_speed`, speed)}
-                                                              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${device.controls?.[`${target.type}_speed`] === speed ? "bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20" : "bg-white border-2 border-bieon-eco/10 border-bieon-eco/20 text-bieon-eco/60 hover:border-bieon-eco/50"}`}
-                                                            >
-                                                              {speed}
-                                                            </button>
-                                                          ))}
-                                                        </div>
+                                                    ) : (
+                                                      <div className="h-[60px] flex items-center justify-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Device is OFF</p>
                                                       </div>
                                                     )}
                                                   </div>
-                                                ) : (
-                                                  <div className="h-[60px] flex items-center justify-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Device is OFF</p>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            ));
+
+                                                  {notes && (
+                                                    <div className="mt-3 text-[10px] text-gray-500 bg-gray-50 p-2.5 rounded-xl border border-gray-100 italic leading-relaxed">
+                                                      Catatan: {notes}
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              );
+                                            });
                                           })()}
                                         </div>
                                       ) : (
@@ -4055,8 +4366,8 @@ export function DeviceControlPage({ onNavigate }) {
             )}
 
             {step === "add-device-form" && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-2xl w-full p-8 sm:p-10 my-8">
+              <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 overflow-y-auto">
+                <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-2xl w-full p-8 sm:p-10 mt-12 mb-20">
                   <div className="flex items-center justify-between mb-8">
                     <div>
                       <h2 className="text-3xl font-bold text-gray-900 leading-tight">{isEditingDevice ? "Edit Informasi" : "Informasi Perangkat"}</h2>
@@ -4150,286 +4461,171 @@ export function DeviceControlPage({ onNavigate }) {
                     {(selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && (
                       <div className="p-6 bg-blue-50/50 rounded-[2rem] border-2 border-blue-100/50">
                         <label className="block text-xs font-black uppercase tracking-[0.2em] text-blue-400 mb-4">Pilih Perangkat yang Dikontrol (Bisa Lebih Dari 1)</label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="max-h-[300px] overflow-y-auto pr-1.5 custom-scrollbar">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-1">
                           {CATEGORY_DEVICES.remote.map((type) => (
-                            <div key={type} className="flex flex-col gap-2">
-                              <button
-                                onClick={() => {
-                                  if (remoteTargets.includes(type)) {
-                                    setRemoteTargets(prev => prev.filter(t => t !== type));
-                                    setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
-                                  } else {
-                                    setRemoteTargets(prev => [...prev, type]);
-                                    // Trigger Pairing
-                                    setPairingStates(prev => ({ ...prev, [type]: 'pairing' }));
-                                    setTimeout(() => {
-                                      const isOutOfRange = Math.random() > 0.8;
-                                      const status = isOutOfRange ? 'out_of_range' : 'connected';
-                                      setPairingStates(prev => ({ ...prev, [type]: status }));
-                                      if (status === 'connected') {
-                                        const brands = DEVICE_BRANDS[type] || ["Samsung", "LG", "Sony"];
-                                        const foundBrand = brands[Math.floor(Math.random() * brands.length)];
-                                        setRemoteBrands(prev => ({ ...prev, [type]: foundBrand }));
-                                        setRemoteCustomNames(prev => ({ ...prev, [type]: type }));
-                                        setPairingSuccessInfo({ name: type, brand: foundBrand });
-                                        setTimeout(() => setPairingSuccessInfo(null), 3000);
-                                      }
-                                    }, 2000);
-                                  }
-                                }}
-                                className={`py-3.5 px-4 rounded-2xl font-bold text-sm transition-all border-2 ${remoteTargets.includes(type) ? "border-blue-500 bg-white text-blue-600 shadow-md" : "border-transparent bg-white/50 text-gray-400 hover:bg-white"}`}
-                              >
-                                <div className="flex items-center justify-between w-full gap-2 min-w-0">
-                                  <div className="flex-1 min-w-0">
-                                    {editingRemoteNameFor === type ? (
-                                      <input
-                                        type="text"
-                                        value={customNameInput}
-                                        onChange={(e) => setCustomNameInput(e.target.value)}
-                                        onBlur={() => {
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => {
+                                if (remoteTargets.includes(type)) {
+                                  setRemoteTargets(prev => prev.filter(t => t !== type));
+                                  setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                  setRemoteBrands(prev => ({ ...prev, [type]: "" }));
+                                } else {
+                                  setRemoteTargets(prev => [...prev, type]);
+                                  setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                }
+                              }}
+                              className={`py-3 px-4 rounded-2xl font-bold text-sm transition-all border-2 text-left relative ${remoteTargets.includes(type) ? "border-blue-500 bg-blue-50/20 text-blue-600 shadow-sm" : "border-gray-100 bg-white text-gray-400 hover:border-blue-200"}`}
+                            >
+                              <div className="flex items-center justify-between w-full gap-2 min-w-0">
+                                <div className="flex-1 min-w-0">
+                                  {editingRemoteNameFor === type ? (
+                                    <input
+                                      type="text"
+                                      value={customNameInput}
+                                      onChange={(e) => setCustomNameInput(e.target.value)}
+                                      onBlur={() => {
+                                        if (customNameInput.trim()) {
+                                          setRemoteCustomNames(prev => ({ ...prev, [type]: customNameInput.trim() }));
+                                        }
+                                        setEditingRemoteNameFor(null);
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
                                           if (customNameInput.trim()) {
                                             setRemoteCustomNames(prev => ({ ...prev, [type]: customNameInput.trim() }));
                                           }
                                           setEditingRemoteNameFor(null);
-                                        }}
-                                        onKeyDown={(e) => {
-                                          if (e.key === 'Enter') {
-                                            if (customNameInput.trim()) {
-                                              setRemoteCustomNames(prev => ({ ...prev, [type]: customNameInput.trim() }));
-                                            }
-                                            setEditingRemoteNameFor(null);
-                                          }
-                                        }}
-                                        autoFocus
-                                        className="w-full bg-transparent border-b-2 border-blue-500 outline-none text-sm font-bold text-blue-600 pb-0.5"
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
-                                    ) : (
-                                      <div className="flex flex-col">
-                                        <span className="truncate block">{remoteCustomNames[type] || type}</span>
-                                        {pairingStates[type] === 'pairing' && <span className="text-[8px] text-blue-500 animate-pulse">Pairing...</span>}
-                                        {pairingStates[type] === 'out_of_range' && <span className="text-[8px] text-red-500 font-bold flex items-center gap-1"><AlertCircle className="w-2 h-2" /> Out of Range</span>}
-                                        {pairingStates[type] === 'connected' && <span className="text-[8px] text-bieon-eco font-bold">Connected</span>}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="flex items-center gap-1.5 shrink-0">
-                                    {remoteTargets.includes(type) && pairingStates[type] !== 'pairing' && (
-                                      <>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setEditingRemoteNameFor(type);
-                                            setCustomNameInput(remoteCustomNames[type] || type);
-                                          }}
-                                          className="p-1 hover:bg-blue-100 rounded-md transition-colors text-blue-400 hover:text-blue-600"
-                                        >
-                                          <Pencil className="w-3 h-3" />
-                                        </button>
-                                        {pairingStates[type] === 'connected' ? (
-                                          <div className="flex items-center gap-1">
-                                            <Check className="w-4 h-4 text-bieon-eco" />
-                                          </div>
-                                        ) : pairingStates[type] === 'out_of_range' ? (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setRemoteTargets(prev => prev.filter(t => t !== type));
-                                              setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
-                                            }}
-                                            className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
-                                          >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                          </button>
-                                        ) : (
-                                          <Check className="w-4 h-4" />
-                                        )}
-                                      </>
-                                    )}
-                                    {pairingStates[type] === 'pairing' && (
-                                      <Radio className="w-4 h-4 text-blue-400 animate-spin" />
-                                    )}
-                                  </div>
+                                        }
+                                      }}
+                                      autoFocus
+                                      className="w-full bg-transparent border-b-2 border-blue-500 outline-none text-sm font-bold text-blue-600 pb-0.5"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  ) : (
+                                    <div className="flex flex-col">
+                                      <span className="truncate block font-bold text-gray-900">{remoteCustomNames[type] || type}</span>
+                                      <span className="text-[10px] mt-0.5 font-medium">
+                                        {pairingStates[type] === 'pairing' && <span className="text-blue-500 animate-pulse">Pairing...</span>}
+                                        {pairingStates[type] === 'out_of_range' && <span className="text-red-500 font-bold flex items-center gap-1"><AlertCircle className="w-2.5 h-2.5" /> Out of Range</span>}
+                                        {pairingStates[type] === 'connected' && <span className="text-bieon-eco font-bold">Connected</span>}
+                                        {(!pairingStates[type] || pairingStates[type] === 'idle') && <span className="text-gray-400">Not Connected</span>}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
-                              </button>
 
-                              {remoteTargets.includes(type) && (
-                                <div className="space-y-2 animate-in fade-in zoom-in-95 duration-300">
-                                  {/* Brand Selector */}
-                                  <div className="relative">
-                                    <select
-                                      value={remoteBrands[type] || ""}
-                                      onChange={(e) => setRemoteBrands(prev => ({ ...prev, [type]: e.target.value }))}
-                                      className="w-full pl-3 pr-8 py-2.5 bg-white border-2 border-blue-100 rounded-xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none transition-all cursor-pointer hover:border-blue-200"
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {remoteTargets.includes(type) && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingRemoteNameFor(type);
+                                        setCustomNameInput(remoteCustomNames[type] || type);
+                                      }}
+                                      className="p-1 hover:bg-blue-100 rounded-md transition-colors text-blue-400 hover:text-blue-600"
                                     >
-                                      <option value="">-- Pilih Merk --</option>
-                                      {DEVICE_BRANDS[type]?.map(brand => (
-                                        <option key={brand} value={brand}>{brand}</option>
-                                      ))}
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-blue-300 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                  </div>
-
-                                  {/* Room Selector */}
-                                  <div className="relative">
-                                    {remoteAddingRoomFor === type ? (
-                                      <div className="flex gap-1.5 items-center">
-                                        <input
-                                          type="text"
-                                          value={newRoomInput}
-                                          onChange={(e) => setNewRoomInput(e.target.value)}
-                                          autoFocus
-                                          placeholder="Ruangan..."
-                                          className="flex-1 pl-3 pr-1 py-2 bg-white border-2 border-blue-200 rounded-xl outline-none text-[10px] font-bold text-gray-700 focus:border-blue-500 transition-all shadow-inner"
-                                        />
-                                        <button
-                                          onClick={() => handleAddRoom(type)}
-                                          className="p-1.5 bg-blue-500 text-white rounded-lg shadow-md shadow-blue-100 hover:bg-blue-600 transition-all active:scale-95"
-                                        >
-                                          <Check className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                          onClick={() => setRemoteAddingRoomFor(null)}
-                                          className="p-1.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-100 transition-all"
-                                        >
-                                          <X className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <select
-                                          value={remoteRooms[type] || ""}
-                                          onChange={(e) => {
-                                            const r = e.target.value;
-                                            if (r === "__new__") {
-                                              setRemoteAddingRoomFor(type);
-                                              setNewRoomInput("");
-                                            } else {
-                                              setRemoteRooms(prev => ({ ...prev, [type]: r }));
-                                              if (type === remoteTargets[0]) setDeviceForm(prev => ({ ...prev, location: r }));
-                                            }
-                                          }}
-                                          className="w-full pl-3 pr-8 py-2.5 bg-white border-2 border-blue-100 rounded-xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none transition-all cursor-pointer hover:border-blue-200"
-                                        >
-                                          <option value="">-- Pilih Ruangan --</option>
-                                          {rooms.map(room => (
-                                            <option key={room} value={room}>{room}</option>
-                                          ))}
-                                          <option value="__new__">+ Buat R. Baru</option>
-                                        </select>
-                                        <ChevronDown className="w-4 h-4 text-blue-300 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                      </>
-                                    )}
-                                  </div>
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  {remoteTargets.includes(type) && pairingStates[type] === 'connected' && (
+                                    <Check className="w-5 h-5 text-bieon-eco" />
+                                  )}
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            </button>
                           ))}
+
                           {/* Rendering Custom Targets */}
                           {customSubTargets.map((type) => (
-                            <div key={type} className="flex flex-col gap-2">
-                              {/* ... similar button as above ... */}
-                              <button
-                                onClick={() => {
-                                  if (remoteTargets.includes(type)) {
-                                    setRemoteTargets(prev => prev.filter(t => t !== type));
-                                  } else {
-                                    setRemoteTargets(prev => [...prev, type]);
-                                    setPairingStates(prev => ({ ...prev, [type]: 'pairing' }));
-                                    setTimeout(() => {
-                                      const isOutOfRange = Math.random() > 0.8;
-                                      const status = isOutOfRange ? 'out_of_range' : 'connected';
-                                      setPairingStates(prev => ({ ...prev, [type]: status }));
-                                      if (status === 'connected') {
-                                        const possibleTypes = ["AC", "TV", "Kipas Angin"];
-                                        const foundType = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];
-                                        const brands = DEVICE_BRANDS[foundType];
-                                        const foundBrand = brands[Math.floor(Math.random() * brands.length)];
-
-                                        setDetectedTypes(prev => ({ ...prev, [type]: foundType }));
-                                        setRemoteBrands(prev => ({ ...prev, [type]: foundBrand }));
-                                        setRemoteCustomNames(prev => ({ ...prev, [type]: foundType }));
-                                        setPairingSuccessInfo({ name: foundType, brand: foundBrand });
-                                        setTimeout(() => setPairingSuccessInfo(null), 3000);
-                                      }
-                                    }, 2000);
-                                  }
-                                }}
-                                className={`py-3.5 px-4 rounded-2xl font-bold text-sm transition-all border-2 ${remoteTargets.includes(type) ? "border-blue-500 bg-white text-blue-600 shadow-md" : "border-transparent bg-white/50 text-gray-400 hover:bg-white"}`}
-                              >
-                                {/* Same content as standard buttons */}
-                                <div className="flex items-center justify-between w-full gap-2 min-w-0">
-                                  <div className="flex-1 min-w-0">
-                                    {editingRemoteNameFor === type ? (
-                                      <input
-                                        type="text"
-                                        value={customNameInput}
-                                        onChange={(e) => setCustomNameInput(e.target.value)}
-                                        onBlur={() => {
-                                          if (customNameInput.trim()) setRemoteCustomNames(prev => ({ ...prev, [type]: customNameInput.trim() }));
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => {
+                                if (remoteTargets.includes(type)) {
+                                  setRemoteTargets(prev => prev.filter(t => t !== type));
+                                  setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                  setRemoteBrands(prev => ({ ...prev, [type]: "" }));
+                                } else {
+                                  setRemoteTargets(prev => [...prev, type]);
+                                  setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                }
+                              }}
+                              className={`py-3 px-4 rounded-2xl font-bold text-sm transition-all border-2 text-left relative ${remoteTargets.includes(type) ? "border-blue-500 bg-blue-50/20 text-blue-600 shadow-sm" : "border-gray-100 bg-white text-gray-400 hover:border-blue-200"}`}
+                            >
+                              <div className="flex items-center justify-between w-full gap-2 min-w-0">
+                                <div className="flex-1 min-w-0">
+                                  {editingRemoteNameFor === type ? (
+                                    <input
+                                      type="text"
+                                      value={customNameInput}
+                                      onChange={(e) => setCustomNameInput(e.target.value)}
+                                      onBlur={() => {
+                                        if (customNameInput.trim()) {
+                                          setRemoteCustomNames(prev => ({ ...prev, [type]: customNameInput.trim() }));
+                                        }
+                                        setEditingRemoteNameFor(null);
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          if (customNameInput.trim()) {
+                                            setRemoteCustomNames(prev => ({ ...prev, [type]: customNameInput.trim() }));
+                                          }
                                           setEditingRemoteNameFor(null);
-                                        }}
-                                        autoFocus
-                                        className="w-full bg-transparent border-b-2 border-blue-500 outline-none text-sm font-bold text-blue-600 pb-0.5"
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
-                                    ) : (
-                                      <div className="flex flex-col">
-                                        <span className="truncate block">{remoteCustomNames[type] || type}</span>
-                                        {pairingStates[type] === 'pairing' && <span className="text-[8px] text-blue-500 animate-pulse">Pairing...</span>}
-                                        {pairingStates[type] === 'out_of_range' && <span className="text-[8px] text-red-500 font-bold">Out of Range</span>}
-                                        {pairingStates[type] === 'connected' && <span className="text-[8px] text-bieon-eco font-bold">Connected</span>}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    {remoteTargets.includes(type) && pairingStates[type] !== 'pairing' && (
-                                      <div className="flex items-center gap-1">
-                                        <button onClick={(e) => { e.stopPropagation(); setEditingRemoteNameFor(type); setCustomNameInput(remoteCustomNames[type] || type); }} className="p-1 hover:bg-blue-100 rounded-md"><Pencil className="w-3 h-3" /></button>
-                                        {(pairingStates[type] === 'out_of_range' || true) && (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setCustomSubTargets(prev => prev.filter(t => t !== type));
-                                              setRemoteTargets(prev => prev.filter(t => t !== type));
-                                            }}
-                                            className="p-1 hover:bg-red-100 rounded-md text-red-500"
-                                          >
-                                            <Trash2 className="w-3 h-3" />
-                                          </button>
-                                        )}
-                                      </div>
-                                    )}
-                                    {remoteTargets.includes(type) && pairingStates[type] === 'connected' && <Check className="w-4 h-4 text-bieon-eco" />}
-                                  </div>
+                                        }
+                                      }}
+                                      autoFocus
+                                      className="w-full bg-transparent border-b-2 border-blue-500 outline-none text-sm font-bold text-blue-600 pb-0.5"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  ) : (
+                                    <div className="flex flex-col">
+                                      <span className="truncate block font-bold text-gray-900">
+                                        {remoteCustomNames[type] || (detectedTypes[type] ? `Perangkat ${detectedTypes[type]}` : "Perangkat Baru")}
+                                      </span>
+                                      <span className="text-[10px] mt-0.5 font-medium">
+                                        {pairingStates[type] === 'pairing' && <span className="text-blue-500 animate-pulse">Pairing...</span>}
+                                        {pairingStates[type] === 'out_of_range' && <span className="text-red-500 font-bold flex items-center gap-1"><AlertCircle className="w-2.5 h-2.5" /> Out of Range</span>}
+                                        {pairingStates[type] === 'connected' && <span className="text-bieon-eco font-bold">Connected</span>}
+                                        {(!pairingStates[type] || pairingStates[type] === 'idle') && <span className="text-gray-400">Not Connected</span>}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
-                              </button>
 
-                              {remoteTargets.includes(type) && pairingStates[type] === 'connected' && (
-                                <div className="space-y-2">
-                                  <div className="relative">
-                                    <select
-                                      value={remoteBrands[type] || ""}
-                                      onChange={(e) => setRemoteBrands(prev => ({ ...prev, [type]: e.target.value }))}
-                                      className="w-full pl-3 pr-8 py-2.5 bg-white border-2 border-blue-100 rounded-xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none"
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {remoteTargets.includes(type) && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingRemoteNameFor(type);
+                                        setCustomNameInput(remoteCustomNames[type] || type);
+                                      }}
+                                      className="p-1 hover:bg-blue-100 rounded-md text-blue-400 hover:text-blue-600"
                                     >
-                                      <option value="">-- Pilih Merk --</option>
-                                      {(DEVICE_BRANDS[type] || DEVICE_BRANDS[detectedTypes[type]])?.map(brand => <option key={brand} value={brand}>{brand}</option>)}
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-blue-300 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                  </div>
-                                  <select
-                                    value={remoteRooms[type] || ""}
-                                    onChange={(e) => setRemoteRooms(prev => ({ ...prev, [type]: e.target.value }))}
-                                    className="w-full pl-3 pr-8 py-2.5 bg-white border-2 border-blue-100 rounded-xl outline-none text-xs font-bold text-gray-700"
+                                      <Pencil className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCustomSubTargets(prev => prev.filter(t => t !== type));
+                                      setRemoteTargets(prev => prev.filter(t => t !== type));
+                                      setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                      setRemoteBrands(prev => ({ ...prev, [type]: "" }));
+                                    }}
+                                    className="p-1 hover:bg-red-100 rounded-md text-red-500"
                                   >
-                                    <option value="">-- Pilih Ruangan --</option>
-                                    {rooms.map(room => <option key={room} value={room}>{room}</option>)}
-                                  </select>
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            </button>
                           ))}
 
                           {/* Success Toast */}
@@ -4449,6 +4645,7 @@ export function DeviceControlPage({ onNavigate }) {
 
                           {/* + Perangkat Lain Button */}
                           <button
+                            type="button"
                             onClick={() => {
                               const newId = `Target_${Date.now()}`;
                               setCustomSubTargets([...customSubTargets, newId]);
@@ -4461,6 +4658,214 @@ export function DeviceControlPage({ onNavigate }) {
                           </button>
                         </div>
                       </div>
+
+                      {/* Configuration Section for Selected Remote Targets */}
+                      {remoteTargets.length > 0 && (
+                        <div className="mt-8 space-y-5 pt-6 border-t-2 border-gray-100">
+                          <label className="block text-xs font-black uppercase tracking-[0.2em] text-blue-500 mb-2">Konfigurasi Perangkat yang Dipilih</label>
+                          <div className="space-y-4">
+                            {remoteTargets.map((type) => {
+                              const isCustom = type.startsWith("Target_");
+                              const customName = remoteCustomNames[type] || (isCustom ? (detectedTypes[type] ? `Perangkat ${detectedTypes[type]}` : "Perangkat Baru") : type);
+                              const deviceTypeForBrands = isCustom ? detectedTypes[type] : type;
+                              const brand = remoteBrands[type] || "";
+                              const pairingState = pairingStates[type] || "idle";
+
+                              return (
+                                <div key={type} className="p-5 bg-blue-50/30 rounded-2xl border-2 border-blue-100/50 shadow-sm animate-in fade-in duration-300">
+                                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-blue-100/30">
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-2.5 h-2.5 rounded-full ${pairingState === 'connected' ? 'bg-bieon-eco' : pairingState === 'pairing' ? 'bg-blue-500 animate-pulse' : pairingState === 'out_of_range' ? 'bg-red-500' : 'bg-gray-300'}`} />
+                                      <span className="font-bold text-gray-900">{customName}</span>
+                                      {isCustom && <span className="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold uppercase">Kustom</span>}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setRemoteTargets(prev => prev.filter(t => t !== type));
+                                        setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                        setRemoteBrands(prev => ({ ...prev, [type]: "" }));
+                                      }}
+                                      className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors"
+                                    >
+                                      Batal Pilih
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                                    {/* Custom Device Type Selector */}
+                                    {isCustom && (
+                                      <div>
+                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Tipe Perangkat</label>
+                                        <div className="relative">
+                                          <select
+                                            value={detectedTypes[type] || ""}
+                                            onChange={(e) => {
+                                              const selectedType = e.target.value;
+                                              setDetectedTypes(prev => ({ ...prev, [type]: selectedType }));
+                                              setRemoteBrands(prev => ({ ...prev, [type]: "" }));
+                                              setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                            }}
+                                            disabled={pairingState === 'pairing' || pairingState === 'connected'}
+                                            className="w-full pl-3 pr-8 py-2.5 bg-white border-2 border-gray-100 rounded-xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none transition-all cursor-pointer hover:border-gray-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                          >
+                                            <option value="">-- Pilih Tipe --</option>
+                                            <option value="AC">AC</option>
+                                            <option value="TV">TV</option>
+                                            <option value="Kipas Angin">Kipas Angin</option>
+                                            <option value="Air Purifier">Air Purifier</option>
+                                            <option value="Proyektor">Proyektor</option>
+                                            <option value="Soundbar">Soundbar</option>
+                                          </select>
+                                          <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Brand Selector */}
+                                    <div className={isCustom && !detectedTypes[type] ? "opacity-40 pointer-events-none" : ""}>
+                                      <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Merk Perangkat</label>
+                                      <div className="relative">
+                                        <select
+                                          value={brand}
+                                          onChange={(e) => {
+                                            const selectedBrand = e.target.value;
+                                            setRemoteBrands(prev => ({ ...prev, [type]: selectedBrand }));
+                                            if (selectedBrand) {
+                                              setPairingStates(prev => ({ ...prev, [type]: 'pairing' }));
+                                              setTimeout(() => {
+                                                const isOutOfRange = Math.random() > 0.8;
+                                                const status = isOutOfRange ? 'out_of_range' : 'connected';
+                                                setPairingStates(prev => ({ ...prev, [type]: status }));
+                                                if (status === 'connected') {
+                                                  setRemoteCustomNames(prev => ({ ...prev, [type]: deviceTypeForBrands }));
+                                                  setPairingSuccessInfo({ name: deviceTypeForBrands, brand: selectedBrand });
+                                                  setTimeout(() => setPairingSuccessInfo(null), 3000);
+                                                }
+                                              }, 1500);
+                                            } else {
+                                              setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                            }
+                                          }}
+                                          disabled={pairingState === 'pairing' || pairingState === 'connected' || (isCustom && !detectedTypes[type])}
+                                          className="w-full pl-3 pr-8 py-2.5 bg-white border-2 border-gray-100 rounded-xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none transition-all cursor-pointer hover:border-gray-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                        >
+                                          <option value="">-- Pilih Merk --</option>
+                                          {DEVICE_BRANDS[deviceTypeForBrands]?.map(b => (
+                                            <option key={b} value={b}>{b}</option>
+                                          ))}
+                                        </select>
+                                        <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                      </div>
+                                    </div>
+
+                                    {/* Pairing Loading State */}
+                                    {pairingState === 'pairing' && (
+                                      <div className="flex items-center gap-2 text-blue-500 text-xs font-bold pl-2 pt-6">
+                                        <Radio className="w-4 h-4 animate-spin" />
+                                        <span>Menghubungkan...</span>
+                                      </div>
+                                    )}
+
+                                    {/* Out of Range Retry State */}
+                                    {pairingState === 'out_of_range' && (
+                                      <div className="flex flex-col gap-1.5 p-3 bg-red-50 border border-red-100 rounded-xl md:col-span-2">
+                                        <div className="flex items-center gap-2 text-red-600 text-xs font-bold">
+                                          <AlertCircle className="w-4 h-4 shrink-0" />
+                                          <span>Di luar jangkauan remote universal!</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setPairingStates(prev => ({ ...prev, [type]: 'idle' }));
+                                            setRemoteBrands(prev => ({ ...prev, [type]: "" }));
+                                          }}
+                                          className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold transition-all w-max"
+                                        >
+                                          Coba Lagi
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {/* Room Selector & Notes - Only shown if connected */}
+                                    {pairingState === 'connected' && (
+                                      <>
+                                        <div>
+                                          <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Lokasi (Ruangan)</label>
+                                          <div className="relative">
+                                            {remoteAddingRoomFor === type ? (
+                                              <div className="flex gap-1.5 items-center">
+                                                <input
+                                                  type="text"
+                                                  value={newRoomInput}
+                                                  onChange={(e) => setNewRoomInput(e.target.value)}
+                                                  autoFocus
+                                                  placeholder="Ruangan..."
+                                                  className="flex-1 px-3 py-2 bg-white border-2 border-blue-200 rounded-xl outline-none text-xs font-bold text-gray-700 focus:border-blue-500 transition-all shadow-inner"
+                                                />
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleAddRoom(type)}
+                                                  className="p-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all"
+                                                >
+                                                  <Check className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setRemoteAddingRoomFor(null)}
+                                                  className="p-2 bg-gray-100 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
+                                                >
+                                                  <X className="w-3.5 h-3.5" />
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <select
+                                                  value={remoteRooms[type] || ""}
+                                                  onChange={(e) => {
+                                                    const r = e.target.value;
+                                                    if (r === "__new__") {
+                                                      setRemoteAddingRoomFor(type);
+                                                      setNewRoomInput("");
+                                                    } else {
+                                                      setRemoteRooms(prev => ({ ...prev, [type]: r }));
+                                                      if (type === remoteTargets[0]) setDeviceForm(prev => ({ ...prev, location: r }));
+                                                    }
+                                                  }}
+                                                  className="w-full pl-3 pr-8 py-2.5 bg-white border-2 border-gray-100 rounded-xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none transition-all cursor-pointer hover:border-gray-200"
+                                                >
+                                                  <option value="">-- Pilih Ruangan --</option>
+                                                  {rooms.map(room => (
+                                                    <option key={room} value={room}>{room}</option>
+                                                  ))}
+                                                  <option value="__new__">+ Buat R. Baru</option>
+                                                </select>
+                                                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <div>
+                                          <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Catatan / Keterangan</label>
+                                          <input
+                                            type="text"
+                                            placeholder="e.g. Suhu ideal 24°C"
+                                            value={remoteNotes[type] || ""}
+                                            onChange={(e) => setRemoteNotes(prev => ({ ...prev, [type]: e.target.value }))}
+                                            className="w-full px-3 py-2 bg-white border-2 border-gray-100 rounded-xl outline-none text-xs font-medium text-gray-700 focus:border-blue-400 transition-all placeholder:text-gray-400"
+                                          />
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     )}
 
                     <div>
@@ -4582,135 +4987,137 @@ export function DeviceControlPage({ onNavigate }) {
                   </div>
                   {selectedCategory !== "sensor" && (
                     <>
-                      {(selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && !activeSensorAspect ? (
-                        <div className="space-y-10 mb-8">
-                          {/* Subtle Device Selector at Top */}
-                          <div className="flex items-center gap-3 mb-4 overflow-x-auto pb-4 scrollbar-hide">
-                            {remoteTargets.map((target) => {
-                              const isActive = (activeConfigTarget || remoteTargets[0]) === target;
-                              const config = targetConfigs[target] || { mode: 'manual' };
+                      {isRemote ? (
+                        !activeSensorAspect && (
+                          <div className="space-y-10 mb-8">
+                            {/* Subtle Device Selector at Top */}
+                            <div className="flex items-center gap-3 mb-4 overflow-x-auto pb-4 scrollbar-hide">
+                              {remoteTargets.map((targetItem) => {
+                                const isActive = (activeConfigTarget || remoteTargets[0]) === targetItem;
+                                const targetConfig = targetConfigs[targetItem] || { mode: 'manual' };
+                                return (
+                                  <button
+                                    key={targetItem}
+                                    onClick={() => {
+                                      setActiveConfigTarget(targetItem);
+                                      setIsRemoteDetailView(false);
+                                      setConfigMode(targetConfig.mode);
+                                    }}
+                                    className={`px-4 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-2 ${isActive ? "border-bieon-eco bg-bieon-eco/5 text-bieon-eco/90" : "border-gray-100 bg-gray-50 text-gray-500 hover:border-bieon-eco/30"}`}
+                                  >
+                                    <div className={`w-2 h-2 rounded-full ${targetConfig.mode === 'manual' ? 'bg-gray-300' : 'bg-bieon-eco animate-pulse'}`} />
+                                    <div className="flex flex-col items-start">
+                                      <span className="text-xs font-bold">{remoteCustomNames[targetItem] || targetItem} {remoteBrands[targetItem] && <span className="text-[10px] font-normal opacity-70">({remoteBrands[targetItem]})</span>}</span>
+                                      <span className="text-[9px] text-gray-500 font-medium">
+                                        {getTargetSummary(targetItem)}
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Active Target Config Area (matches Plug UI) */}
+                            {(() => {
                               return (
-                                <button
-                                  key={target}
-                                  onClick={() => {
-                                    setActiveConfigTarget(target);
-                                    setIsRemoteDetailView(false);
-                                  }}
-                                  className={`px-4 py-2 rounded-xl border-2 transition-all shrink-0 flex items-center gap-2 ${isActive ? "border-bieon-eco bg-bieon-eco/5 text-bieon-eco/90" : "border-gray-100 bg-gray-50 text-gray-500 hover:border-bieon-eco/30"}`}
-                                >
-                                  <div className={`w-2 h-2 rounded-full ${config.mode === 'manual' ? 'bg-gray-300' : 'bg-bieon-eco animate-pulse'}`} />
-                                  <div className="flex flex-col items-start">
-                                    <span className="text-xs font-bold">{remoteCustomNames[target] || target} {remoteBrands[target] && <span className="text-[10px] font-normal opacity-70">({remoteBrands[target]})</span>}</span>
-                                    <span className="text-[9px] text-gray-500 font-medium">
-                                      {getTargetSummary(target)}
-                                    </span>
+                                <div className="space-y-6 animate-in fade-in duration-300">
+                                  {/* CONSISTENT BIG BUTTONS (same as Plug) */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                    <button
+                                      onClick={() => {
+                                        const nextMode = config.mode === 'sensor' ? 'manual' : 'sensor';
+                                        setTargetConfigs(prev => ({ ...prev, [target]: { ...config, mode: nextMode } }));
+                                        setConfigMode(nextMode);
+                                        if (config.mode !== 'sensor') setIsRemoteDetailView(true);
+                                      }}
+                                      className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'sensor' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
+                                    >
+                                      <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
+                                      <div className="text-center sm:text-left">
+                                        <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3>
+                                        <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Kondisi Lingkungan</p>
+                                      </div>
+                                    </button>
+
+                                    <button
+                                      onClick={() => {
+                                        const nextMode = config.mode === 'schedule' ? 'manual' : 'schedule';
+                                        setTargetConfigs(prev => ({ ...prev, [target]: { ...config, mode: nextMode } }));
+                                        setConfigMode(nextMode);
+                                        if (config.mode !== 'schedule') setIsRemoteDetailView(true);
+                                      }}
+                                      className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'schedule' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
+                                    >
+                                      <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
+                                      <div className="text-center sm:text-left">
+                                        <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3>
+                                        <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Waktu</p>
+                                      </div>
+                                    </button>
                                   </div>
-                                </button>
-                              );
-                            })}
-                          </div>
 
-                          {/* Active Target Config Area (matches Plug UI) */}
-                          {(() => {
-                            const target = activeConfigTarget || remoteTargets[0];
-                            const config = targetConfigs[target] || { mode: 'manual', aspect: 'none' };
+                                  {/* ASPECT SELECTOR (Only if sensor is selected) */}
+                                  {config.mode === 'sensor' && (
+                                    <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
+                                      <div className="px-4 py-3 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 mb-2">
+                                        <p className="text-xs text-gray-700 flex items-center gap-2">
+                                          <Activity className="w-4 h-4" /> Pilih Aspek untuk Dikonfigurasi
+                                        </p>
+                                      </div>
 
-                            return (
-                              <div className="space-y-6 animate-in fade-in duration-300">
-                                {/* CONSISTENT BIG BUTTONS (same as Plug) */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                                  <button
-                                    onClick={() => {
-                                      setTargetConfigs(prev => ({ ...prev, [target]: { ...config, mode: config.mode === 'sensor' ? 'manual' : 'sensor' } }));
-                                      if (config.mode !== 'sensor') setIsRemoteDetailView(true);
-                                    }}
-                                    className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'sensor' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
-                                  >
-                                    <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
-                                    <div className="text-center sm:text-left">
-                                      <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3>
-                                      <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Kondisi Lingkungan</p>
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                                        {/* KENYAMANAN */}
+                                        <button
+                                          onClick={() => {
+                                            setTargetConfigs(prev => ({ ...prev, [target]: { ...config, aspect: "kenyamanan" } }));
+                                            setActiveSensorAspect("kenyamanan");
+                                          }}
+                                          className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'kenyamanan' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco hover:bg-bieon-eco/5"}`}
+                                        >
+                                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kenyamanan' ? "bg-bieon-eco/30" : "bg-bieon-eco/10"}`}>
+                                            <Activity className="w-6 h-6 text-bieon-eco" />
+                                          </div>
+                                          <h4 className="text-sm text-gray-900 mb-1 leading-tight">Kenyamanan</h4>
+                                          <p className="text-[10px] text-gray-500">Suhu & Lembap</p>
+                                        </button>
+
+                                        {/* KEAMANAN */}
+                                        <button
+                                          onClick={() => {
+                                            setTargetConfigs(prev => ({ ...prev, [target]: { ...config, aspect: "keamanan" } }));
+                                            setActiveSensorAspect("keamanan");
+                                          }}
+                                          className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'keamanan' ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-500 hover:bg-purple-50"}`}
+                                        >
+                                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'keamanan' ? "bg-purple-200" : "bg-purple-100"}`}>
+                                            <ShieldAlert className="w-6 h-6 text-purple-600" />
+                                          </div>
+                                          <h4 className="text-sm text-gray-900 mb-1 leading-tight">Keamanan</h4>
+                                          <p className="text-[10px] text-gray-500">Motion & Door Sensor</p>
+                                        </button>
+
+                                        {/* KUALITAS AIR */}
+                                        <button
+                                          onClick={() => {
+                                            setTargetConfigs(prev => ({ ...prev, [target]: { ...config, aspect: "kualitasAir" } }));
+                                            setActiveSensorAspect("kualitasAir");
+                                          }}
+                                          className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'kualitasAir' ? "border-cyan-500 bg-cyan-50" : "border-gray-200 hover:border-cyan-500 hover:bg-cyan-50"}`}
+                                        >
+                                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kualitasAir' ? "bg-cyan-200" : "bg-cyan-100"}`}>
+                                            <Waves className="w-6 h-6 text-cyan-600" />
+                                          </div>
+                                          <h4 className="text-sm text-gray-900 mb-1 leading-tight">Kualitas Air</h4>
+                                          <p className="text-[10px] text-gray-500">pH, TDS, Keruh, Suhu</p>
+                                        </button>
+                                      </div>
                                     </div>
-                                  </button>
-
-                                  <button
-                                    onClick={() => {
-                                      setTargetConfigs(prev => ({ ...prev, [target]: { ...config, mode: config.mode === 'schedule' ? 'manual' : 'schedule' } }));
-                                      if (config.mode !== 'schedule') setIsRemoteDetailView(true);
-                                    }}
-                                    className={`p-4 sm:p-5 rounded-xl border-2 transition-all flex items-center justify-center sm:justify-start gap-4 ${config.mode === 'schedule' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco/50"}`}
-                                  >
-                                    <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
-                                    <div className="text-center sm:text-left">
-                                      <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3>
-                                      <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Waktu</p>
-                                    </div>
-                                  </button>
+                                  )}
                                 </div>
-
-                                {/* ASPECT SELECTOR (Only if sensor is selected) */}
-                                {config.mode === 'sensor' && (
-                                  <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
-                                    <div className="px-4 py-3 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 mb-2">
-                                      <p className="text-xs text-gray-700 flex items-center gap-2">
-                                        <Activity className="w-4 h-4" /> Pilih Aspek untuk Dikonfigurasi
-                                      </p>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                                      {/* KENYAMANAN */}
-                                      <button
-                                        onClick={() => {
-                                          setTargetConfigs(prev => ({ ...prev, [target]: { ...config, aspect: "kenyamanan" } }));
-                                          setActiveSensorAspect("kenyamanan");
-                                        }}
-                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'kenyamanan' ? "border-bieon-eco bg-bieon-eco/5" : "border-gray-200 hover:border-bieon-eco hover:bg-bieon-eco/5"}`}
-                                      >
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kenyamanan' ? "bg-bieon-eco/30" : "bg-bieon-eco/10"}`}>
-                                          <Activity className="w-6 h-6 text-bieon-eco" />
-                                        </div>
-                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">Kenyamanan</h4>
-                                        <p className="text-[10px] text-gray-500">Suhu & Lembap</p>
-                                      </button>
-
-                                      {/* KEAMANAN */}
-                                      <button
-                                        onClick={() => {
-                                          setTargetConfigs(prev => ({ ...prev, [target]: { ...config, aspect: "keamanan" } }));
-                                          setActiveSensorAspect("keamanan");
-                                        }}
-                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'keamanan' ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-purple-500 hover:bg-purple-50"}`}
-                                      >
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'keamanan' ? "bg-purple-200" : "bg-purple-100"}`}>
-                                          <ShieldAlert className="w-6 h-6 text-purple-600" />
-                                        </div>
-                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">Keamanan</h4>
-                                        <p className="text-[10px] text-gray-500">Motion & Door Sensor</p>
-                                      </button>
-
-                                      {/* KUALITAS AIR */}
-                                      <button
-                                        onClick={() => {
-                                          setTargetConfigs(prev => ({ ...prev, [target]: { ...config, aspect: "kualitasAir" } }));
-                                          setActiveSensorAspect("kualitasAir");
-                                        }}
-                                        className={`flex flex-col items-center justify-center p-4 border-2 rounded-2xl transition-all group text-center ${config.aspect === 'kualitasAir' ? "border-cyan-500 bg-cyan-50" : "border-gray-200 hover:border-cyan-500 hover:bg-cyan-50"}`}
-                                      >
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kualitasAir' ? "bg-cyan-200" : "bg-cyan-100"}`}>
-                                          <Waves className="w-6 h-6 text-cyan-600" />
-                                        </div>
-                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">Kualitas Air</h4>
-                                        <p className="text-[10px] text-gray-500">pH, TDS, Keruh, Suhu</p>
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-
-
-                              </div>
-                            );
-                          })()}
-                        </div>
+                              );
+                            })()}
+                          </div>
+                        )
                       ) : (
                         <div className="grid grid-cols-2 gap-4 mb-6">
                           <button
@@ -4738,13 +5145,10 @@ export function DeviceControlPage({ onNavigate }) {
                     </>
                   )}
                   {(() => {
-                    const isRemote = (selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote'));
-                    const target = activeConfigTarget || remoteTargets[0];
-                    const config = targetConfigs[target] || { mode: 'manual' };
+                    const showSensorFlow = isRemote ? (isRemoteDetailView && config.mode === 'sensor' && activeSensorAspect) : (configMode === "sensor");
+                    const showScheduleFlow = isRemote ? (isRemoteDetailView && config.mode === 'schedule') : (configMode === "schedule");
 
-                    const showSensorDetail = isRemote ? (config.mode === 'sensor' && activeSensorAspect && isRemoteDetailView) : (configMode === "sensor");
-
-                    if (showSensorDetail) {
+                    if (showSensorFlow) {
                       return (
                         <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
                           {!activeSensorAspect ? (
@@ -5268,9 +5672,7 @@ export function DeviceControlPage({ onNavigate }) {
                           )}
                         </div>
                       );
-                    } else if (isRemote && (!isRemoteDetailView || config.mode === 'manual')) {
-                      return null;
-                    } else {
+                    } else if (showScheduleFlow) {
                       // Schedule flow
                       return (
                         <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2">
@@ -5353,22 +5755,33 @@ export function DeviceControlPage({ onNavigate }) {
                           </button>
                         </div>
                       );
+                    } else {
+                      return null;
                     }
                   })()}
                   <div className="flex gap-3 pt-6">
                     <button
-                      onClick={() => setStep("add-device-form")}
+                      onClick={() => {
+                        if (isRemote && isRemoteDetailView) {
+                          setIsRemoteDetailView(false);
+                          setActiveSensorAspect(null);
+                        } else if (!isRemote && activeSensorAspect) {
+                          setActiveSensorAspect(null);
+                        } else {
+                          setStep("add-device-form");
+                        }
+                      }}
                       className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl  hover:bg-gray-50 transition-all"
                     >
                       Kembali
                     </button>
                     <button
                       id="actual-save-trigger"
-                      onClick={((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && isRemoteDetailView) ? () => { setIsRemoteDetailView(false); setActiveSensorAspect(null); } : handleSaveDevice}
+                      onClick={handleSaveDevice}
                       className="flex-1 px-6 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl  shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                     >
                       <Save className="w-5 h-5" />
-                      {((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && isRemoteDetailView) ? "Selesai Atur Perangkat" : "Simpan Konfigurasi"}
+                      Simpan Konfigurasi
                     </button>
                   </div>
                 </div>
@@ -5462,6 +5875,167 @@ export function DeviceControlPage({ onNavigate }) {
                 className="w-full py-3.5 bg-gray-50 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all cursor-pointer"
               >
                 Batalkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Kelola Sub-Device Universal Remote */}
+      {managingRemoteDevice && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-[200] p-4 overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-2xl w-full overflow-hidden border border-gray-100 flex flex-col my-8 animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 sm:p-8 border-b border-gray-150 bg-gray-50/50">
+              <div>
+                <h3 className="text-2xl font-black text-gray-900">Kelola Sub-Device</h3>
+                <p className="text-xs text-gray-500 mt-1">Universal Remote: <span className="font-bold text-blue-600">{managingRemoteDevice.name || "Perangkat Remote"}</span></p>
+              </div>
+              <button
+                onClick={() => setManagingRemoteDevice(null)}
+                className="p-2 hover:bg-gray-100 rounded-xl text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 sm:p-8 overflow-y-auto max-h-[60vh] space-y-6 custom-scrollbar">
+              {/* Sub-Device List */}
+              <div className="space-y-4">
+                {localSubDevices.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                    <p className="text-sm text-gray-400 italic">Belum ada sub-device terhubung.</p>
+                  </div>
+                ) : (
+                  localSubDevices.map((item, index) => (
+                    <div key={item.id} className="p-5 bg-blue-50/30 rounded-3xl border-2 border-blue-150 flex flex-col gap-4 relative animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      {/* Sub-device header & remove button */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+                            Sub-Device {index + 1}: {item.type}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveLocalSubDevice(item.id)}
+                          className="p-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-sm cursor-pointer"
+                          title="Hapus sub-device"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Input fields grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Custom Name */}
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Nama Perangkat</label>
+                          <input
+                            type="text"
+                            placeholder={`e.g. ${item.type} Utama`}
+                            value={item.customName}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setLocalSubDevices(prev => prev.map(s => s.id === item.id ? { ...s, customName: val } : s));
+                            }}
+                            className="w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-2xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 transition-all"
+                          />
+                        </div>
+
+                        {/* Brand Selection */}
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Merk Perangkat</label>
+                          <div className="relative">
+                            <select
+                              value={item.brand}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setLocalSubDevices(prev => prev.map(s => s.id === item.id ? { ...s, brand: val } : s));
+                              }}
+                              className="w-full pl-4 pr-10 py-3 bg-white border-2 border-blue-100 rounded-2xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none cursor-pointer"
+                            >
+                              <option value="">-- Pilih Merk --</option>
+                              {(DEVICE_BRANDS[item.type] || []).map(b => (
+                                <option key={b} value={b}>{b}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-blue-300 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        {/* Room Selection */}
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Ruangan / Lokasi</label>
+                          <div className="relative">
+                            <select
+                              value={item.room}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setLocalSubDevices(prev => prev.map(s => s.id === item.id ? { ...s, room: val } : s));
+                              }}
+                              className="w-full pl-4 pr-10 py-3 bg-white border-2 border-blue-100 rounded-2xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 appearance-none cursor-pointer"
+                            >
+                              <option value="">-- Pilih Ruangan --</option>
+                              {rooms.map(room => (
+                                <option key={room} value={room}>{room}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-blue-300 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        {/* Notes / Keterangan */}
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">Catatan / Keterangan</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Suhu ideal 24°C"
+                            value={item.notes}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setLocalSubDevices(prev => prev.map(s => s.id === item.id ? { ...s, notes: val } : s));
+                            }}
+                            className="w-full px-4 py-3 bg-white border-2 border-blue-100 rounded-2xl outline-none text-xs font-bold text-gray-700 focus:border-blue-400 transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add Sub-Device Selection */}
+              <div className="pt-4 border-t border-gray-100 text-center">
+                <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Tambah Sub-Device Baru</p>
+                <div className="flex gap-3 justify-center">
+                  {["AC", "TV", "Kipas Angin", "Air Purifier", "Proyektor", "Soundbar"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => handleAddLocalSubDevice(type)}
+                      className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-black rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+                    >
+                      + {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 sm:p-8 border-t border-gray-100 bg-gray-50/50 flex gap-4">
+              <button
+                onClick={() => setManagingRemoteDevice(null)}
+                className="flex-1 py-3.5 border-2 border-gray-300 text-gray-700 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSaveRemoteSubDevices}
+                className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Save className="w-5 h-5" />
+                Simpan Perubahan
               </button>
             </div>
           </div>

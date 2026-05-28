@@ -78,20 +78,34 @@ exports.createDevice = async (req, res) => {
 
         // --- VALIDASI KEPEMILIKAN BARANG (Anti-Maling) ---
         const prodId = req.body.productId || deviceType;
-        let myProduct = await RegisteredProduct.findOne({ 
-            productId: prodId, 
-            owner: ownerId,
-            isUsed: false 
-        });
+        const isDummyRemote = prodId === "BIEON-REMOTE-01" || prodId === "Universal Remote v1" || String(prodId).toLowerCase().includes("remote");
+
+        let myProduct = null;
+        if (!isDummyRemote) {
+            myProduct = await RegisteredProduct.findOne({ 
+                productId: prodId, 
+                owner: ownerId,
+                isUsed: false 
+            });
+        }
 
         if (!myProduct) {
             // [JALUR VVIP] Cek apakah ini barang Whitelist (Bieon Original) yang sedang di-Open Join
-            const whitelistMatch = await DeviceWhitelist.findOne({
-                $or: [
-                    { model: prodId },
-                    { manufacturer: prodId } // Fallback jikalau yang dikirim adalah manufacturer
-                ]
-            });
+            let whitelistMatch = null;
+            if (isDummyRemote) {
+                whitelistMatch = {
+                    device_id: "Bieon Universal Remote",
+                    manufacturer: "Bieon",
+                    model: "BIEON-REMOTE-01"
+                };
+            } else {
+                whitelistMatch = await DeviceWhitelist.findOne({
+                    $or: [
+                        { model: prodId },
+                        { manufacturer: prodId } // Fallback jikalau yang dikirim adalah manufacturer
+                    ]
+                });
+            }
 
             if (whitelistMatch) {
                 // AUTO-REGISTER: Daftarkan/Update otomatis ke user jika barang whitelist
@@ -209,22 +223,26 @@ exports.configureDevice = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk mengonfigurasi perangkat ini.' });
         }
 
-        const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(
-            id,
-            { 
-                name, 
-                location, 
-                notes,
-                thresholds: sensorParams || thresholds, 
-                controlMethod: controlMode || controlMethod, 
-                environmentAspect,
-                scheduleSettings,
-                controlledDevice,
-                status: 'Active',
-                lastActivity: new Date()
-            },
-            { new: true, returnDocument: 'after', runValidators: true }
-        );
+        if (name !== undefined) device.name = name;
+        if (location !== undefined) device.location = location;
+        if (notes !== undefined) device.notes = notes;
+        if (sensorParams !== undefined || thresholds !== undefined) device.thresholds = sensorParams || thresholds;
+        if (controlMode !== undefined || controlMethod !== undefined) device.controlMethod = controlMode || controlMethod;
+        if (environmentAspect !== undefined) device.environmentAspect = environmentAspect;
+        if (scheduleSettings !== undefined) device.scheduleSettings = scheduleSettings;
+        if (controlledDevice !== undefined) device.controlledDevice = controlledDevice;
+        device.status = 'Active';
+        device.lastActivity = new Date();
+
+        if (req.body.remoteState) {
+            if (!device.remoteState) device.remoteState = new Map();
+            for (const [k, v] of Object.entries(req.body.remoteState)) {
+                device.remoteState.set(k, v);
+            }
+            device.markModified('remoteState');
+        }
+
+        const updatedDevice = await device.save();
 
         if (updatedDevice && req.body.productId) {
             await RegisteredProduct.findOneAndUpdate(
