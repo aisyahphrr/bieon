@@ -389,7 +389,7 @@ export function DataLogSistemPage() {
           <div className="absolute bottom-12 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
 
           {/* Console Footer */}
-          <div className="px-6 md:px-8 py-4 md:py-3 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 font-mono text-[10px] md:text-xs text-gray-500 font-black uppercase tracking-widest">
+          <div className="h-auto min-h-fit px-6 md:px-8 py-3 md:py-4 bg-gray-50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 font-mono text-[10px] md:text-xs text-gray-500 font-black uppercase tracking-widest relative z-10">
             <div className="flex flex-wrap gap-x-6 gap-y-1.5">
               <span className="flex items-center gap-2 text-bieon-eco">
                 <div className="w-2 h-2 bg-bieon-eco rounded-full shadow-[0_0_8px_rgba(5,155,39,0.4)] animate-pulse" />
