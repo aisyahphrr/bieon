@@ -1287,7 +1287,7 @@ export function HomeownerDashboard() {
                       {(() => {
                         const tempVal = currentSensors.comfort.temp;
                         const humVal = currentSensors.comfort.humidity;
-                        const isComfortable = tempVal >= 20.5 && tempVal <= 31 && humVal >= 50 && humVal <= 80;
+                        const isComfortable = tempVal >= 18 && tempVal <= 30 && humVal >= 40 && humVal <= 60;
 
                         const styles = getMasterCardStyles(isComfortable);
                         const statusText = isComfortable ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_comfort_bad_text', 'Tidak Nyaman');
@@ -1329,12 +1329,12 @@ export function HomeownerDashboard() {
                           let borderClass = '';
                           let iconColorClass = 'text-eco';
                           let isPulse = false;
-                          if (tempVal < 20.5) {
+                          if (tempVal < 18) {
                             statusLabel = t('dashboard.status_cold', 'Dingin');
                             textClass = 'text-amber-600';
                             borderClass = 'border-amber-500/30';
                             iconColorClass = 'text-amber-500';
-                          } else if (tempVal <= 31) {
+                          } else if (tempVal <= 30) {
                             statusLabel = t('dashboard.status_comfortable', 'Nyaman');
                             textClass = 'text-eco';
                             borderClass = 'border-eco-500/30';
@@ -1361,11 +1361,10 @@ export function HomeownerDashboard() {
                               </div>
 
                               {/* Segmented Range Indicator */}
-                              <div className="relative mt-auto pt-2">
-                                {/* Opsi A: Floating Tooltip (Opaque) */}
+                              <div className="relative mt-5 pt-2">
                                 <div
                                   className="absolute bottom-full mb-0.5 transform -translate-x-1/2 transition-all duration-500 flex flex-col items-center z-10"
-                                  style={{ left: `${tempPercent}%` }}
+                                  style={{ left: `clamp(2%, ${tempPercent}%, 98%)` }}
                                 >
                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-md border bg-white ${textClass} ${borderClass}`}>
                                     {statusLabel}
@@ -1375,9 +1374,9 @@ export function HomeownerDashboard() {
 
                                 {/* Color zones bar */}
                                 <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                  <div className="h-full bg-amber-200" style={{ width: '27.5%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<20.5°C)`}></div>
-                                  <div className="h-full bg-emerald-400" style={{ width: '52.5%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (20.5°C - 31°C)`}></div>
-                                  <div className="h-full bg-amber-200" style={{ width: '20%' }} title={`${t('dashboard.status_hot', 'Panas')} (>31°C)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '15%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<18°C)`}></div>
+                                  <div className="h-full bg-emerald-400" style={{ width: '60%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (18°C - 30°C)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '25%' }} title={`${t('dashboard.status_hot', 'Panas')} (>30°C)`}></div>
                                 </div>
 
                                 {/* Indicator dot */}
@@ -1387,9 +1386,9 @@ export function HomeownerDashboard() {
                                 ></div>
 
                                 {/* Labels */}
-                                <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-3">
-                                  <span className="absolute -translate-x-1/2" style={{ left: '15%' }}>18°C</span>
-                                  <span className="absolute -translate-x-1/2" style={{ left: '75%' }}>30°C</span>
+                                <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-6 w-full">
+                                  <span className="absolute" style={{ left: '15%', transform: 'translateX(-50%)' }}>18°C</span>
+                                  <span className="absolute" style={{ left: '75%', transform: 'translateX(-50%)' }}>30°C</span>
                                 </div>
                               </div>
                             </div>
@@ -1406,12 +1405,12 @@ export function HomeownerDashboard() {
                           let textClass = '';
                           let borderClass = '';
                           let iconColorClass = 'text-eco';
-                          if (humVal < 50) {
+                          if (humVal < 40) {
                             statusLabel = t('dashboard.status_humidity_dry', 'Kering');
                             textClass = 'text-amber-600';
                             borderClass = 'border-amber-500/30';
                             iconColorClass = 'text-amber-500';
-                          } else if (humVal <= 80) {
+                          } else if (humVal <= 60) {
                             statusLabel = t('dashboard.status_comfortable', 'Nyaman');
                             textClass = 'text-eco';
                             borderClass = 'border-eco-500/30';
@@ -1437,11 +1436,10 @@ export function HomeownerDashboard() {
                               </div>
 
                               {/* Segmented Range Indicator */}
-                              <div className="relative mt-auto pt-2">
-                                {/* Opsi A: Floating Tooltip (Opaque) */}
+                              <div className="relative mt-5 pt-2">
                                 <div
                                   className="absolute bottom-full mb-0.5 transform -translate-x-1/2 transition-all duration-500 flex flex-col items-center z-10"
-                                  style={{ left: `${humPercent}%` }}
+                                  style={{ left: `clamp(2%, ${humPercent}%, 98%)` }}
                                 >
                                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap shadow-md border bg-white ${textClass} ${borderClass}`}>
                                     {statusLabel}
@@ -1451,9 +1449,9 @@ export function HomeownerDashboard() {
 
                                 {/* Color zones bar */}
                                 <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                  <div className="h-full bg-amber-200" style={{ width: '33.33%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<50%)`}></div>
-                                  <div className="h-full bg-emerald-400" style={{ width: '50%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (50% - 80%)`}></div>
-                                  <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>80%)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<40%)`}></div>
+                                  <div className="h-full bg-emerald-400" style={{ width: '33.33%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (40% - 60%)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '50%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>60%)`}></div>
                                 </div>
 
                                 {/* Indicator dot */}
@@ -1463,9 +1461,9 @@ export function HomeownerDashboard() {
                                 ></div>
 
                                 {/* Labels */}
-                                <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-3">
-                                  <span className="absolute -translate-x-1/2" style={{ left: '16.67%' }}>40%</span>
-                                  <span className="absolute -translate-x-1/2" style={{ left: '50%' }}>60%</span>
+                                <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-6 w-full">
+                                  <span className="absolute" style={{ left: '16.67%', transform: 'translateX(-50%)' }}>40%</span>
+                                  <span className="absolute" style={{ left: '50%', transform: 'translateX(-50%)' }}>60%</span>
                                 </div>
                               </div>
                             </div>

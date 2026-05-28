@@ -3016,13 +3016,13 @@ export function DeviceControlPage({ onNavigate }) {
                                       let isAbnormal = false;
 
                                       if (isKenyamanan) {
-                                        // Validasi standar baku mutu Kenyamanan Termal (Suhu 20.5-31, Kelembapan 50-80)
+                                        // Validasi standar baku mutu Kenyamanan Termal (Permenkes 2023: Suhu 18-30, Kelembapan 40-60)
                                         const temp = parseFloat(device.currentValues?.temperature);
                                         const hum = parseFloat(device.currentValues?.humidity);
-                                        if (!isNaN(temp) && (temp < 20.5 || temp > 31)) {
+                                        if (!isNaN(temp) && (temp < 18 || temp > 30)) {
                                           isAbnormal = true;
                                         }
-                                        if (!isNaN(hum) && (hum < 50 || hum > 80)) {
+                                        if (!isNaN(hum) && (hum < 40 || hum > 60)) {
                                           isAbnormal = true;
                                         }
                                       } else {
