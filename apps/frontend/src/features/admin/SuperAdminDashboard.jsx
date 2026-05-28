@@ -682,11 +682,19 @@ export default function SuperAdminDashboard({ onNavigate }) {
           <div className="bg-white border border-emerald-100 shadow-sm rounded-[1.5rem] p-4 md:p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 relative overflow-hidden group">
             
             <div className="flex items-start justify-between mb-8 relative z-10">
-              <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-bieon-eco shadow-sm border border-emerald-100 group-hover:scale-105 transition-transform duration-500 relative">
-                <User className="w-7 h-7 group-hover:-rotate-6 transition-transform duration-500" />
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 border-4 border-white rounded-full shadow-sm animate-pulse"></span>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-emerald-50 rounded-xl flex items-center justify-center text-bieon-eco shadow-sm border border-emerald-100 group-hover:scale-105 transition-transform duration-500 relative shrink-0">
+                  <User className="w-7 h-7 group-hover:-rotate-6 transition-transform duration-500" />
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 border-4 border-white rounded-full shadow-sm animate-pulse"></span>
+                </div>
+                <div>
+                  <h3 className="text-4xl font-bold text-slate-800 tracking-tight leading-none mb-1 drop-shadow-sm">
+                    {metricsLoading ? <ShimmerSkeleton className="h-10 w-20" /> : metrics.activeTechnicians || 0}
+                  </h3>
+                  <p className="text-[12px] font-semibold text-slate-500">{t('admin_dashboard.metrics.active_technicians')}</p>
+                </div>
               </div>
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border border-slate-100 px-2 py-1 rounded-md inline-block mb-1">{t('admin_dashboard.metrics.live_status')}</p>
                 <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-[11px] justify-end">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div> {t('admin_dashboard.metrics.online')}
@@ -694,12 +702,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
               </div>
             </div>
 
-            <div className="flex-1 relative z-10">
-              <h3 className="text-4xl font-bold text-slate-800 tracking-tight leading-none mb-2 drop-shadow-sm">
-                {metricsLoading ? <ShimmerSkeleton className="h-10 w-20" /> : metrics.activeTechnicians || 0}
-              </h3>
-              <p className="text-[13px] font-semibold text-slate-500">{t('admin_dashboard.metrics.active_technicians')}</p>
-              <div className="mt-4 inline-flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg shadow-sm">
+            <div className="flex-1 relative z-10 flex flex-col justify-end">
+              <div className="mb-6 inline-flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg shadow-sm w-fit">
                 <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                 {metricsLoading ? <ShimmerSkeleton className="h-4 w-12" /> : t('admin_dashboard.metrics.total_count', { count: metrics.totalTechnicians || 0 })}
               </div>
@@ -707,7 +711,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
             <button
               onClick={() => onNavigate && onNavigate('admin-teknisi')}
-              className="mt-8 w-full py-3.5 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-xl text-xs transition-all border border-slate-200 shadow-sm flex items-center justify-center gap-2 hover:border-bieon-eco/30 hover:text-bieon-eco"
+              className="w-full py-3.5 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-xl text-xs transition-all border border-slate-200 shadow-sm flex items-center justify-center gap-2 hover:border-bieon-eco/30 hover:text-bieon-eco"
             >
               <span className="relative z-10 flex items-center gap-2">{t('admin_dashboard.metrics.btn_manage_tech')} <ChevronRight className="w-4 h-4" /></span>
             </button>
@@ -715,14 +719,14 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* PLN Tariff Management Center */}
           <div className="lg:col-span-3 bg-white border border-sky-100 shadow-sm rounded-[1.5rem] p-4 md:p-6 flex flex-col hover:-translate-y-1 hover:shadow-xl hover:border-sky-200 transition-all duration-300 relative overflow-hidden group">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-6 relative z-10">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 relative z-10">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-sky-50 rounded-xl flex items-center justify-center text-bieon-sense shadow-sm border border-sky-100 shrink-0 group-hover:scale-105 transition-transform">
                   <Zap className="w-7 h-7" />
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-slate-800 tracking-tight">{t('admin_dashboard.tariff_summary.title')}</h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
                     <p className="text-[12px] text-slate-500 font-medium">{t('admin_dashboard.tariff_summary.subtitle')}</p>
                     {plnSummary?.latestUpdate && (
                       <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100/50 text-[10px] font-bold rounded-md">
@@ -733,16 +737,17 @@ export default function SuperAdminDashboard({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-100 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-4">
-                <div className="text-right">
+              <div className="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl flex items-center gap-4 w-fit shrink-0">
+                <div>
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">TOTAL KATEGORI</p>
-                  <p className="text-2xl font-bold text-slate-800 leading-none">
+                  <p className="text-xl font-bold text-slate-800 leading-none">
                     {plnCategoriesLoading ? '-' : plnCategories.length}
                   </p>
                 </div>
-                <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-400">
+                <div className="w-px h-8 bg-slate-200"></div>
+                <button className="text-slate-400 hover:text-slate-600 transition-colors">
                   <Filter className="w-4 h-4" />
-                </div>
+                </button>
               </div>
             </div>
 
@@ -775,27 +780,28 @@ export default function SuperAdminDashboard({ onNavigate }) {
               })}
             </div>
 
-            <div className="mt-auto pt-6 border-t border-slate-100/60 flex items-stretch justify-end gap-4 relative z-10 w-full">
-              <button
-                onClick={() => setShowPlnCategoriesModal(true)}
-                className="px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-600 font-semibold rounded-xl text-xs transition-colors border border-slate-200 flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
-              >
-                <Eye className="w-4 h-4" /> Lihat Struktur Golongan
-              </button>
-              <button
-                onClick={() => onNavigate && onNavigate('admin-tariff')}
-                className="w-full max-w-[300px] py-3.5 bg-[#1194b6] hover:bg-[#0e80a0] text-white font-semibold rounded-xl text-xs transition-colors flex flex-col items-center justify-center gap-1 shadow-md hover:shadow-lg"
-              >
-                <div className="flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  <span>{t('admin_dashboard.tariff_summary.btn_manage_tariff')}</span>
-                </div>
+            <div className="mt-auto pt-6 border-t border-slate-100/60 flex flex-col md:flex-row items-center justify-between gap-4 relative z-10 w-full">
+              <div className="text-[11px] text-slate-500 font-medium hidden md:block">
                 {plnSummary?.latestUpdate && (
-                  <span className="text-[10px] font-medium opacity-80 mt-0.5">
-                    Terakhir: {plnSummary.latestUpdate.category} (Rp {plnSummary.latestUpdate.tariff})
+                  <span>
+                    Update Terakhir: <strong className="text-slate-700">{plnSummary.latestUpdate.category}</strong> (Rp {plnSummary.latestUpdate.tariff})
                   </span>
                 )}
-              </button>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                <button
+                  onClick={() => setShowPlnCategoriesModal(true)}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-600 font-semibold rounded-xl text-xs transition-colors border border-slate-200 flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Eye className="w-4 h-4" /> Lihat Struktur Golongan
+                </button>
+                <button
+                  onClick={() => onNavigate && onNavigate('admin-tariff')}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-[#1194b6] hover:bg-[#0e80a0] text-white font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <Settings className="w-4 h-4" /> {t('admin_dashboard.tariff_summary.btn_manage_tariff')}
+                </button>
+              </div>
             </div>
           </div>
         </div>
