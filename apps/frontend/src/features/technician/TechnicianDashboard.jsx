@@ -375,7 +375,7 @@ export function TechnicianDashboard({ onNavigate }) {
     const setAutoOnline = async () => {
       if (!token || !userId) return;
       try {
-        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/technician/profile/${userId}`, {
+        await fetch(`/api/technician/profile/${userId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
