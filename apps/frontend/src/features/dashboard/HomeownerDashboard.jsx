@@ -38,6 +38,7 @@ import {
   Type,
   ShieldCheck,
   Coins
+  ,Server
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart,

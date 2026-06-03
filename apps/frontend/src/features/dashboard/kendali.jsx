@@ -58,6 +58,105 @@ const CATEGORY_DEVICES = {
   "remote": ["AC", "TV", "Kipas Angin"],
   "other": ["Custom Device"]
 };
+
+const REMOTE_DEVICE_TYPES = [
+  { value: "TV", label: "TV" },
+  { value: "AC", label: "AC" },
+  { value: "Kipas Angin", label: "Kipas Angin" },
+  { value: "Lampu", label: "Lampu" },
+  { value: "Speaker", label: "Speaker" },
+  { value: "Set Top Box", label: "Set Top Box" },
+  { value: "Proyektor", label: "Proyektor" },
+  { value: "Custom", label: "Custom" }
+];
+
+const REMOTE_BRANDS = [
+  "Polytron",
+  "LG",
+  "Samsung",
+  "Sharp",
+  "Sony",
+  "Toshiba",
+  "Panasonic",
+  "Midea",
+  "Daikin",
+  "AUX",
+  "Gree",
+  "Cosmos",
+  "Miyako",
+  "Maspion",
+  "Sanken",
+  "Other"
+];
+
+const REMOTE_FUNCTION_LIBRARY = {
+  TV: [
+    { value: "power", label: "Power" },
+    { value: "volume_up", label: "Volume +" },
+    { value: "volume_down", label: "Volume -" },
+    { value: "channel_up", label: "Channel +" },
+    { value: "channel_down", label: "Channel -" },
+    { value: "mute", label: "Mute" },
+    { value: "input", label: "Input" }
+  ],
+  AC: [
+    { value: "power", label: "Power" },
+    { value: "temp_up", label: "Temp +" },
+    { value: "temp_down", label: "Temp -" },
+    { value: "speed_up", label: "Speed +" },
+    { value: "speed_down", label: "Speed -" },
+    { value: "swing", label: "Swing" },
+    { value: "mode", label: "Mode" }
+  ],
+  "Kipas Angin": [
+    { value: "power", label: "Power" },
+    { value: "speed_up", label: "Speed +" },
+    { value: "speed_down", label: "Speed -" },
+    { value: "swing", label: "Swing" },
+    { value: "timer", label: "Timer" }
+  ],
+  Lampu: [
+    { value: "power", label: "Power" },
+    { value: "brightness_up", label: "Bright +" },
+    { value: "brightness_down", label: "Bright -" },
+    { value: "color_next", label: "Color +" },
+    { value: "color_prev", label: "Color -" }
+  ],
+  Speaker: [
+    { value: "power", label: "Power" },
+    { value: "volume_up", label: "Volume +" },
+    { value: "volume_down", label: "Volume -" },
+    { value: "mute", label: "Mute" },
+    { value: "input", label: "Input" }
+  ],
+  "Set Top Box": [
+    { value: "power", label: "Power" },
+    { value: "channel_up", label: "Channel +" },
+    { value: "channel_down", label: "Channel -" },
+    { value: "number_pad", label: "Number Pad" },
+    { value: "menu", label: "Menu" }
+  ],
+  Proyektor: [
+    { value: "power", label: "Power" },
+    { value: "source", label: "Source" },
+    { value: "menu", label: "Menu" },
+    { value: "keystone", label: "Keystone" },
+    { value: "focus", label: "Focus" }
+  ],
+  Custom: [
+    { value: "power", label: "Power" },
+    { value: "toggle", label: "Toggle" },
+    { value: "start", label: "Start" },
+    { value: "stop", label: "Stop" },
+    { value: "mode", label: "Mode" }
+  ]
+};
+
+const REMOTE_FUNCTION_LABELS = REMOTE_DEVICE_TYPES.reduce((acc, item) => {
+  acc[item.value] = item.label;
+  return acc;
+}, {});
+
 export function DeviceControlPage({ onNavigate }) {
   const [step, setStep] = useState("idle");
   const [bieonSystems, setBieonSystems] = useState([]);
@@ -97,6 +196,121 @@ export function DeviceControlPage({ onNavigate }) {
     if (cleanName) return cleanName;
     const normalizedIeee = normalizeIeee(fallbackIeee);
     return normalizedIeee ? `Device ${normalizedIeee}` : 'Perangkat Baru';
+  };
+  // Extract a concise bit representation from a catalog item or raw strings
+  const extractBitsFromCatalog = (item) => {
+    if (!item) return '';
+    // Prefer explicit fields
+    if (item.bits) return String(item.bits);
+    if (item.rawBitBinary) return String(item.rawBitBinary);
+    if (item.rawBitHex) return String(item.rawBitHex);
+    // If rawBitText is a JSON string, try to parse and extract common keys
+    const tryParse = (v) => {
+      if (!v) return null;
+      if (typeof v !== 'string') return v;
+      try {
+        return JSON.parse(v);
+      } catch (e) {
+        return null;
+      }
+    };
+
+    if (item.bit_length) return String(item.bit_length);
+    const candidates = [item.rawBitText, item.rawBitHex, item.rawBitBinary, item.rawSignature];
+    for (const c of candidates) {
+      const parsed = tryParse(c);
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.bit_length) return String(parsed.bit_length);
+        if (parsed.bits) return String(parsed.bits);
+        if (parsed.raw && parsed.raw.bits) return String(parsed.raw.bits);
+        if (parsed.raw_bit && parsed.raw.bits) return String(parsed.raw.bits);
+        if (parsed.raw_hex) return String(parsed.raw_hex);
+        if (parsed.raw_value) return String(parsed.raw_value);
+      }
+    }
+
+    // Fallbacks: prefer shorter representations
+    if (item.rawBitText && String(item.rawBitText).length < 200) return String(item.rawBitText);
+    if (item.rawBitHex) return String(item.rawBitHex);
+    if (item.rawBitBinary) return String(item.rawBitBinary);
+    return String(item.rawSignature || '').slice(0, 200);
+  };
+  const normalizeRemoteDeviceType = (value) => {
+    const text = String(value || '').trim();
+    if (!text) return 'Custom';
+    const lower = text.toLowerCase();
+    if (lower.includes('tv')) return 'TV';
+    if (lower.includes('ac') || lower.includes('air conditioner')) return 'AC';
+    if (lower.includes('kipas') || lower.includes('fan')) return 'Kipas Angin';
+    if (lower.includes('lampu') || lower.includes('light')) return 'Lampu';
+    if (lower.includes('speaker') || lower.includes('audio')) return 'Speaker';
+    if (lower.includes('set top') || lower.includes('stb')) return 'Set Top Box';
+    if (lower.includes('proyektor') || lower.includes('projector')) return 'Proyektor';
+    return text;
+  };
+  const normalizeRemoteFunctionKey = (value) => {
+    const text = String(value || '').trim().toLowerCase();
+    if (!text) return 'power';
+    if (text.includes('volume') && text.includes('up')) return 'volume_up';
+    if (text.includes('volume') && text.includes('down')) return 'volume_down';
+    if (text.includes('channel') && text.includes('up')) return 'channel_up';
+    if (text.includes('channel') && text.includes('down')) return 'channel_down';
+    if (text.includes('temp') && text.includes('up')) return 'temp_up';
+    if (text.includes('temp') && text.includes('down')) return 'temp_down';
+    if (text.includes('speed') && text.includes('up')) return 'speed_up';
+    if (text.includes('speed') && text.includes('down')) return 'speed_down';
+    if (text.includes('brightness') && text.includes('up')) return 'brightness_up';
+    if (text.includes('brightness') && text.includes('down')) return 'brightness_down';
+    if (text.includes('color') && text.includes('next')) return 'color_next';
+    if (text.includes('color') && text.includes('prev')) return 'color_prev';
+    if (text.includes('mute')) return 'mute';
+    if (text.includes('input')) return 'input';
+    if (text.includes('swing')) return 'swing';
+    if (text.includes('timer')) return 'timer';
+    if (text.includes('menu')) return 'menu';
+    if (text.includes('source')) return 'source';
+    if (text.includes('focus')) return 'focus';
+    if (text.includes('keystone')) return 'keystone';
+    if (text.includes('start')) return 'start';
+    if (text.includes('stop')) return 'stop';
+    if (text.includes('toggle')) return 'toggle';
+    if (text.includes('power')) return 'power';
+    return text.replace(/\s+/g, '_');
+  };
+  const getRemoteFunctionOptions = (deviceType) => {
+    const normalized = normalizeRemoteDeviceType(deviceType);
+    return REMOTE_FUNCTION_LIBRARY[normalized] || REMOTE_FUNCTION_LIBRARY.Custom;
+  };
+  const getRemoteFunctionLabel = (deviceType, functionKey) => {
+    const options = getRemoteFunctionOptions(deviceType);
+    const match = options.find((item) => item.value === functionKey);
+    return match ? match.label : String(functionKey || '').replace(/_/g, ' ');
+  };
+  const groupRemoteMappings = (mappings = []) => {
+    const groups = new Map();
+    mappings.forEach((item) => {
+      const type = normalizeRemoteDeviceType(item?.deviceType || item?.type || item?.targetType || 'Custom');
+      const brand = String(item?.brand || item?.brandName || item?.manufacturer || 'Other').trim() || 'Other';
+      const key = `${type}__${brand}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          id: key,
+          deviceType: type,
+          brand,
+          mappings: []
+        });
+      }
+      groups.get(key).mappings.push({
+        ...item,
+        deviceType: type,
+        brand,
+        functionKey: normalizeRemoteFunctionKey(item?.functionKey || item?.controlAction || item?.function || item?.action),
+        functionLabel: item?.functionLabel || item?.label || getRemoteFunctionLabel(type, item?.functionKey || item?.controlAction || item?.function || item?.action),
+        isActive: item?.isActive !== false,
+        captureStatus: item?.captureStatus || 'mapped'
+      });
+    });
+    return Array.from(groups.values());
   };
   const [sensorConfig, setSensorConfig] = useState({
     temperature: { enabled: false, value: 27, useDefault: true },
@@ -164,28 +378,40 @@ export function DeviceControlPage({ onNavigate }) {
   const [scanAttempted, setScanAttempted] = useState(false);
   const [scanTimer, setScanTimer] = useState(0);
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
+  const [remoteBitCatalogByBieon, setRemoteBitCatalogByBieon] = useState({});
+  const [remoteRegistrationStateByBieon, setRemoteRegistrationStateByBieon] = useState({});
+  const [remoteRegistrationDeviceId, setRemoteRegistrationDeviceId] = useState(null);
+  const [remoteCatalogLoading, setRemoteCatalogLoading] = useState(false);
+  const [remoteMappingDraft, setRemoteMappingDraft] = useState(null);
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
-  const [discardingDevices, setDiscardingDevices] = useState({}); // { deviceId: seconds }
+  const [leavingDevices, setLeavingDevices] = useState({}); // { deviceId: seconds }
   const [pendingOpenJoinDevice, setPendingOpenJoinDevice] = useState(null);
   const [pendingOpenJoinAction, setPendingOpenJoinAction] = useState(null); // 'save' | 'configure'
   const openJoinSubmitLockRef = useRef(false);
 
   // Efek Hitung Mundur untuk Pembuangan Perangkat
   useEffect(() => {
-    const timers = Object.keys(discardingDevices);
+    const timers = Object.keys(leavingDevices);
     if (timers.length === 0) return;
 
     const interval = setInterval(() => {
-      setDiscardingDevices(prev => {
+      setLeavingDevices(prev => {
         const next = { ...prev };
         let hasChanges = false;
 
         for (const id in next) {
           if (next[id] <= 1) {
-            // Timer habis, eksekusi pembuangan
+            // Timer habis, eksekusi leave ke backend (backend publish MQTT leave)
             const expiredDevice = discoveredDevices.find(dev => dev.id === id);
             if (expiredDevice && (expiredDevice.isFromDb || expiredDevice.dbId || expiredDevice._id)) {
-              requestDeviceLeave(expiredDevice);
+              const targetId = expiredDevice.dbId || expiredDevice._id || expiredDevice.id;
+              if (targetId) {
+                void deleteDevice(targetId, {
+                  requireConfirmation: false,
+                  showSuccessAlert: false,
+                  showErrorAlert: false
+                });
+              }
             }
             setJoinedDevicesPool(p => p.filter(pId => pId !== id));
             setDiscoveredDevices(d => d.filter(dev => dev.id !== id));
@@ -201,7 +427,7 @@ export function DeviceControlPage({ onNavigate }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [discardingDevices]);
+  }, [leavingDevices]);
 
   // Efek Hitung Mundur untuk Scanning Open Join
   useEffect(() => {
@@ -267,7 +493,7 @@ export function DeviceControlPage({ onNavigate }) {
       setScanAttempted(true);
       setDiscoveredDevices([]);
       setJoinedDevicesPool([]);
-      setDiscardingDevices({});
+      setLeavingDevices({});
       setScanTimer(30);
     } catch (err) {
       alert('Gagal membuka Open Join: ' + err.message);
@@ -392,7 +618,9 @@ export function DeviceControlPage({ onNavigate }) {
                 installedDate: d.createdAt,
                 currentValues: d.currentValues || {},
                 sensorParams: d.thresholds || {},
-                controls: d.remoteState || {}
+                controls: d.remoteState || {},
+                remoteState: d.remoteState || {},
+                remoteMappings: Array.isArray(d.remoteState?.mappings) ? d.remoteState.mappings : (Array.isArray(d.remoteMappings) ? d.remoteMappings : [])
               }))
           })),
           createdAt: sys.createdAt
@@ -513,6 +741,53 @@ export function DeviceControlPage({ onNavigate }) {
       });
     });
 
+    socket.on('remote_registration_state', (registrationState) => {
+      const bieonId = String(registrationState?.bieonId || currentBieon?.bieonId || '').trim();
+      if (!bieonId) return;
+
+      setRemoteRegistrationStateByBieon(prev => ({
+        ...prev,
+        [bieonId]: {
+          ...registrationState,
+          bieonId,
+          updatedAt: registrationState?.updatedAt || Date.now()
+        }
+      }));
+    });
+
+    socket.on('remote_bit_registration', (eventPayload) => {
+      const bieonId = String(eventPayload?.bieonId || currentBieon?.bieonId || '').trim();
+      const catalogItem = eventPayload?.catalogItem;
+      if (!bieonId || !catalogItem) return;
+
+      setRemoteBitCatalogByBieon(prev => {
+        const currentItems = Array.isArray(prev[bieonId]) ? prev[bieonId] : [];
+        const nextItems = currentItems.filter((item) => item._id !== catalogItem._id && item.rawSignature !== catalogItem.rawSignature);
+        return {
+          ...prev,
+          [bieonId]: [catalogItem, ...nextItems].sort((a, b) => new Date(b.lastSeenAt || b.createdAt || 0) - new Date(a.lastSeenAt || a.createdAt || 0))
+        };
+      });
+    });
+
+    socket.on('remote_bit_catalog_updated', (eventPayload) => {
+      const bieonId = String(eventPayload?.bieonId || currentBieon?.bieonId || '').trim();
+      const catalogItem = eventPayload?.catalogItem;
+      if (!bieonId || !catalogItem) return;
+
+      setRemoteBitCatalogByBieon(prev => {
+        const currentItems = Array.isArray(prev[bieonId]) ? prev[bieonId] : [];
+        const found = currentItems.some((item) => item._id === catalogItem._id || item.rawSignature === catalogItem.rawSignature);
+        const nextItems = found
+          ? currentItems.map((item) => (item._id === catalogItem._id || item.rawSignature === catalogItem.rawSignature) ? catalogItem : item)
+          : [catalogItem, ...currentItems];
+        return {
+          ...prev,
+          [bieonId]: nextItems.sort((a, b) => new Date(b.lastSeenAt || b.createdAt || 0) - new Date(a.lastSeenAt || a.createdAt || 0))
+        };
+      });
+    });
+
     const techAccess = localStorage.getItem('bieon_tech_access');
     if (techAccess === 'true') {
       setIsTechnicianMode(true);
@@ -522,9 +797,48 @@ export function DeviceControlPage({ onNavigate }) {
       socket.off('device_telemetry');
       socket.off('new_unassigned_device');
       socket.off('device_discovered');
+      socket.off('remote_registration_state');
+      socket.off('remote_bit_registration');
+      socket.off('remote_bit_catalog_updated');
       socket.disconnect();
     };
   }, []); // Hapus userProfile dari dependency agar tidak infinite loop
+
+  useEffect(() => {
+    const bieonId = currentBieon?.bieonId;
+    if (!bieonId) return;
+
+    let cancelled = false;
+
+    const loadRemoteCatalog = async () => {
+      try {
+        setRemoteCatalogLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/devices/registration/${encodeURIComponent(bieonId)}/catalog`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        if (!cancelled && response.ok) {
+          setRemoteBitCatalogByBieon(prev => ({
+            ...prev,
+            [bieonId]: Array.isArray(data.items) ? data.items : []
+          }));
+        }
+      } catch (error) {
+        console.error('Gagal memuat katalog raw bit:', error);
+      } finally {
+        if (!cancelled) setRemoteCatalogLoading(false);
+      }
+    };
+
+    loadRemoteCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentBieon?.bieonId]);
 
   useEffect(() => {
     if (!userProfile?._id || userProfile?.role !== 'Homeowner') return;
@@ -838,29 +1152,6 @@ export function DeviceControlPage({ onNavigate }) {
       alert("Error hapus: " + err.message);
     }
   };
-  const requestDeviceLeave = async (device) => {
-    const targetId = device?.dbId || device?._id || device?.id;
-    if (!targetId) return false;
-
-    try {
-      const response = await fetch(`/api/kendaliperangkat/${targetId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'Gagal mengirim leave');
-      }
-
-      return true;
-    } catch (err) {
-      console.error('Error leave device:', err);
-      return false;
-    }
-  };
   const handleQuickSelect = (category, deviceType) => {
     setSelectedCategory(category);
     setSelectedDeviceType(deviceType);
@@ -917,7 +1208,7 @@ export function DeviceControlPage({ onNavigate }) {
       ? pendingOpenJoinDevice.type || "Sensor"
       : pendingOpenJoinDevice.type || "Control Actuator";
     setSelectedDeviceType(defaultType);
-    setSelectedProduct({ id: pendingOpenJoinDevice.id });
+    setSelectedProduct({ id: pendingOpenJoinDevice.id, productId: pendingOpenJoinDevice.id });
     setDeviceForm(prev => ({ ...prev, name: pendingOpenJoinDevice.name || defaultType, location: "", notes: "" }));
     if (category === "sensor") {
       setActiveSensorAspect(determineSensorAspect(pendingOpenJoinDevice));
@@ -927,6 +1218,230 @@ export function DeviceControlPage({ onNavigate }) {
     setStep("add-device-form");
     setPendingOpenJoinDevice(null);
     setPendingOpenJoinAction(null);
+  };
+
+  const handleStartRemoteRegistration = async (device) => {
+    if (!currentBieon?.bieonId) return;
+    if (!device?.id) return;
+
+    try {
+      setRemoteMappingDraft(null);
+      setRemoteRegistrationDeviceId(device.id);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/devices/registration/${encodeURIComponent(currentBieon.bieonId)}/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          duration: 30,
+          sessionId: `web_${Date.now()}`
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal memulai registrasi remote');
+      }
+
+      setRemoteRegistrationStateByBieon(prev => ({
+        ...prev,
+        [currentBieon.bieonId]: {
+          bieonId: currentBieon.bieonId,
+          state: 'active',
+          active: true,
+          sessionId: data.sessionId || `web_${Date.now()}`,
+          duration: data.duration || 90,
+          payload: data,
+          updatedAt: Date.now()
+        }
+      }));
+
+      alert('Mode registrasi remote aktif. Silakan tekan tombol remote untuk menangkap bit.');
+    } catch (error) {
+      alert(`Gagal memulai registrasi remote: ${error.message}`);
+    }
+  };
+
+  const handleOpenRemoteMapping = (device, catalogItem) => {
+    if (!device || !catalogItem) return;
+
+    const fallbackType = normalizeRemoteDeviceType(device.deviceType || device.type || 'Custom');
+    const currentMappings = Array.isArray(device.remoteMappings)
+      ? device.remoteMappings
+      : Array.isArray(device.remoteState?.mappings)
+        ? device.remoteState.mappings
+        : [];
+    const existingMapping = currentMappings.find((item) => item.rawSignature === catalogItem.rawSignature || item._id === catalogItem._id);
+
+    setRemoteMappingDraft({
+      deviceId: device.id,
+      catalogId: catalogItem._id,
+      rawSignature: catalogItem.rawSignature,
+      rawBitText: catalogItem.rawBitText || '-',
+      rawBitHex: catalogItem.rawBitHex || '',
+      rawBitBinary: catalogItem.rawBitBinary || '',
+      sourceRemoteIeee: existingMapping?.sourceRemoteIeee || catalogItem.sourceRemoteIeee || '',
+      sourceRemoteId: existingMapping?.sourceRemoteId || catalogItem.sourceRemoteId || '',
+      deviceType: existingMapping?.deviceType || fallbackType,
+      functionKey: existingMapping?.functionKey || 'power',
+      brand: existingMapping?.brand || 'Other',
+      customBrand: existingMapping?.brand && existingMapping.brand !== 'Other' ? existingMapping.brand : '',
+      functionLabel: existingMapping?.functionLabel || getRemoteFunctionLabel(fallbackType, existingMapping?.functionKey || 'power'),
+      label: existingMapping?.label || ''
+    });
+  };
+
+  const handleCancelRemoteMapping = () => {
+    setRemoteMappingDraft(null);
+  };
+
+  const handleDisableRemoteBit = async (catalogItem) => {
+    if (!catalogItem?._id) return;
+
+    if (!window.confirm('Hapus raw bit ini dari katalog?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/devices/registration/catalog/${catalogItem._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          captureStatus: 'disabled',
+          isActive: false
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal menghapus raw bit');
+      }
+
+      const bieonId = String(currentBieon?.bieonId || '').trim();
+      if (bieonId) {
+        setRemoteBitCatalogByBieon(prev => {
+          const currentItems = Array.isArray(prev[bieonId]) ? prev[bieonId] : [];
+          const nextItems = currentItems.map((item) => (item._id === data.item._id || item.rawSignature === data.item.rawSignature) ? data.item : item);
+          return { ...prev, [bieonId]: nextItems };
+        });
+      }
+
+      if (remoteMappingDraft?.catalogId === catalogItem._id) {
+        setRemoteMappingDraft(null);
+      }
+    } catch (error) {
+      alert(`Gagal menghapus raw bit: ${error.message}`);
+    }
+  };
+
+  const handleSaveRemoteMapping = async () => {
+    if (!remoteMappingDraft || !currentBieon) return;
+
+    const device = getAllDevices().find((item) => String(item.id) === String(remoteMappingDraft.deviceId) || String(item._id) === String(remoteMappingDraft.deviceId));
+    if (!device) {
+      alert('Remote card tidak ditemukan.');
+      return;
+    }
+
+    const deviceType = normalizeRemoteDeviceType(remoteMappingDraft.deviceType);
+    const functionKey = normalizeRemoteFunctionKey(remoteMappingDraft.functionKey);
+    const functionLabel = getRemoteFunctionLabel(deviceType, functionKey);
+    const brand = String(remoteMappingDraft.customBrand || remoteMappingDraft.brand || 'Other').trim() || 'Other';
+    const label = String(remoteMappingDraft.label || functionLabel || functionKey).trim() || functionLabel;
+
+    const existingMappings = Array.isArray(device.remoteMappings)
+      ? device.remoteMappings
+      : Array.isArray(device.remoteState?.mappings)
+        ? device.remoteState.mappings
+        : [];
+
+    const nextMapping = {
+      catalogId: remoteMappingDraft.catalogId,
+      rawSignature: remoteMappingDraft.rawSignature,
+      rawBitText: remoteMappingDraft.rawBitText,
+      rawBitHex: remoteMappingDraft.rawBitHex,
+      rawBitBinary: remoteMappingDraft.rawBitBinary,
+      sourceRemoteIeee: remoteMappingDraft.sourceRemoteIeee,
+      sourceRemoteId: remoteMappingDraft.sourceRemoteId,
+      deviceType,
+      functionKey,
+      functionLabel,
+      label,
+      brand,
+      isActive: true,
+      captureStatus: 'mapped',
+      mappedAt: new Date().toISOString()
+    };
+
+    const nextMappings = [
+      ...existingMappings.filter((item) => item.rawSignature !== nextMapping.rawSignature && item.catalogId !== nextMapping.catalogId),
+      nextMapping
+    ];
+
+    const nextRemoteState = {
+      ...(device.remoteState || {}),
+      mappings: nextMappings,
+      profiles: groupRemoteMappings(nextMappings)
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: device.name,
+          location: device.location,
+          notes: String(device.notes || '').includes('Quick Saved') ? device.notes : device.notes,
+          controlledDevice: nextMappings.map((item) => `${item.deviceType} (${item.brand})`).join(', '),
+          remoteState: nextRemoteState,
+          controlMethod: device.controlMethod || 'Manual'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal menyimpan mapping remote');
+      }
+
+      const updatedDevice = {
+        ...data.device,
+        id: data.device._id,
+        remoteState: nextRemoteState,
+        remoteMappings: nextMappings
+      };
+
+      const updatedSystems = bieonSystems.map((system) => ({
+        ...system,
+        hubs: system.hubs.map((hub) => ({
+          ...hub,
+          devices: hub.devices.map((item) => String(item.id) === String(device.id) ? {
+            ...item,
+            ...updatedDevice,
+            remoteState: nextRemoteState,
+            remoteMappings: nextMappings
+          } : item)
+        }))
+      }));
+
+      setBieonSystems(updatedSystems);
+      setCurrentBieon(updatedSystems.find((system) => system.id === currentBieon.id) || currentBieon);
+      setRemoteBitCatalogByBieon(prev => ({
+        ...prev,
+        [currentBieon.bieonId]: (prev[currentBieon.bieonId] || []).map((item) => item._id === remoteMappingDraft.catalogId ? { ...item, captureStatus: 'mapped', isActive: true, controlAction: functionKey, controlLabel: label, deviceType, controlGroup: brand } : item)
+      }));
+      setRemoteMappingDraft(null);
+      alert('Mapping remote berhasil disimpan dan kontrol card sudah aktif.');
+    } catch (error) {
+      alert(`Gagal menyimpan mapping remote: ${error.message}`);
+    }
   };
 
   const handleAddRoom = (targetType = null) => {
@@ -1115,7 +1630,7 @@ export function DeviceControlPage({ onNavigate }) {
         ownerId: targetOwnerId,
         controlMode: backendControl,
         environmentAspect: backendAspect,
-        productId: selectedProduct?.productId || null,
+        productId: selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || pendingOpenJoinDevice?.device_ieee || deviceForm?.name || null,
         controlledDevice: remoteTargets.map(t => remoteRooms[t] ? `${t} (${remoteRooms[t]})` : t).join(", "),
         sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
         sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null,
@@ -1284,9 +1799,10 @@ export function DeviceControlPage({ onNavigate }) {
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
       const targetOwnerId = (isTechnicianMode && activeHomeownerId) ? activeHomeownerId : userProfile._id;
 
-      const productIdValue = selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || null;
+      const productIdValue = selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || pendingOpenJoinDevice?.device_ieee || deviceForm?.name || null;
       if (!productIdValue) {
-        throw new Error('Product ID tidak tersedia untuk perangkat ini');
+        alert('Product ID tidak tersedia. Pilih produk terlebih dahulu atau gunakan fitur Quick Save agar sistem dapat mendaftarkan productId.');
+        return;
       }
 
       const deviceData = {
@@ -1515,8 +2031,51 @@ export function DeviceControlPage({ onNavigate }) {
       console.error("Gagal update parameter di backend:", err);
     }
   };
-  const deleteDevice = async (deviceId) => {
-    if (!confirm("Yakin ingin menghapus device ini?")) return;
+
+  const handleSendRemoteCommand = async (device, mapping) => {
+    if (!device?.id || !mapping) return;
+
+    const payload = {
+      catalogId: mapping.catalogId,
+      rawSignature: mapping.rawSignature,
+      rawBitText: mapping.rawBitText,
+      rawBitHex: mapping.rawBitHex,
+      rawBitBinary: mapping.rawBitBinary,
+      sourceRemoteIeee: mapping.sourceRemoteIeee,
+      sourceRemoteId: mapping.sourceRemoteId,
+      functionKey: mapping.functionKey,
+      functionLabel: mapping.functionLabel,
+      label: mapping.label
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/kendaliperangkat/${device.id}/remote-command`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Gagal mengirim perintah remote:', errorData);
+      }
+    } catch (err) {
+      console.error('Gagal publish remote command:', err);
+    }
+  };
+
+  const deleteDevice = async (deviceId, options = {}) => {
+    const {
+      requireConfirmation = true,
+      showSuccessAlert = true,
+      showErrorAlert = true
+    } = options;
+
+    if (requireConfirmation && !confirm("Yakin ingin menghapus device ini?")) return false;
 
     try {
       const token = localStorage.getItem('token');
@@ -1528,7 +2087,10 @@ export function DeviceControlPage({ onNavigate }) {
         }
       });
 
-      if (!response.ok) throw new Error("Gagal menghapus perangkat");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Gagal menghapus perangkat");
+      }
 
       // Update local state
       const updatedSystems = bieonSystems.map((system) => ({
@@ -1544,9 +2106,16 @@ export function DeviceControlPage({ onNavigate }) {
         setCurrentBieon(matching || null);
       }
       await fetchRegisteredProducts();
-      alert("Perangkat berhasil dihapus dari database!");
+      if (showSuccessAlert) {
+        alert("Perangkat berhasil dihapus dari database!");
+      }
+      return true;
     } catch (error) {
-      alert("Error: " + error.message);
+      if (showErrorAlert) {
+        alert("Error: " + error.message);
+      }
+      console.error("Error delete device:", error);
+      return false;
     }
   };
 
@@ -1800,14 +2369,13 @@ export function DeviceControlPage({ onNavigate }) {
     // 2. Filter berdasarkan Kategori (Sensor / Aktuator)
     if (activeFilterCategory !== "all") {
       devices = devices.filter((device) => {
-        const cat = (device.category || "").toLowerCase();
-        const type = (device.type || "").toLowerCase();
+        const categoryKey = getDeviceCategoryKey(device);
 
         if (activeFilterCategory === "sensor") {
-          return cat.includes("sensor") || type.includes("sensor");
+          return categoryKey === "sensor";
         }
         if (activeFilterCategory === "control") {
-          return cat.includes("control") || cat.includes("actuator") || type.includes("plug") || type.includes("switch");
+          return categoryKey === "control";
         }
         return true;
       });
@@ -1848,6 +2416,22 @@ export function DeviceControlPage({ onNavigate }) {
       default:
         return Settings;
     }
+  };
+
+  const getDeviceCategoryKey = (device) => {
+    const category = String(device.category || "").trim().toLowerCase();
+    const type = String(device.type || device.deviceType || "").trim().toLowerCase();
+
+    if (category.includes("sensor")) return "sensor";
+    if (category.includes("control") || category.includes("actuator") || category.includes("remote")) return "control";
+    if (type.includes("sensor")) return "sensor";
+    if (type.includes("plug") || type.includes("switch") || type.includes("remote") || type.includes("control")) return "control";
+    return "";
+  };
+
+  const getDeviceCategoryLabel = (device) => {
+    const value = String(device.category || device.type || device.deviceType || "").trim();
+    return value || "Device";
   };
   const isModalOpen = step !== "view-bieon" && step !== "idle" || showEditPage;
 
@@ -2261,9 +2845,26 @@ export function DeviceControlPage({ onNavigate }) {
                     <div className="space-y-4">
                       {getFilteredDevices().map((device) => {
                         const isRemote = (device.controlledDevice && device.controlledDevice.trim() !== "");
+                        const deviceCategoryKey = getDeviceCategoryKey(device);
+                        const deviceCategoryLabel = getDeviceCategoryLabel(device);
                         const isAnySubOn = device.controls && Object.keys(device.controls).some(key => key.endsWith('_power') && device.controls[key] === 1);
                         const isActuallyOn = String(device.status) === "1" || (isRemote && isAnySubOn);
                         const isWaterQuality = (device.deviceType === "Kualitas Air" || device.deviceType === "Sensor Kualitas Air" || device.environmentAspect?.toLowerCase() === "kualitas air" || (device.name || "").toLowerCase().includes("bluecheck"));
+                        const isActuatorDevice = (
+                          (Array.isArray(device.remoteMappings) && device.remoteMappings.length > 0) ||
+                          (Array.isArray(device.remoteState?.mappings) && device.remoteState.mappings.length > 0) ||
+                          (String(device.controlledDevice || '').trim() !== '') ||
+                          deviceCategoryKey !== 'sensor'
+                        );
+                        const currentRemoteCatalog = remoteBitCatalogByBieon[currentBieon?.bieonId] || [];
+                        const currentRemoteRegistration = remoteRegistrationStateByBieon[currentBieon?.bieonId] || null;
+                        const deviceRemoteMappings = Array.isArray(device.remoteMappings)
+                          ? device.remoteMappings
+                          : Array.isArray(device.remoteState?.mappings)
+                            ? device.remoteState.mappings
+                            : [];
+                        const deviceRemoteProfiles = groupRemoteMappings(deviceRemoteMappings);
+                        const hasRemoteProfile = deviceRemoteProfiles.length > 0;
 
                         return (
                           <div
@@ -2275,11 +2876,11 @@ export function DeviceControlPage({ onNavigate }) {
                             <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}>
                               <div className="flex items-start gap-3">
                                 <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-                                  device.category?.toLowerCase() === "sensor"
+                                  deviceCategoryKey === "sensor"
                                     ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]"
                                     : (isActuallyOn ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-gray-900")
                                 }`}>
-                                  {device.category?.toLowerCase() === "sensor" ? (
+                                  {deviceCategoryKey === "sensor" ? (
                                     <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                   ) : (
                                     <Power className={`w-5 h-5 sm:w-6 sm:h-6 ${isActuallyOn ? "text-white" : "text-bieon-eco/90"}`} />
@@ -2290,9 +2891,9 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="flex flex-wrap items-center gap-1 sm:gap-3 mt-1">
                                     <span className="text-xs sm:text-sm font-semibold text-gray-600">{device.deviceType} • {device.location}</span>
                                     <span className="text-xs sm:text-sm font-semibold text-gray-500">IEEE: {formatIeeeDisplay(device.device_ieee || device.id)}</span>
-                                    {device.category?.toLowerCase() === "sensor" ? (
+                                    {getDeviceCategoryKey(device) === "sensor" ? (
                                       <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-bieon-eco/10 text-bieon-eco/90 shadow-sm border border-bieon-eco/30">
-                                        MONITORING
+                                        {getDeviceCategoryLabel(device).toUpperCase()}
                                       </span>
                                     ) : (
                                       <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${isActuallyOn ? "bg-bieon-eco/10 text-bieon-eco/90 shadow-sm border border-bieon-eco/30" : "bg-gray-800 text-gray-300 border border-gray-700"}`}>
@@ -2556,8 +3157,247 @@ export function DeviceControlPage({ onNavigate }) {
                                   </div>
                                 )}
 
+                                {!isTechnicianMode && isActuatorDevice && (
+                                  <div className="mb-6">
+                                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+                                      <div>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Remote Registration</p>
+                                        <h4 className="text-sm font-bold text-gray-900 mt-1">Raw bit catalog untuk {device.name}</h4>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          {currentRemoteRegistration?.active ? 'Mode registrasi aktif. Tekan tombol remote untuk menangkap raw bit.' : 'Tekan Register untuk memulai tangkap raw bit.'}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${currentRemoteRegistration?.active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                          {currentRemoteRegistration?.active ? 'Registering' : 'Idle'}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleStartRemoteRegistration(device)}
+                                          className="px-4 py-2 rounded-xl bg-bieon-eco text-white text-xs font-black uppercase tracking-widest shadow-sm hover:bg-bieon-eco/90 transition-all"
+                                        >
+                                          Register
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {remoteRegistrationDeviceId === device.id && (
+                                      <div className="space-y-3">
+                                        {remoteCatalogLoading && currentRemoteCatalog.length === 0 ? (
+                                          <div className="p-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-500">
+                                            Memuat katalog raw bit...
+                                          </div>
+                                        ) : currentRemoteCatalog.length === 0 ? (
+                                          <div className="p-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-500">
+                                            Belum ada raw bit yang tertangkap.
+                                          </div>
+                                        ) : (
+                                          currentRemoteCatalog.map((bitItem) => {
+                                            const isSelected = remoteMappingDraft?.catalogId === bitItem._id;
+                                            const isMapped = String(bitItem.captureStatus) === 'mapped';
+                                            return (
+                                              <div key={bitItem._id || bitItem.rawSignature} className={`rounded-2xl border p-4 transition-all ${isSelected ? 'border-bieon-eco bg-bieon-eco/5 shadow-sm' : 'border-gray-200 bg-white'}`}>
+                                                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                                  <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                                                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-600 border border-gray-200">
+                                                        {bitItem.protocol || 'raw'}
+                                                      </span>
+                                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${isMapped ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                                        {isMapped ? 'Mapped' : 'Captured'}
+                                                      </span>
+                                                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-600 border border-gray-200">
+                                                        x{bitItem.captureCount || 1}
+                                                      </span>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-gray-900 break-all">{extractBitsFromCatalog(bitItem)}</p>
+                                                    <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-gray-500">
+                                                      <span>Remote: {bitItem.sourceRemoteIeee || bitItem.sourceRemoteId || '-'}</span>
+                                                      <span>Seen: {bitItem.lastSeenAt ? new Date(bitItem.lastSeenAt).toLocaleString('id-ID') : '-'}</span>
+                                                    </div>
+                                                  </div>
+                                                  <div className="flex items-center gap-2 shrink-0">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleOpenRemoteMapping(device, bitItem)}
+                                                      className="w-10 h-10 rounded-xl bg-bieon-eco text-white flex items-center justify-center hover:bg-bieon-eco/90 transition-all"
+                                                      title="Tambah mapping"
+                                                    >
+                                                      <Plus className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleDisableRemoteBit(bitItem)}
+                                                      className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-all"
+                                                      title="Hapus raw bit"
+                                                    >
+                                                      <Minus className="w-4 h-4" />
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {remoteRegistrationDeviceId === device.id && remoteMappingDraft?.deviceId === device.id && (
+                                      <div className="mt-4 p-4 rounded-2xl border border-bieon-eco/20 bg-bieon-eco/5">
+                                        <div className="flex items-center justify-between gap-3 mb-4">
+                                          <div>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-bieon-eco">Mapping Bit</p>
+                                              <p className="text-sm font-bold text-gray-900 break-all mt-1">{extractBitsFromCatalog(remoteMappingDraft)}</p>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={handleCancelRemoteMapping}
+                                            className="p-2 rounded-lg text-gray-500 hover:bg-white transition-all"
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Jenis Perangkat</label>
+                                            <select
+                                              value={remoteMappingDraft.deviceType}
+                                              onChange={(e) => setRemoteMappingDraft(prev => ({ ...prev, deviceType: e.target.value, functionKey: getRemoteFunctionOptions(e.target.value)[0]?.value || 'power' }))}
+                                              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
+                                            >
+                                              {REMOTE_DEVICE_TYPES.map((option) => (
+                                                <option key={option.value} value={option.value}>{option.label}</option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                          <div>
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Fungsi</label>
+                                            <select
+                                              value={remoteMappingDraft.functionKey}
+                                              onChange={(e) => setRemoteMappingDraft(prev => ({ ...prev, functionKey: e.target.value, functionLabel: getRemoteFunctionLabel(prev.deviceType, e.target.value) }))}
+                                              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
+                                            >
+                                              {getRemoteFunctionOptions(remoteMappingDraft.deviceType).map((option) => (
+                                                <option key={option.value} value={option.value}>{option.label}</option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                          <div>
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Merek</label>
+                                            <select
+                                              value={remoteMappingDraft.brand}
+                                              onChange={(e) => setRemoteMappingDraft(prev => ({ ...prev, brand: e.target.value, customBrand: e.target.value === 'Other' ? prev.customBrand : '' }))}
+                                              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
+                                            >
+                                              {REMOTE_BRANDS.map((brand) => (
+                                                <option key={brand} value={brand}>{brand}</option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                          <div>
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Label Kontrol</label>
+                                            <input
+                                              type="text"
+                                              value={remoteMappingDraft.label}
+                                              onChange={(e) => setRemoteMappingDraft(prev => ({ ...prev, label: e.target.value }))}
+                                              placeholder="Contoh: Power TV"
+                                              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
+                                            />
+                                          </div>
+                                          {remoteMappingDraft.brand === 'Other' && (
+                                            <div className="md:col-span-2">
+                                              <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Brand Custom</label>
+                                              <input
+                                                type="text"
+                                                value={remoteMappingDraft.customBrand}
+                                                onChange={(e) => setRemoteMappingDraft(prev => ({ ...prev, customBrand: e.target.value }))}
+                                                placeholder="Contoh: Polytron"
+                                                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
+                                              />
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        <div className="flex items-center justify-end gap-3 mt-4">
+                                          <button
+                                            type="button"
+                                            onClick={handleCancelRemoteMapping}
+                                            className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-white transition-all"
+                                          >
+                                            Batal
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={handleSaveRemoteMapping}
+                                            className="px-4 py-2 rounded-xl bg-bieon-eco text-white text-xs font-black uppercase tracking-widest hover:bg-bieon-eco/90 transition-all flex items-center gap-2"
+                                          >
+                                            <Save className="w-4 h-4" />
+                                            Simpan Mapping
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {hasRemoteProfile && (
+                                      <div className="mt-4 space-y-3">
+                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Remote Control Console</p>
+                                        <div className="grid grid-cols-1 gap-3">
+                                          {deviceRemoteProfiles.map((profile) => (
+                                            <div key={profile.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                                                <div>
+                                                  <p className="text-sm font-black text-gray-900">{profile.deviceType}</p>
+                                                  <p className="text-xs text-gray-500">{profile.brand}</p>
+                                                </div>
+                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-600 border border-gray-200">
+                                                  {profile.mappings.length} mapping
+                                                </span>
+                                              </div>
+                                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                {profile.mappings.map((mapping) => (
+                                                  <button
+                                                    key={mapping.catalogId || mapping.rawSignature}
+                                                    type="button"
+                                                    onClick={() => handleSendRemoteCommand(device, mapping)}
+                                                    title={`Kirim ${mapping.functionLabel}`}
+                                                    className="w-full text-left"
+                                                  >
+                                                    <div className="rounded-2xl border border-bieon-eco/20 bg-bieon-eco/5 px-4 py-3 hover:bg-bieon-eco hover:text-white transition-all cursor-pointer">
+                                                      <p className="text-sm font-extrabold uppercase tracking-widest text-bieon-eco">{mapping.functionLabel}</p>
+                                                      <p className="text-xs text-gray-600 mt-1 truncate">{mapping.label || mapping.rawBitText || mapping.rawSignature}</p>
+                                                    </div>
+                                                  </button>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                        {/* Restore a simple ON/OFF toggle so user can still power the device directly */}
+                                        <div className="mt-3">
+                                          <button
+                                            onClick={() => toggleDevicePower(device.id)}
+                                            className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 font-medium active:scale-95 ${device.isToggling ? "opacity-70 cursor-wait" : "cursor-pointer"} ${String(device.status) === "1" ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border border-green-200 hover:bg-green-100"}`}
+                                          >
+                                            {device.isToggling ? (
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-transparent animate-spin"></div>
+                                                Memproses...
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <Power className="w-4 h-4" /> {String(device.status) === "1" ? "Turn OFF" : "Turn ON"}
+                                              </>
+                                            )}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
                                 {/* Quick Controls Section - Hidden for Technicians (TIDAK BISA EDIT) */}
-                                {!isTechnicianMode && (
+                                {!isTechnicianMode && !hasRemoteProfile && (
                                   <div className="mb-6">
                                     <p className="text-xs  text-gray-400 uppercase tracking-wider mb-3">
                                       {device.category?.toLowerCase() === "sensor" ? "Status Monitoring" :
@@ -3013,7 +3853,7 @@ export function DeviceControlPage({ onNavigate }) {
                     {/* FOOTER BUTTONS */}
                     <div className="flex items-center gap-3 pt-2">
                       <button
-                        onClick={() => { setStep("add-device-choice"); setScanAttempted(false); setDiscoveredDevices([]); setJoinedDevicesPool([]); setDiscardingDevices({}); }}
+                        onClick={() => { setStep("add-device-choice"); setScanAttempted(false); setDiscoveredDevices([]); setJoinedDevicesPool([]); setLeavingDevices({}); }}
                         className="flex-1 py-4 px-6 border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
                       >
                         Kembali
@@ -3244,34 +4084,34 @@ export function DeviceControlPage({ onNavigate }) {
                                     <>
                                       {/* TOMBOL + (JOIN) */}
                                       <button
-                                        onClick={() => !isJoined && discardingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
-                                        disabled={isJoined || discardingDevices[dev.id] !== undefined}
+                                        onClick={() => !isJoined && leavingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
+                                        disabled={isJoined || leavingDevices[dev.id] !== undefined}
                                         className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isJoined
                                           ? 'bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20 cursor-default'
-                                          : discardingDevices[dev.id] !== undefined
+                                          : leavingDevices[dev.id] !== undefined
                                             ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
                                             : 'bg-bieon-eco/5 text-bieon-eco hover:bg-bieon-eco hover:text-white border border-bieon-eco/20'
                                           }`}
-                                        title={isJoined ? "Sudah masuk antrean" : discardingDevices[dev.id] !== undefined ? "Tidak bisa menambah saat proses hapus" : "Tambahkan ke antrean"}
+                                        title={isJoined ? "Sudah masuk antrean" : leavingDevices[dev.id] !== undefined ? "Sedang leave, tidak bisa ditambah" : "Tambahkan ke antrean"}
                                       >
                                         {isJoined ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                                       </button>
 
-                                      {/* TOMBOL - (DISCARD) WITH CIRCULAR TIMER */}
+                                      {/* TOMBOL - (LEAVE) WITH CIRCULAR TIMER */}
                                       <div className="relative w-10 h-10 flex items-center justify-center">
                                         <button
                                           onClick={() => {
-                                            if (discardingDevices[dev.id] === undefined) {
-                                              setDiscardingDevices(prev => ({ ...prev, [dev.id]: 50 }));
+                                            if (leavingDevices[dev.id] === undefined) {
+                                              setLeavingDevices(prev => ({ ...prev, [dev.id]: 50 }));
                                             }
                                           }}
-                                          disabled={discardingDevices[dev.id] !== undefined}
-                                          className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${discardingDevices[dev.id] !== undefined
+                                          disabled={leavingDevices[dev.id] !== undefined}
+                                          className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${leavingDevices[dev.id] !== undefined
                                             ? 'bg-transparent border-transparent'
                                             : 'bg-pink-50 text-pink-500 hover:bg-pink-500 hover:text-white border-pink-100'
                                             }`}
                                         >
-                                          {discardingDevices[dev.id] !== undefined ? (
+                                          {leavingDevices[dev.id] !== undefined ? (
                                             <>
                                               {/* CIRCULAR PROGRESS SVG */}
                                               <svg className="absolute inset-0 w-full h-full -rotate-90">
@@ -3292,13 +4132,13 @@ export function DeviceControlPage({ onNavigate }) {
                                                   strokeWidth="3.5"
                                                   fill="transparent"
                                                   strokeDasharray={113.1}
-                                                  strokeDashoffset={113.1 - (discardingDevices[dev.id] / 50) * 113.1}
+                                                  strokeDashoffset={113.1 - (leavingDevices[dev.id] / 50) * 113.1}
                                                   strokeLinecap="round"
                                                   className="text-pink-500 transition-all duration-1000 ease-linear"
                                                 />
                                               </svg>
                                               <span className="relative z-10 text-[10px] font-black text-pink-600">
-                                                {discardingDevices[dev.id]}
+                                                {leavingDevices[dev.id]}
                                               </span>
                                             </>
                                           ) : (

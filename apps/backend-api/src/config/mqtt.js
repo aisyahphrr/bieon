@@ -18,6 +18,7 @@ const Hub = require('../models/Hub');
 const { findOneByBieonId, normalizeBieonId } = require('../shared/bieonId');
 const PdmMeter = require('../models/PdmMeter');
 const SystemLog = require('../models/SystemLog');
+const RemoteRawBitCatalog = require('../models/RemoteRawBitCatalog');
 
 const buildFlexibleBieonIdRegex = (value) => {
   const chars = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').split('');
@@ -28,6 +29,7 @@ const buildFlexibleBieonIdRegex = (value) => {
 let mqttClient = null;
 let ioInstance = null;
 const openJoinSessions = new Map();
+const remoteRegistrationSessions = new Map();
 
 const normalizeDeviceCategory = (value) => {
   const text = String(value || '').toLowerCase();
@@ -61,6 +63,226 @@ const clearOpenJoinSession = (bieonId) => {
   openJoinSessions.delete(String(bieonId));
 };
 
+const setRemoteRegistrationSession = (bieonId, session = {}) => {
+  if (!bieonId) return null;
+  const normalizedBieonId = String(bieonId).toLowerCase();
+  const duration = Math.max(Number(session.duration) || 90, 1);
+  const expiresAt = Date.now() + duration * 1000;
+  const nextSession = {
+    ...session,
+    bieonId: normalizedBieonId,
+    duration,
+    expiresAt,
+    updatedAt: Date.now()
+  };
+  remoteRegistrationSessions.set(normalizedBieonId, nextSession);
+  return nextSession;
+};
+
+const getRemoteRegistrationSession = (bieonId) => {
+  if (!bieonId) return null;
+  const normalizedBieonId = String(bieonId).toLowerCase();
+  const session = remoteRegistrationSessions.get(normalizedBieonId);
+  if (!session) return null;
+  if (session.expiresAt && session.expiresAt < Date.now()) {
+    remoteRegistrationSessions.delete(normalizedBieonId);
+    return null;
+  }
+  return session;
+};
+
+const clearRemoteRegistrationSession = (bieonId) => {
+  if (!bieonId) return;
+  remoteRegistrationSessions.delete(String(bieonId).toLowerCase());
+};
+
+const toTrimmedString = (value) => {
+  if (value === null || value === undefined) return '';
+  return String(value).trim();
+};
+
+const pickFirstString = (...values) => {
+  for (const value of values) {
+    const text = toTrimmedString(value);
+    if (text) return text;
+  }
+  return '';
+};
+
+const toNumberOrUndefined = (value) => {
+  if (value === null || value === undefined || value === '') return undefined;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : undefined;
+};
+
+const stableStringify = (value) => {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+  if (typeof value === 'object') {
+    const keys = Object.keys(value).sort();
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+};
+
+const normalizeRemoteBitPayload = (topic, payload) => {
+  const rawPayload = typeof payload === 'object' && payload !== null ? payload : { value: payload };
+  const rawBitTextCandidate = pickFirstString(
+    rawPayload.raw_bit,
+    rawPayload.rawBit,
+    rawPayload.raw_code,
+    rawPayload.rawCode,
+    rawPayload.bit,
+    rawPayload.bits,
+    rawPayload.code,
+    rawPayload.value,
+    rawPayload.raw,
+    rawPayload.ir_code,
+    rawPayload.rf_code,
+    rawPayload.signal
+  );
+  const rawBitHexCandidate = pickFirstString(
+    rawPayload.raw_hex,
+    rawPayload.rawHex,
+    rawPayload.hex,
+    rawPayload.code_hex,
+    rawPayload.ir_hex,
+    rawPayload.rf_hex
+  );
+  const rawBitBinaryCandidate = pickFirstString(
+    rawPayload.raw_binary,
+    rawPayload.rawBinary,
+    rawPayload.binary,
+    rawPayload.bits_binary,
+    rawPayload.bit_binary
+  );
+  const protocol = pickFirstString(
+    rawPayload.protocol,
+    rawPayload.type,
+    rawPayload.signal_type,
+    rawPayload.code_type,
+    rawPayload.format
+  );
+  const bitLength = toNumberOrUndefined(
+    rawPayload.bit_length ?? rawPayload.bitLength ?? rawPayload.length ?? rawPayload.bits_length ?? rawPayload.bitCount
+  );
+  const bitCount = toNumberOrUndefined(rawPayload.bit_count ?? rawPayload.bitCount ?? rawPayload.count);
+  const sequence = toNumberOrUndefined(rawPayload.sequence ?? rawPayload.seq ?? rawPayload.index ?? rawPayload.order);
+  const sessionId = pickFirstString(rawPayload.session_id, rawPayload.sessionId, rawPayload.registration_session_id, rawPayload.registrationSessionId);
+  const sourceRemoteId = pickFirstString(rawPayload.remote_id, rawPayload.remoteId, rawPayload.device_id, rawPayload.deviceId, rawPayload.source_remote, rawPayload.sourceRemote);
+  const sourceRemoteIeee = pickFirstString(rawPayload.remote_ieee, rawPayload.remoteIeee, rawPayload.device_ieee, rawPayload.deviceIeee, rawPayload.ieee, rawPayload.ieee_address);
+  const sourceHubId = pickFirstString(rawPayload.hub_id, rawPayload.hubId, rawPayload.hub, rawPayload.source_hub, rawPayload.sourceHub);
+  const rawBitText = rawBitTextCandidate || rawBitHexCandidate || rawBitBinaryCandidate || stableStringify(rawPayload);
+  const rawSignature = [
+    protocol || 'unknown',
+    bitLength !== undefined ? String(bitLength) : 'na',
+    rawBitHexCandidate || rawBitBinaryCandidate || rawBitText || stableStringify(rawPayload)
+  ].join('|');
+
+  return {
+    bieonId: '',
+    rawSignature,
+    rawPayload,
+    rawBitText,
+    rawBitHex: rawBitHexCandidate,
+    rawBitBinary: rawBitBinaryCandidate,
+    protocol: protocol || undefined,
+    bitLength,
+    bitCount,
+    sequence,
+    sessionId: sessionId || undefined,
+    sourceTopic: topic,
+    sourceRemoteId: sourceRemoteId || undefined,
+    sourceRemoteIeee: sourceRemoteIeee || undefined,
+    sourceHubId: sourceHubId || undefined,
+    latestEventPayload: rawPayload
+  };
+};
+
+const persistRemoteRawBitCatalog = async (bieonId, topic, payload) => {
+  const normalizedBieonId = normalizeBieonId(bieonId);
+  if (!normalizedBieonId) return null;
+
+  const bitEvent = normalizeRemoteBitPayload(topic, payload);
+  const now = new Date();
+
+  try {
+    const updated = await RemoteRawBitCatalog.findOneAndUpdate(
+      { bieonId: normalizedBieonId, rawSignature: bitEvent.rawSignature },
+      {
+        $setOnInsert: {
+          bieonId: normalizedBieonId,
+          rawSignature: bitEvent.rawSignature,
+          rawPayload: bitEvent.rawPayload,
+          rawBitText: bitEvent.rawBitText,
+          rawBitHex: bitEvent.rawBitHex,
+          rawBitBinary: bitEvent.rawBitBinary,
+          protocol: bitEvent.protocol,
+          bitLength: bitEvent.bitLength,
+          bitCount: bitEvent.bitCount,
+          sequence: bitEvent.sequence,
+          sessionId: bitEvent.sessionId,
+          sourceTopic: bitEvent.sourceTopic,
+          sourceRemoteId: bitEvent.sourceRemoteId,
+          sourceRemoteIeee: bitEvent.sourceRemoteIeee,
+          sourceHubId: bitEvent.sourceHubId,
+          firstSeenAt: now,
+          lastSeenAt: now,
+          latestEventPayload: bitEvent.latestEventPayload
+        },
+        $set: {
+          rawPayload: bitEvent.rawPayload,
+          rawBitText: bitEvent.rawBitText,
+          rawBitHex: bitEvent.rawBitHex,
+          rawBitBinary: bitEvent.rawBitBinary,
+          protocol: bitEvent.protocol,
+          bitLength: bitEvent.bitLength,
+          bitCount: bitEvent.bitCount,
+          sequence: bitEvent.sequence,
+          sessionId: bitEvent.sessionId,
+          sourceTopic: bitEvent.sourceTopic,
+          sourceRemoteId: bitEvent.sourceRemoteId,
+          sourceRemoteIeee: bitEvent.sourceRemoteIeee,
+          sourceHubId: bitEvent.sourceHubId,
+          lastSeenAt: now,
+          latestEventPayload: bitEvent.latestEventPayload,
+          isActive: true
+        },
+        $inc: { captureCount: 1 }
+      },
+      { upsert: true, new: true, runValidators: true }
+    ).lean();
+
+    return updated;
+  } catch (error) {
+    console.warn('[REMOTE][BIT] Failed to persist raw bit catalog:', error && error.message ? error.message : error);
+    return {
+      bieonId: normalizedBieonId,
+      rawSignature: bitEvent.rawSignature,
+      rawPayload: bitEvent.rawPayload,
+      rawBitText: bitEvent.rawBitText,
+      rawBitHex: bitEvent.rawBitHex,
+      rawBitBinary: bitEvent.rawBitBinary,
+      protocol: bitEvent.protocol,
+      bitLength: bitEvent.bitLength,
+      bitCount: bitEvent.bitCount,
+      sequence: bitEvent.sequence,
+      sessionId: bitEvent.sessionId,
+      sourceTopic: bitEvent.sourceTopic,
+      sourceRemoteId: bitEvent.sourceRemoteId,
+      sourceRemoteIeee: bitEvent.sourceRemoteIeee,
+      sourceHubId: bitEvent.sourceHubId,
+      firstSeenAt: now,
+      lastSeenAt: now,
+      latestEventPayload: bitEvent.latestEventPayload,
+      captureCount: 1,
+      isActive: true
+    };
+  }
+};
+
 const connectMQTT = (io) => {
   ioInstance = io;
   const brokerUrl = process.env.MQTT_BROKER || 'mqtt://127.0.0.1:1883';
@@ -77,6 +299,8 @@ const connectMQTT = (io) => {
     mqttClient.subscribe('bieon/+/admin/command');
     mqttClient.subscribe('bieon/+/admin/open_join');
     mqttClient.subscribe('bieon/+/admin/device_announce');
+    mqttClient.subscribe('bieon/+/events/registration');
+    mqttClient.subscribe('bieon/+/events/bit_registration_announce');
     mqttClient.subscribe('bieon/+/log/system');
     mqttClient.subscribe('bieon/+/hub/+/lifecycle');
     mqttClient.subscribe('bieon/+/energi/pdm/telemetry');
@@ -286,6 +510,76 @@ const connectMQTT = (io) => {
               payload: openJoin,
               state: 'open'
             });
+          }
+          return;
+        }
+
+        const eventsIndex = parts.indexOf('events');
+        if (eventsIndex >= 2 && parts[eventsIndex + 1] === 'registration') {
+          const bieonId = parts[1];
+          const registrationEvent = typeof payload === 'object' && payload !== null ? payload : { state: String(payload) };
+          const registrationState = String(registrationEvent.state || registrationEvent.status || registrationEvent.event || registrationEvent.type || 'active').toLowerCase();
+          const duration = Number(registrationEvent.duration || registrationEvent.timeout || registrationEvent.timeout_s || 90) || 90;
+          const sessionId = String(registrationEvent.session_id || registrationEvent.sessionId || registrationEvent.registration_session_id || registrationEvent.registrationSessionId || `reg_${bieonId}`);
+          const isClosed = ['close', 'closed', 'stop', 'stopped', 'off', 'inactive', 'end', 'ended', 'cancel', 'cancelled', 'complete', 'completed'].includes(registrationState);
+
+          if (isClosed) {
+            clearRemoteRegistrationSession(bieonId);
+          } else {
+            setRemoteRegistrationSession(bieonId, {
+              duration,
+              sessionId,
+              requestedBy: registrationEvent.requested_by || registrationEvent.requestedBy || null,
+              sourceTopic: topic,
+              state: registrationState,
+              active: true
+            });
+          }
+
+          const liveState = {
+            bieonId,
+            topic,
+            sessionId,
+            state: isClosed ? 'closed' : registrationState,
+            active: !isClosed,
+            duration,
+            payload: registrationEvent,
+            requestedBy: registrationEvent.requested_by || registrationEvent.requestedBy || null,
+            sourceTopic: topic,
+            updatedAt: Date.now()
+          };
+
+          console.log('[REMOTE] registration event received:', liveState);
+          if (ioInstance) {
+            ioInstance.emit('remote_registration_state', liveState);
+          }
+          return;
+        }
+
+        if (eventsIndex >= 2 && parts[eventsIndex + 1] === 'bit_registration_announce') {
+          const bieonId = parts[1];
+          const registrationSession = getRemoteRegistrationSession(bieonId);
+          const catalogItem = await persistRemoteRawBitCatalog(bieonId, topic, payload);
+          const announcePayload = {
+            bieonId,
+            topic,
+            sessionId: (typeof payload === 'object' && payload !== null && (payload.session_id || payload.sessionId || payload.registration_session_id || payload.registrationSessionId)) || registrationSession?.sessionId || null,
+            activeSession: Boolean(registrationSession),
+            payload,
+            catalogItem,
+            receivedAt: Date.now()
+          };
+
+          console.log('[REMOTE] bit registration announce received:', {
+            bieonId,
+            sessionId: announcePayload.sessionId,
+            signature: catalogItem?.rawSignature,
+            rawBit: catalogItem?.rawBitText
+          });
+
+          if (ioInstance) {
+            ioInstance.emit('remote_bit_catalog_updated', announcePayload);
+            ioInstance.emit('remote_bit_registration', announcePayload);
           }
           return;
         }
@@ -1199,6 +1493,43 @@ const publishOpenJoin = (bieonDeviceId, duration = 30, meta = {}) => {
   return true;
 };
 
+const publishRemoteRegistration = (bieonDeviceId, duration = 90, meta = {}) => {
+  if (!bieonDeviceId) return false;
+  if (!mqttClient) return false;
+  const normalizedBieonId = String(bieonDeviceId).toLowerCase();
+  const existingSession = getRemoteRegistrationSession(normalizedBieonId);
+  if (existingSession) {
+    console.log(`[MQTT] skip duplicate remote_registration for ${normalizedBieonId}; session already active`);
+    return false;
+  }
+
+  const topic = `bieon/${normalizedBieonId}/admin/registration`;
+  const payload = {
+    command: 'remote_registration',
+    mode: 'remote_registration',
+    duration,
+    source: meta.source || 'api',
+    requested_by: meta.requestedBy || meta.requested_by || 'api',
+    session_id: meta.sessionId || `reg_${Date.now()}`,
+    ...(meta.remoteId ? { remote_id: meta.remoteId } : {}),
+    ...(meta.remoteIeee ? { remote_ieee: meta.remoteIeee } : {}),
+    ...(meta.hubId ? { hub_id: meta.hubId } : {})
+  };
+
+  setRemoteRegistrationSession(normalizedBieonId, {
+    duration,
+    requestedBy: payload.requested_by,
+    sessionId: payload.session_id,
+    sourceTopic: topic,
+    state: 'requested',
+    active: true
+  });
+
+  console.log(`[MQTT] publish remote_registration -> ${topic}`, payload);
+  publishCommand(topic, payload);
+  return true;
+};
+
 const publishCommand = (topic, payload, options = { qos: 1 }) => {
   if (!mqttClient) return false;
   // normalize bieon id in topic (if present) to lowercase
@@ -1292,4 +1623,4 @@ const publishLeave = (bieonDeviceId, deviceIeee, options = {}) => {
   return true;
 };
 
-module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin, publishLeave };
+module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin, publishRemoteRegistration, publishLeave };
