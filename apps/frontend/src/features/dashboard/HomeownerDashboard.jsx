@@ -158,7 +158,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
             <CheckCircle2 className="w-10 h-10 text-eco" strokeWidth={1.5} />
           </div>
           <h3 className="text-xl font-bold text-slate-700 mb-2">{t('dashboard.complaint_sent', 'Pengaduan Terkirim!')}</h3>
-          <p className="text-gray-500 text-sm">{t('dashboard.complaint_sent_desc', 'Tim kami akan segera menindaklanjuti pengaduan Anda.')}</p>
+          <p className="text-slate-500 text-sm">{t('dashboard.complaint_sent_desc', 'Tim kami akan segera menindaklanjuti pengaduan Anda.')}</p>
         </div>
       </div>
     );
@@ -188,7 +188,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
         <form onSubmit={handleSubmit} className="p-5 sm:p-8 overflow-y-auto flex-1">
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 {t('dashboard.problem_device', 'Perangkat Bermasalah')} <span className="text-red-500">*</span>
               </label>
               <select
@@ -206,7 +206,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 {t('dashboard.problem_type', 'Jenis Masalah')} <span className="text-red-500">*</span>
               </label>
               <select
@@ -226,7 +226,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 {t('dashboard.priority', 'Prioritas')}
               </label>
               <div className="flex gap-3">
@@ -251,7 +251,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 {t('dashboard.problem_desc', 'Deskripsi Masalah')} <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -405,11 +405,11 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
                     <td className="px-6 py-4 font-semibold text-slate-700">
                       {'time' in item ? item.time : item.month}
                     </td>
-                    <td className="px-6 py-4 text-gray-700">
+                    <td className="px-6 py-4 text-slate-700">
                       {(item.kwh || 0).toFixed(3)} kWh
                     </td>
                     {chartType === 'daily' && (
-                      <td className="px-6 py-4 text-gray-700">{(item.kwh * 1000).toFixed(0)} W</td>
+                      <td className="px-6 py-4 text-slate-700">{(item.kwh * 1000).toFixed(0)} W</td>
                     )}
                     <td className="px-6 py-4 font-semibold text-eco">
                       Rp {(item.cost || 0).toLocaleString('id-ID')}
@@ -528,11 +528,11 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
             isWaspada ? 'bg-amber-50 text-amber-600' :
               'bg-green-50 text-green-700'
             }`}>
-            <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
+            <div className="flex justify-between items-center text-[13px] font-medium text-slate-500">
               <span>{t('dashboard.budget_this_month', 'Anggaran Bulan Ini:')}</span>
               <span className="font-semibold text-text-headline">Rp {deposit.toLocaleString('id-ID')}</span>
             </div>
-            <div className="flex justify-between items-center text-[13px] font-medium text-gray-500">
+            <div className="flex justify-between items-center text-[13px] font-medium text-slate-500">
               <span>{t('dashboard.used_this_month', 'Terpakai Bulan Ini:')}</span>
               <span className="font-semibold text-text-headline">Rp {totalTerpakai.toLocaleString('id-ID')}</span>
             </div>
@@ -554,7 +554,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 ml-1">{t('dashboard.warning_limit', 'Batas Peringatan (Rp)')}</label>
+              <label className="text-xs font-bold text-slate-500 ml-1">{t('dashboard.warning_limit', 'Batas Peringatan (Rp)')}</label>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[10000, 20000, 30000, 50000].map(val => (
                   <button
@@ -571,7 +571,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
                 ))}
               </div>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 group-focus-within:text-eco transition-colors">Rp</div>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-300 group-focus-within:text-eco transition-colors">Rp</div>
                 <input
                   type="number"
                   value={inputLimit}
@@ -584,9 +584,9 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 ml-1">{t('dashboard.set_budget', 'Atur Anggaran Bulanan (Rp)')}</label>
+              <label className="text-xs font-bold text-slate-500 ml-1">{t('dashboard.set_budget', 'Atur Anggaran Bulanan (Rp)')}</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 group-focus-within:text-eco transition-colors">Rp</div>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-300 group-focus-within:text-eco transition-colors">Rp</div>
                 <input
                   type="number"
                   value={inputDeposit}
@@ -641,143 +641,37 @@ export function HomeownerDashboard() {
   const [liveTurbidity, setLiveTurbidity] = useState(2.1);
   const [liveTds, setLiveTds] = useState(78);
   const [liveWaterTemp, setLiveWaterTemp] = useState(24);
-
-  // Sandbox Simulator State
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [simTemp, setSimTemp] = useState(24.8);
-  const [simHumidity, setSimHumidity] = useState(55);
-  const [simSecurity, setSimSecurity] = useState([
-    { type: 'Motion Sensor', status: 'No Motion', room: 'Ruang Tamu' },
-    { type: 'Door Sensor', status: 'Closed', room: 'Dapur' },
-    { type: 'Door Sensor', status: 'Closed', room: 'Garasi' }
-  ]);
-  const [simPh, setSimPh] = useState(7.25);
-  const [simTurbidity, setSimTurbidity] = useState(2.1);
-  const [simTds, setSimTds] = useState(78);
-  const [simWaterTemp, setSimWaterTemp] = useState(24);
-  const [masterCardMode, setMasterCardMode] = useState(() => localStorage.getItem('masterCardMode') || 'eco-icon');
-
-  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('masterCardMode', masterCardMode);
-  }, [masterCardMode]);
+  const [securityLastUpdated, setSecurityLastUpdated] = useState('');
 
   const getMasterCardStyles = (isSafe) => {
-    if (masterCardMode === 'eco-solid') {
-      return {
-        cardClass: isSafe
-          ? 'bg-[#E6F5E9] border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
-          : 'bg-[#FEF9C3] border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
-        headerClass: 'text-center pb-3',
-        titleTextClass: 'text-left',
-        dividerClass: 'border-0',
-        titleClass: 'text-slate-400',
-        statusClass: 'text-slate-800 font-extrabold text-xl md:text-2xl tracking-wide',
-        iconClass: 'w-14 h-14 text-white'
-      };
-    } else if (masterCardMode === 'eco-solid-soft') {
-      return {
-        cardClass: isSafe
-          ? 'bg-[#E6F5E9] border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
-          : 'bg-amber-50 border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
-        headerClass: 'text-center pb-3',
-        titleTextClass: 'text-left',
-        dividerClass: 'border-0',
-        titleClass: 'text-slate-500',
-        statusClass: 'text-slate-800 font-extrabold text-xl md:text-2xl tracking-wide',
-        iconClass: isSafe ? 'w-14 h-14 text-eco drop-shadow-sm' : 'w-14 h-14 text-amber-500 drop-shadow-sm'
-      };
-    } else if (masterCardMode === 'eco-icon-soft') {
-      return {
-        cardClass: 'bg-white border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
-        headerClass: 'text-left pb-3',
-        titleTextClass: 'text-left',
-        dividerClass: 'border-0',
-        titleClass: 'text-slate-400',
-        statusClass: 'text-slate-800 font-extrabold text-xl md:text-2xl tracking-wide',
-        iconClass: 'w-14 h-14 text-white'
-      };
-    } else {
-      // 'eco-icon'
-      return {
-        cardClass: 'bg-white border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-lg transition-all',
-        headerClass: 'text-left pb-3',
-        titleTextClass: 'text-left',
-        dividerClass: 'border-0',
-        titleClass: 'text-slate-400',
-        statusClass: isSafe
-          ? 'text-[#059b27] font-extrabold text-xl md:text-2xl tracking-wide'
-          : 'text-[#D97706] font-extrabold text-xl md:text-2xl tracking-wide',
-        iconClass: isSafe ? 'w-14 h-14 text-eco drop-shadow-sm' : 'w-14 h-14 text-amber-500 drop-shadow-sm'
-      };
-    }
+    return {
+      cardClass: 'bg-white border-0 text-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
+      headerClass: 'text-left pb-3',
+      titleTextClass: 'text-left',
+      dividerClass: 'border-0',
+      titleClass: 'text-slate-400',
+      statusClass: 'text-slate-800 font-extrabold text-xl md:text-2xl tracking-wide',
+      iconClass: 'w-14 h-14 text-white'
+    };
   };
 
   const renderCardIcon = (Icon, isSafe) => {
     if (isSafe) {
-      if (masterCardMode === 'eco-solid' || masterCardMode === 'eco-icon-soft') {
-        return (
-          <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-[#059b27] border border-[#E0F1E6] flex items-center justify-center shadow-inner">
-            <div className="absolute inset-[-8%] rounded-full border border-dashed border-[#059b27]/30 animate-spin-slow"></div>
-            <Icon className="w-1/2 h-1/2 text-white drop-shadow-sm" strokeWidth={1.5} />
-          </div>
-        );
-      } else if (masterCardMode === 'eco-solid-soft') {
-        return (
-          <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-white border border-[#c3e6cb] flex items-center justify-center shadow-sm">
-            <div className="absolute inset-[-8%] rounded-full border border-dashed border-eco/30 animate-spin-slow"></div>
-            <Icon className="w-1/2 h-1/2 text-eco drop-shadow-sm" strokeWidth={1.5} />
-          </div>
-        );
-      } else { // eco-icon
-        return (
-          <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-eco flex items-center justify-center shadow-md">
-            <div className="absolute inset-[-8%] rounded-full border border-dashed border-eco/30 animate-spin-slow"></div>
-            <Icon className="w-1/2 h-1/2 text-white drop-shadow-sm" strokeWidth={1.5} />
-          </div>
-        );
-      }
+      return (
+        <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-[#059b27] border border-[#E0F1E6] flex items-center justify-center shadow-inner">
+          <div className="absolute inset-[-8%] rounded-full border border-dashed border-[#059b27]/30 animate-spin-slow"></div>
+          <Icon className="w-1/2 h-1/2 text-white drop-shadow-sm" strokeWidth={1.5} />
+        </div>
+      );
     } else {
-      if (masterCardMode === 'eco-solid' || masterCardMode === 'eco-icon-soft') {
-        return (
-          <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-[#F49E0B] border border-[#FEF3C7] flex items-center justify-center shadow-inner">
-            <div className="absolute inset-0 rounded-full bg-[#F49E0B]/10 animate-ping [animation-duration:2s]"></div>
-            <div className="absolute inset-[-8%] rounded-full border border-dashed border-[#F49E0B]/40 animate-spin-fast"></div>
-            <Icon className="w-1/2 h-1/2 text-white animate-pulse drop-shadow-sm" strokeWidth={1.5} />
-          </div>
-        );
-      } else if (masterCardMode === 'eco-solid-soft') {
-        return (
-          <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-white border border-amber-200 flex items-center justify-center shadow-sm">
-            <div className="absolute inset-0 rounded-full bg-amber-500/10 animate-ping [animation-duration:2s]"></div>
-            <div className="absolute inset-[-8%] rounded-full border border-dashed border-amber-400/40 animate-spin-fast"></div>
-            <Icon className="w-1/2 h-1/2 text-amber-500 animate-pulse drop-shadow-sm" strokeWidth={1.5} />
-          </div>
-        );
-      } else { // eco-icon
-        return (
-          <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-amber-500 flex items-center justify-center shadow-md">
-            <div className="absolute inset-0 rounded-full bg-amber-500/15 animate-ping [animation-duration:1.5s]"></div>
-            <div className="absolute inset-[-8%] rounded-full border border-dashed border-amber-400/40 animate-spin-fast"></div>
-            <Icon className="w-1/2 h-1/2 text-white animate-pulse drop-shadow-sm" strokeWidth={1.5} />
-          </div>
-        );
-      }
+      return (
+        <div className="relative aspect-square h-full max-h-28 min-h-[4rem] rounded-full bg-[#F49E0B] border border-[#FEF3C7] flex items-center justify-center shadow-inner">
+          <div className="absolute inset-0 rounded-full bg-[#F49E0B]/10 animate-ping [animation-duration:2s]"></div>
+          <div className="absolute inset-[-8%] rounded-full border border-dashed border-[#F49E0B]/40 animate-spin-fast"></div>
+          <Icon className="w-1/2 h-1/2 text-white animate-pulse drop-shadow-sm" strokeWidth={1.5} />
+        </div>
+      );
     }
-  };
-
-  const handleSetSimSecurityCount = (count) => {
-    const defaultSensors = [
-      { type: 'Motion Sensor', status: 'No Motion', room: 'Ruang Tamu' },
-      { type: 'Door Sensor', status: 'Closed', room: 'Dapur' },
-      { type: 'Door Sensor', status: 'Closed', room: 'Garasi' },
-      { type: 'Motion Sensor', status: 'No Motion', room: 'Kamar Utama' },
-      { type: 'Door Sensor', status: 'Closed', room: 'Pintu Depan' },
-      { type: 'Motion Sensor', status: 'No Motion', room: 'Halaman Belakang' },
-      { type: 'Door Sensor', status: 'Closed', room: 'Jendela Samping' }
-    ];
-    setSimSecurity(defaultSensors.slice(0, count));
   };
 
   // States for real data
@@ -818,6 +712,7 @@ export function HomeownerDashboard() {
       if (mockEnergySummary.tokenBalance !== undefined) setDepositBalance(mockEnergySummary.tokenBalance);
       if (mockEnergySummary.tokenThreshold !== undefined) setWarningLimit(mockEnergySummary.tokenThreshold);
       setRealActivities(mockActivities);
+      setSecurityLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
       return;
     }
 
@@ -897,6 +792,7 @@ export function HomeownerDashboard() {
         const data = await resActivities.json();
         setRealActivities(data.data || []);
       }
+      setSecurityLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
     } catch (err) {
       console.error("Gagal fetch data dashboard real:", err);
     }
@@ -941,6 +837,7 @@ export function HomeownerDashboard() {
         setLiveTurbidity(mockSensors.liveTurbidity);
         setLiveTds(mockSensors.liveTds);
         setLiveWaterTemp(mockSensors.liveWaterTemp);
+        setSecurityLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
         return;
       }
 
@@ -980,6 +877,7 @@ export function HomeownerDashboard() {
           const data = await resWaterTemp.json();
           if (data && data[0] && data[0].value !== null) setLiveWaterTemp(data[0].value);
         }
+        setSecurityLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
       } catch (err) {
         console.error("Gagal fetch data sensor real-time:", err);
       }
@@ -1026,9 +924,9 @@ export function HomeownerDashboard() {
   }
 
   // Menentukan kategori apa saja yang muncul berdasarkan perangkat yang dimiliki
-  const hasComfort = isSimulating || currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));
-  const hasSecurity = isSimulating || currentDevices.some(d => d.environmentAspect === 'Keamanan' || (d.category === 'sensor' && ['Sensor Keamanan', 'Door Sensor', 'Motion Sensor'].some(t => d.type?.includes(t))));
-  const hasWater = isSimulating || currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
+  const hasComfort = currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));
+  const hasSecurity = currentDevices.some(d => d.environmentAspect === 'Keamanan' || (d.category === 'sensor' && ['Sensor Keamanan', 'Door Sensor', 'Motion Sensor'].some(t => d.type?.includes(t))));
+  const hasWater = currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
 
   let currentSensors = {};
 
@@ -1040,7 +938,7 @@ export function HomeownerDashboard() {
   let realTds = liveTds;
   let realWaterTemp = liveWaterTemp;
 
-  if (!isSimulating && currentDevices && currentDevices.length > 0) {
+  if (currentDevices && currentDevices.length > 0) {
     let totalTemp = 0, countTemp = 0;
     let totalHum = 0, countHum = 0;
     let totalPh = 0, countPh = 0;
@@ -1089,37 +987,33 @@ export function HomeownerDashboard() {
   // Gunakan data real-time jika ada
   if (hasComfort) {
     currentSensors.comfort = {
-      temp: isSimulating ? simTemp : realTemp,
-      humidity: isSimulating ? simHumidity : realHumidity,
+      temp: realTemp,
+      humidity: realHumidity,
       comfortLevel: 82
     };
   }
   if (hasSecurity) {
-    if (isSimulating) {
-      currentSensors.security = simSecurity;
+    // Ambil status asli dari perangkat security jika ada
+    const securityDevices = currentDevices.filter(d => d.environmentAspect === 'Keamanan');
+    let securityList = [];
+    if (securityDevices.length > 0) {
+      securityList = securityDevices.map(d => ({
+        type: d.name,
+        status: d.status === '1' ? 'Active' : d.status === '0' ? 'Inactive' : d.status,
+        room: d.location
+      }));
     } else {
-      // Ambil status asli dari perangkat security jika ada
-      const securityDevices = currentDevices.filter(d => d.environmentAspect === 'Keamanan');
-      let securityList = [];
-      if (securityDevices.length > 0) {
-        securityList = securityDevices.map(d => ({
-          type: d.name,
-          status: d.status === '1' ? 'Active' : d.status === '0' ? 'Inactive' : d.status,
-          room: d.location
-        }));
-      } else {
-        // Safe fallback using mockDevices to prevent ROOM_SENSORS ReferenceError crash
-        securityList = mockDevices.filter(d => d.environmentAspect === 'Keamanan').map(d => ({
-          type: d.name,
-          status: d.status,
-          room: d.location
-        }));
-      }
-      // Slice to 3 cards for normal condition (not simulating)
-      currentSensors.security = securityList.slice(0, 3);
+      // Safe fallback using mockDevices to prevent ROOM_SENSORS ReferenceError crash
+      securityList = mockDevices.filter(d => d.environmentAspect === 'Keamanan').map(d => ({
+        type: d.name,
+        status: d.status,
+        room: d.location
+      }));
     }
+    // Slice to 3 cards for normal condition (not simulating)
+    currentSensors.security = securityList.slice(0, 3);
   }
-  if (hasWater) currentSensors.waterQuality = { status: 'drinkable', ph: isSimulating ? simPh : realPh, turbidity: isSimulating ? simTurbidity : realTurbidity, tds: isSimulating ? simTds : realTds, temp: isSimulating ? simWaterTemp : realWaterTemp };
+  if (hasWater) currentSensors.waterQuality = { status: 'drinkable', ph: realPh, turbidity: realTurbidity, tds: realTds, temp: realWaterTemp };
   const dailyData = energySummary?.dailyData || [];
   const monthlyData = energySummary?.monthlyData || [];
   const notifications = realNotifications;
@@ -1279,7 +1173,7 @@ export function HomeownerDashboard() {
           <div className="lg:col-span-9 space-y-6 md:space-y-8">
             {currentSensors.comfort && (
               <>
-                <h2 className="text-lg font-bold text-slate-900 mb-3 mt-6 first:mt-0">Kenyamanan</h2>
+                <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">Kenyamanan</h2>
                 <div id="section-kenyamanan" className="mb-6">
                   <div className="flex flex-col md:flex-row gap-4 w-full">
                     {/* Kiri (Master - Status) */}
@@ -1351,7 +1245,7 @@ export function HomeownerDashboard() {
                             <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.temperature')}</span>
-                                <ThermometerSun className={`w-5.5 h-5.5 ${iconColorClass} ${isPulse ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
+                                <ThermometerSun className={`w-8 h-8 ${iconColorClass} ${isPulse ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
                               </div>
 
                               <div className="flex-1 py-1">
@@ -1426,7 +1320,7 @@ export function HomeownerDashboard() {
                             <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.humidity')}</span>
-                                <Droplet className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                                <Droplet className={`w-8 h-8 ${iconColorClass}`} strokeWidth={1.5} />
                               </div>
 
                               <div className="flex-1 py-1">
@@ -1506,7 +1400,7 @@ export function HomeownerDashboard() {
 
               return (
                 <>
-                  <h2 className="text-lg font-bold text-slate-900 mb-3 mt-6 first:mt-0">Keamanan</h2>
+                  <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">Keamanan</h2>
                   <div id="section-keamanan" className="mb-6">
                     <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
                       {/* Kiri (Master - Status) */}
@@ -1571,15 +1465,15 @@ export function HomeownerDashboard() {
                                       </span>
                                       {isMotion ? (
                                         isSafe ? (
-                                          <Activity className="w-5.5 h-5.5 text-eco" strokeWidth={1.5} />
+                                          <Activity className="w-8 h-8 text-eco" strokeWidth={1.5} />
                                         ) : (
-                                          <Activity className="w-5.5 h-5.5 text-amber-500 animate-pulse" strokeWidth={1.5} />
+                                          <Activity className="w-8 h-8 text-amber-500 animate-pulse" strokeWidth={1.5} />
                                         )
                                       ) : (
                                         isSafe ? (
-                                          <DoorClosed className="w-5.5 h-5.5 text-eco" strokeWidth={1.5} />
+                                          <DoorClosed className="w-8 h-8 text-eco" strokeWidth={1.5} />
                                         ) : (
-                                          <DoorOpen className="w-5.5 h-5.5 text-amber-500 animate-pulse" strokeWidth={1.5} />
+                                          <DoorOpen className="w-8 h-8 text-amber-500 animate-pulse" strokeWidth={1.5} />
                                         )
                                       )}
                                     </div>
@@ -1594,9 +1488,14 @@ export function HomeownerDashboard() {
                                         </span>
                                       </div>
 
-                                      <span className="text-[11px] text-text-dim mt-2 font-bold tracking-tight">
-                                        {sensor.room}
-                                      </span>
+                                      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 mt-2">
+                                        <span className="text-[11px] text-text-dim font-bold tracking-tight">
+                                          {sensor.room}
+                                        </span>
+                                        <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold tracking-wide shrink-0">
+                                          Last: {securityLastUpdated || 'Baru saja'}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -1613,16 +1512,16 @@ export function HomeownerDashboard() {
 
             {currentSensors.waterQuality && (
               <>
-                <h2 className="text-lg font-bold text-slate-900 mb-3 mt-6 first:mt-0">Kualitas Air</h2>
+                <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">Kualitas Air</h2>
                 <div id="section-kualitas-air" className="mb-6">
                   <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
                     {/* Kiri (Master - Status Air) */}
                     <div className="w-full md:w-1/3">
                       {(() => {
-                        const ph = selectedRoom === 'all' ? (isSimulating ? simPh : livePh) : currentSensors.waterQuality.ph;
-                        const turbidity = selectedRoom === 'all' ? (isSimulating ? simTurbidity : liveTurbidity) : currentSensors.waterQuality.turbidity;
-                        const tds = selectedRoom === 'all' ? (isSimulating ? simTds : liveTds) : currentSensors.waterQuality.tds;
-                        const waterTemp = selectedRoom === 'all' ? (isSimulating ? simWaterTemp : liveWaterTemp) : currentSensors.waterQuality.temp;
+                        const ph = selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph;
+                        const turbidity = selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity;
+                        const tds = selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds;
+                        const waterTemp = selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp;
 
                         const isWaterSafe = ph >= 6.5 && ph <= 8.5 && turbidity <= 25 && tds <= 1000 && waterTemp >= 10 && waterTemp <= 30;
 
@@ -1657,7 +1556,7 @@ export function HomeownerDashboard() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
                         {/* pH */}
                         {(() => {
-                          const phVal = selectedRoom === 'all' ? (isSimulating ? simPh : livePh) : currentSensors.waterQuality.ph;
+                          const phVal = selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph;
                           const isPhSafe = phVal >= 6.5 && phVal <= 8.5;
                           const statusLabel = isPhSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
                           const textClass = isPhSafe ? 'text-eco' : 'text-amber-600';
@@ -1667,7 +1566,7 @@ export function HomeownerDashboard() {
                             <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.ph_level')}</span>
-                                <Beaker className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                                <Beaker className={`w-8 h-8 ${iconColorClass}`} strokeWidth={1.5} />
                               </div>
                               <div className="flex-1 py-1">
                                 <div className="text-3xl font-extrabold text-text-headline tracking-tight">{phVal}</div>
@@ -1688,7 +1587,7 @@ export function HomeownerDashboard() {
 
                         {/* Turbidity */}
                         {(() => {
-                          const turbVal = selectedRoom === 'all' ? (isSimulating ? simTurbidity : liveTurbidity) : currentSensors.waterQuality.turbidity;
+                          const turbVal = selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity;
                           const isTurbSafe = turbVal <= 25;
                           const statusLabel = isTurbSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
                           const textClass = isTurbSafe ? 'text-eco' : 'text-amber-600';
@@ -1698,7 +1597,7 @@ export function HomeownerDashboard() {
                             <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.turbidity')}</span>
-                                <Droplets className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                                <Droplets className={`w-8 h-8 ${iconColorClass}`} strokeWidth={1.5} />
                               </div>
                               <div className="flex-1 py-1">
                                 <div className="text-3xl font-extrabold text-text-headline tracking-tight">{turbVal} NTU</div>
@@ -1719,7 +1618,7 @@ export function HomeownerDashboard() {
 
                         {/* TDS */}
                         {(() => {
-                          const tdsVal = selectedRoom === 'all' ? (isSimulating ? simTds : liveTds) : currentSensors.waterQuality.tds;
+                          const tdsVal = selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds;
                           const isTdsSafe = tdsVal <= 1000;
                           const statusLabel = isTdsSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
                           const textClass = isTdsSafe ? 'text-eco' : 'text-amber-600';
@@ -1729,7 +1628,7 @@ export function HomeownerDashboard() {
                             <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.tds')}</span>
-                                <Wind className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                                <Wind className={`w-8 h-8 ${iconColorClass}`} strokeWidth={1.5} />
                               </div>
                               <div className="flex-1 py-1">
                                 <div className="text-3xl font-extrabold text-text-headline tracking-tight">{tdsVal} ppm</div>
@@ -1750,7 +1649,7 @@ export function HomeownerDashboard() {
 
                         {/* Water Temperature */}
                         {(() => {
-                          const waterTempVal = selectedRoom === 'all' ? (isSimulating ? simWaterTemp : liveWaterTemp) : currentSensors.waterQuality.temp;
+                          const waterTempVal = selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp;
                           const isTempNormal = waterTempVal >= 10 && waterTempVal <= 30;
                           const statusLabel = isTempNormal ? t('dashboard.status_water_normal', 'Normal') : t('dashboard.status_water_not_normal', 'Tidak Normal');
                           const textClass = isTempNormal ? 'text-eco' : 'text-amber-600';
@@ -1760,7 +1659,7 @@ export function HomeownerDashboard() {
                             <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.water_temperature')}</span>
-                                <Thermometer className={`w-5.5 h-5.5 ${iconColorClass}`} strokeWidth={1.5} />
+                                <Thermometer className={`w-8 h-8 ${iconColorClass}`} strokeWidth={1.5} />
                               </div>
                               <div className="flex-1 py-1">
                                 <div className="text-3xl font-extrabold text-text-headline tracking-tight">{waterTempVal}°C</div>
@@ -2196,7 +2095,7 @@ export function HomeownerDashboard() {
                                 return notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : notif.message;
                               })()}
                             </div>
-                            <div className="text-[10px] text-gray-400 mt-1.5 font-medium flex items-center justify-between">
+                            <div className="text-[10px] text-slate-400 mt-1.5 font-medium flex items-center justify-between">
                               <span>
                                 {notif.date ? new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t('notification.ui.just_now')}
                               </span>
@@ -2255,268 +2154,7 @@ export function HomeownerDashboard() {
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-        {/* Floating Status Simulator Widget */}
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-          {!isSimulatorOpen ? (
-            <button
-              onClick={() => setIsSimulatorOpen(true)}
-              className="bg-slate-900 text-white font-bold text-xs px-4 py-3 rounded-full shadow-2xl hover:bg-slate-800 transition-all hover:scale-105 flex items-center gap-2 border border-slate-700/50"
-            >
-              <span className="animate-pulse">🛠️</span> Status Simulator
-            </button>
-          ) : (
-            <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 p-5 w-80 sm:w-96 max-h-[500px] overflow-y-auto custom-scrollbar flex flex-col">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <span className="font-extrabold text-sm text-text-headline tracking-tight">🛠️ BIEON Status Simulator</span>
-                <button
-                  onClick={() => setIsSimulatorOpen(false)}
-                  className="text-slate-400 hover:text-slate-500 transition-all text-sm font-bold"
-                >
-                  ✕
-                </button>
-              </div>
 
-              {/* Toggle Simulator */}
-              <div className="flex items-center justify-between mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <span className="text-xs font-bold text-slate-700">Aktifkan Simulasi</span>
-                <button
-                  onClick={() => setIsSimulating(!isSimulating)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${isSimulating ? 'bg-eco' : 'bg-slate-300'}`}
-                >
-                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${isSimulating ? 'transform translate-x-6' : ''}`}></div>
-                </button>
-              </div>
-
-              {/* Master Card Mode Switcher */}
-              <div className="mb-4 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <span className="text-[10px] font-bold text-slate-500 block mb-2 uppercase tracking-wider">Desain Master Card</span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => setMasterCardMode('eco-solid')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-solid' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
-                  >
-                    <span>🌿</span> Eco Solid
-                  </button>
-                  <button
-                    onClick={() => setMasterCardMode('eco-solid-soft')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-solid-soft' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
-                  >
-                    <span>🌱</span> Eco Solid Soft
-                  </button>
-                  <button
-                    onClick={() => setMasterCardMode('eco-icon')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-icon' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
-                  >
-                    <span>🟢</span> Eco Icon
-                  </button>
-                  <button
-                    onClick={() => setMasterCardMode('eco-icon-soft')}
-                    className={`py-1.5 text-[10px] font-bold rounded-lg transition-all border flex items-center justify-center gap-1 ${masterCardMode === 'eco-icon-soft' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
-                  >
-                    <span>❇️</span> Eco Icon Soft
-                  </button>
-                </div>
-              </div>
-
-
-              {isSimulating && (
-                <div className="space-y-4">
-                  {/* Temp Control */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-500">Suhu (Temperature)</span>
-                      <span className="text-eco">{simTemp}°C</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="15"
-                      max="35"
-                      step="0.5"
-                      value={simTemp}
-                      onChange={(e) => setSimTemp(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco"
-                    />
-                    <div className="flex justify-between text-[9px] text-slate-400">
-                      <span>15°C (Dingin)</span>
-                      <span>24.8°C</span>
-                      <span>35°C (Panas)</span>
-                    </div>
-                  </div>
-
-                  {/* Humidity Control */}
-                  <div className="space-y-1.5 mb-3">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-500">Kelembapan (Humidity)</span>
-                      <span className="text-eco">{simHumidity}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="30"
-                      max="90"
-                      step="1"
-                      value={simHumidity}
-                      onChange={(e) => setSimHumidity(parseInt(e.target.value))}
-                      className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco"
-                    />
-                    <div className="flex justify-between text-[9px] text-slate-400">
-                      <span>30% (Kering)</span>
-                      <span>55%</span>
-                      <span>90% (Lembap)</span>
-                    </div>
-                  </div>
-
-                  {/* Water Quality Control Section */}
-                  <div className="border-t border-slate-100 pt-3">
-                    <span className="text-xs font-bold text-slate-700 block mb-2">Simulasi Kualitas Air</span>
-
-                    {/* pH Control */}
-                    <div className="space-y-1.5 mb-3">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-500">Derajat Keasaman (pH)</span>
-                        <span className="text-eco">{simPh}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="14"
-                        step="0.1"
-                        value={simPh}
-                        onChange={(e) => setSimPh(parseFloat(e.target.value))}
-                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco"
-                      />
-                      <div className="flex justify-between text-[9px] text-slate-400">
-                        <span>0 (Asam)</span>
-                        <span>7 (Netral)</span>
-                        <span>14 (Basa)</span>
-                      </div>
-                    </div>
-
-                    {/* Turbidity Control */}
-                    <div className="space-y-1.5 mb-3">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-500">Kekeruhan (Turbidity)</span>
-                        <span className="text-eco">{simTurbidity} NTU</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="50"
-                        step="0.5"
-                        value={simTurbidity}
-                        onChange={(e) => setSimTurbidity(parseFloat(e.target.value))}
-                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco"
-                      />
-                      <div className="flex justify-between text-[9px] text-slate-400">
-                        <span>0 NTU (Jernih)</span>
-                        <span>25 NTU</span>
-                        <span>50 NTU (Keruh)</span>
-                      </div>
-                    </div>
-
-                    {/* TDS Control */}
-                    <div className="space-y-1.5 mb-3">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-500">Zat Terlarut (TDS)</span>
-                        <span className="text-eco">{simTds} ppm</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1500"
-                        step="10"
-                        value={simTds}
-                        onChange={(e) => setSimTds(parseInt(e.target.value))}
-                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco"
-                      />
-                      <div className="flex justify-between text-[9px] text-slate-400">
-                        <span>0 ppm</span>
-                        <span>1000 ppm</span>
-                        <span>1500 ppm</span>
-                      </div>
-                    </div>
-
-                    {/* Water Temp Control */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-500">Suhu Air</span>
-                        <span className="text-eco">{simWaterTemp}°C</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="50"
-                        step="0.5"
-                        value={simWaterTemp}
-                        onChange={(e) => setSimWaterTemp(parseFloat(e.target.value))}
-                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-eco"
-                      />
-                      <div className="flex justify-between text-[9px] text-slate-400">
-                        <span>0°C (Dingin)</span>
-                        <span>24°C</span>
-                        <span>50°C (Panas)</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-100 pt-3">
-                    <span className="text-xs font-bold text-slate-700 block mb-2">Simulasi Keamanan & Grid Layout</span>
-
-                    {/* Security Count Select */}
-                    <div className="space-y-1 mb-3">
-                      <span className="text-[10px] font-bold text-slate-500">Jumlah Sensor (Uji Grid Layout)</span>
-                      <div className="flex gap-1">
-                        {[3, 4, 5, 6, 7].map((num) => (
-                          <button
-                            key={num}
-                            onClick={() => handleSetSimSecurityCount(num)}
-                            className={`flex-1 py-1 text-xs font-bold rounded-lg transition-all border ${simSecurity.length === num ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'}`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Security States Toggles */}
-                    <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
-                      {simSecurity.map((sensor, sIdx) => {
-                        const isMotion = sensor.type.toLowerCase().includes('motion');
-                        const isSafe = isMotion ? sensor.status === 'No Motion' : sensor.status === 'Closed';
-
-                        return (
-                          <div key={sIdx} className="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100 text-[10px] font-bold">
-                            <div className="flex flex-col">
-                              <span className="text-slate-800">{isMotion ? 'Sensor Gerak' : 'Sensor Pintu'}</span>
-                              <span className="text-slate-400 font-medium text-[9px]">{sensor.room}</span>
-                            </div>
-
-                            <button
-                              onClick={() => {
-                                const updated = [...simSecurity];
-                                if (isMotion) {
-                                  updated[sIdx].status = sensor.status === 'No Motion' ? 'Motion Detected' : 'No Motion';
-                                } else {
-                                  updated[sIdx].status = sensor.status === 'Closed' ? 'Open' : 'Closed';
-                                }
-                                setSimSecurity(updated);
-                              }}
-                              className={`px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase transition-all ${isSafe ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
-                            >
-                              {isMotion
-                                ? (sensor.status === 'No Motion' ? 'Aman' : 'Terdeteksi')
-                                : (sensor.status === 'Closed' ? 'Tertutup' : 'Terbuka')
-                              }
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
       </div>
 
       <style>{`
