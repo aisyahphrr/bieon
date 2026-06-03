@@ -24,6 +24,9 @@ router.put('/:id/pin', kendaliPerangkatController.togglePinDevice);
 // Route untuk update parameter (Remote/Actuator)
 router.put('/:id/params', kendaliPerangkatController.updateDeviceParams);
 
+// Route untuk publish perintah remote menggunakan source IEEE original
+router.post('/:id/remote-command', kendaliPerangkatController.sendRemoteCommand);
+
 // Ambil semua perangkat di satu Hub
 router.get('/hub/:hubId', kendaliPerangkatController.getDevicesByHub);
 

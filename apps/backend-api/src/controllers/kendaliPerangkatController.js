@@ -9,6 +9,12 @@ const TechnicianAccess = require('../models/TechnicianAccess');
 const DeviceWhitelist = require('../models/DeviceWhitelist');
 const mqtt = require('../config/mqtt');
 
+// Helper: normalize product/device identifiers (IEEE / productId)
+function normalizeId(input) {
+    if (!input && input !== 0) return '';
+    return String(input || '').replace(/[:\-\s]/g, '').toUpperCase();
+}
+
 // 1. Mencatat perangkat yang terdeteksi (tanda icon di UI)
 exports.discoverDevice = async (req, res) => {
     try {
@@ -36,7 +42,7 @@ exports.discoverDevice = async (req, res) => {
 // 2. Simpan perangkat baru (Direct dari Form UI)
 exports.createDevice = async (req, res) => {
     try {
-        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice, ownerId: manualOwnerId, device_ieee } = req.body;
+        const { name, deviceType, category, location, notes, hubId, sensorParams, scheduleSettings, controlMode, sensorData, controlledDevice, remoteState, ownerId: manualOwnerId, device_ieee } = req.body;
         
         // Fallback untuk lokasi agar tidak error validation failed
         const finalLocation = location || "Ruangan Utama";
@@ -76,36 +82,23 @@ exports.createDevice = async (req, res) => {
             return res.status(404).json({ message: 'Hub tidak ditemukan. Pastikan Hub ID valid.' });
         }
 
-        // --- VALIDASI KEPEMILIKAN BARANG (Anti-Maling) ---
-        const prodId = req.body.productId || deviceType;
-        const isDummyRemote = prodId === "BIEON-REMOTE-01" || prodId === "Universal Remote v1" || String(prodId).toLowerCase().includes("remote");
-
-        let myProduct = null;
-        if (!isDummyRemote) {
-            myProduct = await RegisteredProduct.findOne({ 
-                productId: prodId, 
-                owner: ownerId,
-                isUsed: false 
-            });
-        }
+        // --- AUTO-REGISTER BARANG: jangan blok simpan saat device belum ada di daftar ---
+        const rawProdId = req.body.productId || deviceType;
+        const prodId = normalizeId(rawProdId);
+        let myProduct = await RegisteredProduct.findOne({ 
+            productId: prodId, 
+            owner: ownerId,
+            isUsed: false 
+        });
 
         if (!myProduct) {
             // [JALUR VVIP] Cek apakah ini barang Whitelist (Bieon Original) yang sedang di-Open Join
-            let whitelistMatch = null;
-            if (isDummyRemote) {
-                whitelistMatch = {
-                    device_id: "Bieon Universal Remote",
-                    manufacturer: "Bieon",
-                    model: "BIEON-REMOTE-01"
-                };
-            } else {
-                whitelistMatch = await DeviceWhitelist.findOne({
-                    $or: [
-                        { model: prodId },
-                        { manufacturer: prodId } // Fallback jikalau yang dikirim adalah manufacturer
-                    ]
-                });
-            }
+            const whitelistMatch = await DeviceWhitelist.findOne({
+                $or: [
+                    { model: prodId },
+                    { manufacturer: prodId } // Fallback jikalau yang dikirim adalah manufacturer
+                ]
+            });
 
             if (whitelistMatch) {
                 // AUTO-REGISTER: Daftarkan/Update otomatis ke user jika barang whitelist
@@ -122,19 +115,29 @@ exports.createDevice = async (req, res) => {
                     return regCategory === 'sensor' ? 'kenyamanan' : 'none';
                 })();
 
-                myProduct = await RegisteredProduct.findOneAndUpdate(
-                    { productId: prodId }, // Cari berdasarkan ID unik barang
-                    { 
-                        $set: {
-                            productName: name || whitelistMatch.device_id,
-                            category: regCategory,
-                            aspect: targetAspect,
-                            owner: ownerId,
-                            isUsed: false
-                        }
-                    },
-                    { upsert: true, new: true } // Kalau gak ada bikin baru, kalau ada update
-                );
+                try {
+                    myProduct = await RegisteredProduct.findOneAndUpdate(
+                        { productId: prodId }, // Cari berdasarkan ID unik barang
+                        { 
+                            $set: {
+                                productId: prodId,
+                                productName: name || whitelistMatch.device_id,
+                                category: regCategory,
+                                aspect: targetAspect,
+                                owner: ownerId,
+                                isUsed: false
+                            }
+                        },
+                        { upsert: true, new: true }
+                    );
+                } catch (err) {
+                    // Handle duplicate key race: another request created the product concurrently
+                    if (err && err.code === 11000) {
+                        myProduct = await RegisteredProduct.findOne({ productId: prodId });
+                    } else {
+                        throw err;
+                    }
+                }
                 
                 console.log(`[AUTO-REG] Whitelisted device ${prodId} successfully processed for user ${ownerId}`);
 
@@ -146,9 +149,33 @@ exports.createDevice = async (req, res) => {
                     });
                 }
             } else {
-                return res.status(403).json({ 
-                    message: 'Barang tidak ditemukan di daftar registrasi Anda atau bukan barang original Bieon.' 
-                });
+                const fallbackCategory = String(category || deviceType || 'sensor').toLowerCase().includes('control') ? 'control' : 'sensor';
+                const fallbackAspect = fallbackCategory === 'control' ? 'smart-switch' : 'kenyamanan';
+
+                try {
+                    myProduct = await RegisteredProduct.findOneAndUpdate(
+                        { productId: prodId, owner: ownerId },
+                        {
+                            $set: {
+                                productId: prodId,
+                                productName: name || prodId,
+                                category: fallbackCategory,
+                                aspect: fallbackAspect,
+                                owner: ownerId,
+                                isUsed: false
+                            }
+                        },
+                        { upsert: true, new: true }
+                    );
+                } catch (err) {
+                    if (err && err.code === 11000) {
+                        myProduct = await RegisteredProduct.findOne({ productId: prodId });
+                    } else {
+                        throw err;
+                    }
+                }
+
+                console.log(`[AUTO-REG] Non-whitelisted device ${prodId} allowed without IEEE validation for user ${ownerId}`);
             }
         }
 
@@ -156,7 +183,7 @@ exports.createDevice = async (req, res) => {
         // Karena DeviceWhitelist sekarang berbasis model, bukan perangkat individual,
         // maka IEEE *harus* dikirim dari frontend/MQTT.
         let finalIeee = device_ieee || req.body.ieee || req.body.mac || req.body.productId;
-        let finalModelId = req.body.productId || deviceType;
+        let finalModelId = normalizeId(req.body.productId || deviceType);
         
         const capturedIeee = finalIeee || "0000000000000000";
         const capturedModelId = finalModelId;
@@ -180,6 +207,7 @@ exports.createDevice = async (req, res) => {
             scheduleSettings,
             sensorData, 
             controlledDevice,
+            remoteState,
             lastActivity: new Date()
         });
 
@@ -187,9 +215,10 @@ exports.createDevice = async (req, res) => {
 
         // Update RegisteredProduct status if productId provided
         if (req.body.productId) {
+            const prodToMark = normalizeId(req.body.productId);
             await RegisteredProduct.findOneAndUpdate(
-                { productId: req.body.productId },
-                { isUsed: true }
+                { productId: prodToMark },
+                { isUsed: true, owner: ownerId }
             );
         }
 
@@ -210,7 +239,7 @@ exports.createDevice = async (req, res) => {
 exports.configureDevice = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes, controlledDevice } = req.body;
+        const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes, controlledDevice, remoteState } = req.body;
 
         // Cari dulu untuk cek kepemilikan
         const device = await KendaliPerangkat.findById(id);
@@ -223,26 +252,23 @@ exports.configureDevice = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk mengonfigurasi perangkat ini.' });
         }
 
-        if (name !== undefined) device.name = name;
-        if (location !== undefined) device.location = location;
-        if (notes !== undefined) device.notes = notes;
-        if (sensorParams !== undefined || thresholds !== undefined) device.thresholds = sensorParams || thresholds;
-        if (controlMode !== undefined || controlMethod !== undefined) device.controlMethod = controlMode || controlMethod;
-        if (environmentAspect !== undefined) device.environmentAspect = environmentAspect;
-        if (scheduleSettings !== undefined) device.scheduleSettings = scheduleSettings;
-        if (controlledDevice !== undefined) device.controlledDevice = controlledDevice;
-        device.status = 'Active';
-        device.lastActivity = new Date();
-
-        if (req.body.remoteState) {
-            if (!device.remoteState) device.remoteState = new Map();
-            for (const [k, v] of Object.entries(req.body.remoteState)) {
-                device.remoteState.set(k, v);
-            }
-            device.markModified('remoteState');
-        }
-
-        const updatedDevice = await device.save();
+        const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(
+            id,
+            { 
+                name, 
+                location, 
+                notes,
+                thresholds: sensorParams || thresholds, 
+                controlMethod: controlMode || controlMethod, 
+                environmentAspect,
+                scheduleSettings,
+                controlledDevice,
+                remoteState,
+                status: 'Active',
+                lastActivity: new Date()
+            },
+            { new: true, returnDocument: 'after', runValidators: true }
+        );
 
         if (updatedDevice && req.body.productId) {
             await RegisteredProduct.findOneAndUpdate(
@@ -401,23 +427,44 @@ exports.deleteDevice = async (req, res) => {
             console.log(`[MQTT] Published admin leave to ${leaveTopic}`, leavePayload);
         }
 
-        const productIdToReset = device.modelId || device.type;
-        
+        // Remove the device record
         await KendaliPerangkat.findByIdAndDelete(req.params.id);
 
-        // CLEANUP: Bebaskan kembali produk di daftar registrasi agar bisa dipakai lagi
-        if (productIdToReset) {
+        // CLEANUP: Attempt to release or remove RegisteredProduct entries tied to this device.
+        // We will normalize possible product ids and then check whether any other KendaliPerangkat
+        // refers to the same productId/modelId. If none remain and the RegisteredProduct is owned by this user,
+        // delete it. Otherwise mark it unused and clear owner.
+        try {
             const RegisteredProduct = require('../models/RegisteredProduct');
-            await RegisteredProduct.findOneAndUpdate(
-                { 
-                    $or: [
-                        { productId: productIdToReset },
-                        { productName: productIdToReset }
-                    ]
-                },
-                { isUsed: false, owner: null }
-            );
-            console.log(`[Cleanup] Product ${productIdToReset} has been released and is now reusable.`);
+            const candidates = new Set();
+            if (device.device_ieee) candidates.add(normalizeId(device.device_ieee));
+            if (device.modelId) candidates.add(normalizeId(device.modelId));
+            if (device.type) candidates.add(normalizeId(device.type));
+            if (device._id) candidates.add(String(device._id));
+
+            const prodIds = Array.from(candidates).filter(v => v && v.length > 0);
+            if (prodIds.length > 0) {
+                const regs = await RegisteredProduct.find({ productId: { $in: prodIds } });
+                for (const reg of regs) {
+                    // check if any other device references this productId/modelId
+                    const other = await KendaliPerangkat.findOne({
+                        _id: { $ne: device._id },
+                        $or: [ { device_ieee: reg.productId }, { modelId: reg.productId }, { name: reg.productId } ]
+                    }).lean();
+
+                    if (!other && String(reg.owner) === String(device.owner)) {
+                        // safe to remove the registered product for this owner
+                        await RegisteredProduct.deleteOne({ _id: reg._id });
+                        console.log(`[Cleanup] Deleted RegisteredProduct ${reg.productId} owned by ${device.owner}`);
+                    } else {
+                        // release ownership so it can be reused but keep record
+                        await RegisteredProduct.findByIdAndUpdate(reg._id, { isUsed: false, owner: null });
+                        console.log(`[Cleanup] Released RegisteredProduct ${reg.productId} (set isUsed=false, owner=null)`);
+                    }
+                }
+            }
+        } catch (cleanupErr) {
+            console.warn('[Cleanup] Failed to fully cleanup RegisteredProduct entries:', cleanupErr && cleanupErr.message ? cleanupErr.message : cleanupErr);
         }
 
         res.status(200).json({ message: 'Perangkat berhasil dihapus dan ID produk telah dilepaskan.' });
@@ -608,5 +655,166 @@ exports.updateDeviceParams = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Gagal memperbarui parameter', error: error.message });
+    }
+};
+
+// 9. Publish remote command from frontend mapping using original remote source IEEE
+exports.sendRemoteCommand = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            catalogId,
+            rawSignature,
+            rawBitText,
+            rawBitHex,
+            rawBitBinary,
+            sourceRemoteIeee,
+            sourceRemoteId,
+            functionKey,
+            functionLabel,
+            label
+        } = req.body;
+
+        const device = await KendaliPerangkat.findById(id);
+        if (!device) return res.status(404).json({ message: 'Perangkat tidak ditemukan' });
+
+        if (req.user.role !== 'SuperAdmin' && String(device.owner) !== String(req.user.userId)) {
+            if (req.user.role === 'Technician') {
+                const session = await TechnicianAccess.findOne({
+                    homeownerId: device.owner,
+                    technicianId: req.user.userId,
+                    status: 'Active'
+                });
+                if (!session) {
+                    return res.status(403).json({ message: 'Anda tidak diizinkan mengontrol perangkat ini (Sesi tidak aktif).' });
+                }
+            } else {
+                return res.status(403).json({ message: 'Anda tidak diizinkan mengontrol perangkat ini.' });
+            }
+        }
+
+        const bieonId = device.bieonId || req.user.bieonId;
+        if (!bieonId) return res.status(400).json({ message: 'Bieon ID tidak tersedia untuk perangkat ini.' });
+
+        const normalizedDeviceIeee = String(device.device_ieee || device.modelId || device.name || '').replace(/[:\-\s]/g, '').toLowerCase() || undefined;
+        const adminTopic = `bieon/${bieonId}/admin/command`;
+
+        // Determine raw hex and bit count for firmware compatibility
+        let raw_hex = rawBitHex || '';
+        let bits = 0;
+
+        // Helper: attempt to set raw_hex/bits from a parsed object
+        const tryExtractFromObject = (obj) => {
+            if (!obj || typeof obj !== 'object') return false;
+            // common keys: raw_hex, raw_value, raw, rawBit, raw_bit, bits, bit_length, bit_count
+            if (obj.raw_hex) raw_hex = raw_hex || String(obj.raw_hex);
+            if (obj.raw_value) raw_hex = raw_hex || String(obj.raw_value);
+            if (obj.raw) raw_hex = raw_hex || String(obj.raw);
+            if (obj.rawBit) raw_hex = raw_hex || String(obj.rawBit);
+            if (obj.raw_bit) raw_hex = raw_hex || String(obj.raw_bit);
+            if (obj.rawBitHex) raw_hex = raw_hex || String(obj.rawBitHex);
+            if (obj.bits && Number(obj.bits)) bits = bits || Number(obj.bits);
+            if (obj.bit_length && Number(obj.bit_length)) bits = bits || Number(obj.bit_length);
+            if (obj.bit_count && Number(obj.bit_count)) bits = bits || Number(obj.bit_count);
+            return !!(raw_hex || bits);
+        };
+
+        // 1) If rawBitText is JSON-encoded, parse and extract
+        if (rawBitText && typeof rawBitText === 'string') {
+            let parsed = null;
+            try {
+                parsed = JSON.parse(rawBitText);
+            } catch (e) {
+                parsed = null;
+            }
+            if (parsed) {
+                tryExtractFromObject(parsed);
+                // If parsed.raw_bit is a semicolon key=value string like slot=0;protocol=1;bits=64;raw=0x...
+                const raw_bit_field = parsed.raw_bit || parsed.rawBit || parsed.rawBitText || parsed.raw_bit_text;
+                if (raw_bit_field && typeof raw_bit_field === 'string') {
+                    const parts = raw_bit_field.split(';');
+                    for (const p of parts) {
+                        const kv = p.split('=');
+                        if (kv.length === 2) {
+                            const k = kv[0].trim();
+                            const v = kv[1].trim();
+                            if ((k === 'raw' || k === 'raw_hex') && v) raw_hex = raw_hex || v;
+                            if ((k === 'bits' || k === 'bit_length' || k === 'bit_count') && Number(v)) bits = bits || Number(v);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2) If rawBitBinary provided as bit string
+        if ((!raw_hex || raw_hex === '') && rawBitBinary) {
+            const bin = String(rawBitBinary || '').replace(/[^01]/g, '');
+            if (bin.length > 0) {
+                bits = bits || Math.min(bin.length, 64);
+                try {
+                    const value = BigInt('0b' + bin.slice(0, bits));
+                    raw_hex = raw_hex || ('0x' + value.toString(16));
+                } catch (e) {
+                    // ignore conversion errors
+                }
+            }
+        }
+
+        // 3) If rawBitText is plain binary or hex string
+        if ((!raw_hex || raw_hex === '') && rawBitText && typeof rawBitText === 'string') {
+            const txt = rawBitText.trim();
+            if (/^[01]{1,64}$/.test(txt)) {
+                bits = bits || Math.min(txt.length, 64);
+                const value = BigInt('0b' + txt.slice(0, bits));
+                raw_hex = raw_hex || ('0x' + value.toString(16));
+            } else if (/^0x[0-9a-fA-F]+$/.test(txt)) {
+                raw_hex = raw_hex || txt;
+            }
+        }
+
+        // 4) fallback to provided rawBitHex
+        if ((!raw_hex || raw_hex === '') && rawBitHex) {
+            raw_hex = String(rawBitHex || '');
+        }
+
+        // 5) If we have raw_hex but not bits, infer from hex length
+        if ((!bits || bits === 0) && raw_hex && raw_hex.length > 0) {
+            const hx = raw_hex.replace(/^0x/i, '').replace(/[^0-9a-fA-F]/g, '');
+            if (hx.length > 0) bits = Math.min(hx.length * 4, 64);
+        }
+
+        const payload = {
+            command: 'remote_command',
+            action: functionKey || 'remote',
+            rawBitText: rawBitText || undefined,
+            rawBitHex: rawBitHex || undefined,
+            rawBitBinary: rawBitBinary || undefined,
+            raw_signature: rawSignature || undefined,
+            raw_hex: raw_hex || undefined,
+            raw_value: raw_hex || undefined,
+            bits: bits || undefined,
+            sourceRemoteIeee: sourceRemoteIeee || undefined,
+            sourceRemoteId: sourceRemoteId || undefined,
+            // Include both target_ieee and ieee to match firmware expectations
+            target_ieee: normalizedDeviceIeee,
+            ieee: normalizedDeviceIeee,
+            device_ieee: normalizedDeviceIeee,
+            device_id: String(device._id),
+            catalog_id: catalogId || undefined,
+            label: label || functionLabel || undefined,
+            command_id: `cmd_${Date.now()}`,
+            requested_by: String(req.user.userId),
+            timestamp: Date.now()
+        };
+
+        console.log(`[MQTT] Publishing admin command to ${adminTopic}:`, JSON.stringify(payload));
+        const published = mqtt.publishCommand(adminTopic, payload);
+        if (!published) {
+            return res.status(503).json({ message: 'MQTT broker belum siap untuk mengirim perintah remote' });
+        }
+
+        res.status(200).json({ message: 'Perintah remote berhasil dikirim', payload });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal mengirim perintah remote', error: error.message });
     }
 };
