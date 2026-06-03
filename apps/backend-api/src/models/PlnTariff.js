@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 const { isValidPlnTariffCategoryLabel } = require('../constants/plnTariffCategories');
 
 const plnTariffSchema = new mongoose.Schema({
@@ -19,5 +20,7 @@ const plnTariffSchema = new mongoose.Schema({
 
 // Index untuk query tarif terbaru per golongan secara efisien
 plnTariffSchema.index({ category: 1, createdAt: -1 });
+
+plnTariffSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('PlnTariff', plnTariffSchema);

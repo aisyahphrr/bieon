@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const deviceSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -45,5 +46,7 @@ const deviceSchema = new mongoose.Schema({
     battery: { type: Number },
     lastSeen: { type: Date }
 }, { timestamps: true });
+
+deviceSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('Device', deviceSchema);

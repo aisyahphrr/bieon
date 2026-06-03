@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const kendaliPerangkatSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -86,5 +87,7 @@ const kendaliPerangkatSchema = new mongoose.Schema({
 
 // Ensure uniqueness per Bieon system for hardware IEEE identifiers
 kendaliPerangkatSchema.index({ bieonId: 1, device_ieee: 1 }, { unique: true, sparse: true });
+
+kendaliPerangkatSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('KendaliPerangkat', kendaliPerangkatSchema);

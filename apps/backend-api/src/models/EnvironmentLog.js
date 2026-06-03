@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const environmentLogSchema = new mongoose.Schema({
     hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub', required: true },
@@ -15,5 +16,7 @@ const environmentLogSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 environmentLogSchema.index({ owner: 1, date: -1 });
+
+environmentLogSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('EnvironmentLog', environmentLogSchema);

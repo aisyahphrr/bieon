@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const accountDeletionRequestSchema = new mongoose.Schema({
     targetUser: {
@@ -75,5 +76,7 @@ const accountDeletionRequestSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 accountDeletionRequestSchema.index({ targetUser: 1, createdAt: -1 });
+
+accountDeletionRequestSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('AccountDeletionRequest', accountDeletionRequestSchema);

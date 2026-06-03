@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const passwordResetSchema = new mongoose.Schema(
   {
@@ -36,6 +37,8 @@ const passwordResetSchema = new mongoose.Schema(
 );
 
 passwordResetSchema.index({ userId: 1, status: 1, createdAt: -1 });
+
+passwordResetSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('PasswordReset', passwordResetSchema);
 

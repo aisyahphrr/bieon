@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const energyLogSchema = new mongoose.Schema({
     device: { type: mongoose.Schema.Types.ObjectId, ref: 'KendaliPerangkat', required: true },
@@ -14,5 +15,7 @@ const energyLogSchema = new mongoose.Schema({
 
 // Indexing for faster queries on specific owners and dates
 energyLogSchema.index({ owner: 1, date: -1 });
+
+energyLogSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('EnergyLog', energyLogSchema);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const hubSchema = new mongoose.Schema({
     name: { type: String, required: true }, // misal: "Hub 1", "Hub 2"
@@ -6,7 +7,11 @@ const hubSchema = new mongoose.Schema({
     device_ieee: { type: String }, // MAC/IEEE Address for the Hub
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     tenantId: { type: String }, // For multi-tenant isolation
-    status: { type: String, enum: ['Online', 'Offline'], default: 'Offline' }
+    status: { type: String, enum: ['Online', 'Offline', 'Removing'], default: 'Offline' },
+    last_seen: { type: Date },
+    firmware_version: { type: String }
 }, { timestamps: true });
+
+hubSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('Hub', hubSchema);

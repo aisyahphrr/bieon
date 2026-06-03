@@ -22,6 +22,9 @@ const userSchema = new mongoose.Schema({
     tenantId: { type: String },   // ID Tenant (tenant_001, tenant_002, dst)
     assignedTechnician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Referensi ke Teknisi yang menangani
 
+    // Pelacakan Penggunaan Data (Memory Allocation)
+    totalDataUsageBytes: { type: Number, default: 0 }, // Total ukuran semua data dari semua koleksi
+
     // Field Khusus Teknisi
     technicianId: { type: String },
     nik: { type: String, sparse: true },

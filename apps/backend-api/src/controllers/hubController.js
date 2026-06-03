@@ -296,3 +296,110 @@ exports.cleanupOrphans = async (req, res) => {
         res.status(500).json({ message: 'Gagal membersihkan data hantu', error: error.message });
     }
 };
+
+// POST /api/hubs/open_join
+exports.startHubOpenJoin = async (req, res) => {
+    try {
+        const { bieonId, duration = 60 } = req.body || {};
+        if (!bieonId) {
+            return res.status(400).json({ message: 'Bieon ID tidak boleh kosong.' });
+        }
+
+        if (!req.user?.userId) {
+            return res.status(401).json({ message: 'Sesi berakhir, silakan login kembali.' });
+        }
+
+        // Cari BieonSystem untuk verifikasi owner
+        const system = await BieonSystem.findOne({ bieonId: buildFlexibleBieonIdRegex(bieonId) || bieonId });
+        if (!system) {
+            return res.status(404).json({ message: 'Sistem BIEON tidak ditemukan.' });
+        }
+
+        if (req.user.role !== 'SuperAdmin' && String(system.owner) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses untuk membuka open join pada sistem ini.' });
+        }
+
+        const { publishOpenJoin } = require('../config/mqtt');
+        const published = publishOpenJoin(bieonId, Number(duration) || 60, {
+            mode: 'add_hub_node',
+            hub_only: true,
+            requestedBy: String(req.user.userId)
+        });
+
+        res.status(200).json({
+            message: published
+                ? `Open join aktif untuk hub node pada sistem ${bieonId} (${duration}s). Silakan tekan tombol pairing pada Hub Anda.`
+                : `Open join untuk sistem ${bieonId} sudah aktif.`
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal mengaktifkan mode open join Hub', error: error.message });
+    }
+};
+
+// POST /api/hubs/:hubId/leave
+exports.leaveHub = async (req, res) => {
+    try {
+        const { hubId } = req.params;
+        const { remove_children = true } = req.body || {};
+
+        const hub = await Hub.findById(hubId);
+        if (!hub) {
+            return res.status(404).json({ message: 'Hub tidak ditemukan.' });
+        }
+
+        if (req.user.role !== 'SuperAdmin' && String(hub.owner) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses untuk menghapus hub ini.' });
+        }
+
+        const deviceIeee = hub.device_ieee;
+        if (!deviceIeee) {
+            // Jika tidak ada device_ieee, langsung hapus saja dari DB
+            await Hub.findByIdAndDelete(hubId);
+            return res.status(200).json({ message: 'Hub berhasil dihapus dari database (tidak memiliki device_ieee).' });
+        }
+
+        const { publishLeave } = require('../config/mqtt');
+        const published = publishLeave(hub.bieonId, deviceIeee, {
+            remove_children: remove_children !== false,
+            requested_by: String(req.user.userId)
+        });
+
+        // Set status Hub ke 'Removing' di database
+        hub.status = 'Removing';
+        await hub.save();
+
+        res.status(200).json({
+            message: published
+                ? 'Permintaan penghapusan Hub berhasil dikirim ke gateway. Menunggu konfirmasi...'
+                : 'Gagal mempublikasikan perintah penghapusan ke MQTT.'
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal memproses penghapusan hub', error: error.message });
+    }
+};
+
+// DELETE /api/hubs/:hubId
+exports.deleteHub = async (req, res) => {
+    try {
+        const { hubId } = req.params;
+
+        const hub = await Hub.findById(hubId);
+        if (!hub) {
+            return res.status(404).json({ message: 'Hub tidak ditemukan.' });
+        }
+
+        if (req.user.role !== 'SuperAdmin' && String(hub.owner) !== String(req.user.userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses untuk menghapus hub ini.' });
+        }
+
+        await Hub.findByIdAndDelete(hubId);
+
+        // Hapus perangkat yang menempel di hub ini
+        await KendaliPerangkat.deleteMany({ hubId });
+
+        res.status(200).json({ message: 'Hub berhasil dihapus secara paksa dari database.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Gagal menghapus hub secara paksa', error: error.message });
+    }
+};
+

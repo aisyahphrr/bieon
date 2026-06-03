@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const systemLogSchema = new mongoose.Schema({
     bieonId: { type: String, required: true },
@@ -8,5 +9,7 @@ const systemLogSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 systemLogSchema.index({ bieonId: 1, createdAt: -1 });
+
+systemLogSchema.plugin(dataSizePlugin);
 
 module.exports = mongoose.model('SystemLog', systemLogSchema);
