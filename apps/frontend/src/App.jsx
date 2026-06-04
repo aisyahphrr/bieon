@@ -100,7 +100,9 @@ function AppContent() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login expectedRole="Homeowner" />} />
+        <Route path="/login-5uper4dm1N" element={<Login expectedRole="SuperAdmin" />} />
+        <Route path="/login-tekn1s1" element={<Login expectedRole="Technician" />} />
         <Route path="/signup" element={<Signup setTempData={setTempData} />} />
         <Route path="/setup" element={<Setup tempData={tempData} />} />
         <Route path="/delete-approval" element={<DeleteApprovalPage />} />

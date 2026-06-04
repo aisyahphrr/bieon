@@ -32,7 +32,7 @@ const parseJsonSafely = async (response) => {
   }
 };
 
-const Login = () => {
+const Login = ({ expectedRole = 'Homeowner' }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -68,6 +68,11 @@ const Login = () => {
         throw new Error(data.message || 'Login Google gagal');
       }
 
+      const userRole = data.user?.role || 'Homeowner';
+      if (userRole !== expectedRole) {
+        throw new Error(`Akses ditolak. Akun Anda tidak memiliki izin untuk masuk melalui portal ini.`);
+      }
+
       // Use the same key used across the app
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.user.id);
@@ -79,7 +84,6 @@ const Login = () => {
         localStorage.setItem('USE_MOCK_DATA', 'true');
       }
 
-      const userRole = data.user?.role;
       if (userRole === 'SuperAdmin') {
         navigate('/admin');
       } else if (userRole === 'Technician') {
@@ -125,6 +129,11 @@ const Login = () => {
         throw new Error(data.message || 'Login gagal. Pastikan backend berjalan dan kredensial Anda benar.');
       }
 
+      const userRole = data.user?.role || 'Homeowner';
+      if (userRole !== expectedRole) {
+        throw new Error(`Akses ditolak. Akun Anda tidak memiliki izin untuk masuk melalui portal ini.`);
+      }
+
       // Simpan data ke local storage
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.user.id);
@@ -137,7 +146,6 @@ const Login = () => {
       }
 
       // Arahkan berdasarkan role
-      const userRole = data.user?.role;
       if (userRole === 'SuperAdmin') {
         navigate('/admin');
       } else if (userRole === 'Technician') {
