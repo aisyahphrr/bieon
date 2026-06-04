@@ -412,12 +412,12 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Gagal mengambil data teknisi.');
+                throw new Error(result.message || t('admin_technician.errors.fetch_failed', 'Gagal mengambil data teknisi.'));
             }
 
             setTechnicians((result.data || []).map(mapApiTechnicianToUi));
         } catch (error) {
-            setFormError(error.message || 'Terjadi kesalahan saat mengambil data teknisi.');
+            setFormError(error.message || t('admin_technician.errors.fetch_error', 'Terjadi kesalahan saat mengambil data teknisi.'));
             setTechnicians([]);
         } finally {
             setIsLoadingTechnicians(false);
@@ -540,7 +540,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             const result = await response.json();
             
             if (response.ok && result.success) {
-                setSuccessMessage('Berhasil menugaskan pelanggan ke teknisi.');
+                setSuccessMessage(t('admin_technician.alerts.clients_assigned', 'Berhasil menugaskan pelanggan ke teknisi.'));
                 setIsAddClientModalOpen(false);
                 setSelectedClients([]);
                 
@@ -588,7 +588,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
     const handleAddTechnician = async () => {
         if (!formData.name || !formData.email || !formData.phone || !formData.address || !formData.password) {
-            setFormError('Nama, email, nomor telepon, alamat, dan password wajib diisi.');
+            setFormError(t('admin_technician.validation.all_fields_required', 'Nama, email, nomor telepon, alamat, dan password wajib diisi.'));
             return;
         }
 
@@ -622,7 +622,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                 }
             }
             if (payload.password.length < 8) {
-                setFormError('Password minimal 8 karakter.');
+                setFormError(t('admin_technician.validation.password_min_len', 'Password minimal 8 karakter.'));
                 setIsSubmitting(false);
                 return;
             }
@@ -635,10 +635,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Gagal membuat akun teknisi.');
+                throw new Error(result.message || t('admin_technician.errors.add_failed', 'Gagal membuat akun teknisi.'));
             }
 
-            setSuccessMessage('Akun teknisi berhasil ditambahkan.');
+            setSuccessMessage(t('admin_technician.alerts.tech_added', 'Akun teknisi berhasil ditambahkan.'));
             setIsAddModalOpen(false);
             setFormData(getInitialFormData());
             await loadTechnicians();
@@ -656,12 +656,12 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
     const confirmDeleteTechnician = async () => {
         if (!selectedTechnician?._id) {
-            setFormError('ID teknisi tidak ditemukan.');
+            setFormError(t('admin_technician.validation.id_not_found', 'ID teknisi tidak ditemukan.'));
             return;
         }
 
         if (!deleteReason.trim()) {
-            setFormError('Alasan penghapusan wajib diisi.');
+            setFormError(t('admin_technician.validation.delete_reason_required', 'Alasan penghapusan wajib diisi.'));
             return;
         }
 
@@ -677,7 +677,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Gagal menghapus teknisi.');
+                throw new Error(result.message || t('admin_technician.errors.delete_failed', 'Gagal menghapus teknisi.'));
             }
 
             const deletionRequest = result.data?.deletionRequest || null;
@@ -687,7 +687,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                     ? { ...tech, deletionRequest }
                     : tech
             )));
-            setSuccessMessage(result.message || 'Permintaan penghapusan teknisi berhasil dibuat.');
+            setSuccessMessage(result.message || t('admin_technician.alerts.delete_success', 'Permintaan penghapusan teknisi berhasil dibuat.'));
             setIsDeleteModalOpen(false);
             setDeleteReason('');
             setSelectedTechnician(null);
@@ -765,10 +765,10 @@ export function ManajemenTeknisiPage({ onNavigate }) {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Gagal memperbarui data teknisi.');
+                throw new Error(result.message || t('admin_technician.errors.update_failed', 'Gagal memperbarui data teknisi.'));
             }
 
-            setSuccessMessage('Data teknisi berhasil diperbarui.');
+            setSuccessMessage(t('admin_technician.alerts.tech_updated', 'Data teknisi berhasil diperbarui.'));
             setIsEditModalOpen(false);
             setSelectedTechnician(null);
             setFormData(getInitialFormData());
@@ -959,7 +959,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
 
                     <div className="overflow-x-auto md:overflow-visible p-4 md:p-0">
                         {isLoadingTechnicians && (
-                            <div className="px-4 py-3 text-sm font-semibold text-gray-500">Memuat data teknisi...</div>
+                            <div className="px-4 py-3 text-sm font-semibold text-gray-500">{t('admin_technician.table.loading', 'Memuat data teknisi...')}</div>
                         )}
 
                         {/* Desktop Table View */}
@@ -1101,9 +1101,9 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                     </div>
 
                                     <div className="p-3 border-t border-gray-50 flex items-center justify-between gap-2">
-                                        <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">{t('admin_technician.table.col_action')}</button>
-                                        <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-bieon-eco/10 text-bieon-eco font-bold text-xs rounded-xl hover:bg-bieon-eco/15 transition-all text-center">{t('admin_technician.form_modal.btn_save').split(' ')[0]}</button>
-                                        <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-bieon-sense/10 text-bieon-sense font-bold text-xs rounded-xl hover:bg-bieon-sense/20 transition-all text-center">{t('admin_technician.table.btn_view_map').split(' ')[1]}</button>
+                                        <button onClick={() => handleViewDetail(tech)} className="flex-1 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-xl hover:bg-blue-100 transition-all text-center">{t('admin_technician.table.btn_detail', 'Detail')}</button>
+                                        <button onClick={() => handleEditTechnician(tech)} className="flex-1 py-2 bg-bieon-eco/10 text-bieon-eco font-bold text-xs rounded-xl hover:bg-bieon-eco/15 transition-all text-center">{t('admin_technician.table.btn_edit', 'Edit')}</button>
+                                        <button onClick={() => openMapModal(tech.id)} className="flex-1 py-2 bg-bieon-sense/10 text-bieon-sense font-bold text-xs rounded-xl hover:bg-bieon-sense/20 transition-all text-center">{t('admin_technician.table.btn_map', 'Peta')}</button>
                                         <button onClick={() => handleDeleteTechnician(tech)} className="w-[45px] flex items-center justify-center py-2 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all shrink-0">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
@@ -1365,7 +1365,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 })
                                             ) : (
                                                 <div className="w-full py-4 text-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 text-xs font-medium">
-                                                    Silakan pilih Wilayah Kerja Standar terlebih dahulu
+                                                    {t('admin_technician.form_modal.select_work_region_first', 'Silakan pilih Wilayah Kerja Standar terlebih dahulu')}
                                                 </div>
                                             )}
                                         </div>

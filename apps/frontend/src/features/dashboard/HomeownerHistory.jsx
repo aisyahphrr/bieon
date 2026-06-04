@@ -441,7 +441,7 @@ export function HomeownerHistory({ onNavigate }) {
             doc.save(`${t('history.export.filename_prefix', 'BIEON_History')}_${activeTab}_${new Date().getTime()}.pdf`);
         } catch (pdfError) {
             console.error('PDF ERROR:', pdfError);
-            alert("Gagal membuat PDF.");
+            alert(t('history.export.alert_error_pdf', 'Gagal membuat PDF.'));
         }
     };
 
@@ -516,7 +516,7 @@ export function HomeownerHistory({ onNavigate }) {
             doc.save(`${t('history.export.filename_prefix', 'BIEON_Full_Report')}_${new Date().getTime()}.pdf`);
         } catch (err) {
             console.error('EXPORT ALL ERROR:', err);
-            alert("Gagal mengekspor laporan lengkap.");
+            alert(t('history.export.alert_error_all_pdf', 'Gagal mengekspor laporan lengkap.'));
         } finally {
             setIsExportingAll(false);
         }
@@ -566,7 +566,7 @@ export function HomeownerHistory({ onNavigate }) {
                                         : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
-                                    {tab.id === 'Notifikasi & Alert' ? 'Notifikasi & Peringatan' : tab.full}
+                                    {tab.full}
                                 </button>
 
                             ))}

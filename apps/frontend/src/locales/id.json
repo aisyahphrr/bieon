@@ -1,6 +1,8 @@
 {
   "common": {
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "back": "Kembali",
+    "updating": "Memperbarui..."
   },
   "nav": {
     "dashboard": "Beranda",
@@ -180,7 +182,12 @@
     "month_sep": "Sep",
     "month_oct": "Okt",
     "month_nov": "Nov",
-    "month_dec": "Des"
+    "month_dec": "Des",
+    "security_status": "Status Keamanan",
+    "status_all_safe_text": "Semua Aman",
+    "status_needs_attention_text": "Perlu Perhatian",
+    "motion_sensor": "Sensor Gerak",
+    "door_sensor": "Sensor Pintu"
   },
   "history": {
     "title": "Riwayat Aktivitas",
@@ -333,7 +340,9 @@
       "val_no_data_progress": "TIDAK ADA DATA PROGRES",
       "perf_needs_improvement": "PERLU DITINGKATKAN",
       "perf_good": "BAGUS",
-      "perf_excellent": "SANGAT MEMUASKAN"
+      "perf_excellent": "SANGAT MEMUASKAN",
+      "alert_error_pdf": "Gagal membuat PDF.",
+      "alert_error_all_pdf": "Gagal mengekspor laporan lengkap."
     },
     "filters": {
       "select_customer": "Pilih Pelanggan",
@@ -481,7 +490,14 @@
       "no_review": "Tidak ada ulasan tertulis.",
       "rating_placeholder": "Tulis pengalaman Anda di sini...",
       "sending": "Mengirim...",
-      "export_pdf": "Ekspor Detail Pengaduan (PDF)"
+      "export_pdf": "Ekspor Detail Pengaduan (PDF)",
+      "title": "Detail Pengaduan",
+      "actions_notice": "Aksi tersedia dapat dilihat di panel bawah pada desktop atau scroll ke bawah.",
+      "error_fetch_latest": "Gagal mengambil data terbaru",
+      "error_update_status": "Gagal memperbarui status",
+      "error_update_progress": "Gagal memperbarui progres",
+      "error_process_log": "Gagal memproses data log",
+      "technician_fallback": "Teknisi"
     },
     "perf": {
       "good": "Bagus",
@@ -677,7 +693,9 @@
       "ticket_id": "ID Tiket",
       "date": "Tanggal",
       "customer": "Pelanggan",
+      "location": "Lokasi",
       "topic": "Topik Kendala",
+      "duration": "Durasi",
       "technician": "Teknisi",
       "rating": "Rating",
       "status": "Status",
@@ -761,8 +779,25 @@
       "budget_updated": "Anggaran Diperbarui",
       "threshold_updated": "Batas Peringatan Diperbarui",
       "low_budget": "Batas Anggaran Rendah!",
-      "device_control": "Kontrol Perangkat"
+      "device_control": "Kontrol Perangkat",
+      "security_motion": "Sensor Gerak",
+      "water_ph_critical": "pH Air Kritis!",
+      "temp_high_warning": "Suhu Terlalu Panas",
+      "budget_limit_warning": "Peringatan Anggaran",
+      "tech_confirm_needed": "Butuh Konfirmasi",
+      "work_confirmation": "Konfirmasi Pekerjaan",
+      "sla_warning": "Peringatan SLA",
+      "sla_overdue_repair": "SLA Overdue Perbaikan",
+      "water_ph_unfit": "pH Air Tidak Layak",
+      "hub_offline": "Hub Offline",
+      "hub_battery_low": "Baterai Lemah",
+      "manual_control": "Kontrol Manual",
+      "hardware_status": "Status Perangkat",
+      "system_auto": "Otomasi Sistem",
+      "ping_warning": "Teguran PING",
+      "ticket_reassigned": "Tiket Dialihkan"
     },
+
     "msg": {
       "complaint_sent": "Pengaduan Anda telah terkirim dan menunggu tindak lanjut dari tim teknis.",
       "new_ticket": "Tiket pengaduan baru telah diajukan ke sistem.",
@@ -780,9 +815,60 @@
       "device_control": "Perangkat dihidupkan/dimatikan melalui dasbor.",
       "water_alert": "Kadar air sanitasi tandon utama berada di bawah ambang batas standar.",
       "power_alert": "Tegangan atau daya listrik sistem BIEON terpantau melebihi kapasitas wajar.",
-      "hub_offline": "Peringatan: Hub kehilangan koneksi internet.",
-      "unauthorized_access": "Upaya akses tidak sah terdeteksi pada sistem.",
-      "sla_overdue": "Tiket pengaduan mendekati atau telah melampaui batas waktu SLA."
+      "security_motion_detected": "Sensor mendeteksi pergerakan mencurigakan pada pukul {{time}}.",
+      "door_open_warning": "Pintu di {{location}} terbuka melebihi batas waktu aman.",
+      "water_ph_low": "pH Air turun drastis ke level {{ph}}. Mohon periksa filter Anda.",
+      "water_ph_critical": "KRITIS: pH Air pada {{deviceName}} terdeteksi di bawah standar ({{ph}}). Segera cek kondisi filter air.",
+      "water_ph_unfit": "pH Air terdeteksi tidak layak ({{ph}}). Sistem menyarankan pembersihan tandon air.",
+      "temp_high_ac_on": "Suhu ruangan melebihi {{temp}}°C, AC otomatis dinyalakan.",
+      "temp_high_location": "Suhu ruangan di {{location}} mencapai {{temp}}°C.",
+      "budget_usage_high": "Penggunaan listrik bulan ini sudah mencapai {{percent}}% dari batas bulanan Anda.",
+      "budget_updated_nominal": "Anggaran listrik bulanan Anda berhasil diatur menjadi Rp {{amount}}.",
+      "budget_updated_success": "Anggaran listrik bulanan Anda berhasil diperbarui menjadi Rp {{budget}}.",
+      "budget_limit_changed": "Batas peringatan sisa anggaran Anda telah diubah menjadi Rp {{limit}}.",
+      "budget_limit_warning": "Peringatan: Batas peringatan yang Anda setel (Rp {{limit}}) lebih besar dari total anggaran Anda (Rp {{budget}}).",
+      "schedule_automation_executed": "Jadwal otomatisasi ({{name}}) berhasil dieksekusi.",
+      "schedule_device_action": "Perangkat {{deviceName}} telah di-{{action}} secara otomatis berdasarkan jadwal.",
+      "system_auto_action": "Sistem otomatis {{action}} {{deviceName}} karena kondisi {{aspect}} {{condition}}.",
+      "hub_offline": "{{hubName}} terdeteksi offline. Silakan periksa koneksi internet atau catu daya.",
+      "hub_battery_low": "Baterai {{hubName}} tersisa {{percent}}%. Disarankan untuk segera melakukan penggantian baterai.",
+      "manual_device_action": "[Manual] Anda telah {{action}} {{deviceName}} di {{location}}.",
+      "hardware_status_changed": "[Hardware Baru] Perangkat {{deviceName}} telah berubah status menjadi {{status}}.",
+      "log_device_status": "[Log] Perangkat {{deviceName}} di {{location}} telah berubah status menjadi {{status}}.",
+      "sla_almost_overdue": "Peringatan: Tiket {{ticketId}} hampir melewati batas SLA (Overdue Respons).",
+      "new_ticket_assigned_tech": "Anda ditugaskan untuk menangani pengaduan: \"{{topic}}\". Segera cek detail tugas.",
+      "ticket_finished_tech": "Tiket \"{{topic}}\" telah selesai. Anda mendapat rating {{stars}}★.",
+      "ticket_cancelled_tech": "Tiket \"{{topic}}\" yang Anda tangani telah dibatalkan oleh pelanggan.",
+      "admin_ping_tech": "Admin mengirimkan PING! Segera selesaikan tiket {{topic}}. Status urgensi: {{urgency}}.",
+      "overdue_repair": "Batas waktu perbaikan terlampaui (56 jam). Status otomatis berubah menjadi Overdue Perbaikan.",
+      "overdue_response": "Peringatan: Tiket {{topic}} telah melewati batas waktu respon 30 menit!",
+      "log_access_approved": "Permintaan akses Data Log untuk {{bieonId}} telah disetujui SuperAdmin.",
+      "log_access_approved_comp": "SuperAdmin menyetujui akses data log untuk tiket {{topic}}.",
+      "log_access_denied_comp": "Maaf, akses data log untuk tiket {{topic}} ditolak oleh SuperAdmin.",
+      "maintenance_scheduled": "Jadwal Pemeliharaan Rutin untuk {{area}} dijadwalkan hari ini.",
+      "critical_hubs_offline": "KRITIS: {{count}} Hub IoT di {{location}} offline secara bersamaan.",
+      "hub_connection_lost": "KONEKSI TERPUTUS: Hub BIEON milik pelanggan {{bieonId}} tidak dapat dihubungi.",
+      "performance_report_ready": "Laporan Performa Teknisi Bulan {{month}} sudah siap untuk diunduh.",
+      "sla_violation_tech": "SLA Pelanggaran: Teknisi {{technician}} gagal merespons tiket {{ticketId}} dalam 30 menit.",
+      "admin_new_complaint_full": "Ada pengaduan baru dari {{senderName}}. Hub: {{bieonId}}. Topik: {{topic}}",
+      "tech_started_working": "Teknisi {{technician}} telah mulai mengerjakan tiket \"{{topic}}\".",
+      "ticket_completed_feedback": "Tiket \"{{topic}}\" selesai. Rating: {{stars}}★. Ulasan: {{review}}",
+      "ticket_cancelled_by_customer": "Tiket \"{{topic}}\" telah dibatalkan oleh pelanggan.",
+      "tech_requested_log": "Teknisi meminta akses log untuk tiket {{topic}}. Alasan: {{reason}}",
+      "overdue_respons_admin": "Tiket dari {{bieonId}} Overdue Respons! Segera alihkan teknisi.",
+      "overdue_repair_admin": "Tiket dari {{bieonId}} Overdue Perbaikan! Segera ingatkan teknisi.",
+      "homeowner_complaint_created": "Tiket pengaduan \"{{topic}}\" Anda berhasil dibuat. Mohon tunggu respon admin.",
+      "tech_completed_repair": "Teknisi telah menyelesaikan perbaikan tiket \"{{topic}}\". Silakan konfirmasi dan beri penilaian.",
+      "homeowner_complaint_rejected": "Maaf, pengaduan \"{{topic}}\" Anda ditolak. Alasan: {{reason}}",
+      "homeowner_ticket_assigned": "Tiket pengaduan \"{{topic}}\" Anda telah ditugaskan ke teknisi {{technician}}.",
+      "tech_updated_progress": "Teknisi memperbarui progres: \"{{progress}}\".",
+      "work_confirmation_required": "Konfirmasi pekerjaan teknisi untuk tiket #{{ticketId}} diperlukan sebelum ditutup.",
+      "ticket_reassigned": "Tiket dialihkan dari {{oldTech}} ke {{newTech}} karena melewati batas waktu.",
+      "ping_tech": "Admin mengirimkan PING! Segera selesaikan tiket {{topic}}. Status urgensi: {{urgency}}",
+      "sla_overdue_repair_tech": "Peringatan: Perbaikan tiket {{topic}} telah melewati batas 56 jam!",
+      "sla_overdue_repair_admin": "Tiket {{bieonId}} telah melewati batas waktu perbaikan.",
+      "sla_overdue_respons_auto": "Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.",
+      "sla_approaching": "Perbaikan {{topic}} mendekati batas waktu SLA. Prioritas ditingkatkan."
     }
   },
   "notification_messages": {
@@ -865,7 +951,7 @@
       "email": "Email",
       "address": "Alamat Lengkap",
       "complaint_status": "Status Pengaduan",
-      "system_active": "System Active",
+      "system_active": "Sistem Aktif",
       "install_date": "Tanggal Instalasi",
       "last_update": "Update Terakhir",
       "status_latest": "Terbaru",
@@ -1621,6 +1707,8 @@
       "error_failed": "Gagal menambahkan BIEON ID"
     },
     "budget": {
+      "title": "Manajemen Anggaran Listrik",
+      "subtitle": "Monitoring anggaran & batas peringatan kritis",
       "input_placeholder": "Masukkan nominal (Contoh: 1000000)",
       "btn_save": "Simpan Pengaturan",
       "success_msg": "Anggaran Berhasil Disimpan"
@@ -1855,6 +1943,145 @@
           "content_li4": "Perjanjian ini ditandatangani di Indonesia."
         }
       }
+    },
+    "forgot": {
+      "request_title": "Lupa Password",
+      "request_subtitle": "Masukkan email atau nomor telepon yang terdaftar. Kami akan mengirim OTP ke email/WA jika akun terdaftar.",
+      "verify_title": "Verifikasi OTP",
+      "verify_subtitle": "Masukkan kode OTP yang telah dikirim ke {{identifier}}",
+      "reset_title": "Reset Password",
+      "reset_subtitle": "Masukkan password baru Anda.",
+      "lbl_identifier": "Email atau No. Telepon (+62...)",
+      "ph_identifier": "contoh: user@example.com atau +628123...",
+      "ph_password": "Password baru",
+      "ph_confirm_password": "Konfirmasi password",
+      "ph_otp": "Masukkan OTP",
+      "btn_send_otp": "Kirim OTP",
+      "btn_sending": "Mengirim...",
+      "btn_verify": "Verifikasi",
+      "btn_resend_otp": "Kirim ulang OTP",
+      "btn_change_address": "Ubah alamat",
+      "btn_reset": "Reset",
+      "btn_cancel": "Batal",
+      "err_identifier_required": "Email atau nomor telepon wajib diisi",
+      "err_otp_required": "OTP wajib diisi",
+      "err_fields_required": "Isi semua field",
+      "err_password_mismatch": "Password tidak cocok",
+      "err_request_failed": "Gagal mengirim permintaan",
+      "err_verify_failed": "Gagal memverifikasi OTP",
+      "err_resend_failed": "Gagal mengirim ulang OTP",
+      "info_otp_sent": "Jika akun terdaftar, OTP telah dikirim. Silakan cek email atau WhatsApp Anda.",
+      "info_resend_success": "OTP terkirim ulang. Silakan cek email/WA Anda."
     }
+  },
+  "kendali": {
+    "title": "Kendali Perangkat",
+    "subtitle": "Manajemen Hub & Smart Device BIEON",
+    "no_system": "Belum Ada Sistem BIEON",
+    "no_system_desc": "Daftarkan ID perangkat BIEON Anda untuk memulai monitoring.",
+    "add_bieon": "Tambah BIEON",
+    "add_bieon_desc": "Masukkan BIEON ID untuk mendaftarkan sistem smart monitoring.",
+    "ph_bieon_id": "Contoh: BIEON-001",
+    "btn_add": "Hubungkan BIEON",
+    "btn_back": "Kembali",
+    "registered_systems": "Sistem BIEON Terdaftar",
+    "room_filter": "Filter per Ruangan",
+    "all_rooms": "Semua Ruangan",
+    "management": "Manajemen Perangkat",
+    "open_join_access": "Akses \"Open Join\"",
+    "registered_devices": "Perangkat Terdaftar",
+    "open_join_title": "Buka Open Join",
+    "open_join_desc": "Hubungkan perangkat baru ke Hub Anda.",
+    "status_pairing": "Sedang mencari perangkat...",
+    "status_connected": "Tersambung",
+    "device_not_found": "Perangkat Tidak Ditemukan",
+    "add_new_device": "Tambahkan Perangkat Baru",
+    "select_device_type": "Pilih Tipe Device",
+    "device_info": "Informasi Perangkat",
+    "edit_info": "Edit Informasi",
+    "save_success": "Perangkat berhasil disimpan!",
+    "delete_success": "Perangkat berhasil dihapus!",
+    "delete_confirm": "Apakah Anda yakin ingin menghapus perangkat ini?",
+    "aspects": {
+      "comfort": "Kenyamanan",
+      "security": "Keamanan",
+      "water_quality": "Kualitas Air",
+      "environment": "Parameter Lingkungan",
+      "schedule": "Jadwal Otomatis"
+    },
+    "params": {
+      "temperature": "Suhu (Temperature)",
+      "humidity": "Kelembaban (Humidity)",
+      "motion": "Motion Sensor",
+      "door": "Door Sensor",
+      "ph": "pH Air",
+      "turbidity": "Kekeruhan (Turbidity)",
+      "tds": "TDS (Total Dissolved Solids)",
+      "water_temp": "Suhu Air (Water Temp)"
+    },
+    "tech_access_token": "Token Akses Teknisi",
+    "tech_config_active": "Sedang Dikonfigurasi Teknisi"
+  },
+  "datalog": {
+    "title": "Log Data & Diagnostik",
+    "subtitle": "Monitoring Telemetri Gateway Real-time",
+    "live_monitoring": "Monitoring Langsung:",
+    "global_system": "Sistem Global",
+    "stats": {
+      "uptime": "Sistem Aktif",
+      "cpu_load": "Beban CPU",
+      "security": "Keamanan",
+      "node_status": "Status Node",
+      "buffer": "Buffer:"
+    },
+    "status": {
+      "syncing": "Menyinkronkan diagnostik langsung...",
+      "paused": "Aliran langsung ditangguhkan",
+      "live": "Data langsung dari backend + socket"
+    },
+    "search_placeholder": "Cari log (tipe atau kategori)...",
+    "stream_active": "Aliran telemetri masuk aktif...",
+    "no_logs_match": "Tidak ada log yang cocok dengan pencarian Anda: \"{{search}}\""
+  },
+  "delete_approval": {
+    "err_token_not_found": "Token approval tidak ditemukan.",
+    "err_fetch_failed": "Gagal mengambil data approval.",
+    "err_fetch_error": "Terjadi kesalahan saat mengambil data approval.",
+    "err_process_failed": "Gagal memproses keputusan.",
+    "msg_decision_success": "Keputusan berhasil diproses.",
+    "err_process_error": "Terjadi kesalahan saat memproses keputusan.",
+    "loading_request": "Memuat permintaan persetujuan...",
+    "title": "Persetujuan Penghapusan Akun",
+    "status_approved": "Disetujui",
+    "status_rejected": "Ditolak",
+    "status_pending": "Menunggu Keputusan",
+    "greeting": "Dear Project Owner,",
+    "description": "Anda menerima permintaan penghapusan akun yang diajukan oleh Super Admin. Silakan tinjau detail di bawah ini sebelum mengambil keputusan.",
+    "account_details_title": "Detail Akun yang Akan Dihapus",
+    "lbl_fullname": "Nama Lengkap",
+    "lbl_email": "Email",
+    "lbl_role": "Role",
+    "lbl_requested_by": "Diajukan Oleh",
+    "lbl_reason": "Alasan Penghapusan",
+    "important_title": "Penting untuk Diperhatikan",
+    "warn_point_1": "Jika disetujui, akun akan dihapus permanen dari sistem.",
+    "warn_point_2": "Pengguna target dan Super Admin pengaju akan menerima email hasil keputusan.",
+    "warn_point_3": "Jika ditolak, akun tetap aktif dan status penolakan akan terlihat di dashboard Super Admin.",
+    "status_summary_title": "Ringkasan Status",
+    "lbl_requested_at": "Diajukan Pada",
+    "lbl_decided_at": "Diputuskan Pada",
+    "lbl_decision_note": "Catatan Keputusan",
+    "btn_approve": "Setujui Penghapusan",
+    "btn_reject": "Tolak Permintaan"
+  },
+  "complaint_extra": {
+    "urgent": "Mendesak",
+    "no_desc": "Tidak ada deskripsi."
+  },
+  "role": {
+    "homeowner": "Pemilik Rumah"
+  },
+  "activity": {
+    "platform_source": "melalui {{platform}}"
   }
 }

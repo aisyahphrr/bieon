@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { mockNotifications } from '../features/dashboard/homeownerMockData';
+import { getLocalizedTitle, getLocalizedCategory, getLocalizedMessage } from '../utils/notificationI18nHelper';
+
 
 const typeStyles = {
   danger: { iconText: 'text-alert-danger', iconBg: 'bg-alert-danger/10', icon: AlertTriangle, accent: 'border-l-alert-danger' },
@@ -364,89 +366,9 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
 
             const style = typeStyles[resolvedType] || typeStyles.info;
 
-            const getLocalizedCategory = (text) => {
-              if (!text) return t('notification.ui.title', 'Notifikasi');
-              const lower = text.toLowerCase();
-              
-              // Mapping Judul/Kategori ke Key i18n menggunakan partial match
-              if (lower.includes('bahaya')) return t('notification.category.danger', 'Bahaya');
-              if (lower.includes('waspada')) return t('notification.category.warning', 'Waspada');
-              if (lower.includes('keamanan')) return t('notification.category.security', 'Keamanan');
-              if (lower.includes('sistem') || lower.includes('hub') || lower.includes('kontrol')) return t('notification.category.system', 'Sistem');
-              
-              // Menangkap "Pengaduan Terkirim", "Tiket Baru", "Tugas Baru", dll
-              if (lower.includes('pengaduan') || lower.includes('tiket') || lower.includes('tugas') || lower.includes('perbaikan')) {
-                return t('notification.category.complaint', 'Pengaduan');
-              }
-              
-              if (lower.includes('kenyamanan')) return t('notification.category.comfort', 'Kenyamanan');
-              
-              // Menangkap "Anggaran", "Tarif", "Topup"
-              if (lower.includes('energi') || lower.includes('anggaran') || lower.includes('tarif')) {
-                return t('notification.category.energy', 'Energi');
-              }
-              
-              if (lower.includes('air') || lower.includes('tandon') || lower.includes('ph')) {
-                return t('notification.category.water', 'Air Sanitasi');
-              }
-              
-              return text;
-            };
-
-            const getLocalizedTitle = (text, category) => {
-              if (!text) return getLocalizedCategory(category);
-              const lower = text.toLowerCase();
-              
-              // Mapping Judul Spesifik ke Key i18n
-              if (lower.includes('terkirim')) return t('notification.title.complaint_sent', text);
-              if (lower.includes('tiket pengaduan baru')) return t('notification.title.new_complaint_ticket', text);
-              if (lower.includes('mulai memproses')) return t('notification.title.tech_processing', text);
-              if (lower.includes('perbaikan selesai')) return t('notification.title.repair_finished', text);
-              if (lower.includes('pekerjaan selesai')) return t('notification.title.job_finished', text);
-              if (lower.includes('ditolak')) return t('notification.title.complaint_rejected', text);
-              if (lower.includes('dibatalkan')) return t('notification.title.ticket_cancelled', text);
-              if (lower.includes('update perbaikan')) return t('notification.title.repair_update', text);
-              if (lower.includes('permintaan data log')) return t('notification.title.log_request', text);
-              if (lower.includes('akses log diberikan')) return t('notification.title.log_granted', text);
-              if (lower.includes('akses log ditolak')) return t('notification.title.log_denied', text);
-              if (lower.includes('tugas perbaikan baru')) return t('notification.title.new_task', text);
-              if (lower.includes('teknisi ditugaskan')) return t('notification.title.tech_assigned', text);
-              if (lower.includes('overdue')) return t('notification.title.sla_overdue', text);
-              if (lower.includes('anggaran diperbarui')) return t('notification.title.budget_updated', text);
-              if (lower.includes('peringatan anggaran diperbarui')) return t('notification.title.threshold_updated', text);
-              if (lower.includes('terlalu rendah')) return t('notification.title.low_budget', text);
-              if (lower.includes('kontrol perangkat')) return t('notification.title.device_control', text);
-
-              // Jika tidak ada yang cocok, gunakan pelokalan kategori sebagai judul
-              return getLocalizedCategory(category || text);
-            };
-
-            const getLocalizedMessage = (text) => {
-              if (!text) return '';
-              const lower = text.toLowerCase();
-              
-              if (lower.includes('terkirim dan menunggu')) return t('notification.msg.complaint_sent', text);
-              if (lower.includes('diajukan oleh') || lower.includes('tiket pengaduan baru telah')) return t('notification.msg.new_ticket', text);
-              if (lower.includes('dalam perjalanan') || lower.includes('mulai memproses')) return t('notification.msg.tech_processing', text);
-              if (lower.includes('selesai dilakukan') || lower.includes('berikan rating')) return t('notification.msg.repair_finished', text);
-              if (lower.includes('pekerjaan perbaikan telah selesai')) return t('notification.msg.job_finished', text);
-              if (lower.includes('tidak dapat diproses') || lower.includes('ditolak')) return t('notification.msg.complaint_rejected', text);
-              if (lower.includes('telah dibatalkan')) return t('notification.msg.ticket_cancelled', text);
-              if (lower.includes('meminta akses log')) return t('notification.msg.log_request', text);
-              if (lower.includes('akses log') && lower.includes('diberikan')) return t('notification.msg.log_granted', text);
-              if (lower.includes('akses log') && lower.includes('ditolak')) return t('notification.msg.log_denied', text);
-              if (lower.includes('ditambahkan ke jadwal')) return t('notification.msg.new_task', text);
-              if (lower.includes('teknisi baru telah ditugaskan')) return t('notification.msg.tech_assigned', text);
-              if (lower.includes('penyesuaian pada pengaturan') || lower.includes('anggaran energi')) return t('notification.msg.budget_updated', text);
-              if (lower.includes('dihidupkan/dimatikan') || lower.includes('melalui dasbor')) return t('notification.msg.device_control', text);
-              if (lower.includes('kadar air') || lower.includes('di bawah ambang batas')) return t('notification.msg.water_alert', text);
-              if (lower.includes('tegangan') || lower.includes('melebihi kapasitas')) return t('notification.msg.power_alert', text);
-              if (lower.includes('hub') && lower.includes('kehilangan koneksi')) return t('notification.msg.hub_offline', text);
-              if (lower.includes('akses tidak sah')) return t('notification.msg.unauthorized_access', text);
-              if (lower.includes('batas waktu sla')) return t('notification.msg.sla_overdue', text);
-              
-              return text;
-            };
+            const resolvedGetLocalizedCategory = (text) => getLocalizedCategory(text, t);
+            const resolvedGetLocalizedTitle = (text, cat) => getLocalizedTitle(text, cat, t);
+            const resolvedGetLocalizedMessage = (text) => getLocalizedMessage(text, notif.metadata || {}, t);
 
              return (
               <div 
@@ -483,7 +405,8 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
                           else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled')) smartType = 'TICKET_CANCELLED';
                         }
                         const dynamicTitle = smartType && t(`notifications.dynamic.${smartType}.title`, { defaultValue: '' });
-                        return dynamicTitle || getLocalizedTitle(notif.title, notif.category);
+                        return dynamicTitle || resolvedGetLocalizedTitle(notif.title, notif.category);
+
                       })()}
                     </h4>
                     <p className={`text-[13px] leading-relaxed ${notif.isRead ? 'text-gray-400' : 'text-gray-600 font-medium'}`}>
@@ -522,7 +445,8 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
                             date: notif.metadata?.date || ''
                           });
                         }
-                        return (notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : getLocalizedMessage(notif.message));
+                        return (notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : resolvedGetLocalizedMessage(notif.message));
+
                       })()}
                     </p>
                     

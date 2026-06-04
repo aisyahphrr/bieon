@@ -325,7 +325,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
                         : (userProfile?.fullName?.split(' ')[0] || 'User')}!
                     </div>
                     <div className="text-[10px] text-gray-500 font-medium">
-                      {isTechnicianMode ? 'Homeowner' : (userProfile?.role || 'Homeowner')}
+                      {isTechnicianMode ? t('role.homeowner') : (userProfile?.role?.toLowerCase() === 'homeowner' || !userProfile?.role ? t('role.homeowner') : userProfile.role)}
                     </div>
                   </div>
                 </button>

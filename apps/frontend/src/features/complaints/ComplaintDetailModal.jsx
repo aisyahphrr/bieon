@@ -39,11 +39,12 @@ export function ComplaintDetailModal({
     renderActions,
     role,
     isHistoryView = false,
-    title = "Detail Pengaduan",
+    title,
     onActionSuccess
 }) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
+    const modalTitle = title || t('complaint.detail_box.title', 'Detail Pengaduan');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     const [localTicket, setLocalTicket] = React.useState(null);
@@ -173,7 +174,7 @@ export function ComplaintDetailModal({
                 )}
 
                 {role !== 'homeowner' && (
-                    <p className="hidden md:block text-[10px] text-gray-400 italic text-center">Aksi tersedia dapat dilihat di panel bawah pada desktop atau scroll ke bawah.</p>
+                    <p className="hidden md:block text-[10px] text-gray-400 italic text-center">{t('complaint.detail_box.actions_notice', 'Aksi tersedia dapat dilihat di panel bawah pada desktop atau scroll ke bawah.')}</p>
                 )}
             </div>
         );
@@ -256,7 +257,7 @@ export function ComplaintDetailModal({
             const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!response.ok) throw new Error('Gagal mengambil data terbaru');
+            if (!response.ok) throw new Error(t('complaint.detail_box.error_fetch_latest', 'Gagal mengambil data terbaru'));
             const data = await response.json();
             
             // Map display ID if needed (consistent with frontend logic)
@@ -285,7 +286,7 @@ export function ComplaintDetailModal({
                 },
                 body: JSON.stringify({ status: newStatus, note, rating })
             });
-            if (!response.ok) throw new Error('Gagal memperbarui status');
+            if (!response.ok) throw new Error(t('complaint.detail_box.error_update_status', 'Gagal memperbarui status'));
             
             // Refresh data first to update timeline before closing/notifying
             await fetchComplaintDetail();
@@ -319,7 +320,7 @@ export function ComplaintDetailModal({
                     note: progressNote 
                 })
             });
-            if (!response.ok) throw new Error('Gagal memperbarui progres');
+            if (!response.ok) throw new Error(t('complaint.detail_box.error_update_progress', 'Gagal memperbarui progres'));
             
             // Refresh data to show new timeline entry immediately
             await fetchComplaintDetail();
@@ -346,7 +347,7 @@ export function ComplaintDetailModal({
                 },
                 body: JSON.stringify({ reason })
             });
-            if (!response.ok) throw new Error('Gagal memproses data log');
+            if (!response.ok) throw new Error(t('complaint.detail_box.error_process_log', 'Gagal memproses data log'));
             
             // Refresh data
             await fetchComplaintDetail();
@@ -684,14 +685,14 @@ export function ComplaintDetailModal({
                         onClick={onClose}
                         className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-bold border border-gray-200 hover:bg-gray-50 transition-all active:scale-95 shrink-0"
                     >
-                        <ArrowLeft className="w-4 h-4" /> Kembali
+                        <ArrowLeft className="w-4 h-4" /> {t('common.back', 'Kembali')}
                     </button>
                     <h2 className="text-base md:text-2xl font-bold text-white flex items-center gap-3 truncate">
-                        {title}
+                        {modalTitle}
                         {isRefreshing && (
                             <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
                                 <RefreshCw className="w-3 h-3 text-white animate-spin" />
-                                <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">Memperbarui...</span>
+                                <span className="text-[10px] font-bold text-white/80 uppercase tracking-widest">{t('common.updating', 'Memperbarui...')}</span>
                             </div>
                         )}
                     </h2>
@@ -828,7 +829,7 @@ export function ComplaintDetailModal({
                                                 <User className="w-6 h-6 text-gray-400" />
                                             </div>
                                             <div className="text-start">
-                                                <h4 className="font-bold text-gray-900 text-sm leading-tight">{localTicket.technicianInfo?.name || localTicket.technician?.fullName || 'Teknisi'}</h4>
+                                                <h4 className="font-bold text-gray-900 text-sm leading-tight">{localTicket.technicianInfo?.name || localTicket.technician?.fullName || t('complaint.detail_box.technician_fallback', 'Teknisi')}</h4>
                                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{t('complaint.detail_box.rating_label', 'Nilai')}: {localTicket.rating.stars || localTicket.rating}/5</p>
                                             </div>
                                         </div>

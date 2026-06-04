@@ -1,24 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle2, Loader2, Mail, ShieldCheck, XCircle } from 'lucide-react';
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || '';
 
-const formatDateTime = (value) => {
-    if (!value) return '-';
-    return new Date(value).toLocaleString('id-ID', {
-        dateStyle: 'full',
-        timeStyle: 'short',
-    });
-};
-
-const toneClasses = {
-    pending: 'bg-amber-50 text-amber-700 border-amber-200',
-    approved: 'bg-bieon-eco/10 text-bieon-eco border-bieon-sense/25',
-    rejected: 'bg-red-50 text-red-700 border-red-200',
-};
-
 export default function DeleteApprovalPage() {
+    const { t, i18n } = useTranslation();
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token') || '';
     const initialAction = (searchParams.get('action') || '').toLowerCase();
@@ -30,6 +18,20 @@ export default function DeleteApprovalPage() {
     const [resultMessage, setResultMessage] = useState('');
     const autoActionDoneRef = useRef(false);
 
+    const formatDateTime = (value) => {
+        if (!value) return '-';
+        return new Date(value).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
+            dateStyle: 'full',
+            timeStyle: 'short',
+        });
+    };
+
+    const toneClasses = {
+        pending: 'bg-amber-50 text-amber-700 border-amber-200',
+        approved: 'bg-bieon-eco/10 text-bieon-eco border-bieon-sense/25',
+        rejected: 'bg-red-50 text-red-700 border-red-200',
+    };
+
     const statusTone = useMemo(() => {
         if (!requestData?.status) return 'pending';
         return requestData.status;
@@ -37,7 +39,7 @@ export default function DeleteApprovalPage() {
 
     const fetchRequest = async () => {
         if (!token) {
-            setError('Token approval tidak ditemukan.');
+            setError(t('delete_approval.err_token_not_found', 'Token approval tidak ditemukan.'));
             setIsLoading(false);
             return;
         }
@@ -48,13 +50,13 @@ export default function DeleteApprovalPage() {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Gagal mengambil data approval.');
+                throw new Error(result.message || t('delete_approval.err_fetch_failed', 'Gagal mengambil data approval.'));
             }
 
             setRequestData(result.data);
             setError('');
         } catch (fetchError) {
-            setError(fetchError.message || 'Terjadi kesalahan saat mengambil data approval.');
+            setError(fetchError.message || t('delete_approval.err_fetch_error', 'Terjadi kesalahan saat mengambil data approval.'));
         } finally {
             setIsLoading(false);
         }
@@ -75,13 +77,13 @@ export default function DeleteApprovalPage() {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Gagal memproses keputusan.');
+                throw new Error(result.message || t('delete_approval.err_process_failed', 'Gagal memproses keputusan.'));
             }
 
             setRequestData(result.data);
-            setResultMessage(result.message || 'Keputusan berhasil diproses.');
+            setResultMessage(result.message || t('delete_approval.msg_decision_success', 'Keputusan berhasil diproses.'));
         } catch (submitError) {
-            setError(submitError.message || 'Terjadi kesalahan saat memproses keputusan.');
+            setError(submitError.message || t('delete_approval.err_process_error', 'Terjadi kesalahan saat memproses keputusan.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -110,7 +112,7 @@ export default function DeleteApprovalPage() {
             <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
                 <div className="bg-white border border-slate-200 rounded-3xl shadow-xl p-8 w-full max-w-lg text-center">
                     <Loader2 className="w-10 h-10 mx-auto text-bieon-eco animate-spin" />
-                    <p className="mt-4 text-base font-bold text-slate-800">Memuat permintaan persetujuan...</p>
+                    <p className="mt-4 text-base font-bold text-slate-800">{t('delete_approval.loading_request', 'Memuat permintaan persetujuan...')}</p>
                 </div>
             </div>
         );
@@ -138,11 +140,11 @@ export default function DeleteApprovalPage() {
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">BIEON Approval Center</p>
-                                <h1 className="text-2xl font-black text-slate-900">Persetujuan Penghapusan Akun</h1>
+                                <h1 className="text-2xl font-black text-slate-900">{t('delete_approval.title', 'Persetujuan Penghapusan Akun')}</h1>
                             </div>
                         </div>
                         <div className={`px-4 py-2 rounded-full border text-xs font-bold ${toneClasses[statusTone] || toneClasses.pending}`}>
-                            {requestData?.status === 'approved' ? 'Disetujui' : requestData?.status === 'rejected' ? 'Ditolak' : 'Menunggu Keputusan'}
+                            {requestData?.status === 'approved' ? t('delete_approval.status_approved', 'Disetujui') : requestData?.status === 'rejected' ? t('delete_approval.status_rejected', 'Ditolak') : t('delete_approval.status_pending', 'Menunggu Keputusan')}
                         </div>
                     </div>
                 </div>
@@ -161,32 +163,32 @@ export default function DeleteApprovalPage() {
                     )}
 
                     <div className="space-y-3">
-                        <p className="text-lg font-bold text-slate-900">Dear Project Owner,</p>
+                        <p className="text-lg font-bold text-slate-900">{t('delete_approval.greeting', 'Dear Project Owner,')}</p>
                         <p className="text-sm leading-7 text-slate-600">
-                            Anda menerima permintaan penghapusan akun yang diajukan oleh Super Admin. Silakan tinjau detail di bawah ini sebelum mengambil keputusan.
+                            {t('delete_approval.description', 'Anda menerima permintaan penghapusan akun yang diajukan oleh Super Admin. Silakan tinjau detail di bawah ini sebelum mengambil keputusan.')}
                         </p>
                     </div>
 
                     <div className="rounded-3xl border border-red-200 bg-red-50/70 p-6">
                         <div className="flex items-center gap-3 text-red-600 mb-4">
                             <AlertCircle className="w-6 h-6" />
-                            <h2 className="text-lg font-bold">Detail Akun yang Akan Dihapus</h2>
+                            <h2 className="text-lg font-bold">{t('delete_approval.account_details_title', 'Detail Akun yang Akan Dihapus')}</h2>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-4 text-sm">
                             <div className="rounded-2xl bg-white border border-red-100 p-4">
-                                <p className="text-xs font-bold uppercase text-slate-400">Nama Lengkap</p>
+                                <p className="text-xs font-bold uppercase text-slate-400">{t('delete_approval.lbl_fullname', 'Nama Lengkap')}</p>
                                 <p className="mt-2 font-bold text-slate-900">{requestData?.targetSnapshot?.fullName || '-'}</p>
                             </div>
                             <div className="rounded-2xl bg-white border border-red-100 p-4">
-                                <p className="text-xs font-bold uppercase text-slate-400">Email</p>
+                                <p className="text-xs font-bold uppercase text-slate-400">{t('delete_approval.lbl_email', 'Email')}</p>
                                 <p className="mt-2 font-bold text-slate-900 break-all">{requestData?.targetSnapshot?.email || '-'}</p>
                             </div>
                             <div className="rounded-2xl bg-white border border-red-100 p-4">
-                                <p className="text-xs font-bold uppercase text-slate-400">Role</p>
+                                <p className="text-xs font-bold uppercase text-slate-400">{t('delete_approval.lbl_role', 'Role')}</p>
                                 <p className="mt-2 font-bold text-slate-900">{requestData?.targetRole || '-'}</p>
                             </div>
                             <div className="rounded-2xl bg-white border border-red-100 p-4">
-                                <p className="text-xs font-bold uppercase text-slate-400">Diajukan Oleh</p>
+                                <p className="text-xs font-bold uppercase text-slate-400">{t('delete_approval.lbl_requested_by', 'Diajukan Oleh')}</p>
                                 <p className="mt-2 font-bold text-slate-900">{requestData?.requestedBySnapshot?.fullName || '-'}</p>
                             </div>
                         </div>
@@ -195,33 +197,33 @@ export default function DeleteApprovalPage() {
                     <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
                         <div className="flex items-center gap-2 mb-3">
                             <Mail className="w-5 h-5 text-slate-500" />
-                            <h3 className="text-sm font-bold text-slate-700">Alasan Penghapusan</h3>
+                            <h3 className="text-sm font-bold text-slate-700">{t('delete_approval.lbl_reason', 'Alasan Penghapusan')}</h3>
                         </div>
                         <p className="text-sm leading-7 text-slate-700 whitespace-pre-wrap">{requestData?.reason || '-'}</p>
                     </div>
 
                     <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-6">
-                        <h3 className="text-sm font-bold text-amber-800 mb-2">Penting untuk Diperhatikan</h3>
+                        <h3 className="text-sm font-bold text-amber-800 mb-2">{t('delete_approval.important_title', 'Penting untuk Diperhatikan')}</h3>
                         <ul className="list-disc pl-5 space-y-2 text-sm text-amber-800">
-                            <li>Jika disetujui, akun akan dihapus permanen dari sistem.</li>
-                            <li>Pengguna target dan Super Admin pengaju akan menerima email hasil keputusan.</li>
-                            <li>Jika ditolak, akun tetap aktif dan status penolakan akan terlihat di dashboard Super Admin.</li>
+                            <li>{t('delete_approval.warn_point_1', 'Jika disetujui, akun akan dihapus permanen dari sistem.')}</li>
+                            <li>{t('delete_approval.warn_point_2', 'Pengguna target dan Super Admin pengaju akan menerima email hasil keputusan.')}</li>
+                            <li>{t('delete_approval.warn_point_3', 'Jika ditolak, akun tetap aktif dan status penolakan akan terlihat di dashboard Super Admin.')}</li>
                         </ul>
                     </div>
 
                     <div className="rounded-3xl border border-slate-200 bg-white p-6">
-                        <h3 className="text-sm font-bold text-slate-700 mb-3">Ringkasan Status</h3>
+                        <h3 className="text-sm font-bold text-slate-700 mb-3">{t('delete_approval.status_summary_title', 'Ringkasan Status')}</h3>
                         <div className="grid sm:grid-cols-2 gap-4 text-sm">
                             <div>
-                                <p className="text-xs font-bold uppercase text-slate-400">Diajukan Pada</p>
+                                <p className="text-xs font-bold uppercase text-slate-400">{t('delete_approval.lbl_requested_at', 'Diajukan Pada')}</p>
                                 <p className="mt-1 font-semibold text-slate-800">{formatDateTime(requestData?.createdAt)}</p>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase text-slate-400">Diputuskan Pada</p>
+                                <p className="text-xs font-bold uppercase text-slate-400">{t('delete_approval.lbl_decided_at', 'Diputuskan Pada')}</p>
                                 <p className="mt-1 font-semibold text-slate-800">{formatDateTime(requestData?.decidedAt)}</p>
                             </div>
                             <div className="sm:col-span-2">
-                                <p className="text-xs font-bold uppercase text-slate-400">Catatan Keputusan</p>
+                                <p className="text-xs font-bold uppercase text-slate-400">{t('delete_approval.lbl_decision_note', 'Catatan Keputusan')}</p>
                                 <p className="mt-1 font-semibold text-slate-800">{requestData?.decisionNote || '-'}</p>
                             </div>
                         </div>
@@ -236,7 +238,7 @@ export default function DeleteApprovalPage() {
                                 className="py-4 rounded-2xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isSubmitting && initialAction === 'approve' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                                Setujui Penghapusan
+                                {t('delete_approval.btn_approve', 'Setujui Penghapusan')}
                             </button>
                             <button
                                 type="button"
@@ -245,7 +247,7 @@ export default function DeleteApprovalPage() {
                                 className="py-4 rounded-2xl bg-slate-600 text-white font-bold hover:bg-slate-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isSubmitting && initialAction === 'reject' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                                Tolak Permintaan
+                                {t('delete_approval.btn_reject', 'Tolak Permintaan')}
                             </button>
                         </div>
                     )}

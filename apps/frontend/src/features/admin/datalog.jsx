@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   FileText, 
   Download, 
@@ -36,6 +37,7 @@ const asText = (value) => {
 const buildLog = (time, tag, msg) => ({ time, tag, msg });
 
 export function DataLogSistemPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [logs, setLogs] = useState([]);
@@ -43,7 +45,7 @@ export function DataLogSistemPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const customerName = location.state?.customerName || "Sistem Global";
+  const customerName = location.state?.customerName || t('datalog.global_system', 'Sistem Global');
   const ownerId = location.state?.homeownerId || location.state?.ownerId || location.state?.userId || '';
   const bieonId = location.state?.bieonId || location.state?.systemId || '';
   const streamingRef = useRef(isStreaming);
@@ -174,10 +176,10 @@ export function DataLogSistemPage() {
   }, [appendLogs]);
 
   const liveStatusText = useMemo(() => {
-    if (isLoading) return 'Syncing live diagnostics...';
-    if (!isStreaming) return 'Live stream paused';
-    return 'Live data from backend + socket';
-  }, [isLoading, isStreaming]);
+    if (isLoading) return t('datalog.status.syncing', 'Syncing live diagnostics...');
+    if (!isStreaming) return t('datalog.status.paused', 'Live stream paused');
+    return t('datalog.status.live', 'Live data from backend + socket');
+  }, [isLoading, isStreaming, t]);
 
   const handleDownloadTxt = () => {
     const header = `BIEON SMART GATEWAY LOG\n` +
@@ -227,21 +229,21 @@ export function DataLogSistemPage() {
             <div className="px-4 py-2 bg-white border-2 border-bieon-eco/20 shadow-sm rounded-xl md:hidden ml-4">
               <span className="text-bieon-eco text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
                 <div className="w-2 h-2 bg-bieon-eco rounded-full animate-pulse shadow-[0_0_8px_rgba(5,155,39,0.6)]" />
-                Live Monitoring: {customerName}
+                {t('datalog.live_monitoring', 'Live Monitoring:')} {customerName}
               </span>
             </div>
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-black text-[#235C50] tracking-tight">Data Log & Diagnostics</h1>
-            <p className="text-gray-500 text-sm font-medium">Monitoring Real-time Gateway Telemetry</p>
+            <h1 className="text-2xl font-black text-[#235C50] tracking-tight">{t('datalog.title', 'Data Log & Diagnostics')}</h1>
+            <p className="text-gray-500 text-sm font-medium">{t('datalog.subtitle', 'Monitoring Real-time Gateway Telemetry')}</p>
           </div>
 
           <div className="hidden md:block">
             <div className="px-4 py-2 bg-white border-2 border-bieon-eco/20 shadow-sm rounded-xl">
               <span className="text-bieon-eco text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
                 <div className="w-2 h-2 bg-bieon-eco rounded-full animate-pulse shadow-[0_0_8px_rgba(5,155,39,0.6)]" />
-                Live Monitoring: {customerName}
+                {t('datalog.live_monitoring', 'Live Monitoring:')} {customerName}
               </span>
             </div>
           </div>
@@ -254,7 +256,7 @@ export function DataLogSistemPage() {
               <Activity className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5 truncate">Uptime</p>
+              <p className="text-[9px] md:text-[10px] font-black text-blue-500 uppercase tracking-widest mb-0.5 truncate">{t('datalog.stats.uptime', 'Sistem Aktif')}</p>
               <p className="text-lg md:text-2xl font-black text-gray-900 leading-none">99.98%</p>
             </div>
           </div>
@@ -264,7 +266,7 @@ export function DataLogSistemPage() {
               <Cpu className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] md:text-[10px] font-black text-purple-500 uppercase tracking-widest mb-0.5 truncate">CPU Load</p>
+              <p className="text-[9px] md:text-[10px] font-black text-purple-500 uppercase tracking-widest mb-0.5 truncate">{t('datalog.stats.cpu_load', 'Beban CPU')}</p>
               <p className="text-lg md:text-2xl font-black text-gray-900 leading-none">12.4%</p>
             </div>
           </div>
@@ -274,7 +276,7 @@ export function DataLogSistemPage() {
               <ShieldCheck className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] md:text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-0.5 truncate">Security</p>
+              <p className="text-[9px] md:text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-0.5 truncate">{t('datalog.stats.security', 'Keamanan')}</p>
               <p className="text-lg md:text-2xl font-black text-gray-900 leading-none">WPA3-Enc</p>
             </div>
           </div>
@@ -284,8 +286,8 @@ export function DataLogSistemPage() {
               <Server className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] md:text-[10px] font-black text-amber-500 uppercase tracking-widest mb-0.5 truncate">Node Status</p>
-              <p className="text-lg md:text-2xl font-black text-gray-900 leading-none">14 Active</p>
+              <p className="text-[9px] md:text-[10px] font-black text-amber-500 uppercase tracking-widest mb-0.5 truncate">{t('datalog.stats.node_status', 'Status Node')}</p>
+              <p className="text-lg md:text-2xl font-black text-gray-900 leading-none">14 {t('history.status.aktif', 'Active')}</p>
             </div>
           </div>
         </div>
@@ -308,7 +310,7 @@ export function DataLogSistemPage() {
                   <input
                     autoFocus
                     type="text"
-                    placeholder="Search logs (type or category)..."
+                    placeholder={t('datalog.search_placeholder', 'Cari log (tipe atau kategori)...')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono font-bold text-gray-800 outline-none focus:border-bieon-eco focus:ring-2 focus:ring-bieon-eco/20 transition-all placeholder:text-gray-400"
@@ -366,7 +368,9 @@ export function DataLogSistemPage() {
                 ))
               ) : (
                 <div className="py-20 text-center">
-                  <p className="text-gray-400 italic">No logs match your search: "{searchTerm}"</p>
+                  <p className="text-gray-400 italic">
+                    {t('datalog.no_logs_match', 'Tidak ada log yang cocok dengan pencarian Anda: "{{search}}"', { search: searchTerm })}
+                  </p>
                 </div>
               )}
               
@@ -377,7 +381,7 @@ export function DataLogSistemPage() {
                   </span>
                   <span className="text-bieon-eco font-black select-none w-14 shrink-0 animate-pulse">[RECV]</span>
                   <span className="text-bieon-eco/80 italic font-medium animate-pulse flex items-center gap-2">
-                    Inbound telemetry stream active...
+                    {t('datalog.stream_active', 'Aliran telemetri masuk aktif...')}
                     <span className="w-1.5 h-4 bg-bieon-eco animate-bounce" />
                   </span>
                 </div>
@@ -395,8 +399,8 @@ export function DataLogSistemPage() {
                 <div className="w-2 h-2 bg-bieon-eco rounded-full shadow-[0_0_8px_rgba(5,155,39,0.4)] animate-pulse" />
                 BIEON_RT_ENGINE_LIVE
               </span>
-              <span>Buffer: {Math.min(logs.length, MAX_LOGS)}/{MAX_LOGS}</span>
-              <span>{isLoading ? 'Syncing...' : 'Live Ready'}</span>
+              <span>{t('datalog.stats.buffer', 'Buffer:')} {Math.min(logs.length, MAX_LOGS)}/{MAX_LOGS}</span>
+              <span>{isLoading ? t('history.loading', 'Syncing...') : t('datalog.live_ready', 'Live Ready')}</span>
             </div>
             <div className="flex gap-6 shrink-0">
               <span className="bg-white text-gray-600 px-2 py-0.5 rounded border border-gray-200">UTF-8</span>

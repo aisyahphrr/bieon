@@ -739,7 +739,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
               <div className="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl flex items-center gap-4 w-fit shrink-0">
                 <div>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">TOTAL KATEGORI</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">{t('admin_dashboard.pln_segments.total_categories', 'TOTAL KATEGORI')}</p>
                   <p className="text-xl font-bold text-slate-800 leading-none">
                     {plnCategoriesLoading ? '-' : plnCategories.length}
                   </p>
@@ -784,7 +784,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <div className="text-[11px] text-slate-500 font-medium hidden md:block">
                 {plnSummary?.latestUpdate && (
                   <span>
-                    Update Terakhir: <strong className="text-slate-700">{plnSummary.latestUpdate.category}</strong> (Rp {plnSummary.latestUpdate.tariff})
+                    {t('admin_dashboard.pln_segments.last_update', 'Update Terakhir')}: <strong className="text-slate-700">{plnSummary.latestUpdate.category}</strong> (Rp {plnSummary.latestUpdate.tariff})
                   </span>
                 )}
               </div>
@@ -793,7 +793,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   onClick={() => setShowPlnCategoriesModal(true)}
                   className="w-full sm:w-auto px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-600 font-semibold rounded-xl text-xs transition-colors border border-slate-200 flex items-center justify-center gap-2 shadow-sm"
                 >
-                  <Eye className="w-4 h-4" /> Lihat Struktur Golongan
+                  <Eye className="w-4 h-4" /> {t('admin_dashboard.pln_segments.btn_view_structure', 'Lihat Struktur Golongan')}
                 </button>
                 <button
                   onClick={() => onNavigate && onNavigate('admin-tariff')}
@@ -1265,8 +1265,8 @@ export default function SuperAdminDashboard({ onNavigate }) {
                         <div className="w-24 h-24 mb-6 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100/50 shadow-inner">
                            <Users className="w-10 h-10 text-slate-300" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-700 mb-1">Belum Ada Pelanggan</h3>
-                        <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto">Tidak ada data pelanggan yang cocok dengan status atau pencarian ini.</p>
+                        <h3 className="text-lg font-bold text-slate-700 mb-1">{t('admin_dashboard.table.empty_title', 'Belum Ada Pelanggan')}</h3>
+                        <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto">{t('admin_dashboard.table.empty_desc', 'Tidak ada data pelanggan yang cocok dengan status atau pencarian ini.')}</p>
                       </div>
                     </td>
                   </tr>

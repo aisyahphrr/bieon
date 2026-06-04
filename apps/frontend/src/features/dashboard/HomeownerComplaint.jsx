@@ -227,7 +227,7 @@ export function HomeownerComplaint({ onNavigate }) {
                             const diff = end - new Date(item.processStartedAt);
                             const hours = Math.floor(diff / (1000 * 60 * 60));
                             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                            return hours > 0 ? `${hours}j ${minutes}m` : `${minutes}m`;
+                            return hours > 0 ? t('complaint.duration_format_hours_mins', '{{hours}}j {{minutes}}m', { hours, minutes }) : t('complaint.duration_format_mins', '{{minutes}}m', { minutes });
                           })()
                         : null
                 };
@@ -397,7 +397,7 @@ export function HomeownerComplaint({ onNavigate }) {
                 const newFiles = await Promise.all(filePromises);
                 setFormFiles(prev => [...prev, ...newFiles]);
             } catch (error) {
-                alert("Gagal membaca file gambar.");
+                alert(t('complaint.alerts.read_file_failed', 'Gagal membaca file gambar.'));
             }
         }
     };
@@ -413,7 +413,7 @@ export function HomeownerComplaint({ onNavigate }) {
     const handleSubmitComplaint = async (e) => {
         e.preventDefault();
         if (!formData.category || !formData.device || !formData.topic || !formData.description) {
-            alert("Harap lengkapi semua field yang ditandai bintang (*).");
+            alert(t('complaint.alerts.fill_required', 'Harap lengkapi semua field yang ditandai bintang (*).'));
             return;
         }
 
@@ -495,13 +495,13 @@ export function HomeownerComplaint({ onNavigate }) {
                 setHoverStars(0);
                 // Refresh data
                 await fetchComplaints();
-                alert("Terima kasih! Tiket telah diselesaikan dan ulasan Anda telah disimpan.");
+                alert(t('complaint.alerts.thank_you_completed', 'Terima kasih! Tiket telah diselesaikan dan ulasan Anda telah disimpan.'));
             } else {
-                alert("Gagal mengirimkan penilaian.");
+                alert(t('complaint.alerts.send_rating_failed', 'Gagal mengirimkan penilaian.'));
             }
         } catch (error) {
             console.error("Error submitting rating:", error);
-            alert("Terjadi kesalahan saat mengirim penilaian.");
+            alert(t('complaint.alerts.send_rating_error', 'Terjadi kesalahan saat mengirim penilaian.'));
         }
     };
 

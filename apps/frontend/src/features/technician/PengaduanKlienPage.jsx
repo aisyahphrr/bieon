@@ -53,7 +53,7 @@ const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }
             <div className="bg-[#f8fafc] p-3 rounded-xl border border-gray-100 mb-4">
                 <div className="flex items-center gap-2 mb-2">
                     <FileText className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Topik Kendala</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('complaint.table_col.topic', 'Topik Kendala')}</span>
                 </div>
                 <p className="text-xs text-gray-600 line-clamp-2 mb-4 leading-relaxed">{item.topic}</p>
                 <div className="flex flex-row items-center justify-between gap-2 w-full mt-2">
@@ -260,7 +260,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                         customer: item.homeowner?.fullName || 'Unknown User',
                         location: item.homeowner?.address || '-',
                         topic: item.topic || 'No Topic',
-                        description: item.desc || 'Tidak ada deskripsi.',
+                        description: item.desc || t('complaint_extra.no_desc', 'Tidak ada deskripsi.'),
                         status: item.status?.toLowerCase() || 'unassigned',
                         clientInfo: item.homeowner ? {
                             name: item.homeowner.fullName,
@@ -448,7 +448,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
                             </div>
                             {stats.hasOverdue && (
                                 <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50 text-red-600 rounded-full text-[9px] md:text-[10px] font-bold border border-red-100 whitespace-nowrap animate-pulse">
-                                    <AlertCircle className="w-2.5 h-2.5 md:w-3 md:h-3" /> Urgent
+                                    <AlertCircle className="w-2.5 h-2.5 md:w-3 md:h-3" /> {t('complaint_extra.urgent', 'Urgent')}
                                 </div>
                             )}
                         </div>

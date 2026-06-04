@@ -781,27 +781,27 @@ export function RiwayatPerbaikanPage() {
               <thead className="bg-white border-b border-gray-200 text-gray-500 select-none">
                 <tr>
                   <th onClick={() => requestSort('id')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">{t('table_col.ticket_id', 'ID Tiket')} {getSortIcon('id')}</div>
+                    <div className="flex items-center gap-1.5">{t('complaint.table_col.ticket_id', 'ID Tiket')} {getSortIcon('id')}</div>
                   </th>
                   <th onClick={() => requestSort('finishedDate')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">{t('table_col.date', 'Tanggal')} {getSortIcon('finishedDate')}</div>
+                    <div className="flex items-center gap-1.5">{t('complaint.table_col.date', 'Tanggal')} {getSortIcon('finishedDate')}</div>
                   </th>
                   <th onClick={() => requestSort('client')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">{t('table_col.customer', 'Pelanggan')} {getSortIcon('client')}</div>
+                    <div className="flex items-center gap-1.5">{t('complaint.table_col.customer', 'Pelanggan')} {getSortIcon('client')}</div>
                   </th>
                   <th onClick={() => requestSort('location')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">{t('table_col.location', 'Lokasi')} {getSortIcon('location')}</div>
+                    <div className="flex items-center gap-1.5">{t('complaint.table_col.location', 'Lokasi')} {getSortIcon('location')}</div>
                   </th>
                   <th className="px-3 md:px-4 lg:px-6 py-4 font-normal whitespace-nowrap max-w-[400px]">
-                    {t('table_col.topic', 'Topik Kendala')}
+                    {t('complaint.table_col.topic', 'Topik Kendala')}
                   </th>
                   <th onClick={() => requestSort('duration')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">{t('table_col.duration', 'Durasi')} {getSortIcon('duration')}</div>
+                    <div className="flex items-center gap-1.5">{t('complaint.table_col.duration', 'Durasi')} {getSortIcon('duration')}</div>
                   </th>
                   <th onClick={() => requestSort('stars')} className="px-3 md:px-4 lg:px-6 py-4 font-normal cursor-pointer hover:bg-gray-50 transition-colors whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">{t('table_col.rating', 'Rating')} {getSortIcon('stars')}</div>
+                    <div className="flex items-center gap-1.5">{t('complaint.table_col.rating', 'Rating')} {getSortIcon('stars')}</div>
                   </th>
-                  <th className="px-3 md:px-4 lg:px-6 py-4 w-[120px] font-normal whitespace-nowrap text-center text-xs uppercase tracking-wider">{t('table_col.action', 'Aksi')}</th>
+                  <th className="px-3 md:px-4 lg:px-6 py-4 w-[120px] font-normal whitespace-nowrap text-center text-xs uppercase tracking-wider">{t('complaint.table_col.action', 'Aksi')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

@@ -63,6 +63,12 @@ import {
   mockActivities,
   mockSensors
 } from './homeownerMockData';
+import {
+  getLocalizedTitle as getNotifTitle,
+  getLocalizedCategory as getNotifCategory,
+  getLocalizedMessage as getNotifMessage
+} from '../../utils/notificationI18nHelper';
+
 
 // Helper to decode JWT token safely in browser
 function getEmailFromToken() {
@@ -197,11 +203,11 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
                 required
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sense/20 focus:border-sense"
               >
-                <option value="">Pilih perangkat...</option>
+                <option value="">{t('dashboard.select_device', 'Pilih perangkat...')}</option>
                 {realDevices.map(d => (
                   <option key={d._id} value={d.name}>{d.name} ({d.location})</option>
                 ))}
-                <option value="Lainnya">Lainnya</option>
+                <option value="Lainnya">{t('dashboard.others', 'Lainnya')}</option>
               </select>
             </div>
 
@@ -215,13 +221,13 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
                 required
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sense/20 focus:border-sense"
               >
-                <option value="">Pilih jenis masalah...</option>
-                <option>Perangkat tidak merespon</option>
-                <option>Sensor tidak akurat</option>
-                <option>Koneksi terputus</option>
-                <option>Kerusakan fisik</option>
-                <option>Error response</option>
-                <option>Lainnya</option>
+                <option value="">{t('dashboard.select_issue', 'Pilih jenis masalah...')}</option>
+                <option value="Perangkat tidak merespon">{t('dashboard.issue_not_responding', 'Perangkat tidak merespon')}</option>
+                <option value="Sensor tidak akurat">{t('dashboard.issue_inaccurate', 'Sensor tidak akurat')}</option>
+                <option value="Koneksi terputus">{t('dashboard.issue_disconnected', 'Koneksi terputus')}</option>
+                <option value="Kerusakan fisik">{t('dashboard.issue_physical_damage', 'Kerusakan fisik')}</option>
+                <option value="Error response">{t('dashboard.issue_error_response', 'Error response')}</option>
+                <option value="Lainnya">{t('dashboard.others', 'Lainnya')}</option>
               </select>
             </div>
 
@@ -1043,55 +1049,18 @@ export function HomeownerDashboard() {
       device: act.deviceName || act.actuator || 'Perangkat',
       action: act.action || ((statusStr === 'ON' || statusStr === '1') ? 'ON' : 'OFF'),
       trigger: act.trigger || 'Manual',
+      platform: act.trigger || 'Web',
       time: act.timestamp ? new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
       icon,
       color
     };
   });
 
-  const getLocalizedCategory = (text) => {
-    if (!text) return t('notification.ui.title', 'Notifikasi');
-    const lower = text.toLowerCase();
-    if (lower.includes('bahaya')) return t('notification.category.danger', 'Bahaya');
-    if (lower.includes('waspada')) return t('notification.category.warning', 'Waspada');
-    if (lower.includes('keamanan')) return t('notification.category.security', 'Keamanan');
-    if (lower.includes('sistem') || lower.includes('hub') || lower.includes('kontrol')) return t('notification.category.system', 'Sistem');
-    if (lower.includes('pengaduan') || lower.includes('tiket') || lower.includes('tugas') || lower.includes('perbaikan')) {
-      return t('notification.category.complaint', 'Pengaduan');
-    }
-    if (lower.includes('kenyamanan')) return t('notification.category.comfort', 'Kenyamanan');
-    if (lower.includes('energi') || lower.includes('anggaran') || lower.includes('tarif')) {
-      return t('notification.category.energy', 'Energi');
-    }
-    if (lower.includes('air') || lower.includes('tandon') || lower.includes('ph')) {
-      return t('notification.category.water', 'Air Sanitasi');
-    }
-    return text;
-  };
+  const getLocalizedCategory = (text) => getNotifCategory(text, t);
 
-  const getLocalizedTitle = (text, category) => {
-    if (!text) return getLocalizedCategory(category);
-    const lower = text.toLowerCase();
-    if (lower.includes('terkirim')) return t('notification.title.complaint_sent', text);
-    if (lower.includes('tiket pengaduan baru')) return t('notification.title.new_complaint_ticket', text);
-    if (lower.includes('mulai memproses')) return t('notification.title.tech_processing', text);
-    if (lower.includes('perbaikan selesai')) return t('notification.title.repair_finished', text);
-    if (lower.includes('pekerjaan selesai')) return t('notification.title.job_finished', text);
-    if (lower.includes('ditolak')) return t('notification.title.complaint_rejected', text);
-    if (lower.includes('dibatalkan')) return t('notification.title.ticket_cancelled', text);
-    if (lower.includes('update perbaikan')) return t('notification.title.repair_update', text);
-    if (lower.includes('permintaan data log')) return t('notification.title.log_request', text);
-    if (lower.includes('akses log diberikan')) return t('notification.title.log_granted', text);
-    if (lower.includes('akses log ditolak')) return t('notification.title.log_denied', text);
-    if (lower.includes('tugas perbaikan baru')) return t('notification.title.new_task', text);
-    if (lower.includes('teknisi ditugaskan')) return t('notification.title.tech_assigned', text);
-    if (lower.includes('overdue')) return t('notification.title.sla_overdue', text);
-    if (lower.includes('anggaran diperbarui')) return t('notification.title.budget_updated', text);
-    if (lower.includes('peringatan anggaran diperbarui')) return t('notification.title.threshold_updated', text);
-    if (lower.includes('terlalu rendah')) return t('notification.title.low_budget', text);
-    if (lower.includes('kontrol perangkat')) return t('notification.title.device_control', text);
-    return getLocalizedCategory(category || text);
-  };
+
+  const getLocalizedTitle = (text, category) => getNotifTitle(text, category, t);
+
 
   const handleReadNotification = async (notif) => {
     try {
@@ -1173,7 +1142,7 @@ export function HomeownerDashboard() {
           <div className="lg:col-span-9 space-y-6 md:space-y-8">
             {currentSensors.comfort && (
               <>
-                <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">Kenyamanan</h2>
+                <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">{t('dashboard.comfort', 'Kenyamanan')}</h2>
                 <div id="section-kenyamanan" className="mb-6">
                   <div className="flex flex-col md:flex-row gap-4 w-full">
                     {/* Kiri (Master - Status) */}
@@ -1400,7 +1369,7 @@ export function HomeownerDashboard() {
 
               return (
                 <>
-                  <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">Keamanan</h2>
+                  <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">{t('dashboard.security', 'Keamanan')}</h2>
                   <div id="section-keamanan" className="mb-6">
                     <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
                       {/* Kiri (Master - Status) */}
@@ -1512,7 +1481,7 @@ export function HomeownerDashboard() {
 
             {currentSensors.waterQuality && (
               <>
-                <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">Kualitas Air</h2>
+                <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">{t('dashboard.water_health', 'Kualitas Air')}</h2>
                 <div id="section-kualitas-air" className="mb-6">
                   <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
                     {/* Kiri (Master - Status Air) */}
@@ -1881,7 +1850,7 @@ export function HomeownerDashboard() {
                         strokeWidth={2.5}
                         dot={{ fill: 'var(--color-eco-500)', r: 5, strokeWidth: 0 }}
                         activeDot={{ r: 7, stroke: '#fff', strokeWidth: 2 }}
-                        name="Konsumsi (kWh)"
+                        name={t('dashboard.energy_consumption_label', 'Konsumsi (kWh)')}
                       />
                     </RechartsLineChart>
                   </ResponsiveContainer>
@@ -2092,7 +2061,8 @@ export function HomeownerDashboard() {
                                     percent: notif.metadata?.percent || ''
                                   });
                                 }
-                                return notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : notif.message;
+                                return notif.messageKey ? t(notif.messageKey, notif.metadata || {}) : getNotifMessage(notif.message, notif.metadata || {}, t);
+
                               })()}
                             </div>
                             <div className="text-[10px] text-slate-400 mt-1.5 font-medium flex items-center justify-between">
@@ -2129,7 +2099,7 @@ export function HomeownerDashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-text-headline leading-tight mb-0.5">{activity.device}</div>
-                        <div className="text-[10px] text-text-dim font-medium uppercase tracking-wider">{getLocalizedAction(activity.action)} • {getLocalizedTrigger(activity.trigger)}</div>
+                        <div className="text-[10px] text-text-dim font-medium uppercase tracking-wider">{getLocalizedAction(activity.action)} • {t('activity.platform_source', { platform: activity.platform || 'Web' })}</div>
                       </div>
                       <div className="text-[10px] font-semibold text-text-dim bg-slate-100/50 px-2 py-1 rounded-lg">{activity.time}</div>
                     </div>

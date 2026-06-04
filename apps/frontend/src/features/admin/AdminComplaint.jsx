@@ -871,10 +871,10 @@ export default function AdminComplaint({ onNavigate }) {
                 fetchData();
             } else {
                 const err = await response.json();
-                alert(`Gagal menugaskan teknisi: ${err.message}`);
+                alert(`${t('complaint.alert_assign_failed', 'Gagal menugaskan teknisi')}: ${err.message}`);
             }
         } catch (error) {
-            alert(`Terjadi kesalahan server: ${error.message}`);
+            alert(`${t('complaint.alert_server_error', 'Terjadi kesalahan server')}: ${error.message}`);
         }
     };
 
@@ -917,7 +917,7 @@ export default function AdminComplaint({ onNavigate }) {
                 body: JSON.stringify({ isApproved })
             });
 
-            if (!response.ok) throw new Error('Gagal memproses akses log di server');
+            if (!response.ok) throw new Error(t('complaint.err_log_access_server', 'Gagal memproses akses log di server'));
 
             // Update local state for optimistic UI
             setComplaints(prev => prev.map(c => {
@@ -1202,7 +1202,7 @@ export default function AdminComplaint({ onNavigate }) {
                                         <td colSpan={8} className="px-8 py-20 text-center">
                                             <div className="flex flex-col items-center justify-center gap-4">
                                                 <div className="w-10 h-10 border-4 border-gray-100 border-t-bieon-eco rounded-full animate-spin"></div>
-                                                <p className="text-sm font-bold text-gray-500 animate-pulse">Menarik Data dari Database...</p>
+                                                <p className="text-sm font-bold text-gray-500 animate-pulse">{t('complaint.loading_db', 'Menarik Data dari Database...')}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -1225,8 +1225,8 @@ export default function AdminComplaint({ onNavigate }) {
                                             <div className="flex flex-col items-center gap-4">
                                                 <Activity className="w-12 h-12 text-gray-100" />
                                                 <div className="space-y-1">
-                                                    <p className="text-lg font-bold text-gray-900">Tidak ada pengaduan ditemukan</p>
-                                                    <p className="text-sm font-semibold text-gray-400">Belum ada pengaduan di database server.</p>
+                                                    <p className="text-lg font-bold text-gray-900">{t('complaint.no_complaints_found', 'Tidak ada pengaduan ditemukan')}</p>
+                                                    <p className="text-sm font-semibold text-gray-400">{t('complaint.no_complaints_desc', 'Belum ada pengaduan di database server.')}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -1467,13 +1467,13 @@ export default function AdminComplaint({ onNavigate }) {
                                                     {(tech?.fullName || '?').charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="text-sm font-bold text-gray-800">{tech?.fullName || 'Tanpa Nama'}</p>
+                                                    <p className="text-sm font-bold text-gray-800">{tech?.fullName || t('complaint.no_name', 'Tanpa Nama')}</p>
                                                     <p className="text-[10px] text-gray-400 font-medium">{tech?.position || 'Teknisi BIEON'}</p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className={`px-2 py-0.5 rounded text-[9px] font-bold border ${tech.status === 'aktif' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                                                {tech.status === 'aktif' ? 'Standby' : 'Sibuk'}
-                                            </div>
+                                                <div className={`px-2 py-0.5 rounded text-[9px] font-bold border ${tech.status === 'aktif' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                                                    {tech.status === 'aktif' ? t('complaint.status_standby', 'Standby') : t('complaint.status_busy', 'Sibuk')}
+                                                </div>
                                         </button>
                                     )) : (
                                         <div className="text-center py-4 text-xs font-bold text-gray-400">{t('complaint.detail_box.no_technician', 'Belum ada teknisi yang ditugaskan')}</div>

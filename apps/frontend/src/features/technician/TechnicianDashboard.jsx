@@ -85,6 +85,7 @@ const loadLeafletAssets = async () => {
 
 // Internal Map Component for Clients
 function ClientLiveMap({ clients, isLoading }) {
+  const { t } = useTranslation();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const layerGroupRef = useRef(null);
@@ -132,27 +133,27 @@ function ClientLiveMap({ clients, isLoading }) {
         const markerHtml = `
           <div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px);">
             <div style="
-              background:white;
-              color:#1f2937;
-              font-weight:700;
-              font-size:11px;
-              padding:4px 10px;
-              border-radius:999px;
-              margin-bottom:6px;
-              box-shadow:0 8px 20px rgba(15,23,42,0.18);
-              white-space:nowrap;
-              border:2px solid ${statusColor};
-            ">
+               background:white;
+               color:#1f2937;
+               font-weight:700;
+               font-size:11px;
+               padding:4px 10px;
+               border-radius:999px;
+               margin-bottom:6px;
+               box-shadow:0 8px 20px rgba(15,23,42,0.18);
+               white-space:nowrap;
+               border:2px solid ${statusColor};
+             ">
               ${client.nama}
             </div>
             <div style="
-              width:18px;
-              height:18px;
-              border-radius:999px;
-              background:${statusColor};
-              border:3px solid white;
-              box-shadow:0 8px 20px rgba(15,23,42,0.18);
-            "></div>
+               width:18px;
+               height:18px;
+               border-radius:999px;
+               background:${statusColor};
+               border:3px solid white;
+               box-shadow:0 8px 20px rgba(15,23,42,0.18);
+             "></div>
           </div>
         `;
 
@@ -165,6 +166,10 @@ function ClientLiveMap({ clients, isLoading }) {
           }),
         });
 
+        const localizedSystemStatus = client.statusSistem === 'No BIEON Installed' 
+          ? t('tech_dashboard.table.no_bieon', 'Belum Ada BIEON Terpasang') 
+          : client.statusSistem;
+
         marker.bindPopup(`
           <div style="font-family: sans-serif; padding: 5px; min-width: 150px;">
             <strong style="color: #059b27; font-size: 14px; display: block; margin-bottom: 4px;">${client.nama}</strong>
@@ -172,15 +177,15 @@ function ClientLiveMap({ clients, isLoading }) {
             <div style="margin-top: 12px; display: flex; justify-content: space-between; border-top: 1px solid #f3f4f6; pt-2;">
               <div style="text-align: center;">
                 <div style="font-weight: bold; color: #1f2937; font-size: 14px;">${client.jumlahBieon}</div>
-                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">Hub</div>
+                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">${t('tech_dashboard.client_modal.total_bieon_short', 'Hub')}</div>
               </div>
               <div style="text-align: center;">
                 <div style="font-weight: bold; color: #1f2937; font-size: 14px;">${client.jumlahDevice}</div>
-                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">Node</div>
+                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">${t('tech_dashboard.client_modal.total_devices_short', 'Node')}</div>
               </div>
               <div style="text-align: center;">
-                <div style="font-weight: bold; color: ${statusColor}; font-size: 11px;">${client.statusSistem}</div>
-                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">Status</div>
+                <div style="font-weight: bold; color: ${statusColor}; font-size: 11px;">${localizedSystemStatus}</div>
+                <div style="font-size: 9px; color: #9ca3af; text-transform: uppercase;">${t('history.columns.status', 'Status')}</div>
               </div>
             </div>
           </div>
@@ -201,7 +206,7 @@ function ClientLiveMap({ clients, isLoading }) {
     initMap().catch(console.error);
 
     return () => { disposed = true; };
-  }, [clients]);
+  }, [clients, t]);
 
   useEffect(() => {
     return () => {
@@ -219,7 +224,7 @@ function ClientLiveMap({ clients, isLoading }) {
         <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-[1000]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-eco border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-bold text-gray-700 tracking-tight">Menyiapkan Data Peta...</span>
+            <span className="text-sm font-bold text-gray-700 tracking-tight">{t('tech_dashboard.map.loading', 'Menyiapkan Data Peta...')}</span>
           </div>
         </div>
       )}
@@ -430,8 +435,8 @@ export function TechnicianDashboard({ onNavigate }) {
       doc.text(t('complaint.summary_metrics', 'RINGKASAN METRIK (FILTER SAAT INI)'), 18, 66);
       doc.setFontSize(11);
       doc.text(`${t('tech_dashboard.charts.clients_title', 'Jumlah Pelanggan')}: ${filteredClients.length}`, 18, 75);
-      doc.text(`BIEON Hub: ${filteredClients.reduce((acc, c) => acc + c.jumlahBieon, 0)}`, 80, 75);
-      doc.text(`Device: ${filteredClients.reduce((acc, c) => acc + c.jumlahDevice, 0)}`, 140, 75);
+      doc.text(`${t('tech_dashboard.pdf.bieon_hub', 'BIEON Hub')}: ${filteredClients.reduce((acc, c) => acc + c.jumlahBieon, 0)}`, 80, 75);
+      doc.text(`${t('tech_dashboard.pdf.device', 'Device')}: ${filteredClients.reduce((acc, c) => acc + c.jumlahDevice, 0)}`, 140, 75);
 
       // Table
       const tableData = filteredClients.map(c => [
@@ -846,7 +851,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       fill="url(#colorBieon)"
                       shape={<ThreeDBar />}
                       barSize={30}
-                      name="Akses Token"
+                      name={t('tech_dashboard.charts.token_access', 'Akses Token')}
                     />
                     <defs>
                       <linearGradient id="colorBieon" x1="0" y1="0" x2="0" y2="1">
@@ -897,7 +902,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       strokeWidth={3}
                       dot={{ fill: '#a855f7', r: 5 }}
                       activeDot={{ r: 7 }}
-                      name="Total Klien"
+                      name={t('tech_dashboard.charts.total_clients_legend', 'Total Klien')}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -945,7 +950,7 @@ export function TechnicianDashboard({ onNavigate }) {
                       strokeWidth={3}
                       dot={{ fill: '#f59e0b', r: 5 }}
                       activeDot={{ r: 7 }}
-                      name="Pengaduan"
+                      name={t('tech_dashboard.charts.complaints_legend', 'Pengaduan')}
                     />
                   </LineChart>
                 </ResponsiveContainer>

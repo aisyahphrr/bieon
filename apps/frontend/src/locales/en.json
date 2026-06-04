@@ -1,6 +1,8 @@
 {
   "common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "back": "Back",
+    "updating": "Updating..."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -180,7 +182,12 @@
     "month_sep": "Sep",
     "month_oct": "Oct",
     "month_nov": "Nov",
-    "month_dec": "Dec"
+    "month_dec": "Dec",
+    "security_status": "Security Status",
+    "status_all_safe_text": "All Clear",
+    "status_needs_attention_text": "Needs Attention",
+    "motion_sensor": "Motion Sensor",
+    "door_sensor": "Door Sensor"
   },
   "history": {
     "title": "Activity History",
@@ -333,7 +340,9 @@
       "val_no_data_progress": "NO PROGRESS DATA",
       "perf_needs_improvement": "NEEDS IMPROVEMENT",
       "perf_good": "GOOD",
-      "perf_excellent": "EXCELLENT"
+      "perf_excellent": "EXCELLENT",
+      "alert_error_pdf": "Failed to generate PDF.",
+      "alert_error_all_pdf": "Failed to export full report."
     },
     "filters": {
       "select_customer": "Select Customer",
@@ -480,7 +489,14 @@
       "no_review": "No written review.",
       "rating_placeholder": "Write your experience here...",
       "sending": "Sending...",
-      "export_pdf": "Export Complaint Detail (PDF)"
+      "export_pdf": "Export Complaint Detail (PDF)",
+      "title": "Complaint Details",
+      "actions_notice": "Available actions can be viewed in the bottom panel on desktop or scroll down.",
+      "error_fetch_latest": "Failed to fetch latest data",
+      "error_update_status": "Failed to update status",
+      "error_update_progress": "Failed to update progress",
+      "error_process_log": "Failed to process log data",
+      "technician_fallback": "Technician"
     },
     "perf": {
       "good": "Good",
@@ -677,7 +693,9 @@
       "ticket_id": "Ticket ID",
       "date": "Date",
       "customer": "Customer",
+      "location": "Location",
       "topic": "Issue Topic",
+      "duration": "Duration",
       "technician": "Technician",
       "rating": "Rating",
       "status": "Status",
@@ -762,8 +780,25 @@
       "budget_updated": "Budget Updated",
       "threshold_updated": "Warning Limit Updated",
       "low_budget": "Low Budget Alert!",
-      "device_control": "Device Control"
+      "device_control": "Device Control",
+      "security_motion": "Motion Sensor Alert",
+      "water_ph_critical": "Critical Water pH!",
+      "temp_high_warning": "Temperature Too High",
+      "budget_limit_warning": "Budget Warning",
+      "tech_confirm_needed": "Confirmation Required",
+      "work_confirmation": "Work Confirmation",
+      "sla_warning": "SLA Warning",
+      "sla_overdue_repair": "SLA Repair Overdue",
+      "water_ph_unfit": "Water pH Unfit",
+      "hub_offline": "Hub Offline",
+      "hub_battery_low": "Low Battery",
+      "manual_control": "Manual Control",
+      "hardware_status": "Device Status",
+      "system_auto": "System Automation",
+      "ping_warning": "PING Warning",
+      "ticket_reassigned": "Ticket Reassigned"
     },
+
     "msg": {
       "complaint_sent": "Your complaint has been sent and is awaiting action from the technical team.",
       "new_ticket": "A new complaint ticket has been submitted to the system.",
@@ -783,7 +818,60 @@
       "power_alert": "Voltage or power consumption of the BIEON system exceeds normal capacity.",
       "hub_offline": "Warning: Hub lost internet connection.",
       "unauthorized_access": "Unauthorized access attempt detected on the system.",
-      "sla_overdue": "The complaint ticket is approaching or has exceeded the SLA deadline."
+      "sla_overdue": "The complaint ticket is approaching or has exceeded the SLA deadline.",
+      "security_motion_detected": "Sensor detected suspicious movement at {{time}}.",
+      "door_open_warning": "Door at {{location}} has been open beyond the safe time limit.",
+      "water_ph_low": "Water pH has dropped drastically to level {{ph}}. Please check your filter.",
+      "water_ph_critical": "CRITICAL: Water pH on {{deviceName}} detected below standard ({{ph}}). Immediately check your water filter.",
+      "water_ph_unfit": "Water pH detected as unfit ({{ph}}). System recommends cleaning the water tank.",
+      "temp_high_ac_on": "Room temperature exceeded {{temp}}°C, AC automatically turned on.",
+      "temp_high_location": "Room temperature at {{location}} reached {{temp}}°C.",
+      "budget_usage_high": "Electricity usage this month has reached {{percent}}% of your monthly limit.",
+      "budget_updated_nominal": "Your monthly electricity budget has been set to Rp {{amount}}.",
+      "budget_updated_success": "Your monthly electricity budget has been successfully updated to Rp {{budget}}.",
+      "budget_limit_changed": "Your budget warning threshold has been changed to Rp {{limit}}.",
+      "budget_limit_warning": "Warning: The warning threshold you set (Rp {{limit}}) is greater than your total budget (Rp {{budget}}).",
+      "schedule_automation_executed": "Automation schedule ({{name}}) has been successfully executed.",
+      "schedule_device_action": "Device {{deviceName}} has been automatically {{action}} based on schedule.",
+      "system_auto_action": "System automatically {{action}} {{deviceName}} due to {{aspect}} {{condition}} condition.",
+      "hub_battery_low": "Battery on {{hubName}} is at {{percent}}%. It is recommended to replace the battery soon.",
+      "manual_device_action": "[Manual] You have {{action}} {{deviceName}} at {{location}}.",
+      "hardware_status_changed": "[New Hardware] Device {{deviceName}} has changed status to {{status}}.",
+      "log_device_status": "[Log] Device {{deviceName}} at {{location}} has changed status to {{status}}.",
+      "sla_almost_overdue": "Warning: Ticket {{ticketId}} is about to exceed the SLA deadline (Response Overdue).",
+      "new_ticket_assigned_tech": "You have been assigned to handle complaint: \"{{topic}}\". Please check the task details.",
+      "ticket_finished_tech": "Ticket \"{{topic}}\" has been completed. You received a rating of {{stars}}★.",
+      "ticket_cancelled_tech": "Ticket \"{{topic}}\" that you were handling has been cancelled by the customer.",
+      "admin_ping_tech": "Admin sent a PING! Please complete ticket {{topic}} immediately. Urgency level: {{urgency}}.",
+      "overdue_repair": "Repair deadline exceeded (56 hours). Status automatically changed to Repair Overdue.",
+      "overdue_response": "Warning: Ticket {{topic}} has exceeded the 30-minute response time limit!",
+      "log_access_approved": "Log Data access request for {{bieonId}} has been approved by SuperAdmin.",
+      "log_access_approved_comp": "SuperAdmin approved log data access for ticket {{topic}}.",
+      "log_access_denied_comp": "Sorry, log data access for ticket {{topic}} was denied by SuperAdmin.",
+      "maintenance_scheduled": "Routine Maintenance for {{area}} is scheduled for today.",
+      "critical_hubs_offline": "CRITICAL: {{count}} IoT Hubs in {{location}} went offline simultaneously.",
+      "hub_connection_lost": "CONNECTION LOST: BIEON Hub for customer {{bieonId}} cannot be reached.",
+      "performance_report_ready": "Technician Performance Report for {{month}} is ready to download.",
+      "sla_violation_tech": "SLA Violation: Technician {{technician}} failed to respond to ticket {{ticketId}} within 30 minutes.",
+      "admin_new_complaint_full": "New complaint from {{senderName}}. Hub: {{bieonId}}. Topic: {{topic}}",
+      "tech_started_working": "Technician {{technician}} has started working on ticket \"{{topic}}\".",
+      "ticket_completed_feedback": "Ticket \"{{topic}}\" completed. Rating: {{stars}}★. Review: {{review}}",
+      "ticket_cancelled_by_customer": "Ticket \"{{topic}}\" has been cancelled by the customer.",
+      "tech_requested_log": "Technician requested log access for ticket {{topic}}. Reason: {{reason}}",
+      "overdue_respons_admin": "Ticket from {{bieonId}} is Response Overdue! Please reassign a technician immediately.",
+      "overdue_repair_admin": "Ticket from {{bieonId}} is Repair Overdue! Please remind the technician.",
+      "homeowner_complaint_created": "Your complaint ticket \"{{topic}}\" has been successfully created. Please wait for admin response.",
+      "tech_completed_repair": "The technician has completed the repair for ticket \"{{topic}}\". Please confirm and provide a rating.",
+      "homeowner_complaint_rejected": "Sorry, your complaint \"{{topic}}\" has been rejected. Reason: {{reason}}",
+      "homeowner_ticket_assigned": "Your complaint ticket \"{{topic}}\" has been assigned to technician {{technician}}.",
+      "tech_updated_progress": "Technician updated progress: \"{{progress}}\".",
+      "work_confirmation_required": "Technician work confirmation for ticket #{{ticketId}} is required before closing.",
+      "ticket_reassigned": "Ticket reassigned from {{oldTech}} to {{newTech}} due to deadline exceeded.",
+      "ping_tech": "Admin sent a PING! Please complete ticket {{topic}} immediately. Urgency level: {{urgency}}",
+      "sla_overdue_repair_tech": "Warning: Repair for ticket {{topic}} has exceeded the 56-hour limit!",
+      "sla_overdue_repair_admin": "Ticket {{bieonId}} has exceeded the repair time limit.",
+      "sla_overdue_respons_auto": "Response time limit exceeded (30 minutes). Status automatically changed to Response Overdue.",
+      "sla_approaching": "Repair for {{topic}} is approaching the SLA deadline. Priority has been increased."
     }
   },
   "notification_messages": {
@@ -1622,6 +1710,8 @@
       "error_failed": "Failed to add BIEON ID"
     },
     "budget": {
+      "title": "Electricity Budget Management",
+      "subtitle": "Budget monitoring & critical warning limits",
       "input_placeholder": "Enter nominal (Example: 1000000)",
       "btn_save": "Save Settings",
       "success_msg": "Budget Successfully Saved"
@@ -1856,6 +1946,145 @@
           "content_li4": "This Agreement is signed in Indonesia."
         }
       }
+    },
+    "forgot": {
+      "request_title": "Forgot Password",
+      "request_subtitle": "Enter your registered email or phone number. We will send an OTP to your email/WA if the account is registered.",
+      "verify_title": "Verify OTP",
+      "verify_subtitle": "Enter the OTP code sent to {{identifier}}",
+      "reset_title": "Reset Password",
+      "reset_subtitle": "Enter your new password.",
+      "lbl_identifier": "Email or Phone Number (+62...)",
+      "ph_identifier": "e.g.: user@example.com or +628123...",
+      "ph_password": "New password",
+      "ph_confirm_password": "Confirm password",
+      "ph_otp": "Enter OTP",
+      "btn_send_otp": "Send OTP",
+      "btn_sending": "Sending...",
+      "btn_verify": "Verify",
+      "btn_resend_otp": "Resend OTP",
+      "btn_change_address": "Change address",
+      "btn_reset": "Reset",
+      "btn_cancel": "Cancel",
+      "err_identifier_required": "Email or phone number is required",
+      "err_otp_required": "OTP is required",
+      "err_fields_required": "Fill in all fields",
+      "err_password_mismatch": "Passwords do not match",
+      "err_request_failed": "Failed to send request",
+      "err_verify_failed": "Failed to verify OTP",
+      "err_resend_failed": "Failed to resend OTP",
+      "info_otp_sent": "If the account is registered, the OTP has been sent. Please check your email or WhatsApp.",
+      "info_resend_success": "OTP resent. Please check your email/WA."
     }
+  },
+  "kendali": {
+    "title": "Device Control",
+    "subtitle": "BIEON Hub & Smart Device Management",
+    "no_system": "No BIEON System Yet",
+    "no_system_desc": "Register your BIEON device ID to start monitoring.",
+    "add_bieon": "Add BIEON",
+    "add_bieon_desc": "Enter BIEON ID to register smart monitoring system.",
+    "ph_bieon_id": "Example: BIEON-001",
+    "btn_add": "Connect BIEON",
+    "btn_back": "Back",
+    "registered_systems": "Registered BIEON Systems",
+    "room_filter": "Filter by Room",
+    "all_rooms": "All Rooms",
+    "management": "Device Management",
+    "open_join_access": "Access \"Open Join\"",
+    "registered_devices": "Registered Devices",
+    "open_join_title": "Open Join",
+    "open_join_desc": "Connect new devices to your Hub.",
+    "status_pairing": "Searching for devices...",
+    "status_connected": "Connected",
+    "device_not_found": "Device Not Found",
+    "add_new_device": "Add New Device",
+    "select_device_type": "Select Device Type",
+    "device_info": "Device Information",
+    "edit_info": "Edit Information",
+    "save_success": "Device successfully saved!",
+    "delete_success": "Device successfully deleted!",
+    "delete_confirm": "Are you sure you want to delete this device?",
+    "aspects": {
+      "comfort": "Comfort",
+      "security": "Security",
+      "water_quality": "Water Quality",
+      "environment": "Environmental Parameters",
+      "schedule": "Automatic Schedule"
+    },
+    "params": {
+      "temperature": "Temperature",
+      "humidity": "Humidity",
+      "motion": "Motion Sensor",
+      "door": "Door Sensor",
+      "ph": "Water pH",
+      "turbidity": "Turbidity",
+      "tds": "TDS (Total Dissolved Solids)",
+      "water_temp": "Water Temp"
+    },
+    "tech_access_token": "Technician Access Token",
+    "tech_config_active": "Being Configured by Technician"
+  },
+  "datalog": {
+    "title": "Data Log & Diagnostics",
+    "subtitle": "Monitoring Real-time Gateway Telemetry",
+    "live_monitoring": "Live Monitoring:",
+    "global_system": "Global System",
+    "stats": {
+      "uptime": "Uptime",
+      "cpu_load": "CPU Load",
+      "security": "Security",
+      "node_status": "Node Status",
+      "buffer": "Buffer:"
+    },
+    "status": {
+      "syncing": "Syncing live diagnostics...",
+      "paused": "Live stream paused",
+      "live": "Live data from backend + socket"
+    },
+    "search_placeholder": "Search logs (type or category)...",
+    "stream_active": "Inbound telemetry stream active...",
+    "no_logs_match": "No logs match your search: \"{{search}}\""
+  },
+  "delete_approval": {
+    "err_token_not_found": "Approval token not found.",
+    "err_fetch_failed": "Failed to fetch approval data.",
+    "err_fetch_error": "An error occurred while fetching approval data.",
+    "err_process_failed": "Failed to process decision.",
+    "msg_decision_success": "Decision successfully processed.",
+    "err_process_error": "An error occurred while processing decision.",
+    "loading_request": "Loading approval request...",
+    "title": "Account Deletion Approval",
+    "status_approved": "Approved",
+    "status_rejected": "Rejected",
+    "status_pending": "Awaiting Decision",
+    "greeting": "Dear Project Owner,",
+    "description": "You have received an account deletion request submitted by the Super Admin. Please review the details below before making a decision.",
+    "account_details_title": "Details of Account to be Deleted",
+    "lbl_fullname": "Full Name",
+    "lbl_email": "Email",
+    "lbl_role": "Role",
+    "lbl_requested_by": "Requested By",
+    "lbl_reason": "Deletion Reason",
+    "important_title": "Important to Note",
+    "warn_point_1": "If approved, the account will be permanently deleted from the system.",
+    "warn_point_2": "The target user and the requesting Super Admin will receive an email containing the decision outcome.",
+    "warn_point_3": "If rejected, the account will remain active and the rejection status will be visible on the Super Admin dashboard.",
+    "status_summary_title": "Status Summary",
+    "lbl_requested_at": "Requested At",
+    "lbl_decided_at": "Decided At",
+    "lbl_decision_note": "Decision Note",
+    "btn_approve": "Approve Deletion",
+    "btn_reject": "Reject Request"
+  },
+  "complaint_extra": {
+    "urgent": "Urgent",
+    "no_desc": "No description."
+  },
+  "role": {
+    "homeowner": "Homeowner"
+  },
+  "activity": {
+    "platform_source": "via {{platform}}"
   }
 }

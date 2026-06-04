@@ -1,5 +1,6 @@
 // Device Control Dashboard
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { io } from "socket.io-client";
 import {
   Plus,
@@ -158,6 +159,7 @@ const REMOTE_FUNCTION_LABELS = REMOTE_DEVICE_TYPES.reduce((acc, item) => {
 }, {});
 
 export function DeviceControlPage({ onNavigate }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState("idle");
   const [bieonSystems, setBieonSystems] = useState([]);
   const [currentBieon, setCurrentBieon] = useState(null);
@@ -2468,9 +2470,9 @@ export function DeviceControlPage({ onNavigate }) {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Settings className="w-5 h-5 text-bieon-eco" />
-                    <h3 className="font-bold text-gray-900 text-lg">Kendali Perangkat</h3>
+                    <h3 className="font-bold text-gray-900 text-lg">{t('kendali.title', 'Kendali Perangkat')}</h3>
                   </div>
-                  <p className="text-sm text-gray-500">Kelola smart devices dengan sistem BIEON</p>
+                  <p className="text-sm text-gray-500">{t('kendali.subtitle', 'Manajemen Hub & Smart Device BIEON')}</p>
                 </div>
                 <div className="flex gap-3 sm:gap-4">
                   {step === "view-bieon" && currentBieon && (
@@ -2478,7 +2480,7 @@ export function DeviceControlPage({ onNavigate }) {
                       onClick={() => setStep("idle")}
                       className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl  hover:bg-gray-50 transition-all flex items-center gap-2"
                     >
-                      <span>← Kembali ke Semua BIEON</span>
+                      <span>{t('kendali.back_to_all', '← Kembali ke Semua BIEON')}</span>
                     </button>
                   )}
                   {userProfile?.role === 'Homeowner' && (
@@ -2487,7 +2489,7 @@ export function DeviceControlPage({ onNavigate }) {
                       className="px-5 py-2.5 bg-white border-2 border-bieon-eco/20 text-bieon-eco rounded-2xl  hover:bg-bieon-eco/5 transition-all shadow-sm flex items-center gap-2"
                     >
                       <Radio className="w-5 h-5" />
-                      <span>Akses Teknisi</span>
+                      <span>{t('kendali.tech_access_token', 'Token Akses Teknisi')}</span>
                     </button>
                   )}
                 </div>
@@ -2501,9 +2503,9 @@ export function DeviceControlPage({ onNavigate }) {
                     <div className="w-24 h-24 bg-gradient-to-br from-bieon-eco/20 to-bieon-sense/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
                       <Home className="w-12 h-12 text-bieon-eco" />
                     </div>
-                    <h2 className="text-2xl  text-gray-900 mb-3">Belum Ada Sistem BIEON</h2>
+                    <h2 className="text-2xl  text-gray-900 mb-3">{t('kendali.no_system', 'Belum Ada Sistem BIEON')}</h2>
                     <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                      Mulai dengan menambahkan sistem BIEON Anda untuk mengelola smart devices
+                      {t('kendali.no_system_desc', 'Daftarkan ID perangkat BIEON Anda untuk memulai monitoring.')}
                     </p>
                     {!isTechnicianMode && (
                       <button
@@ -2511,7 +2513,7 @@ export function DeviceControlPage({ onNavigate }) {
                         className="px-8 py-4 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl  shadow-lg hover:shadow-xl transition-all"
                       >
                         <Plus className="w-5 h-5 inline mr-2" />
-                        Tambah BIEON Pertama
+                        {t('kendali.add_first_bieon', 'Tambah BIEON Pertama')}
                       </button>
                     )}
                   </div>
@@ -2525,7 +2527,7 @@ export function DeviceControlPage({ onNavigate }) {
                             <Home className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">BIEON Systems</p>
+                            <p className="text-sm text-gray-600">{t('kendali.bieon_systems', 'BIEON Systems')}</p>
                             <p className="text-2xl  text-gray-900">{bieonSystems.length}</p>
                           </div>
                         </div>
@@ -2536,7 +2538,7 @@ export function DeviceControlPage({ onNavigate }) {
                             <Wifi className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">Total Hubs</p>
+                            <p className="text-sm text-gray-600">{t('kendali.total_hubs', 'Total Hubs')}</p>
                             <p className="text-2xl  text-gray-900">{bieonSystems.reduce((sum, b) => sum + (Number(b.totalHubs) || 0), 0)}</p>
                           </div>
                         </div>
@@ -2547,7 +2549,7 @@ export function DeviceControlPage({ onNavigate }) {
                             <Settings className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">Total Devices</p>
+                            <p className="text-sm text-gray-600">{t('kendali.total_devices', 'Total Devices')}</p>
                             <p className="text-2xl  text-gray-900">{getAllDevices().length}</p>
                           </div>
                         </div>
@@ -2558,7 +2560,7 @@ export function DeviceControlPage({ onNavigate }) {
                             <Zap className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">Active Devices</p>
+                            <p className="text-sm text-gray-600">{t('kendali.active_devices', 'Active Devices')}</p>
                             <p className="text-2xl  text-gray-900">
                               {getAllDevices().filter((d) => {
                                 const isRemote = d.controlledDevice && d.controlledDevice.trim() !== "";
@@ -2573,14 +2575,14 @@ export function DeviceControlPage({ onNavigate }) {
                     { /* BIEON Systems List */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
                       <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl  text-gray-900">Sistem BIEON Terdaftar</h2>
+                        <h2 className="text-xl  text-gray-900">{t('kendali.registered_systems', 'Sistem BIEON Terdaftar')}</h2>
                         {!isTechnicianMode && (
                           <button
                             onClick={() => setStep("input-id")}
                             className="flex items-center gap-2 px-4 py-2 bg-bieon-eco text-white rounded-lg  hover:bg-bieon-eco/90 transition-all shadow-md active:scale-95"
                           >
                             <Plus className="w-4 h-4" />
-                            Tambah BIEON
+                            {t('kendali.add_bieon', 'Tambah BIEON')}
                           </button>
                         )}
                       </div>
@@ -2604,9 +2606,9 @@ export function DeviceControlPage({ onNavigate }) {
                                   <h3 className="text-lg  text-gray-900">{bieon.name}</h3>
                                   <p className="text-sm text-gray-600">ID: {bieon.bieonId}</p>
                                   <div className="flex items-center gap-4 mt-2">
-                                    <span className="text-sm text-gray-500">{bieon.totalHubs} Hubs</span>
+                                    <span className="text-sm text-gray-500">{bieon.totalHubs} {t('kendali.hubs_label', 'Hubs')}</span>
                                     <span className="text-sm text-gray-500">•</span>
-                                    <span className="text-sm text-gray-500">{bieon.hubs.flatMap((h) => h.devices).length} Devices</span>
+                                    <span className="text-sm text-gray-500">{bieon.hubs.flatMap((h) => h.devices).length} {t('kendali.devices_label', 'Devices')}</span>
                                   </div>
                                 </div>
                               </div>
@@ -5279,7 +5281,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
                                     <div className="px-4 py-3 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 mb-2">
                                       <p className="text-xs text-gray-700 flex items-center gap-2">
-                                        <Activity className="w-4 h-4" /> Pilih Aspek untuk Dikonfigurasi
+                                        <Activity className="w-4 h-4" /> {t('kendali.select_aspect_config', 'Pilih Aspek untuk Dikonfigurasi')}
                                       </p>
                                     </div>
 
@@ -5295,8 +5297,8 @@ export function DeviceControlPage({ onNavigate }) {
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kenyamanan' ? "bg-bieon-eco/30" : "bg-bieon-eco/10"}`}>
                                           <Activity className="w-6 h-6 text-bieon-eco" />
                                         </div>
-                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">Kenyamanan</h4>
-                                        <p className="text-[10px] text-gray-500">Suhu & Lembap</p>
+                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">{t('kendali.aspects.comfort', 'Kenyamanan')}</h4>
+                                        <p className="text-[10px] text-gray-500">{t('kendali.aspect_comfort_desc', 'Suhu & Lembap')}</p>
                                       </button>
 
                                       {/* KEAMANAN */}
@@ -5310,8 +5312,8 @@ export function DeviceControlPage({ onNavigate }) {
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'keamanan' ? "bg-purple-200" : "bg-purple-100"}`}>
                                           <ShieldAlert className="w-6 h-6 text-purple-600" />
                                         </div>
-                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">Keamanan</h4>
-                                        <p className="text-[10px] text-gray-500">Motion & Door Sensor</p>
+                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">{t('kendali.aspects.security', 'Keamanan')}</h4>
+                                        <p className="text-[10px] text-gray-500">{t('kendali.aspect_security_desc', 'Motion & Door Sensor')}</p>
                                       </button>
 
                                       {/* KUALITAS AIR */}
@@ -5325,8 +5327,8 @@ export function DeviceControlPage({ onNavigate }) {
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${config.aspect === 'kualitasAir' ? "bg-cyan-200" : "bg-cyan-100"}`}>
                                           <Waves className="w-6 h-6 text-cyan-600" />
                                         </div>
-                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">Kualitas Air</h4>
-                                        <p className="text-[10px] text-gray-500">pH, TDS, Keruh, Suhu</p>
+                                        <h4 className="text-sm text-gray-900 mb-1 leading-tight">{t('kendali.aspects.water_quality', 'Kualitas Air')}</h4>
+                                        <p className="text-[10px] text-gray-500">{t('kendali.aspect_water_desc', 'pH, TDS, Keruh, Suhu')}</p>
                                       </button>
                                     </div>
                                   </div>
@@ -5345,8 +5347,8 @@ export function DeviceControlPage({ onNavigate }) {
                           >
                             <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                             <div className="text-center sm:text-left">
-                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3>
-                              <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Kondisi Lingkungan</p>
+                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.environment', 'Parameter Lingkungan')}</h3>
+                              <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.environment_setup_desc', 'Pengaturan Berdasarkan Kondisi Lingkungan')}</p>
                             </div>
                           </button>
                           <button
@@ -5355,8 +5357,8 @@ export function DeviceControlPage({ onNavigate }) {
                           >
                             <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                             <div className="text-center sm:text-left">
-                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3>
-                              <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Waktu</p>
+                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.schedule', 'Jadwal Otomatis')}</h3>
+                              <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.schedule_setup_desc', 'Pengaturan Berdasarkan Waktu')}</p>
                             </div>
                           </button>
                         </div>
@@ -5377,7 +5379,7 @@ export function DeviceControlPage({ onNavigate }) {
                             <div className="space-y-4">
                               <div className="px-4 py-3 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 mb-6">
                                 <p className="text-sm  text-gray-700 flex items-center gap-2">
-                                  <Activity className="w-4 h-4" /> Pilih Aspek untuk Dikonfigurasi
+                                  <Activity className="w-4 h-4" /> {t('kendali.select_aspect_config', 'Pilih Aspek untuk Dikonfigurasi')}
                                 </p>
                               </div>
 
@@ -5390,8 +5392,8 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="w-12 h-12 bg-bieon-eco/10 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                     <Activity className="w-6 h-6 text-bieon-eco" />
                                   </div>
-                                  <h4 className="text-sm  text-gray-900 mb-1 leading-tight">Kenyamanan</h4>
-                                  <p className="text-[10px] text-gray-500">Suhu & Lembap</p>
+                                  <h4 className="text-sm  text-gray-900 mb-1 leading-tight">{t('kendali.aspects.comfort', 'Kenyamanan')}</h4>
+                                  <p className="text-[10px] text-gray-500">{t('kendali.aspect_comfort_desc', 'Suhu & Lembap')}</p>
                                 </button>
 
                                 {/* ASPEK KEAMANAN (Gabungan Motion & Pintu) */}
@@ -5402,8 +5404,8 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                     <ShieldAlert className="w-6 h-6 text-purple-600" />
                                   </div>
-                                  <h4 className="text-sm  text-gray-900 mb-1 leading-tight">Keamanan</h4>
-                                  <p className="text-[10px] text-gray-500">Motion & Door Sensor</p>
+                                  <h4 className="text-sm  text-gray-900 mb-1 leading-tight">{t('kendali.aspects.security', 'Keamanan')}</h4>
+                                  <p className="text-[10px] text-gray-500">{t('kendali.aspect_security_desc', 'Motion & Door Sensor')}</p>
                                 </button>
 
                                 {/* KUALITAS AIR */}
@@ -5414,8 +5416,8 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                                     <Waves className="w-6 h-6 text-cyan-600" />
                                   </div>
-                                  <h4 className="text-sm  text-gray-900 mb-1 leading-tight">Kualitas Air</h4>
-                                  <p className="text-[10px] text-gray-500">pH, TDS, Keruh, Suhu</p>
+                                  <h4 className="text-sm  text-gray-900 mb-1 leading-tight">{t('kendali.aspects.water_quality', 'Kualitas Air')}</h4>
+                                  <p className="text-[10px] text-gray-500">{t('kendali.aspect_water_desc', 'pH, TDS, Keruh, Suhu')}</p>
                                 </button>
                               </div>
                             </div>
@@ -5427,7 +5429,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   className="flex items-center gap-2 text-bieon-eco  hover:text-bieon-eco/90 transition-colors group mb-2"
                                 >
                                   <ChevronRight className="w-5 h-5 rotate-180" />
-                                  Kembali Pilih Aspek
+                                  {t('kendali.back_to_aspect', 'Kembali Pilih Aspek')}
                                 </button>
                               )}
 
@@ -5986,7 +5988,7 @@ export function DeviceControlPage({ onNavigate }) {
                       onClick={() => setStep("add-device-form")}
                       className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl  hover:bg-gray-50 transition-all"
                     >
-                      Kembali
+                      {t('kendali.btn_back', 'Kembali')}
                     </button>
                     <button
                       id="actual-save-trigger"
@@ -5994,7 +5996,7 @@ export function DeviceControlPage({ onNavigate }) {
                       className="flex-1 px-6 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl  shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
                     >
                       <Save className="w-5 h-5" />
-                      {((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && isRemoteDetailView) ? "Selesai Atur Perangkat" : "Simpan Konfigurasi"}
+                      {((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && isRemoteDetailView) ? t('kendali.finish_setup_device', 'Selesai Atur Perangkat') : t('kendali.save_config', 'Simpan Konfigurasi')}
                     </button>
                   </div>
                 </div>
