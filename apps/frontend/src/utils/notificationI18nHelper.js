@@ -59,8 +59,8 @@ export function getLocalizedTitle(text, category, t) {
   if (lower.includes('hub offline') || lower.includes('hub terputus')) return t('notification.title.hub_offline', text);
   if (lower.includes('baterai lemah') || lower.includes('low battery') || lower.includes('hub battery low')) return t('notification.title.hub_battery_low', text);
   if (lower.includes('kontrol manual') || lower.includes('manual control') || lower.includes('[manual]')) return t('notification.title.manual_control', text);
-  if (lower.includes('status perangkat') || lower.includes('device status') || lower.includes('hardware status') || lower.includes('[hardware baru]')) return t('notification.title.hardware_status', text);
-  if (lower.includes('otomasi sistem') || lower.includes('system automation') || lower.includes('sistem otomatis')) return t('notification.title.system_auto', text);
+  if (lower.includes('status perangkat') || lower.includes('device status') || lower.includes('hardware status') || lower.includes('[hardware baru]') || lower.includes('perangkat menyala') || lower.includes('perangkat mati')) return t('notification.title.hardware_status', text);
+  if (lower.includes('otomasi sistem') || lower.includes('system automation') || lower.includes('sistem otomatis') || lower.includes('otomasi aktif') || lower.includes('otomasi selesai')) return t('notification.title.system_auto', text);
   // TEGURAN PING #1 / #2 / #3 — title from pingComplaint controller
   if (lower.includes('teguran ping') || lower.includes('ping warning') || lower.match(/ping #\d/)) return t('notification.title.ping_warning', text);
   // Ticket Dialihkan (re-assigned)
@@ -452,6 +452,12 @@ export function getLocalizedMessage(text, metadata = {}, t) {
     return t('notification.msg.overdue_repair_admin', { bieonId: metadata.bieonId || overdueRepairAdminMatch[1] || '' });
   }
 
+  const complaintCreatedSuccessMatch = text.match(/Tiket pengaduan #([\w-]+) telah berhasil dibuat\. Teknisi akan segera ditugaskan\./i) ||
+                                       text.match(/Complaint ticket #([\w-]+) has been successfully created\. A technician will be assigned shortly\./i);
+  if (complaintCreatedSuccessMatch) {
+    return t('notification.msg.complaint_created_success', { ticketId: metadata.ticketId || complaintCreatedSuccessMatch[1] || '' });
+  }
+
   const homeownerCreatedMatch = text.match(/Tiket pengaduan "(.+?)" Anda berhasil dibuat/i);
   if (homeownerCreatedMatch) {
     return t('notification.msg.homeowner_complaint_created', { topic: metadata.topic || homeownerCreatedMatch[1] || '' });
@@ -520,4 +526,15 @@ export function getLocalizedMessage(text, metadata = {}, t) {
 
   // ── Fallback: kembalikan teks asli ──────────────────────────────────────────
   return text;
+}
+
+export function translateNotificationMessage(text, metadata = {}, t, messageKey = null) {
+  if (messageKey) {
+    return t(messageKey, metadata);
+  }
+  return getLocalizedMessage(text, metadata, t);
+}
+
+export function translateNotificationTitle(text, category, t) {
+  return getLocalizedTitle(text, category, t);
 }

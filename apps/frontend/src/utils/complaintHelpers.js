@@ -101,3 +101,10 @@ export const getPerformanceIndicator = (points) => {
     if (points >= 70) return { icon: '🟡', label: i18n.t('export.perf_good', 'Standar'), color: 'text-yellow-600', bg: 'bg-yellow-50' };
     return { icon: '🔴', label: i18n.t('export.perf_needs_improvement', 'Butuh Training'), color: 'text-red-600', bg: 'bg-red-50' };
 };
+
+export const localizeTopic = (topic, t = (k, f) => f) => {
+    if (!topic) return '';
+    const key = `complaint.topic.${topic.toLowerCase().replace(/[^a-z0-9_]/g, '_')}`;
+    const translated = t(key);
+    return translated !== key ? translated : topic;
+};

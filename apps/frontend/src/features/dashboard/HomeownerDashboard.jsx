@@ -1369,7 +1369,7 @@ export function HomeownerDashboard() {
 
               return (
                 <>
-                  <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">{t('dashboard.security', 'Keamanan')}</h2>
+                  <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">{t('dashboard.security.title', 'Keamanan')}</h2>
                   <div id="section-keamanan" className="mb-6">
                     <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
                       {/* Kiri (Master - Status) */}
@@ -1462,7 +1462,7 @@ export function HomeownerDashboard() {
                                           {sensor.room}
                                         </span>
                                         <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold tracking-wide shrink-0">
-                                          Last: {securityLastUpdated || 'Baru saja'}
+                                          {t('dashboard.security.last_time', { time: securityLastUpdated || t('dashboard.just_now', 'Baru saja') }, `Terakhir: ${securityLastUpdated || 'Baru saja'}`)}
                                         </span>
                                       </div>
                                     </div>
@@ -2099,7 +2099,7 @@ export function HomeownerDashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-text-headline leading-tight mb-0.5">{activity.device}</div>
-                        <div className="text-[10px] text-text-dim font-medium uppercase tracking-wider">{getLocalizedAction(activity.action)} • {t('activity.platform_source', { platform: activity.platform || 'Web' })}</div>
+                        <div className="text-[10px] text-text-dim font-medium tracking-wider">{getLocalizedAction(activity.action)?.toUpperCase()} • {t('activity.platform_source', { platform: activity.platform || 'Web' })}</div>
                       </div>
                       <div className="text-[10px] font-semibold text-text-dim bg-slate-100/50 px-2 py-1 rounded-lg">{activity.time}</div>
                     </div>

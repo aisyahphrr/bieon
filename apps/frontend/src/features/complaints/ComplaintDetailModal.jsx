@@ -24,7 +24,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
-import { formatStatusDisplay, getPerformanceIndicator } from '../../utils/complaintHelpers';
+import { formatStatusDisplay, getPerformanceIndicator, localizeTopic } from '../../utils/complaintHelpers';
 import { useSLA } from '../../hooks/useSLA';
 import { useTranslation } from 'react-i18next';
 
@@ -460,7 +460,8 @@ export function ComplaintDetailModal({
             const count = matchCount ? matchCount[1] : '1';
             const matchUrg = cleaned.match(/(?:menjadi|to):\s*(.*)/i);
             const urgency = matchUrg ? matchUrg[1].replace(/\.$/, '').trim() : 'MEDIUM';
-            return t('complaint.timeline_events.ping_sent', 'SuperAdmin mengirimkan PING (Teguran ke-{{count}}). Urgensi ditingkatkan menjadi: {{urgency}}.', { count, urgency });
+            const localizedUrgency = t('complaint.urgency_' + urgency.toLowerCase().replace(/\s+/g, '_'), urgency);
+            return t('complaint.timeline_events.ping_sent', 'SuperAdmin mengirimkan PING (Teguran ke-{{count}}). Urgensi ditingkatkan menjadi: {{urgency}}.', { count, urgency: localizedUrgency });
         }
         
         // Completing & Rejection
@@ -522,7 +523,7 @@ export function ComplaintDetailModal({
             [t('export.row_tech_rating', 'Rating Teknisi'), `: ${localTicket.rating?.stars || localTicket.rating || '-'} / 5`],
             [t('export.row_customer_name', 'Nama Pelanggan'), `: ${localTicket.clientInfo?.name || localTicket.client || localTicket.homeowner?.fullName || '-'}`],
             [t('export.row_address', 'Alamat'), `: ${localTicket.clientInfo?.address || localTicket.homeowner?.address || '-'}`],
-            [t('export.row_topic', 'Topik Kendala'), `: ${localTicket.topic || '-'}`],
+            [t('export.row_topic', 'Topik Kendala'), `: ${localizeTopic(localTicket.topic, t) || '-'}`],
             [t('export.row_category', 'Kategori'), `: ${localTicket.category || '-'}`],
             [t('complaint.detail_box.status_label', 'Status'), `: ${formatStatusDisplay(localTicket.status, activeRole).toUpperCase()}`],
             [t('export.row_desc', 'Deskripsi Masalah'), `: ${localTicket.description || localTicket.desc || '-'}`],
@@ -653,7 +654,7 @@ export function ComplaintDetailModal({
                     level === 'amber' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                         'bg-eco/5 text-eco border-eco/20'
                 }`}>
-                SLA: {type} {isOverdue ? 'OVERDUE' : ''}
+                {t('complaint.sla_timer_label', 'SLA: {{type}}', { type: type === 'Repair' ? t('complaint.sla_repair_short', 'Perbaikan') : t('complaint.sla_response_short', 'Respons') })} {isOverdue ? t('complaint.sla_overdue_label', 'OVERDUE') : ''}
             </span>
         ) : null;
 
@@ -667,7 +668,7 @@ export function ComplaintDetailModal({
                 </span>
                 {badgeTicket.isEscalated && !['selesai', 'ditolak'].includes(badgeTicket.status?.toLowerCase()) && (
                     <span className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-[0_2px_4px_rgba(239,68,68,0.3)] flex items-center gap-1 animate-pulse">
-                        <AlertCircle className="w-2.5 h-2.5" /> PRIORITAS
+                        <AlertCircle className="w-2.5 h-2.5" /> {t('complaint.priority', 'PRIORITAS').toUpperCase()}
                     </span>
                 )}
                 {slaTimer}
@@ -727,7 +728,7 @@ export function ComplaintDetailModal({
                             <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-100 shadow-sm">
                                 <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6 pb-4 border-b border-gray-100">
                                     <div className="text-start">
-                                        <h3 className="text-lg font-bold text-gray-900 leading-tight">{localTicket.topic}</h3>
+                                        <h3 className="text-lg font-bold text-gray-900 leading-tight">{localizeTopic(localTicket.topic, t)}</h3>
                                         <p className="text-[11px] text-gray-500 font-medium">{t('complaint.detail_box.ticket_id', 'ID Tiket')}: {localTicket.id}</p>
                                     </div>
                                     <div className="shrink-0">

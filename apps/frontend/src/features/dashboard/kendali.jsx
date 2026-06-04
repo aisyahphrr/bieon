@@ -488,7 +488,7 @@ export function DeviceControlPage({ onNavigate }) {
       const res = await fetch('/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Gagal mengaktifkan open join');
+        throw new Error(data.message || t('kendali.open_join.error_activate', 'Gagal mengaktifkan open join'));
       }
 
       setIsScanning(true);
@@ -498,7 +498,7 @@ export function DeviceControlPage({ onNavigate }) {
       setLeavingDevices({});
       setScanTimer(30);
     } catch (err) {
-      alert('Gagal membuka Open Join: ' + err.message);
+      alert(t('kendali.open_join.error_open', 'Gagal membuka Open Join: ') + err.message);
       setIsOpenJoinRequestPending(false);
       openJoinSubmitLockRef.current = false;
       return;
@@ -1026,9 +1026,9 @@ export function DeviceControlPage({ onNavigate }) {
       setCurrentBieon(newBieon);
       setBieonIdInput("");
       setStep("view-bieon");
-      alert("Sistem BIEON berhasil ditambahkan!");
+      alert(t('homeowner_qc.add_bieon.success', 'Sistem BIEON berhasil ditambahkan!'));
     } catch (error) {
-      alert("Gagal: " + error.message);
+      alert(t('homeowner_qc.add_bieon.error_failed', 'Gagal menambahkan BIEON ID') + ': ' + error.message);
     }
   };
 
@@ -1777,7 +1777,7 @@ export function DeviceControlPage({ onNavigate }) {
       setJoinedDevicesPool(prev => prev.filter(id => id !== dev.id));
       setDiscoveredDevices(prev => prev.filter(d => d.id !== dev.id));
 
-      alert(data.message || `Berhasil! ${dev.name} telah terdaftar.`);
+      alert(data.message || t('kendali.open_join.registered_success', 'Berhasil! {{name}} telah terdaftar.', { name: dev.name }));
 
       // Refresh produk terdaftar dulu biar sinkron
       await fetchRegisteredProducts();
@@ -1786,7 +1786,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     } catch (error) {
       console.error('Quick Save Error:', error);
-      alert(`Gagal simpan: ${error.message}`);
+      alert(t('kendali.open_join.save_failed', 'Gagal simpan: ') + error.message);
     }
   };
 
@@ -2605,10 +2605,10 @@ export function DeviceControlPage({ onNavigate }) {
                                 <div>
                                   <h3 className="text-lg  text-gray-900">{bieon.name}</h3>
                                   <p className="text-sm text-gray-600">ID: {bieon.bieonId}</p>
-                                  <div className="flex items-center gap-4 mt-2">
-                                    <span className="text-sm text-gray-500">{bieon.totalHubs} {t('kendali.hubs_label', 'Hubs')}</span>
-                                    <span className="text-sm text-gray-500">•</span>
-                                    <span className="text-sm text-gray-500">{bieon.hubs.flatMap((h) => h.devices).length} {t('kendali.devices_label', 'Devices')}</span>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-sm font-semibold text-gray-700">
+                                      {t('kendali.hub_device_count', { hubCount: bieon.totalHubs, deviceCount: bieon.hubs.flatMap((h) => h.devices).length }, `${bieon.totalHubs} Hubs • ${bieon.hubs.flatMap((h) => h.devices).length} Devices`)}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -2628,8 +2628,8 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h2 className="text-2xl  text-gray-900">Tambah BIEON</h2>
-                      <p className="text-sm text-gray-600 mt-1">Masukkan ID BIEON Anda</p>
+                      <h2 className="text-2xl  text-gray-900">{t('homeowner_qc.add_bieon.title', 'Tambah BIEON')}</h2>
+                      <p className="text-sm text-gray-600 mt-1">{t('homeowner_qc.add_bieon.subtitle', 'Masukkan ID BIEON Anda')}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -2644,17 +2644,17 @@ export function DeviceControlPage({ onNavigate }) {
                   <div className="space-y-6">
                     <div>
                       <label className="block text-sm  text-gray-700 mb-2">
-                        ID BIEON <span className="text-red-500">*</span>
+                        {t('homeowner_qc.add_bieon.label_id', 'ID BIEON')} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={bieonIdInput}
                         onChange={(e) => setBieonIdInput(e.target.value)}
-                        placeholder="Contoh: BIEON-001"
+                        placeholder={t('homeowner_qc.add_bieon.placeholder_id', 'Demo: Coba BIEON-001...')}
                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-bieon-eco"
                       />
                       <p className="text-xs text-gray-500 mt-2">
-                        Demo: Coba BIEON-001, BIEON-002, BIEON-003, atau BIEON-004
+                        {t('homeowner_qc.add_bieon.demo_tip', 'Demo: Coba BIEON-001, BIEON-002, BIEON-003, atau BIEON-004')}
                       </p>
                     </div>
                     <div className="flex gap-3">
@@ -2665,13 +2665,13 @@ export function DeviceControlPage({ onNavigate }) {
                         }}
                         className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl  hover:bg-gray-50 transition-all"
                       >
-                        Batal
+                        {t('homeowner_qc.add_bieon.btn_cancel', 'Batal')}
                       </button>
                       <button
                         onClick={handleSubmitBieonId}
                         className="flex-1 px-6 py-3 bg-gradient-to-r from-bieon-eco to-bieon-sense text-white rounded-xl  shadow-lg hover:shadow-xl transition-all"
                       >
-                        Submit
+                        {t('homeowner_qc.add_bieon.btn_submit', 'Submit')}
                       </button>
                     </div>
                   </div>
@@ -2690,11 +2690,15 @@ export function DeviceControlPage({ onNavigate }) {
                       <div className="flex items-center gap-4 mt-3">
                         <div className="flex items-center gap-2">
                           <Wifi className="w-4 h-4 text-bieon-eco" />
-                          <span className="text-sm font-semibold text-gray-700">{currentBieon.totalHubs} Hub Nodes</span>
+                          <span className="text-sm font-semibold text-gray-700">
+                            {t('kendali.hub_nodes_count', { count: currentBieon.totalHubs }, `${currentBieon.totalHubs} Hub Nodes`)}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Settings className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-semibold text-gray-700">{currentBieon.hubs.flatMap((h) => h.devices).length} Devices</span>
+                          <span className="text-sm font-semibold text-gray-700">
+                            {t('kendali.devices_count', { count: currentBieon.hubs.flatMap((h) => h.devices).length }, `${currentBieon.hubs.flatMap((h) => h.devices).length} Devices`)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -2727,11 +2731,11 @@ export function DeviceControlPage({ onNavigate }) {
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600 font-semibold">Devices:</span>
+                              <span className="text-gray-600 font-semibold">{t('kendali.devices_label', 'Devices:')}</span>
                               <span className="font-bold text-gray-900">{hub.devices.length}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600 font-semibold">Status:</span>
+                              <span className="text-gray-600 font-semibold">{t('kendali.status_label', 'Status:')}</span>
                               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${hub.status === "active" ? "bg-bieon-eco/10 text-bieon-eco/90" : "bg-gray-100 text-gray-600"}`}>
                                 {hub.status}
                               </span>
@@ -2742,7 +2746,7 @@ export function DeviceControlPage({ onNavigate }) {
                           onClick={() => handleSelectHub(hub)}
                           className="mt-6 w-full py-2.5 bg-bieon-eco text-white font-bold rounded-lg hover:bg-bieon-eco/90 transition-colors flex justify-center items-center gap-2 shadow-sm"
                         >
-                          <Plus className="w-4 h-4" /> Add Device
+                          <Plus className="w-4 h-4" /> {t('kendali.btn_add_device', 'Add Device')}
                         </button>
                       </div>
                     ))}
@@ -2750,13 +2754,14 @@ export function DeviceControlPage({ onNavigate }) {
                 </div>
                 { /* Room Filter & Device List */}
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8">
-                  <h3 className="font-bold text-gray-900 mb-4">Filter per Ruangan</h3>
+                  <h3 className="font-bold text-gray-900 mb-4">{t('kendali.room_filter', 'Filter per Ruangan')}</h3>
                   <div className="flex flex-wrap gap-3 mb-6">
                     <button
                       onClick={() => setSelectedRoom("all")}
                       className={`px-4 py-2 rounded-lg font-semibold transition-all ${selectedRoom === "all" ? "bg-gradient-to-r from-bieon-eco to-green-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                     >
-                      Semua Ruangan ({currentBieon?.hubs.flatMap(h => h.devices).length || 0})
+                      {t('kendali.all_rooms', { count: currentBieon?.hubs.flatMap(h => h.devices).length || 0 }, `Semua Ruangan (${currentBieon?.hubs.flatMap(h => h.devices).length || 0})`)}
+
                     </button>
                     {dynamicRooms.map((room) => {
                       const allBieonDevices = currentBieon ? currentBieon.hubs.flatMap(h => h.devices) : [];
@@ -2777,8 +2782,8 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">Kendali Perangkat</h2>
-                      <p className="text-sm text-gray-500 mt-1 font-medium">CRUD, kontrol manual, status, dan detail perangkat</p>
+                      <h2 className="text-2xl font-bold text-gray-900">{t('kendali.device_control', 'Kendali Perangkat')}</h2>
+                      <p className="text-sm text-gray-500 mt-1 font-medium">{t('kendali.device_control_desc', 'CRUD, kontrol manual, status, dan detail perangkat')}</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -2787,7 +2792,7 @@ export function DeviceControlPage({ onNavigate }) {
                         <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-bieon-eco transition-colors" />
                         <input
                           type="text"
-                          placeholder="Cari perangkat..."
+                          placeholder={t('kendali.search_device', 'Cari perangkat...')}
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco focus:bg-white transition-all shadow-sm"
@@ -2800,19 +2805,19 @@ export function DeviceControlPage({ onNavigate }) {
                           onClick={() => setActiveFilterCategory("all")}
                           className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "all" ? "bg-white text-bieon-eco shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                         >
-                          Semua
+                          {t('kendali.tab_all', 'Semua')}
                         </button>
                         <button
                           onClick={() => setActiveFilterCategory("sensor")}
                           className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "sensor" ? "bg-white text-bieon-eco shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                         >
-                          Sensor
+                          {t('kendali.tab_sensor', 'Sensor')}
                         </button>
                         <button
                           onClick={() => setActiveFilterCategory("control")}
                           className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeFilterCategory === "control" ? "bg-white text-bieon-eco shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
                         >
-                          Aktuator
+                          {t('kendali.tab_actuator', 'Aktuator')}
                         </button>
                       </div>
                     </div>
@@ -2839,7 +2844,7 @@ export function DeviceControlPage({ onNavigate }) {
                   {getFilteredDevices().length === 0 && (
                     <div className="text-center py-12">
                       <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-600">Belum ada device di ruangan ini</p>
+                      <p className="text-gray-600">{t('kendali.empty_room', 'Belum ada device di ruangan ini')}</p>
                     </div>
                   )}
 
@@ -3788,16 +3793,16 @@ export function DeviceControlPage({ onNavigate }) {
                   <div className="w-20 h-20 bg-bieon-eco/5 rounded-3xl flex items-center justify-center mx-auto mb-6">
                     <Cpu className="w-10 h-10 text-bieon-eco" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Manajemen Perangkat</h2>
-                  <p className="text-sm text-gray-600 mb-8">Apa yang ingin Anda lakukan untuk Hub {selectedHub?.name}?</p>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('kendali.device_management', 'Manajemen Perangkat')}</h2>
+                  <p className="text-sm text-gray-600 mb-8">{t('kendali.hub_action_prompt', 'Apa yang ingin Anda lakukan untuk Hub {{hubName}}?', { hubName: selectedHub?.name })}</p>
 
                   <div className="grid gap-4">
                     <button
                       onClick={() => setStep("open-join")}
                       className="group p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-bieon-eco hover:shadow-xl transition-all text-left"
                     >
-                      <h4 className="font-normal text-gray-900 group-hover:text-bieon-eco">Akses "Open Join"</h4>
-                      <p className="text-xs text-gray-500">Kirim Instruksi open join ke hub melalui backend, mqtt dan esp B</p>
+                      <h4 className="font-normal text-gray-900 group-hover:text-bieon-eco">{t('kendali.access_open_join', 'Akses "Open Join"')}</h4>
+                      <p className="text-xs text-gray-500">{t('kendali.access_open_join_desc', 'Kirim Instruksi open join ke hub melalui backend, mqtt dan esp B')}</p>
                     </button>
 
                     <button
@@ -3807,8 +3812,8 @@ export function DeviceControlPage({ onNavigate }) {
                       }}
                       className="group p-6 bg-white border-2 border-gray-100 rounded-3xl hover:border-blue-500 hover:shadow-xl transition-all text-left"
                     >
-                      <h4 className="font-normal text-gray-900 group-hover:text-blue-500">Perangkat Terdaftar</h4>
-                      <p className="text-xs text-gray-500">Lanjutkan proses pengaturan & konfigurasi perangkat Anda.</p>
+                      <h4 className="font-normal text-gray-900 group-hover:text-blue-500">{t('kendali.registered_devices', 'Perangkat Terdaftar')}</h4>
+                      <p className="text-xs text-gray-500">{t('kendali.registered_devices_desc', 'Lanjutkan proses pengaturan & konfigurasi perangkat Anda.')}</p>
                     </button>
                   </div>
                 </div>
@@ -3820,20 +3825,20 @@ export function DeviceControlPage({ onNavigate }) {
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full p-8 sm:p-10 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-black text-gray-900">Buka Open Join</h2>
+                    <h2 className="text-2xl font-black text-gray-900">{t('kendali.open_join.title', 'Buka Open Join')}</h2>
                     <button onClick={() => { setStep("add-device-choice"); setScanAttempted(false); }} className="p-2 hover:bg-gray-100 rounded-full transition-all">
                       <X className="w-5 h-5 text-gray-400" />
                     </button>
                   </div>
 
                   <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-                    Pilih hub yang ingin dibuka jendela join-nya. Instruksi akan diteruskan dari web ke backend, lalu ke ESP B dan ESP A.
+                    {t('kendali.open_join.desc', 'Pilih hub yang ingin dibuka jendela join-nya. Instruksi akan diteruskan dari web ke backend, lalu ke ESP B dan ESP A.')}
                   </p>
 
                   <div className="space-y-6">
                     {/* HUB TARGET CARD */}
                     <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Hub Target</p>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{t('kendali.open_join.target_hub', 'Hub Target')}</p>
                       <div className="bg-gray-50 border border-gray-100 p-5 rounded-3xl flex items-center gap-4">
                         <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
                           <Cpu className="w-6 h-6 text-bieon-eco" />
@@ -3848,7 +3853,7 @@ export function DeviceControlPage({ onNavigate }) {
                     {/* INFO BOX GREEN */}
                     <div className="bg-bieon-eco/5 border border-bieon-eco/20 p-5 rounded-3xl">
                       <p className="text-xs text-gray-700 leading-relaxed font-medium">
-                        Open join akan aktif selama 30 detik. Saat device berhasil join dan teridentifikasi, backend akan membuat device map otomatis.
+                        {t('kendali.open_join.info', 'Open join akan aktif selama 30 detik. Saat device berhasil join dan teridentifikasi, backend akan membuat device map otomatis.')}
                       </p>
                     </div>
 
@@ -3858,7 +3863,7 @@ export function DeviceControlPage({ onNavigate }) {
                         onClick={() => { setStep("add-device-choice"); setScanAttempted(false); setDiscoveredDevices([]); setJoinedDevicesPool([]); setLeavingDevices({}); }}
                         className="flex-1 py-4 px-6 border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
                       >
-                        Kembali
+                        {t('kendali.open_join.back', 'Kembali')}
                       </button>
                       <button
                         onClick={handleStartDiscovery}
@@ -3874,17 +3879,17 @@ export function DeviceControlPage({ onNavigate }) {
                               </svg>
                               <span className="relative z-10 text-[8px] font-black">{scanTimer}</span>
                             </div>
-                            Scanning...
+                            {t('kendali.open_join.scanning_label', 'Scanning...')}
                           </>
                         ) : (
-                          "Buka Open Join 30 Detik"
+                          t('kendali.open_join.start_button', 'Buka Open Join 30 Detik')
                         )}
                       </button>
                     </div>
 
                     {/* CONNECTED DEVICES SECTION */}
                     <div className="pt-4 border-t border-gray-100">
-                      <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-4">Perangkat Terdaftar Anda</p>
+                      <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-4">{t('kendali.open_join.registered_devices', 'Perangkat Terdaftar Anda')}</p>
 
                       {(() => {
                         // Ambil perangkat dari scan live
@@ -3947,8 +3952,8 @@ export function DeviceControlPage({ onNavigate }) {
                           <div className="space-y-3">
                             {allCandidates.length === 0 && !isScanning && !scanAttempted && (
                               <div className="flex flex-col items-center justify-center py-10 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
-                                <p className="text-sm text-gray-400 italic">Menunggu perangkat bergabung...</p>
-                                <p className="text-[10px] text-gray-300 mt-2 text-center px-6">Klik tombol Buka Open Join untuk mulai mendeteksi perangkat baru.</p>
+                                <p className="text-sm text-gray-400 italic">{t('kendali.open_join.waiting_devices', 'Menunggu perangkat bergabung...')}</p>
+                                <p className="text-[10px] text-gray-300 mt-2 text-center px-6">{t('kendali.open_join.click_start_desc', 'Klik tombol Buka Open Join untuk mulai mendeteksi perangkat baru.')}</p>
                               </div>
                             )}
 
@@ -3960,7 +3965,7 @@ export function DeviceControlPage({ onNavigate }) {
                                     <span className="font-bold text-bieon-eco">{scanTimer}</span>
                                   </div>
                                 </div>
-                                <p className="text-sm text-bieon-eco font-medium">Sedang mencari perangkat...</p>
+                                <p className="text-sm text-bieon-eco font-medium">{t('kendali.open_join.scanning_countdown', { timeLeft: scanTimer }, `${scanTimer} Sedang mencari perangkat...`)}</p>
                               </div>
                             )}
 
@@ -3969,9 +3974,9 @@ export function DeviceControlPage({ onNavigate }) {
                                 <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
                                   <WifiOff className="w-6 h-6 text-orange-500" />
                                 </div>
-                                <h4 className="text-sm font-bold text-orange-600">Perangkat Tidak Ditemukan</h4>
+                                <h4 className="text-sm font-bold text-orange-600">{t('kendali.open_join.devices_not_found', 'Perangkat Tidak Ditemukan')}</h4>
                                 <p className="text-[10px] text-orange-500 mt-2 text-center px-6 leading-relaxed">
-                                  Tidak ada perangkat baru yang terdeteksi. Perangkat yang sudah ada di Perangkat Terdaftar atau Hub tidak akan dimunculkan lagi.
+                                  {t('kendali.open_join.devices_not_found_desc', 'Tidak ada perangkat baru yang terdeteksi. Perangkat yang sudah ada di Perangkat Terdaftar atau Hub tidak akan dimunculkan lagi.')}
                                 </p>
                               </div>
                             )}
@@ -4065,7 +4070,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               isSensor ? 'bg-bieon-eco hover:bg-bieon-eco/90 shadow-bieon-eco/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
                                             } text-white text-[9px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap shadow-sm`}
                                           >
-                                            Atur Sekarang
+                                            {t('kendali.btn_configure', 'Atur Sekarang')}
                                           </button>
                                           <button
                                             onClick={(e) => {
@@ -4077,7 +4082,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               }
                                             }}
                                             className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                            title="Hapus Produk"
+                                            title={t('kendali.tooltip_delete_product', 'Hapus Produk')}
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </button>
@@ -4094,7 +4099,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
                                             : 'bg-bieon-eco/5 text-bieon-eco hover:bg-bieon-eco hover:text-white border border-bieon-eco/20'
                                           }`}
-                                        title={isJoined ? "Sudah masuk antrean" : leavingDevices[dev.id] !== undefined ? "Sedang leave, tidak bisa ditambah" : "Tambahkan ke antrean"}
+                                        title={isJoined ? t('kendali.open_join.tooltip_already_joined', 'Sudah masuk antrean') : leavingDevices[dev.id] !== undefined ? t('kendali.open_join.tooltip_leaving', 'Sedang leave, tidak bisa ditambah') : t('kendali.open_join.tooltip_add_queue', 'Tambahkan ke antrean')}
                                       >
                                         {isJoined ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                                       </button>
@@ -4168,8 +4173,8 @@ export function DeviceControlPage({ onNavigate }) {
                                 <CheckCircle className="w-5 h-5" />
                               </div>
                               <div>
-                                <h4 className="text-sm font-bold">{joinedDevicesPool.length} Perangkat Terpilih</h4>
-                                <p className="text-[10px] text-white/70">Kelola masing-masing atau simpan sekaligus</p>
+                                <h4 className="text-sm font-bold">{t('kendali.open_join.selected_devices', { count: joinedDevicesPool.length }, `${joinedDevicesPool.length} Perangkat Terpilih`)}</h4>
+                                <p className="text-[10px] text-white/70">{t('kendali.open_join.selected_devices_desc', 'Kelola masing-masing atau simpan sekaligus')}</p>
                               </div>
                             </div>
                           </div>
@@ -4204,10 +4209,10 @@ export function DeviceControlPage({ onNavigate }) {
                                           aria-label="Pilih kategori perangkat"
                                         >
                                           <option value="" disabled>
-                                            {pendingOpenJoinAction === "save" ? "Simpan sebagai…" : "Atur sebagai…"}
+                                            {pendingOpenJoinAction === "save" ? t('kendali.open_join.save_as', 'Simpan sebagai…') : t('kendali.open_join.configure_as', 'Atur sebagai…')}
                                           </option>
-                                          <option value="sensor">Sensor</option>
-                                          <option value="control">Control Aktuator</option>
+                                          <option value="sensor">{t('kendali.open_join.option_sensor', 'Sensor')}</option>
+                                          <option value="control">{t('kendali.open_join.option_actuator', 'Control Aktuator')}</option>
                                         </select>
                                         <button
                                           type="button"
@@ -4217,7 +4222,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           }}
                                           className="px-2 py-1.5 text-white/70 hover:text-white text-[10px] font-bold"
                                         >
-                                          Batal
+                                          {t('kendali.open_join.btn_cancel', 'Batal')}
                                         </button>
                                       </>
                                     ) : (
@@ -4226,13 +4231,13 @@ export function DeviceControlPage({ onNavigate }) {
                                           onClick={() => initOpenJoinDeviceConfiguration(dev, "save")}
                                           className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-lg transition-all border border-white/20"
                                         >
-                                          Simpan
+                                          {t('kendali.open_join.btn_save', 'Simpan')}
                                         </button>
                                         <button
                                           onClick={() => initOpenJoinDeviceConfiguration(dev, "configure")}
                                           className="px-3 py-1.5 bg-white hover:bg-bieon-eco/5 text-bieon-eco text-[10px] font-bold rounded-lg transition-all shadow-sm"
                                         >
-                                          Atur
+                                          {t('kendali.open_join.btn_configure_short', 'Atur')}
                                         </button>
                                       </>
                                     )}
@@ -4245,7 +4250,7 @@ export function DeviceControlPage({ onNavigate }) {
                           <div className="mt-4 flex items-start gap-2">
                             <span className="text-yellow-500 text-xs">✨</span>
                             <p className="text-[10px] text-gray-400 italic leading-relaxed">
-                              Device baru akan otomatis muncul dan dipisahkan berdasarkan tipe (Sensor/Aktuator) saat bergabung.
+                              {t('kendali.open_join.auto_detect_note', 'Device baru akan otomatis muncul dan dipisahkan berdasarkan tipe (Sensor/Aktuator) saat bergabung.')}
                             </p>
                           </div>
                         </div>
@@ -4260,15 +4265,15 @@ export function DeviceControlPage({ onNavigate }) {
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full p-8 sm:p-10 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-3xl font-bold text-gray-900 leading-tight">Tambahkan Perangkat Baru</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 leading-tight">{t('kendali.add_new_device', 'Tambahkan Perangkat Baru')}</h2>
                     <button onClick={() => setStep("add-device-choice")} className="p-2 hover:bg-gray-100 rounded-full transition-all">
                       <X className="w-6 h-6 text-gray-400" />
                     </button>
                   </div>
-                  <p className="text-sm text-gray-500 mb-8">Masukkan ID dan Nama Produk yang tertera pada stiker fisik perangkat.</p>
+                  <p className="text-sm text-gray-500 mb-8">{t('kendali.add_new_device_desc', 'Masukkan ID dan Nama Produk yang tertera pada stiker fisik perangkat.')}</p>
                   <form onSubmit={handleRegisterProduct} className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-widest text-gray-400">ID Device (Stiker)</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-gray-400">{t('kendali.device_id_sticker', 'ID Device (Stiker)')}</label>
                       <input
                         required
                         list="device-ids"
@@ -4375,8 +4380,8 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-4xl w-full p-6 sm:p-10 my-4 sm:my-0">
                   <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">Perangkat Terdaftar</h2>
-                      <p className="text-sm text-gray-500 mt-1">Lanjutkan proses pengaturan dan konfigurasi perangkat Anda.</p>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{t('kendali.registered_devices_title', 'Perangkat Terdaftar')}</h2>
+                      <p className="text-sm text-gray-500 mt-1">{t('kendali.registered_devices_desc', 'Lanjutkan proses pengaturan & konfigurasi perangkat Anda.')}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -4397,7 +4402,7 @@ export function DeviceControlPage({ onNavigate }) {
                       type="text"
                       value={productSearchQuery}
                       onChange={(e) => setProductSearchQuery(e.target.value)}
-                      placeholder="Cari perangkat berdasarkan nama atau ID..."
+                      placeholder={t('kendali.search_placeholder', 'Cari perangkat berdasarkan nama atau ID ...')}
                       className="w-full pl-14 pr-6 py-5 bg-gray-50 border-2 border-gray-100 rounded-[1.5rem] focus:bg-white focus:border-bieon-eco focus:ring-4 focus:ring-bieon-eco/10 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-400 placeholder:font-normal shadow-sm"
                     />
                   </div>
@@ -4427,8 +4432,8 @@ export function DeviceControlPage({ onNavigate }) {
                               <Activity className="w-6 h-6" />
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold text-gray-900">Sensor</h3>
-                              <p className="text-[9px] font-bold text-bieon-eco uppercase tracking-widest">Monitoring System</p>
+                              <h3 className="text-xl font-bold text-gray-900">{t('kendali.sensor_title', 'Sensor')}</h3>
+                              <p className="text-[9px] font-bold text-bieon-eco uppercase tracking-widest">{t('kendali.sensor_desc', 'Monitoring System')}</p>
                             </div>
                           </div>
 
@@ -4457,7 +4462,7 @@ export function DeviceControlPage({ onNavigate }) {
                                       onClick={() => handleEditDevice(dev)}
                                       className="px-3 py-2 bg-bieon-eco text-white text-[9px] font-bold rounded-xl hover:bg-bieon-eco/90 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-bieon-eco/20"
                                     >
-                                      Atur Sekarang
+                                      {t('kendali.btn_configure', 'Atur Sekarang')}
                                     </button>
                                     <button
                                       onClick={(e) => {
@@ -4465,7 +4470,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         deleteDevice(dev.id);
                                       }}
                                       className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                      title="Hapus Produk"
+                                      title={t('kendali.tooltip_delete_product', 'Hapus Produk')}
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </button>
@@ -4515,7 +4520,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         }}
                                         className="px-3 py-2 bg-bieon-eco text-white text-[9px] font-bold rounded-xl hover:bg-bieon-eco/90 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-bieon-eco/20"
                                       >
-                                        Atur Sekarang
+                                        {t('kendali.btn_configure', 'Atur Sekarang')}
                                       </button>
                                       <button
                                         onClick={(e) => {
@@ -4523,7 +4528,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           handleDeleteRegisteredProduct(product.productId);
                                         }}
                                         className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                        title="Hapus Produk"
+                                        title={t('kendali.tooltip_delete_product', 'Hapus Produk')}
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </button>
@@ -4532,7 +4537,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 ))
                               ) : (quickSavedSensors.length === 0 && (
                                 <div className="py-12 text-center">
-                                  <p className="text-xs font-medium text-gray-400">Belum ada sensor terdaftar</p>
+                                  <p className="text-xs font-medium text-gray-400">{t('kendali.empty_sensor', 'Belum ada sensor terdaftar')}</p>
                                 </div>
                               ))}
                             </div>
@@ -4546,8 +4551,8 @@ export function DeviceControlPage({ onNavigate }) {
                               <Cpu className="w-6 h-6" />
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold text-gray-900">Control</h3>
-                              <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Actuator System</p>
+                              <h3 className="text-xl font-bold text-gray-900">{t('kendali.control_title', 'Control')}</h3>
+                              <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{t('kendali.control_desc', 'Actuator System')}</p>
                             </div>
                           </div>
 
@@ -4570,7 +4575,7 @@ export function DeviceControlPage({ onNavigate }) {
                                       onClick={() => handleEditDevice(dev)}
                                       className="px-3 py-2 bg-blue-600 text-white text-[9px] font-bold rounded-xl hover:bg-blue-700 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-blue-600/20"
                                     >
-                                      Atur Sekarang
+                                      {t('kendali.btn_configure', 'Atur Sekarang')}
                                     </button>
                                     <button
                                       onClick={(e) => {
@@ -4578,7 +4583,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         deleteDevice(dev.id);
                                       }}
                                       className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                      title="Hapus Produk"
+                                      title={t('kendali.tooltip_delete_product', 'Hapus Produk')}
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </button>
@@ -4617,7 +4622,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         }}
                                         className="px-3 py-2 bg-blue-600 text-white text-[9px] font-bold rounded-xl hover:bg-blue-700 transition-all uppercase tracking-wider whitespace-nowrap shadow-sm shadow-blue-600/20"
                                       >
-                                        Atur Sekarang
+                                        {t('kendali.btn_configure', 'Atur Sekarang')}
                                       </button>
                                       <button
                                         onClick={(e) => {
@@ -4625,7 +4630,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           handleDeleteRegisteredProduct(product.productId);
                                         }}
                                         className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                                        title="Hapus Produk"
+                                        title={t('kendali.tooltip_delete_product', 'Hapus Produk')}
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </button>
@@ -4634,7 +4639,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 ))
                               ) : (quickSavedControls.length === 0 && (
                                 <div className="py-12 text-center">
-                                  <p className="text-xs font-medium text-gray-400">Belum ada control terdaftar</p>
+                                  <p className="text-xs font-medium text-gray-400">{t('kendali.empty_control', 'Belum ada control terdaftar')}</p>
                                 </div>
                               ))}
                             </div>
@@ -6019,8 +6024,8 @@ export function DeviceControlPage({ onNavigate }) {
               <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/30">
                 <Radio className="w-8 h-8 text-white animate-pulse" />
               </div>
-              <h3 className="text-xl font-black text-white">Token Akses Teknisi</h3>
-              <p className="text-white/80 text-xs mt-1">Berikan kode ini kepada teknisi Anda</p>
+              <h3 className="text-xl font-black text-white">{t('kendali.tech_access_token', 'Token Akses Teknisi')}</h3>
+              <p className="text-white/80 text-xs mt-1">{t('kendali.tech_access_desc', 'Berikan kode ini kepada teknisi Anda')}</p>
             </div>
             <div className="p-8 text-center">
               <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl py-6 mb-6">
@@ -6030,15 +6035,13 @@ export function DeviceControlPage({ onNavigate }) {
               </div>
               <div className="flex items-start gap-3 text-left bg-amber-50 p-4 rounded-xl border border-amber-100 mb-6">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-800 leading-relaxed">
-                  Token ini bersifat <strong className="font-extrabold text-amber-950">sekali pakai</strong> dengan masa aktif <strong className="font-extrabold text-amber-950">5 menit</strong>. Setelah digunakan, akses konfigurasi teknisi berlaku selama <strong className="font-extrabold text-amber-950">30 menit</strong> dan akan <em className="italic">logout otomatis</em> jika waktu habis.
-                </p>
+                <p className="text-[11px] text-amber-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: t('kendali.tech_access_warning') }} />
               </div>
               <button
                 onClick={() => setShowTokenModal(false)}
                 className="w-full py-3.5 bg-gray-900 text-white  rounded-xl hover:bg-gray-800 transition-all shadow-lg active:scale-95"
               >
-                Selesai
+                {t('kendali.done', 'Selesai')}
               </button>
             </div>
           </div>
