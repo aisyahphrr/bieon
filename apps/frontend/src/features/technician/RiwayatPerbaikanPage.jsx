@@ -168,7 +168,10 @@ export function RiwayatPerbaikanPage() {
                 originalId: safeId,
                 id: `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}`,
                 date: new Date(item.createdAt).toLocaleDateString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
-                finishedDate: new Date(item.completedAt || item.updatedAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                finishedDate: (() => {
+                  const formatted = new Date(item.completedAt || item.updatedAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                  return i18n.language === 'id' ? formatted.replace(/\./g, ':') : formatted;
+                })(),
                 client: item.homeowner?.fullName || 'Pelanggan Bieon',
                 location: item.homeowner?.address || '-',
                 duration: calculateDuration(item.createdAt, item.completedAt || item.updatedAt, t),
@@ -272,7 +275,10 @@ export function RiwayatPerbaikanPage() {
 
     doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text(`${t('export.printed_at', 'Dicetak pada')}: ${new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`, 14, 30);
+    doc.text(`${t('export.printed_at', 'Dicetak pada')}: ${(() => {
+      const formatted = new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US');
+      return i18n.language === 'id' ? formatted.replace(/\./g, ':') : formatted;
+    })()}`, 14, 30);
 
     // Columns matching the UI table order
     const tableColumn = [

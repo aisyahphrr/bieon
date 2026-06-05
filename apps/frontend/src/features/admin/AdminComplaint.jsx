@@ -1260,24 +1260,22 @@ export default function AdminComplaint({ onNavigate }) {
                             {t('table.pagination_info', '{{start}}-{{end}} dari {{total}} item', { start: startIndex + 1, end: Math.min(startIndex + rowsPerPage, totalItems), total: totalItems })}
                         </div>
 
-                        {/* Pagination Controls - Right: ikon di HP, teks di desktop */}
-                        <div className="flex items-center gap-1.5 md:gap-3">
+                        {/* Pagination Controls - Right */}
+                        <div className="flex items-center gap-2 md:gap-3">
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage(currentPage - 1)}
                                 className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                             >
                                 <ChevronLeft className="w-4 h-4 md:hidden" />
-                                <span className="hidden md:inline lg:hidden">{t('table.previous', 'Sebelumnya').slice(0, 4)}</span>
-                                <span className="hidden lg:inline">{t('table.previous', 'Sebelumnya')}</span>
+                                <span className="hidden md:inline">{t('history.previous')}</span>
                             </button>
                             <button
-                                disabled={currentPage >= Math.ceil(totalItems / rowsPerPage)}
+                                disabled={currentPage >= totalPages}
                                 onClick={() => setCurrentPage(currentPage + 1)}
                                 className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
                             >
-                                <span className="hidden lg:inline">{t('table.next', 'Selanjutnya')}</span>
-                                <span className="hidden md:inline lg:hidden">{t('table.next', 'Selanjutnya').slice(0, 4)}</span>
+                                <span className="hidden md:inline">{t('history.next')}</span>
                                 <ChevronRight className="w-4 h-4 md:hidden" />
                             </button>
                         </div>

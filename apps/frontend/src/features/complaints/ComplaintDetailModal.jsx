@@ -932,7 +932,7 @@ export function ComplaintDetailModal({
                                                         }`}>
                                                         <span className="text-[9px] font-black uppercase">
                                                             {(localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1) >= 70 ? t('complaint.perf.safe', 'Aman') : t('complaint.perf.danger', 'Bahaya')}
-                                                            {['admin', 'superadmin'].includes(role?.toLowerCase()) && ` ΓÇó ${Math.round((localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1))}`}
+                                                            {['admin', 'superadmin'].includes(role?.toLowerCase()) && ` \u2022 ${Math.round((localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1))}`}
                                                         </span>
                                                     </div>
                                                 )}

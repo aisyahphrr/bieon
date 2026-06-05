@@ -215,10 +215,11 @@ export default function AdminHistory({ onNavigate }) {
 
     const formatDateTime = (dateStr) => {
         const date = new Date(dateStr);
-        return date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
+        const formatted = date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
             day: '2-digit', month: 'short', year: 'numeric',
             hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
+        return i18n.language === 'id' ? formatted.replace(/\./g, ':') : formatted;
     };
 
     const formatDateDisplay = (isoDate) => {
