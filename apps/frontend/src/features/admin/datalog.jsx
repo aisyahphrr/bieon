@@ -37,7 +37,12 @@ const asText = (value) => {
 const buildLog = (time, tag, msg) => ({ time, tag, msg });
 
 export function DataLogSistemPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('bieon_language', lang);
+  };
   const navigate = useNavigate();
   const location = useLocation();
   const [logs, setLogs] = useState([]);
@@ -226,11 +231,38 @@ export function DataLogSistemPage() {
             >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             </button>
-            <div className="px-4 py-2 bg-white border-2 border-bieon-eco/20 shadow-sm rounded-xl md:hidden ml-4">
-              <span className="text-bieon-eco text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
-                <div className="w-2 h-2 bg-bieon-eco rounded-full animate-pulse shadow-[0_0_8px_rgba(5,155,39,0.6)]" />
-                {t('datalog.live_monitoring', 'Live Monitoring:')} {customerName}
-              </span>
+            <div className="flex items-center gap-3 ml-4 md:hidden">
+              <div className="px-4 py-2 bg-white border-2 border-bieon-eco/20 shadow-sm rounded-xl">
+                <span className="text-bieon-eco text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-2 h-2 bg-bieon-eco rounded-full animate-pulse shadow-[0_0_8px_rgba(5,155,39,0.6)]" />
+                  {t('datalog.live_monitoring_short', 'Live:')} {customerName}
+                </span>
+              </div>
+              {/* Premium Language Pill Toggle Mobile */}
+              <div className="flex items-center bg-bieon-eco/5 p-0.5 rounded-xl border border-bieon-eco/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
+                <button
+                  onClick={() => handleLanguageChange('id')}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all duration-300 ${
+                    currentLang === 'id'
+                      ? 'bg-white text-bieon-eco shadow-sm border border-bieon-eco/10 scale-100'
+                      : 'text-slate-400 hover:text-bieon-eco bg-transparent'
+                  }`}
+                  title="Bahasa Indonesia"
+                >
+                  ID
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all duration-300 ${
+                    currentLang === 'en'
+                      ? 'bg-white text-bieon-eco shadow-sm border border-bieon-eco/10 scale-100'
+                      : 'text-slate-400 hover:text-bieon-eco bg-transparent'
+                  }`}
+                  title="English"
+                >
+                  EN
+                </button>
+              </div>
             </div>
           </div>
 
@@ -240,11 +272,38 @@ export function DataLogSistemPage() {
           </div>
 
           <div className="hidden md:block">
-            <div className="px-4 py-2 bg-white border-2 border-bieon-eco/20 shadow-sm rounded-xl">
-              <span className="text-bieon-eco text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
-                <div className="w-2 h-2 bg-bieon-eco rounded-full animate-pulse shadow-[0_0_8px_rgba(5,155,39,0.6)]" />
-                {t('datalog.live_monitoring', 'Live Monitoring:')} {customerName}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 bg-white border-2 border-bieon-eco/20 shadow-sm rounded-xl">
+                <span className="text-bieon-eco text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-2 h-2 bg-bieon-eco rounded-full animate-pulse shadow-[0_0_8px_rgba(5,155,39,0.6)]" />
+                  {t('datalog.live_monitoring', 'Live Monitoring:')} {customerName}
+                </span>
+              </div>
+              {/* Premium Language Pill Toggle */}
+              <div className="flex items-center bg-bieon-eco/5 p-0.5 rounded-xl border border-bieon-eco/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] shrink-0 select-none">
+                <button
+                  onClick={() => handleLanguageChange('id')}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'id'
+                      ? 'bg-white text-bieon-eco shadow-sm border border-bieon-eco/10 scale-100'
+                      : 'text-slate-400 hover:text-bieon-eco bg-transparent'
+                  }`}
+                  title="Bahasa Indonesia"
+                >
+                  ID
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
+                    currentLang === 'en'
+                      ? 'bg-white text-bieon-eco shadow-sm border border-bieon-eco/10 scale-100'
+                      : 'text-slate-400 hover:text-bieon-eco bg-transparent'
+                  }`}
+                  title="English"
+                >
+                  EN
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -328,7 +387,7 @@ export function DataLogSistemPage() {
                   : 'bg-gray-100 text-gray-500 border border-gray-200'
                 }`}
               >
-                {isStreaming ? 'LIVE_STREAMING' : 'PAUSED'}
+                {isStreaming ? t('datalog.live_streaming_btn', 'LIVE_STREAMING') : t('datalog.paused_btn', 'PAUSED')}
               </button>
               <div className="h-8 w-px bg-gray-200 mx-2" />
               <button 

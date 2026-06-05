@@ -2214,7 +2214,10 @@
     },
     "search_placeholder": "Cari log (tipe atau kategori)...",
     "stream_active": "Aliran telemetri masuk aktif...",
-    "no_logs_match": "Tidak ada log yang cocok dengan pencarian Anda: \"{{search}}\""
+    "no_logs_match": "Tidak ada log yang cocok dengan pencarian Anda: \"{{search}}\"",
+    "live_streaming_btn": "LIVE STREAMING",
+    "paused_btn": "JEDA",
+    "live_monitoring_short": "Langsung:"
   },
   "delete_approval": {
     "err_token_not_found": "Token approval tidak ditemukan.",
@@ -2256,5 +2259,9 @@
   },
   "activity": {
     "platform_source": "melalui {{platform}}"
+  },
+  "technician": {
+    "control_warning": "⚠️ PERHATIAN: Harap hati-hati karena sedang di halaman Homeowner! ⚠️",
+    "exit_session_placeholder": "Tuliskan aktivitas dan status perangkat yang dikonfigurasi..."
   }
 }

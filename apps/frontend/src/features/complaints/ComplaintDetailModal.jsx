@@ -173,9 +173,7 @@ export function ComplaintDetailModal({
                     </div>
                 )}
 
-                {role !== 'homeowner' && (
-                    <p className="hidden md:block text-[10px] text-gray-400 italic text-center">{t('complaint.detail_box.actions_notice', 'Aksi tersedia dapat dilihat di panel bawah pada desktop atau scroll ke bawah.')}</p>
-                )}
+
             </div>
         );
     };

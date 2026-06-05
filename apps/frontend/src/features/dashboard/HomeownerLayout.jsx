@@ -18,7 +18,7 @@ function TechReportModal({ isOpen, onClose, onSubmit }) {
         <textarea
           value={report}
           onChange={(e) => setReport(e.target.value)}
-          placeholder="Tuliskan aktivitas dan status perangkat yang dikonfigurasi..."
+          placeholder={t('technician.exit_session_placeholder')}
           className="w-full bg-slate-50 border-0 rounded-xl p-4 focus:outline-none focus:bg-white focus:ring-4 focus:ring-orange-500/15 min-h-[120px] mb-4 text-sm resize-none transition-all placeholder:text-gray-400"
         />
         <div className="flex justify-end gap-2">
@@ -338,7 +338,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       {/* Technician Limited Access Banner */}
       {isTechnicianMode && (
         <div className="bg-gradient-to-r from-red-600 to-red-800 text-white py-2 px-4 text-center text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] shadow-lg sticky top-0 z-[100]">
-          ⚠️ PERHATIAN: Harap hati-hati karena sedang di halaman Homeowner! ⚠️
+          {t('technician.control_warning')}
         </div>
       )}
 

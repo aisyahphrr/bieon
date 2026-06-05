@@ -2217,7 +2217,10 @@
     },
     "search_placeholder": "Search logs (type or category)...",
     "stream_active": "Inbound telemetry stream active...",
-    "no_logs_match": "No logs match your search: \"{{search}}\""
+    "no_logs_match": "No logs match your search: \"{{search}}\"",
+    "live_streaming_btn": "LIVE STREAMING",
+    "paused_btn": "PAUSED",
+    "live_monitoring_short": "Live:"
   },
   "delete_approval": {
     "err_token_not_found": "Approval token not found.",
@@ -2259,5 +2262,9 @@
   },
   "activity": {
     "platform_source": "via {{platform}}"
+  },
+  "technician": {
+    "control_warning": "⚠️ WARNING: Please be careful as you are currently on the Homeowner page! ⚠️",
+    "exit_session_placeholder": "Write down the activities and status of the configured devices..."
   }
 }
