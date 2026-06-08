@@ -115,7 +115,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
     if (techAccess === 'true') {
       const checkExpiry = () => {
         if (techExpiry && Date.now() > parseInt(techExpiry)) {
-          alert("Sesi Teknisi Anda telah berakhir (30 menit). Anda telah di-logout otomatis.");
+          alert(t('alerts.session_expired'));
           localStorage.removeItem('bieon_tech_access');
           localStorage.removeItem('bieon_tech_access_expiry');
           setIsTechnicianMode(false);
@@ -165,7 +165,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
       const data = await response.json();
       if (!response.ok) {
-        alert("Gagal mengirim laporan: " + data.message);
+        alert(t('alerts.send_report_failed', { message: data.message }));
         return;
       }
 
@@ -188,7 +188,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       navigate('/teknisi');
     } catch (error) {
       console.error("Error submit report:", error);
-      alert("Terjadi kesalahan teknis saat mengirim laporan.");
+      alert(t('alerts.send_report_error'));
     }
   };
 

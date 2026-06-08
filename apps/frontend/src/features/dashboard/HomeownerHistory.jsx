@@ -23,7 +23,6 @@ import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
 import { useTranslation } from 'react-i18next';
-import i18n_core from 'i18next';
 import { mockHistoryData } from './homeownerMockData';
 import { translateNotificationMessage } from '../../utils/notificationI18nHelper';
 
@@ -397,9 +396,13 @@ export function HomeownerHistory({ onNavigate }) {
             const doc = new jsPDF('l', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.width;
 
+            const tabConfig = tabs.find(tb => tb.id === activeTab);
+            const translatedTab = tabConfig ? tabConfig.full : activeTab;
+            const safeTabName = translatedTab.replace(/\s+/g, '_');
+
             doc.setFontSize(22);
             doc.setTextColor(5, 155, 39);
-            doc.text(t('history.export.pdf_header', { tab: activeTab }), 15, 20);
+            doc.text(t('history.export.pdf_header', { tab: translatedTab }), 15, 20);
 
             doc.setFontSize(10);
             doc.setTextColor(100);
@@ -419,7 +422,7 @@ export function HomeownerHistory({ onNavigate }) {
                 margin: { left: 15, right: 15 }
             });
 
-            doc.save(`${t('history.export.filename_prefix', 'BIEON_History')}_${activeTab}_${new Date().getTime()}.pdf`);
+            doc.save(`${t('history.export.filename_prefix', 'BIEON_History')}_${safeTabName}_${new Date().getTime()}.pdf`);
         } catch (pdfError) {
             console.error('PDF ERROR:', pdfError);
             alert(t('history.export.alert_error_pdf', 'Gagal membuat PDF.'));
@@ -443,7 +446,7 @@ export function HomeownerHistory({ onNavigate }) {
             doc.text(t('history.export.system_tagline', 'Smart Green Living Monitoring System'), pageWidth / 2, 92, { align: 'center' });
 
             doc.setFontSize(12);
-            doc.text(`${t('history.export.report_period', 'Periode Laporan')}: ${new Date().toLocaleDateString(i18n_core.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
+            doc.text(`${t('history.export.report_period', 'Periode Laporan')}: ${new Date().toLocaleDateString(i18n.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
             doc.text(t('history.export.print_date', { date: formatDateTime(new Date()) }), pageWidth / 2, 118, { align: 'center' });
 
             doc.setDrawColor(5, 155, 39);

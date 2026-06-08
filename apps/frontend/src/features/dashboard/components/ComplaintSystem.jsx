@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const ComplaintSystem = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ title: '', room: '', desc: '' });
   const [status, setStatus] = useState('idle'); // idle, loading, success
 
@@ -26,44 +28,44 @@ const ComplaintSystem = () => {
           <svg width="48" height="48" style={{ color: 'var(--accent-green)', marginBottom: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="M22 4L12 14.01l-3-3"></path>
           </svg>
-          <h4>Tiket Dibuat!</h4>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Teknisi akan segera meninjau laporan Anda.</p>
+          <h4>{t('complaint_system.ticket_created')}</h4>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{t('complaint_system.ticket_created_desc')}</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Judul Kendala</label>
+            <label>{t('complaint_system.label_title')}</label>
             <input 
               required
               type="text" 
               className="form-control" 
-              placeholder="Contoh: AC Bocor"
+              placeholder={t('placeholder.complaint_title_example')}
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
             />
           </div>
           <div className="form-group">
-            <label>Lokasi / Ruangan</label>
+            <label>{t('complaint_system.label_location')}</label>
             <select className="form-control" value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})} required>
-              <option value="">Pilih Area</option>
+              <option value="">{t('complaint_system.select_area')}</option>
               <option value="R1">Ruang Tamu (R1)</option>
               <option value="R2">Kamar Utama (R2)</option>
               <option value="Outdoor">Outdoor / Taman</option>
             </select>
           </div>
           <div className="form-group">
-            <label>Deskripsi</label>
+            <label>{t('complaint_system.label_desc')}</label>
             <textarea 
               required
               className="form-control" 
               rows="3" 
-              placeholder="Jelaskan kendala secara singkat..."
+              placeholder={t('placeholder.complaint_desc')}
               value={formData.desc}
               onChange={e => setFormData({...formData, desc: e.target.value})}
             ></textarea>
           </div>
           <button type="submit" className="btn-primary" disabled={status === 'loading'}>
-            {status === 'loading' ? 'Mengirim...' : 'Buat Tiket Baru'}
+            {status === 'loading' ? t('complaint_system.btn_submitting') : t('complaint_system.btn_create')}
           </button>
         </form>
       )}

@@ -943,7 +943,7 @@ export function DeviceControlPage({ onNavigate }) {
   const handleGenerateToken = async () => {
     try {
       if (!userProfile?._id) {
-        alert("Profil user tidak ditemukan. Mohon refresh halaman.");
+        alert(t('alerts.profile_not_found'));
         return;
       }
 
@@ -967,11 +967,11 @@ export function DeviceControlPage({ onNavigate }) {
         localStorage.setItem('bieon_active_token_expiry', (Date.now() + 5 * 60 * 1000).toString());
         setShowTokenModal(true);
       } else {
-        alert("Gagal generate token: " + (data.message || "Kesalahan server"));
+        alert(t('alerts.token_generate_failed', { message: data.message || t('kendali.server_error', 'Kesalahan server') }));
       }
     } catch (error) {
       console.error("error generate token:", error);
-      alert("Terjadi kesalahan teknis saat generate token. Pastikan koneksi server aktif.");
+      alert(t('alerts.token_generate_error'));
     }
   };
 
@@ -984,7 +984,7 @@ export function DeviceControlPage({ onNavigate }) {
   const handleSubmitBieonId = async () => {
     if (!bieonIdInput.trim()) return;
     if (!userProfile?._id) {
-      alert("Profil pengguna belum siap. Silakan refresh halaman.");
+      alert(t('alerts.profile_not_ready'));
       return;
     }
 
@@ -1092,7 +1092,7 @@ export function DeviceControlPage({ onNavigate }) {
       });
       const data = await response.json();
       if (response.ok) {
-        alert("Produk berhasil diregistrasi!");
+        alert(t('alerts.product_registered'));
         await fetchRegisteredProducts(); // Refresh data!
 
         if (targetStep === "add-device-form") {
@@ -1117,7 +1117,7 @@ export function DeviceControlPage({ onNavigate }) {
       } else {
         if (data.message === "ID Produk sudah terdaftar di sistem.") {
           const wantToSetup = window.confirm(
-            "ID Produk ini sudah terdaftar di sistem.\n\nApakah Anda ingin diarahkan ke daftar 'Perangkat Anda' untuk segera melakukan konfigurasi?"
+            t('alerts.product_already_registered_confirm')
           );
           if (wantToSetup) {
             await fetchRegisteredProducts();
@@ -1128,12 +1128,12 @@ export function DeviceControlPage({ onNavigate }) {
         }
       }
     } catch (err) {
-      alert("Error registrasi: " + err.message);
+      alert(t('alerts.registration_error', { message: err.message }));
     }
   };
 
   const handleDeleteRegisteredProduct = async (productId) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus produk ini dari daftar terdaftar?")) return;
+    if (!window.confirm(t('alerts.delete_product_confirm'))) return;
 
     try {
       const response = await fetch(`/api/products/${productId}`, {
@@ -1145,13 +1145,13 @@ export function DeviceControlPage({ onNavigate }) {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Produk berhasil dihapus!");
+        alert(t('alerts.product_deleted'));
         await fetchRegisteredProducts();
       } else {
-        alert(data.message || "Gagal menghapus produk");
+        alert(data.message || t('alerts.product_delete_failed'));
       }
     } catch (err) {
-      alert("Error hapus: " + err.message);
+      alert(t('alerts.product_delete_error', { message: err.message }));
     }
   };
   const handleQuickSelect = (category, deviceType) => {
@@ -1260,9 +1260,9 @@ export function DeviceControlPage({ onNavigate }) {
         }
       }));
 
-      alert('Mode registrasi remote aktif. Silakan tekan tombol remote untuk menangkap bit.');
+      alert(t('alerts.remote_mode_active'));
     } catch (error) {
-      alert(`Gagal memulai registrasi remote: ${error.message}`);
+      alert(t('alerts.remote_start_failed', { message: error.message }));
     }
   };
 
@@ -1302,7 +1302,7 @@ export function DeviceControlPage({ onNavigate }) {
   const handleDisableRemoteBit = async (catalogItem) => {
     if (!catalogItem?._id) return;
 
-    if (!window.confirm('Hapus raw bit ini dari katalog?')) return;
+    if (!window.confirm(t('alerts.delete_raw_bit_confirm'))) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -1336,7 +1336,7 @@ export function DeviceControlPage({ onNavigate }) {
         setRemoteMappingDraft(null);
       }
     } catch (error) {
-      alert(`Gagal menghapus raw bit: ${error.message}`);
+      alert(t('alerts.raw_bit_delete_failed', { message: error.message }));
     }
   };
 
@@ -1345,7 +1345,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     const device = getAllDevices().find((item) => String(item.id) === String(remoteMappingDraft.deviceId) || String(item._id) === String(remoteMappingDraft.deviceId));
     if (!device) {
-      alert('Remote card tidak ditemukan.');
+      alert(t('alerts.remote_card_not_found'));
       return;
     }
 
@@ -1440,9 +1440,9 @@ export function DeviceControlPage({ onNavigate }) {
         [currentBieon.bieonId]: (prev[currentBieon.bieonId] || []).map((item) => item._id === remoteMappingDraft.catalogId ? { ...item, captureStatus: 'mapped', isActive: true, controlAction: functionKey, controlLabel: label, deviceType, controlGroup: brand } : item)
       }));
       setRemoteMappingDraft(null);
-      alert('Mapping remote berhasil disimpan dan kontrol card sudah aktif.');
+      alert(t('alerts.remote_mapping_saved'));
     } catch (error) {
-      alert(`Gagal menyimpan mapping remote: ${error.message}`);
+      alert(t('alerts.remote_mapping_failed', { message: error.message }));
     }
   };
 
@@ -1450,7 +1450,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!newRoomInput.trim()) return;
     const roomName = newRoomInput.trim();
     if (rooms.includes(roomName)) {
-      alert("Ruangan sudah ada!");
+      alert(t('alerts.room_already_exists'));
       return;
     }
     setRooms([...rooms, roomName]);
@@ -1469,18 +1469,18 @@ export function DeviceControlPage({ onNavigate }) {
   const handleSubmitDeviceForm = () => {
     const isRemote = (selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote'));
     if (!deviceForm.name || (!isRemote && !deviceForm.location)) {
-      alert("Mohon lengkapi nama device dan lokasi!");
+      alert(t('alerts.fill_device_location'));
       return;
     }
 
     if ((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote'))) {
       if (remoteTargets.length === 0) {
-        alert("Mohon pilih perangkat yang dikontrol!");
+        alert(t('alerts.select_controlled_device'));
         return;
       }
       const missingRoom = remoteTargets.find(t => !remoteRooms[t]);
       if (missingRoom) {
-        alert(`Mohon pilih ruangan untuk ${missingRoom}!`);
+        alert(t('alerts.select_room_for', { name: missingRoom }));
         return;
       }
     }
@@ -1595,18 +1595,18 @@ export function DeviceControlPage({ onNavigate }) {
   const handleDirectSave = async (forcedMode = null) => {
     const isRemote = (selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote'));
     if (!deviceForm.name || (!isRemote && !deviceForm.location)) {
-      alert("Mohon lengkapi nama device dan lokasi!");
+      alert(t('alerts.fill_device_location'));
       return;
     }
 
     if ((selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote'))) {
       if (remoteTargets.length === 0) {
-        alert("Mohon pilih perangkat yang dikontrol!");
+        alert(t('alerts.select_controlled_device'));
         return;
       }
       const missingRoom = remoteTargets.find(t => !remoteRooms[t]);
       if (missingRoom) {
-        alert(`Mohon pilih ruangan untuk ${missingRoom}!`);
+        alert(t('alerts.select_room_for', { name: missingRoom }));
         return;
       }
     }
@@ -1685,10 +1685,10 @@ export function DeviceControlPage({ onNavigate }) {
       resetForm();
       setIsEditingDevice(null);
       setStep("view-bieon");
-      alert(editingId ? "Perangkat berhasil diperbarui!" : "Perangkat berhasil ditambahkan ke database!");
+      alert(editingId ? t('alerts.device_updated') : t('alerts.device_added'));
     } catch (error) {
       console.error("Save error details:", error);
-      alert("Gagal simpan: " + (error.message || "Terjadi kesalahan pada server"));
+      alert(t('alerts.device_save_failed', { message: error.message || '' }));
     }
   };
 
@@ -1803,7 +1803,7 @@ export function DeviceControlPage({ onNavigate }) {
 
       const productIdValue = selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || pendingOpenJoinDevice?.device_ieee || deviceForm?.name || null;
       if (!productIdValue) {
-        alert('Product ID tidak tersedia. Pilih produk terlebih dahulu atau gunakan fitur Quick Save agar sistem dapat mendaftarkan productId.');
+        alert(t('alerts.product_id_unavailable'));
         return;
       }
 
@@ -1880,9 +1880,9 @@ export function DeviceControlPage({ onNavigate }) {
       resetForm();
       setIsEditingDevice(null);
       setStep("view-bieon");
-      alert(editingId ? "Perangkat berhasil diperbarui!" : "Perangkat berhasil ditambahkan ke database!");
+      alert(editingId ? t('alerts.device_updated') : t('alerts.device_added'));
     } catch (error) {
-      alert("Gagal simpan: " + error.message);
+      alert(t('alerts.device_save_failed', { message: error.message || '' }));
     }
   };
   const generateMockSensorData = (deviceType) => {
@@ -1991,7 +1991,7 @@ export function DeviceControlPage({ onNavigate }) {
         }))
       })));
     } catch (error) {
-      alert("Gagal mengirim perintah: " + error.message);
+      alert(t('alerts.device_send_failed', { message: error.message }));
       setBieonSystems(prev => prev.map(system => ({
         ...system,
         hubs: system.hubs.map(hub => ({
@@ -2077,7 +2077,7 @@ export function DeviceControlPage({ onNavigate }) {
       showErrorAlert = true
     } = options;
 
-    if (requireConfirmation && !confirm("Yakin ingin menghapus device ini?")) return false;
+    if (requireConfirmation && !confirm(t('alerts.delete_device_confirm'))) return false;
 
     try {
       const token = localStorage.getItem('token');
@@ -2109,12 +2109,12 @@ export function DeviceControlPage({ onNavigate }) {
       }
       await fetchRegisteredProducts();
       if (showSuccessAlert) {
-        alert("Perangkat berhasil dihapus dari database!");
+        alert(t('alerts.device_deleted'));
       }
       return true;
     } catch (error) {
       if (showErrorAlert) {
-        alert("Error: " + error.message);
+        alert(t('alerts.device_save_failed', { message: error.message }));
       }
       console.error("Error delete device:", error);
       return false;
@@ -2313,7 +2313,7 @@ export function DeviceControlPage({ onNavigate }) {
     }
     setShowEditPage(false);
     setEditingDevice(null);
-    alert("Device berhasil diupdate!");
+    alert(t('alerts.device_updated_db'));
   };
   const handleCancelEdit = () => {
     setShowEditPage(false);
@@ -3228,7 +3228,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                       type="button"
                                                       onClick={() => handleOpenRemoteMapping(device, bitItem)}
                                                       className="w-10 h-10 rounded-xl bg-bieon-eco text-white flex items-center justify-center hover:bg-bieon-eco/90 transition-all"
-                                                      title="Tambah mapping"
+                                                      title={t('placeholder.title_add_mapping')}
                                                     >
                                                       <Plus className="w-4 h-4" />
                                                     </button>
@@ -3236,7 +3236,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                       type="button"
                                                       onClick={() => handleDisableRemoteBit(bitItem)}
                                                       className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-all"
-                                                      title="Hapus raw bit"
+                                                      title={t('placeholder.title_delete_raw_bit')}
                                                     >
                                                       <Minus className="w-4 h-4" />
                                                     </button>
@@ -3308,7 +3308,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               type="text"
                                               value={remoteMappingDraft.label}
                                               onChange={(e) => setRemoteMappingDraft(prev => ({ ...prev, label: e.target.value }))}
-                                              placeholder="Contoh: Power TV"
+                                              placeholder={t('placeholder.example_tv')}
                                               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
                                             />
                                           </div>
@@ -3319,7 +3319,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                 type="text"
                                                 value={remoteMappingDraft.customBrand}
                                                 onChange={(e) => setRemoteMappingDraft(prev => ({ ...prev, customBrand: e.target.value }))}
-                                                placeholder="Contoh: Polytron"
+                                                placeholder={t('placeholder.example_brand')}
                                                 className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
                                               />
                                             </div>
@@ -4281,7 +4281,7 @@ export function DeviceControlPage({ onNavigate }) {
                         value={productRegForm.id}
                         onChange={(e) => setProductRegForm({ ...productRegForm, id: e.target.value })}
                         className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold"
-                        placeholder="Ketik atau pilih ID (Contoh: SNZB...)"
+                        placeholder={t('placeholder.sensor_id_input')}
                       />
                       <datalist id="device-ids">
                         <option value="SNZB_02DR2" />
@@ -4351,7 +4351,7 @@ export function DeviceControlPage({ onNavigate }) {
                         value={productRegForm.name}
                         onChange={(e) => setProductRegForm({ ...productRegForm, name: e.target.value })}
                         className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold"
-                        placeholder="Contoh: SNZB-02D"
+                        placeholder={t('placeholder.example_sensor_id')}
                       />
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 mt-4">
@@ -4913,7 +4913,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           value={newRoomInput}
                                           onChange={(e) => setNewRoomInput(e.target.value)}
                                           autoFocus
-                                          placeholder="Ruangan..."
+                                          placeholder={t('placeholder.room_placeholder')}
                                           className="flex-1 pl-3 pr-1 py-2 bg-white border-2 border-blue-200 rounded-xl outline-none text-[10px] font-bold text-gray-700 focus:border-blue-500 transition-all shadow-inner"
                                         />
                                         <button
@@ -5104,7 +5104,7 @@ export function DeviceControlPage({ onNavigate }) {
                         onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })}
                         disabled={Boolean(isEditingDevice || selectedProduct)}
                         className={`w-full p-4 border-2 border-gray-100 rounded-2xl outline-none font-bold ${(isEditingDevice || selectedProduct) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-gray-50 focus:border-bieon-eco text-gray-900'}`}
-                        placeholder="Contoh: AC Ruang Tamu"
+                        placeholder={t('placeholder.device_name_example')}
                       />
                     </div>
 
@@ -5113,7 +5113,7 @@ export function DeviceControlPage({ onNavigate }) {
                       <textarea
                         value={deviceForm.notes}
                         onChange={(e) => setDeviceForm({ ...deviceForm, notes: e.target.value })}
-                        placeholder="Tambahkan catatan untuk perangkat ini..."
+                        placeholder={t('placeholder.device_notes_alt')}
                         className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none min-h-[100px] resize-none"
                       />
                     </div>
@@ -5140,7 +5140,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 type="text"
                                 value={newRoomInput}
                                 onChange={(e) => setNewRoomInput(e.target.value)}
-                                placeholder="Nama Ruangan..."
+                                placeholder={t('placeholder.room_name')}
                                 className="flex-1 p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none "
                               />
                               <button onClick={handleAddRoom} className="p-4 bg-bieon-eco text-white rounded-2xl  shadow-lg"><Check className="w-6 h-6" /></button>
@@ -5504,7 +5504,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               temperature: { ...sensorConfig.temperature, value: parseFloat(e.target.value) }
                                             })}
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                            placeholder="Masukkan nilai suhu (°C)"
+                                            placeholder={t('placeholder.temperature_value')}
                                           />
                                         )}
                                       </div>
@@ -5568,7 +5568,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               humidity: { ...sensorConfig.humidity, value: parseFloat(e.target.value) }
                                             })}
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                                            placeholder="Masukkan nilai kelembaban (%)"
+                                            placeholder={t('placeholder.humidity_value')}
                                           />
                                         )}
                                       </div>

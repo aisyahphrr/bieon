@@ -172,7 +172,7 @@ const Setup = ({ tempData }) => {
 
     const handleRegister = async () => {
         if (!tempData?.email || (!tempData?.password && !tempData?.isGoogle)) {
-            setError('Data pendaftaran hilang. Harap ulangi dari halaman signup.');
+            setError(t('auth.errors.registration_missing'));
             return;
         }
 
@@ -206,7 +206,7 @@ const Setup = ({ tempData }) => {
 
                 if (!updateRes.ok) {
                     const errJson = await updateRes.json();
-                    throw new Error(errJson.message || 'Gagal melengkapi profil');
+                    throw new Error(errJson.message || t('auth.errors.profile_failed'));
                 }
 
                 const updateData = await updateRes.json();
@@ -239,7 +239,7 @@ const Setup = ({ tempData }) => {
 
                 if (!registerRes.ok) {
                     const errJson = await registerRes.json();
-                    throw new Error(errJson.message || 'Gagal mendaftar');
+                    throw new Error(errJson.message || t('auth.errors.registration_failed'));
                 }
 
                 const registerData = await registerRes.json();
@@ -252,7 +252,7 @@ const Setup = ({ tempData }) => {
                     body: JSON.stringify({ email: tempData.email, password: tempData.password })
                 });
 
-                if (!loginRes.ok) throw new Error('Login otomatis gagal.');
+                if (!loginRes.ok) throw new Error(t('auth.errors.auto_login_failed'));
 
                 const loginData = await loginRes.json();
                 localStorage.setItem('token', loginData.token);

@@ -388,7 +388,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
       body: data,
       foot: isNumericData ? [[t('admin_dashboard.export.footer_total'), total]] : null,
       startY: 25,
-      styles: { fontSize: 9 },
+      styles: { fontSize: 9, overflow: 'linebreak' },
+      pageBreak: 'auto',
+      rowPageBreak: 'avoid',
       headStyles: { fillStyle: 'f', fillColor: [5, 155, 39], textColor: 255 },
       footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' }
     });
@@ -1268,7 +1270,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                         <div className="flex items-center justify-center gap-1">
                           {/* Quick Actions */}
                           <button
-                            title="Pause/Suspend"
+                            title={t('tooltip.pause_suspend')}
                             className="inline-flex w-8 h-8 items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-x-2 group-hover:translate-x-0"
                           >
                             <AlertCircle className="w-4 h-4" />
@@ -1284,7 +1286,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                                 }, 100);
                               }
                             }}
-                            title="Detail"
+                            title={t('tooltip.detail')}
                             className="inline-flex w-8 h-8 items-center justify-center text-slate-400 hover:text-bieon-eco hover:bg-bieon-eco/10 rounded-lg transition-all active:scale-95 z-10"
                           >
                             <ChevronRight className="w-5 h-5" />

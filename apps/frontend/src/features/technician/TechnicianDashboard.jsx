@@ -417,7 +417,7 @@ export function TechnicianDashboard({ onNavigate }) {
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text('Smart Green Living Monitoring System', 14, 28);
+    doc.text(t('export.system_tagline', 'Smart Green Living Monitoring System'), 14, 28);
     
     doc.setFontSize(14);
     doc.setTextColor(0);

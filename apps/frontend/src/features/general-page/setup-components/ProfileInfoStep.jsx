@@ -105,9 +105,11 @@ const ProfileInfoStep = ({
                         </div>
                         <input 
                             type="text" 
-                            placeholder="812 3456 7890" 
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder={t('auth.setup.step1.placeholder_phone')} 
                             value={formData.phone} 
-                            onChange={(e) => setFormData({...formData, phone: e.target.value})} 
+                            onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})} 
                             className="flex-1 w-full bg-transparent px-4 py-3.5 text-[13px] text-slate-800 focus:outline-none placeholder-slate-400 font-semibold" 
                         />
                     </div>

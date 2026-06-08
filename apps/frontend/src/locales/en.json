@@ -438,6 +438,7 @@
       "no_bieon": "No BIEON found for this customer",
       "custom_range": "Custom Range"
     },
+    "export_alert": "No data available to export",
     "no_data_desc": "Data for this filter is not available yet or not synced.",
     "of": "of",
     "pagination_info": "{{start}} of {{total}} items",
@@ -833,7 +834,8 @@
       "just_now": "Just now",
       "new": "New",
       "empty_title": "So Quiet...",
-      "empty_desc": "No new notifications for you right now. Check back later!"
+      "empty_desc": "No new notifications for you right now. Check back later!",
+      "close": "Close"
     },
     "category": {
       "danger": "Danger",
@@ -919,7 +921,6 @@
       "ping_warning": "PING Warning",
       "ticket_reassigned": "Ticket Reassigned"
     },
-
     "msg": {
       "complaint_sent": "Your complaint has been sent and is awaiting action from the technical team.",
       "new_ticket": "A new complaint ticket has been submitted to the system.",
@@ -1151,6 +1152,7 @@
     "skills": {
       "title": "Skills & Competencies",
       "subtitle": "Technical expertise level",
+      "positioning": "Positioning",
       "response_speed": "Response Speed",
       "repair_speed": "Repair Speed",
       "service_rating": "Service Rating"
@@ -1868,15 +1870,35 @@
   },
   "auth": {
     "terms_privacy_footer": "BIEON's Terms of Service & Privacy Policy",
+    "errors": {
+      "google_failed": "Google sign-in failed.",
+      "access_denied": "Access denied. Your account does not have permission to access this portal.",
+      "fields_required": "Email and password are required.",
+      "login_failed": "Log in failed. Please verify your credentials and try again.",
+      "email_required": "Email address is required.",
+      "otp_failed": "Failed to send OTP. Please try again later.",
+      "registration_missing": "Registration data not found. Please restart from the sign-up page.",
+      "profile_failed": "Failed to complete profile data.",
+      "registration_failed": "Registration failed.",
+      "auto_login_failed": "Automatic log in failed."
+    },
+    "loading": {
+      "processing": "Processing...",
+      "connecting_google": "Connecting Google...",
+      "please_wait": "Please wait..."
+    },
+    "info": {
+      "otp_sent": "If the account is registered, the OTP has been sent. Please check your email or WhatsApp."
+    },
     "login": {
-      "title": "Login your Account",
+      "title": "Sign In to Your Account",
       "subtitle": "Welcome back to BIEON Smart Living.",
       "label_username_email": "Email or Username",
       "placeholder_username_email": "Enter your email or username",
       "label_password": "Password",
       "placeholder_password": "Enter your password",
       "forgot_password": "Forgot Password?",
-      "btn_login": "Login",
+      "btn_login": "Sign In",
       "divider": "or",
       "btn_google": "Continue with Google",
       "no_account": "Don't have an account?",
@@ -1884,12 +1906,12 @@
     },
     "signup": {
       "title": "Create an Account",
-      "subtitle": "Start your Smart Living journey with BIEON.",
+      "subtitle": "Begin your Smart Living journey with BIEON.",
       "label_email": "Email Address",
       "placeholder_email": "Enter your email address",
       "label_password": "Password",
       "placeholder_password": "Create a secure password (min. 8 characters)",
-      "btn_signup": "Create Account",
+      "btn_signup": "Sign Up",
       "divider": "Or continue with",
       "btn_google": "Google",
       "have_account": "Already have an account?",
@@ -1903,7 +1925,7 @@
       },
       "step1": {
         "title": "Hello! Welcome to BIEON",
-        "subtitle": "Before you start monitoring your smart home, let's complete your profile data first!",
+        "subtitle": "Before you start monitoring your BIEON's EcoSense, let's complete your profile data first!",
         "label_first_name": "First Name",
         "placeholder_first_name": "Enter your first name",
         "label_last_name": "Last Name",
@@ -1920,7 +1942,7 @@
         "btn_next": "Next Step"
       },
       "step2": {
-        "title": "Connect Your Home 🔌",
+        "title": "Connect Your BIEON 🔌",
         "subtitle": "Register your BIEON ID and set up your electricity tariff to start monitoring energy consumption in real-time.",
         "label_system_name": "System / House Name",
         "placeholder_system_name": "Example: Sweet Home, Cozy Apartment",
@@ -2069,6 +2091,7 @@
     "no_system": "No BIEON System Yet",
     "no_system_desc": "Register your BIEON device ID to start monitoring.",
     "add_bieon": "Add BIEON",
+    "add_first_bieon": "Add First BIEON",
     "add_bieon_desc": "Enter BIEON ID to register smart monitoring system.",
     "ph_bieon_id": "Example: BIEON-001",
     "btn_add": "Connect BIEON",
@@ -2250,5 +2273,233 @@
   "technician": {
     "control_warning": "⚠️ WARNING: Please be careful as you are currently on the Homeowner page! ⚠️",
     "exit_session_placeholder": "Write down the activities and status of the configured devices..."
+  },
+  "landing": {
+    "nav": {
+      "home": "Home",
+      "features": "Features",
+      "about": "About Us",
+      "contact": "Contact",
+      "login": "Log In"
+    },
+    "hero": {
+      "title": "Smart Living Monitoring System",
+      "subtitle": "Monitor Today, Sustain Tomorrow.",
+      "desc": "Smart monitoring system for energy, water, and environment — real-time, accurate, and data-driven.",
+      "btn_start": "Get Started",
+      "btn_demo": "Watch Demo",
+      "trusted": "Trusted by 2,000+ Homeowners."
+    },
+    "problem": {
+      "title": "Problem",
+      "heading": "Still Relying on Manual Data?",
+      "item1": {
+        "title": "Not Real-Time",
+        "desc": "Data is often delayed and inaccurate."
+      },
+      "item2": {
+        "title": "Complex Monitoring",
+        "desc": "Manual tracking is time-consuming."
+      },
+      "item3": {
+        "title": "Delayed Decisions",
+        "desc": "Delayed actions during critical events."
+      },
+      "item4": {
+        "title": "Potential Resource Waste",
+        "desc": "Financial losses due to utility inefficiencies."
+      }
+    },
+    "solution": {
+      "title": "SOLUTION",
+      "heading": "ONE PLATFORM. TOTAL MONITORING",
+      "energy": "Energy",
+      "water": "Water",
+      "environment": "Environment",
+      "security": "Security"
+    },
+    "features": {
+      "title": "Features",
+      "heading": "KEY FEATURES",
+      "item1": {
+        "title": "Real Time Monitoring",
+        "desc": "Users can monitor all parameters directly and in real-time for faster and more accurate decision-making."
+      },
+      "item2": {
+        "title": "Analytics",
+        "desc": "Data is processed into insights and visualizations that help in-depth analysis of trends, efficiency, and system conditions."
+      },
+      "item3": {
+        "title": "Smart Alert",
+        "desc": "The system provides automatic notifications when abnormal conditions occur or parameters cross certain limits."
+      },
+      "item4": {
+        "title": "Cloud Dashboard",
+        "desc": "All data can be accessed anytime and anywhere through an integrated cloud dashboard."
+      }
+    },
+    "products": {
+      "title": "Our Products",
+      "heading": "Products Line",
+      "item1": {
+        "title": "EcoSense Energy",
+        "desc": "Smart energy monitoring system to monitor electricity consumption, energy use efficiency, and system performance in real-time."
+      },
+      "item2": {
+        "title": "EcoSense Water",
+        "desc": "Water quality and usage monitoring solution to help maintain health, safety, efficiency, and sustainability of water resources."
+      },
+      "item3": {
+        "title": "EcoSense Environment",
+        "desc": "Environmental monitoring platform that measures various parameters such as air quality, temperature, humidity, and other environmental conditions in an integrated manner."
+      },
+      "item4": {
+        "title": "EcoSense Security",
+        "desc": "Smart monitoring and notification system to improve the security of areas, assets, and infrastructure through real-time monitoring and a smart alert system."
+      }
+    },
+    "customers": {
+      "title": "Our Customers",
+      "item1": {
+        "title": "Home Owner",
+        "desc": "Smart monitoring solutions to help homes be more efficient, comfortable, and sustainable through real-time monitoring of energy, water, and the environment."
+      },
+      "item2": {
+        "title": "Business",
+        "desc": "Helping businesses monitor operations, resource efficiency, and environmental quality to support productivity and data-driven decision making."
+      },
+      "item3": {
+        "title": "Industry",
+        "desc": "Integrated monitoring system for industry to optimize efficiency, operational control, security, and sustainability."
+      },
+      "item4": {
+        "title": "Government",
+        "desc": "Supporting governments in environmental data management, infrastructure, and public utilities through a connected, real-time smart monitoring system."
+      }
+    },
+    "works": {
+      "title": "HOW IT WORKS",
+      "heading": "How This System Works?"
+    },
+    "benefit": {
+      "title": "Platform Benefits",
+      "heading": "Impact"
+    },
+    "cta": {
+      "heading": "START YOUR SYSTEM TRANSFORMATION NOW!",
+      "desc": "Increase efficiency, reduce costs, and create a smarter future with EcoSense.",
+      "benefit1": "Increased Efficiency",
+      "benefit2": "Reduced Costs",
+      "benefit3": "Greener Operations",
+      "benefit4": "Faster Decisions",
+      "btn": "GET STARTED NOW",
+      "trust": "Secure, Reliable, and Integrated"
+    },
+    "footer": {
+      "desc": "Smart monitoring system — real-time, accurate, and data-driven.",
+      "quick_link": "Quick Links",
+      "services": "System Services",
+      "monitoring": "Monitoring Dashboard",
+      "control": "Device Control",
+      "history": "History & Data Logs",
+      "complaint": "Complaint Center",
+      "contact_info": "Contact Info",
+      "copyright": "© 2026 BIEON - Smart Green Living Monitoring System. All rights reserved."
+    }
+  },
+  "alerts": {
+    "session_expired": "Your Technician session has ended (30 minutes). You have been automatically logged out.",
+    "send_report_failed": "Failed to send report: {{message}}",
+    "send_report_error": "A technical error occurred while sending the report.",
+    "complaint_send_failed": "Failed to send complaint. Please try again.",
+    "profile_not_found": "User profile not found. Please refresh the page.",
+    "token_generate_failed": "Failed to generate token: {{message}}",
+    "token_generate_error": "A technical error occurred while generating the token. Please ensure the server connection is active.",
+    "profile_not_ready": "User profile is not ready. Please refresh the page.",
+    "product_registered": "Product successfully registered!",
+    "registration_error": "Registration error: {{message}}",
+    "product_deleted": "Product successfully deleted!",
+    "product_delete_failed": "Failed to delete product",
+    "product_delete_error": "Delete error: {{message}}",
+    "remote_mode_active": "Remote registration mode active. Please press the remote button to capture bits.",
+    "remote_start_failed": "Failed to start remote registration: {{message}}",
+    "raw_bit_delete_failed": "Failed to delete raw bit: {{message}}",
+    "remote_card_not_found": "Remote card not found.",
+    "remote_mapping_saved": "Remote mapping saved successfully and control card is now active.",
+    "remote_mapping_failed": "Failed to save remote mapping: {{message}}",
+    "room_already_exists": "Room already exists!",
+    "fill_device_location": "Please fill in the device name and location!",
+    "select_controlled_device": "Please select the controlled device!",
+    "select_room_for": "Please select a room for {{name}}!",
+    "device_updated": "Device successfully updated!",
+    "device_added": "Device successfully added to database!",
+    "device_save_failed": "Save failed: {{message}}",
+    "product_id_unavailable": "Product ID unavailable. Please select a product first or use the Quick Save feature so the system can register the productId.",
+    "device_send_failed": "Failed to send command: {{message}}",
+    "device_deleted": "Device successfully deleted from database!",
+    "device_updated_db": "Device successfully updated!",
+    "product_already_registered_confirm": "This Product ID is already registered in the system.\n\nWould you like to be redirected to the 'Your Devices' list to configure it now?",
+    "delete_product_confirm": "Are you sure you want to delete this product from the registered list?",
+    "delete_raw_bit_confirm": "Delete this raw bit from the catalog?",
+    "delete_device_confirm": "Are you sure you want to delete this device?",
+    "device_name_required": "Device name cannot be empty!",
+    "device_type_required": "Device type must be selected!",
+    "profile_update_failed": "Failed to save profile updates.",
+    "profile_update_error": "An error occurred while saving the profile."
+  },
+  "placeholder": {
+    "describe_problem": "Describe the problem you are experiencing in detail...",
+    "enter_manual_code": "Or enter code manually",
+    "device_name_example": "Example: AC Living Room",
+    "device_notes": "Add notes about this device...",
+    "device_notes_alt": "Add notes for this device...",
+    "room_name": "Room Name...",
+    "room_placeholder": "Room...",
+    "example_tv": "Example: Power TV",
+    "example_brand": "Example: Polytron",
+    "example_sensor_id": "Example: SNZB-02D",
+    "sensor_id_input": "Type or select ID (Example: SNZB...)",
+    "temperature_value": "Enter temperature value (°C)",
+    "humidity_value": "Enter humidity value (%)",
+    "complaint_title_example": "Example: AC Leaking",
+    "complaint_desc": "Briefly explain the issue...",
+    "select_hub": "Select hub...",
+    "select_room": "Select room...",
+    "select_category": "Select category...",
+    "title_add_mapping": "Add mapping",
+    "title_delete_raw_bit": "Delete raw bit"
+  },
+  "tooltip": {
+    "manage_complaint": "Complaint Management",
+    "view_detail": "View Detail",
+    "delete_client": "Delete Client",
+    "pause_suspend": "Pause/Suspend",
+    "detail": "Detail"
+  },
+  "complaint_system": {
+    "ticket_created": "Ticket Created!",
+    "ticket_created_desc": "A technician will review your report shortly.",
+    "label_title": "Issue Title",
+    "label_location": "Location / Room",
+    "select_area": "Select Area",
+    "label_desc": "Description",
+    "btn_submitting": "Sending...",
+    "btn_create": "Create New Ticket"
+  },
+  "client_detail": {
+    "page_title": "Customer Detail Page",
+    "in_development": "Under Development",
+    "in_development_desc": "We are preparing the best design to make it easier to monitor your customers in depth. Stay tuned for the next update!",
+    "back_to_management": "Back to Customer Management"
+  },
+  "kendali_options": {
+    "category_comfort": "Comfort",
+    "category_water": "Water Quality",
+    "category_security": "Security",
+    "sensor_comfort": "Comfort Sensor",
+    "sensor_water": "Water Quality Sensor",
+    "sensor_security": "Security Sensor",
+    "smart_switch": "Smart Switch",
+    "smart_plug": "Smart Plug"
   }
 }

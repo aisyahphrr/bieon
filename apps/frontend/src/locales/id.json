@@ -735,7 +735,8 @@
       "completed": "Pengaduan telah selesai ditangani oleh teknisi.",
       "rated": "Pelanggan telah memberikan penilaian dan ulasan perbaikan.",
       "cancelled": "Pelanggan membatalkan pengaduan.",
-      "rejected": "Tiket ditolak oleh SuperAdmin."
+      "rejected": "Tiket ditolak oleh SuperAdmin.",
+      "awaiting_confirmation": "Menunggu konfirmasi pelanggan."
     },
     "sla": {
       "response_time_left": "SLA Respons: {{time}} tersisa",
@@ -819,7 +820,10 @@
     "ping_fail": "Gagal mengirimkan PING.",
     "fail_reject": "Gagal menolak tiket.",
     "alert_assign_failed": "Gagal menugaskan teknisi",
-    "alert_server_error": "Terjadi kesalahan server"
+    "alert_server_error": "Terjadi kesalahan server",
+    "last_update": "Pembaruan Terakhir",
+    "group_label": "Grup",
+    "val_format": "Format: {{val}}"
   },
   "notification": {
     "ui": {
@@ -830,7 +834,8 @@
       "just_now": "Baru saja",
       "new": "Baru",
       "empty_title": "Hening Sekali...",
-      "empty_desc": "Belum ada notifikasi baru untukmu saat ini. Cek kembali nanti ya!"
+      "empty_desc": "Belum ada notifikasi baru untukmu saat ini. Cek kembali nanti ya!",
+      "close": "Tutup"
     },
     "category": {
       "danger": "Bahaya",
@@ -849,7 +854,8 @@
       "sistem": "Sistem",
       "pengaduan": "Pengaduan",
       "kenyamanan": "Kenyamanan",
-      "review_required": "Butuh Tinjauan"
+      "review_required": "Butuh Tinjauan",
+      "action_required": "Perlu Tindakan / Persetujuan"
     },
     "global": {
       "device_manual_control": "[Manual] Perangkat {{deviceName}} di {{location}} telah diubah ke status {{action}}.",
@@ -915,7 +921,6 @@
       "ping_warning": "Teguran PING",
       "ticket_reassigned": "Tiket Dialihkan"
     },
-
     "msg": {
       "complaint_sent": "Pengaduan Anda telah terkirim dan menunggu tindak lanjut dari tim teknis.",
       "new_ticket": "Tiket pengaduan baru telah diajukan ke sistem.",
@@ -987,7 +992,9 @@
       "sla_overdue_repair_tech": "Peringatan: Perbaikan tiket {{topic}} telah melewati batas 56 jam!",
       "sla_overdue_repair_admin": "Tiket {{bieonId}} telah melewati batas waktu perbaikan.",
       "sla_overdue_respons_auto": "Batas waktu respon terlampaui (30 menit). Status otomatis berubah menjadi Overdue Respons.",
-      "sla_approaching": "Perbaikan {{topic}} mendekati batas waktu SLA. Prioritas ditingkatkan."
+      "sla_approaching": "Perbaikan {{topic}} mendekati batas waktu SLA. Prioritas ditingkatkan.",
+      "unauthorized_access": "Upaya akses tidak sah terdeteksi pada sistem.",
+      "sla_overdue": "Tiket pengaduan mendekati atau telah melebihi batas waktu SLA."
     }
   },
   "notification_messages": {
@@ -1438,6 +1445,7 @@
       "lbl_specialization": "Spesialisasi",
       "lbl_coverage": "Area Coverage",
       "lbl_available_clients": "Pilih dari pelanggan yang tersedia (Pelanggan):",
+      "loading_clients": "Memuat pelanggan yang tersedia...",
       "empty_available_clients": "Tidak ada pelanggan (Pelanggan) yang belum ditugaskan.",
       "btn_save_assign": "Simpan Penugasan",
       "status_available": "Tersedia",
@@ -1861,15 +1869,35 @@
     }
   },
   "auth": {
-    "terms_privacy_footer": "Syarat Layanan & Kebijakan Privasi BIEON",
+    "terms_privacy_footer": "Syarat Ketentuan & Kebijakan Privasi BIEON",
+    "errors": {
+      "google_failed": "Gagal masuk menggunakan akun Google.",
+      "access_denied": "Akses ditolak. Akun Anda tidak memiliki izin untuk mengakses portal ini.",
+      "fields_required": "Email dan kata sandi wajib diisi.",
+      "login_failed": "Gagal masuk. Silakan periksa kembali email dan kata sandi Anda.",
+      "email_required": "Alamat email wajib diisi.",
+      "otp_failed": "Gagal mengirimkan kode OTP. Silakan coba beberapa saat lagi.",
+      "registration_missing": "Data registrasi tidak ditemukan. Silakan ulangi proses pendaftaran dari halaman pendaftaran.",
+      "profile_failed": "Gagal melengkapi data profil.",
+      "registration_failed": "Gagal melakukan pendaftaran.",
+      "auto_login_failed": "Gagal masuk secara otomatis."
+    },
+    "loading": {
+      "processing": "Memproses...",
+      "connecting_google": "Menghubungkan Google...",
+      "please_wait": "Mohon tunggu..."
+    },
+    "info": {
+      "otp_sent": "Jika akun terdaftar, kode OTP telah dikirim. Silakan periksa email atau WhatsApp Anda."
+    },
     "login": {
       "title": "Masuk ke Akun Anda",
       "subtitle": "Selamat datang kembali di BIEON Smart Living.",
       "label_username_email": "Email atau Username",
       "placeholder_username_email": "Masukkan email atau username Anda",
-      "label_password": "Password",
-      "placeholder_password": "Masukkan password Anda",
-      "forgot_password": "Lupa Password?",
+      "label_password": "Kata Sandi",
+      "placeholder_password": "Masukkan kata sandi Anda",
+      "forgot_password": "Lupa Kata Sandi?",
       "btn_login": "Masuk",
       "divider": "atau",
       "btn_google": "Lanjutkan dengan Google",
@@ -1881,13 +1909,13 @@
       "subtitle": "Mulai perjalanan Smart Living Anda bersama BIEON.",
       "label_email": "Alamat Email",
       "placeholder_email": "Masukkan alamat email Anda",
-      "label_password": "Password",
-      "placeholder_password": "Buat password aman (min. 8 karakter)",
-      "btn_signup": "Buat Akun",
+      "label_password": "Kata Sandi",
+      "placeholder_password": "Buat kata sandi aman (minimal 8 karakter)",
+      "btn_signup": "Daftar Akun",
       "divider": "Atau lanjutkan dengan",
       "btn_google": "Google",
       "have_account": "Sudah memiliki akun?",
-      "link_login": "Log in di sini"
+      "link_login": "Masuk di sini"
     },
     "setup": {
       "stepper": {
@@ -1897,7 +1925,7 @@
       },
       "step1": {
         "title": "Halo! Selamat datang di BIEON",
-        "subtitle": "Sebelum mulai memonitor hunian cerdasmu, yuk lengkapi data profil berikut!",
+        "subtitle": "Sebelum mulai memonitor EcoSense BIEON, yuk lengkapi data profil berikut!",
         "label_first_name": "Nama Depan",
         "placeholder_first_name": "Masukkan nama depan Anda",
         "label_last_name": "Nama Belakang",
@@ -1914,7 +1942,7 @@
         "btn_next": "Langkah Selanjutnya"
       },
       "step2": {
-        "title": "Hubungkan Hunianmu 🔌",
+        "title": "Hubungkan BIEON mu 🔌",
         "subtitle": "Daftarkan ID BIEON dan atur tarif listrik untuk mulai memantau penggunaan energi secara real-time.",
         "label_system_name": "Nama Sistem / Rumah",
         "placeholder_system_name": "Contoh: Rumahku, Apartemen Nyaman",
@@ -2063,6 +2091,7 @@
     "no_system": "Belum Ada Sistem BIEON",
     "no_system_desc": "Daftarkan ID perangkat BIEON Anda untuk memulai monitoring.",
     "add_bieon": "Tambah BIEON",
+    "add_first_bieon": "Tambah BIEON Pertama",
     "add_bieon_desc": "Masukkan BIEON ID untuk mendaftarkan sistem smart monitoring.",
     "ph_bieon_id": "Contoh: BIEON-001",
     "btn_add": "Hubungkan BIEON",
@@ -2244,5 +2273,233 @@
   "technician": {
     "control_warning": "⚠️ PERHATIAN: Harap hati-hati karena sedang di halaman Homeowner! ⚠️",
     "exit_session_placeholder": "Tuliskan aktivitas dan status perangkat yang dikonfigurasi..."
+  },
+  "landing": {
+    "nav": {
+      "home": "Beranda",
+      "features": "Fitur",
+      "about": "Tentang Kami",
+      "contact": "Kontak",
+      "login": "Masuk"
+    },
+    "hero": {
+      "title": "Smart Living Monitoring System",
+      "subtitle": "Monitor Today, Sustain Tomorrow.",
+      "desc": "Smart monitoring system untuk energi, air, dan lingkungan — real-time, akurat, dan berbasis data.",
+      "btn_start": "Mulai Sekarang",
+      "btn_demo": "Lihat Demo",
+      "trusted": "Dipercaya oleh lebih dari 2.000 Homeowners."
+    },
+    "problem": {
+      "title": "Problem",
+      "heading": "Masih Mengandalkan Data Manual?",
+      "item1": {
+        "title": "Tidak Real-Time",
+        "desc": "Data sering kali terlambat dan kurang akurat."
+      },
+      "item2": {
+        "title": "Sulit Monitoring",
+        "desc": "Pemantauan secara manual menyita waktu dan tenaga."
+      },
+      "item3": {
+        "title": "Keputusan Lambat",
+        "desc": "Keterlambatan tindakan saat mendeteksi kondisi kritis."
+      },
+      "item4": {
+        "title": "Potensi Pemborosan",
+        "desc": "Potensi kerugian finansial akibat penggunaan yang tidak efisien."
+      }
+    },
+    "solution": {
+      "title": "SOLUTION",
+      "heading": "ONE PLATFORM. TOTAL MONITORING",
+      "energy": "Energi",
+      "water": "Air",
+      "environment": "Lingkungan",
+      "security": "Keamanan"
+    },
+    "features": {
+      "title": "Features",
+      "heading": "FITUR UTAMA",
+      "item1": {
+        "title": "Real Time Monitoring",
+        "desc": "Pengguna dapat memantau seluruh parameter secara langsung dan real-time untuk pengambilan keputusan yang lebih cepat dan akurat."
+      },
+      "item2": {
+        "title": "Analytics",
+        "desc": "Data diolah menjadi insight dan visualisasi yang membantu analisis tren, efisiensi, dan kondisi sistem secara lebih mendalam."
+      },
+      "item3": {
+        "title": "Smart Alert",
+        "desc": "Sistem memberikan notifikasi otomatis ketika terjadi kondisi abnormal atau parameter melewati batas tertentu."
+      },
+      "item4": {
+        "title": "Cloud Dashboard",
+        "desc": "Seluruh data dapat diakses kapan saja dan di mana saja melalui dashboard berbasis cloud yang terintegrasi."
+      }
+    },
+    "products": {
+      "title": "Our Products",
+      "heading": "Products Line",
+      "item1": {
+        "title": "EcoSense Energy",
+        "desc": "Sistem monitoring energi cerdas untuk memantau konsumsi listrik, efisiensi penggunaan energi, dan performa sistem secara real-time."
+      },
+      "item2": {
+        "title": "EcoSense Water",
+        "desc": "Solusi monitoring kualitas dan penggunaan air untuk membantu menjaga kesehatan, keamanan, efisiensi dan keberlanjutan sumber daya air."
+      },
+      "item3": {
+        "title": "EcoSense Environment",
+        "desc": "Platform monitoring lingkungan yang mengukur berbagai parameter seperti kualitas udara, suhu, kelembaban, dan kondisi lingkungan lainnya secara terintegrasi."
+      },
+      "item4": {
+        "title": "EcoSense Security",
+        "desc": "Sistem monitoring dan notifikasi cerdas untuk meningkatkan keamanan area, aset, dan infrastruktur melalui pemantauan real-time dan smart alert system."
+      }
+    },
+    "customers": {
+      "title": "Customer Kami",
+      "item1": {
+        "title": "Home Owner",
+        "desc": "Solusi monitoring cerdas untuk membantu rumah lebih efisien, nyaman, dan berkelanjutan melalui pemantauan energi, air, dan lingkungan secara real-time."
+      },
+      "item2": {
+        "title": "Business",
+        "desc": "Membantu bisnis memantau operasional, efisiensi sumber daya, dan kualitas lingkungan untuk mendukung produktivitas dan pengambilan keputusan berbasis data."
+      },
+      "item3": {
+        "title": "Industry",
+        "desc": "Sistem monitoring terintegrasi untuk industri dalam meningkatkan efisiensi, kontrol operasional, keamanan, dan sustainability secara lebih optimal."
+      },
+      "item4": {
+        "title": "Government",
+        "desc": "Mendukung pemerintah dalam pengelolaan data lingkungan, infrastruktur, dan utilitas publik melalui sistem monitoring cerdas yang terhubung dan real-time."
+      }
+    },
+    "works": {
+      "title": "HOW IT WORKS",
+      "heading": "Bagaimana Sistem ini Bekerja?"
+    },
+    "benefit": {
+      "title": "Platform Benefits",
+      "heading": "Dampak"
+    },
+    "cta": {
+      "heading": "MULAI TRANSFORMASI SISTEM ANDA SAAT INI!",
+      "desc": "Tingkatkan efisiensi, kurangi biaya, dan ciptakan masa depan yang lebih cerdas dengan EcoSense.",
+      "benefit1": "Efisiensi Meningkat",
+      "benefit2": "Biaya Berkurang",
+      "benefit3": "Operasional Lebih Hijau",
+      "benefit4": "Keputusan Lebih Cepat",
+      "btn": "MULAI SEKARANG",
+      "trust": "Aman, Terpercaya, dan Terintegrasi"
+    },
+    "footer": {
+      "desc": "Smart monitoring system — real-time, akurat, dan berbasis data.",
+      "quick_link": "Tautan Cepat",
+      "services": "Layanan Sistem",
+      "monitoring": "Dashboard Monitoring",
+      "control": "Kendali Perangkat",
+      "history": "Riwayat & Data Log",
+      "complaint": "Pusat Pengaduan",
+      "contact_info": "Informasi Kontak",
+      "copyright": "© 2026 BIEON - Smart Green Living Monitoring System. Hak Cipta Dilindungi Undang-Undang."
+    }
+  },
+  "alerts": {
+    "session_expired": "Sesi Teknisi Anda telah berakhir (30 menit). Anda telah di-logout otomatis.",
+    "send_report_failed": "Gagal mengirim laporan: {{message}}",
+    "send_report_error": "Terjadi kesalahan teknis saat mengirim laporan.",
+    "complaint_send_failed": "Gagal mengirim pengaduan. Silakan coba lagi.",
+    "profile_not_found": "Profil user tidak ditemukan. Mohon refresh halaman.",
+    "token_generate_failed": "Gagal generate token: {{message}}",
+    "token_generate_error": "Terjadi kesalahan teknis saat generate token. Pastikan koneksi server aktif.",
+    "profile_not_ready": "Profil pengguna belum siap. Silakan refresh halaman.",
+    "product_registered": "Produk berhasil diregistrasi!",
+    "registration_error": "Error registrasi: {{message}}",
+    "product_deleted": "Produk berhasil dihapus!",
+    "product_delete_failed": "Gagal menghapus produk",
+    "product_delete_error": "Error hapus: {{message}}",
+    "remote_mode_active": "Mode registrasi remote aktif. Silakan tekan tombol remote untuk menangkap bit.",
+    "remote_start_failed": "Gagal memulai registrasi remote: {{message}}",
+    "raw_bit_delete_failed": "Gagal menghapus raw bit: {{message}}",
+    "remote_card_not_found": "Remote card tidak ditemukan.",
+    "remote_mapping_saved": "Mapping remote berhasil disimpan dan kontrol card sudah aktif.",
+    "remote_mapping_failed": "Gagal menyimpan mapping remote: {{message}}",
+    "room_already_exists": "Ruangan sudah ada!",
+    "fill_device_location": "Mohon lengkapi nama device dan lokasi!",
+    "select_controlled_device": "Mohon pilih perangkat yang dikontrol!",
+    "select_room_for": "Mohon pilih ruangan untuk {{name}}!",
+    "device_updated": "Perangkat berhasil diperbarui!",
+    "device_added": "Perangkat berhasil ditambahkan ke database!",
+    "device_save_failed": "Gagal simpan: {{message}}",
+    "product_id_unavailable": "Product ID tidak tersedia. Pilih produk terlebih dahulu atau gunakan fitur Quick Save agar sistem dapat mendaftarkan productId.",
+    "device_send_failed": "Gagal mengirim perintah: {{message}}",
+    "device_deleted": "Perangkat berhasil dihapus dari database!",
+    "device_updated_db": "Device berhasil diupdate!",
+    "product_already_registered_confirm": "ID Produk ini sudah terdaftar di sistem.\n\nApakah Anda ingin diarahkan ke daftar 'Perangkat Anda' untuk segera melakukan konfigurasi?",
+    "delete_product_confirm": "Apakah Anda yakin ingin menghapus produk ini dari daftar terdaftar?",
+    "delete_raw_bit_confirm": "Hapus raw bit ini dari katalog?",
+    "delete_device_confirm": "Yakin ingin menghapus device ini?",
+    "device_name_required": "Nama device tidak boleh kosong!",
+    "device_type_required": "Tipe device harus dipilih!",
+    "profile_update_failed": "Gagal menyimpan pembaruan profil.",
+    "profile_update_error": "Terjadi kesalahan saat menyimpan profil."
+  },
+  "placeholder": {
+    "describe_problem": "Jelaskan masalah yang Anda alami secara detail...",
+    "enter_manual_code": "Atau masukkan kode manual",
+    "device_name_example": "Contoh: AC Ruang Tamu",
+    "device_notes": "Tambahkan catatan tentang device ini...",
+    "device_notes_alt": "Tambahkan catatan untuk perangkat ini...",
+    "room_name": "Nama Ruangan...",
+    "room_placeholder": "Ruangan...",
+    "example_tv": "Contoh: Power TV",
+    "example_brand": "Contoh: Polytron",
+    "example_sensor_id": "Contoh: SNZB-02D",
+    "sensor_id_input": "Ketik atau pilih ID (Contoh: SNZB...)",
+    "temperature_value": "Masukkan nilai suhu (°C)",
+    "humidity_value": "Masukkan nilai kelembaban (%)",
+    "complaint_title_example": "Contoh: AC Bocor",
+    "complaint_desc": "Jelaskan kendala secara singkat...",
+    "select_hub": "Pilih hub...",
+    "select_room": "Pilih ruangan...",
+    "select_category": "Pilih kategori...",
+    "title_add_mapping": "Tambah mapping",
+    "title_delete_raw_bit": "Hapus raw bit"
+  },
+  "tooltip": {
+    "manage_complaint": "Manajemen Pengaduan",
+    "view_detail": "Lihat Detail",
+    "delete_client": "Hapus Klien",
+    "pause_suspend": "Pause/Suspend",
+    "detail": "Detail"
+  },
+  "complaint_system": {
+    "ticket_created": "Tiket Dibuat!",
+    "ticket_created_desc": "Teknisi akan segera meninjau laporan Anda.",
+    "label_title": "Judul Kendala",
+    "label_location": "Lokasi / Ruangan",
+    "select_area": "Pilih Area",
+    "label_desc": "Deskripsi",
+    "btn_submitting": "Mengirim...",
+    "btn_create": "Buat Tiket Baru"
+  },
+  "client_detail": {
+    "page_title": "Halaman Detail Pelanggan",
+    "in_development": "Dalam Pengembangan",
+    "in_development_desc": "Kami sedang menyiapkan desain terbaik untuk memudahkan pemantauan detail pelanggan Anda secara mendalam. Pantau terus update selanjutnya!",
+    "back_to_management": "Kembali ke Manajemen Pelanggan"
+  },
+  "kendali_options": {
+    "category_comfort": "Kenyamanan",
+    "category_water": "Kualitas Air",
+    "category_security": "Keamanan",
+    "sensor_comfort": "Sensor Kenyamanan",
+    "sensor_water": "Sensor Kualitas Air",
+    "sensor_security": "Sensor Keamanan",
+    "smart_switch": "Smart Switch",
+    "smart_plug": "Smart Plug"
   }
 }

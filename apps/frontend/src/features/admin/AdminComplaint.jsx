@@ -33,7 +33,7 @@ import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { SuperAdminLayout } from './SuperAdminLayout';
 import { useSLA } from '../../hooks/useSLA';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
-import { formatStatusDisplay, getRawDisplayStatus, getActionButtons, getPerformanceIndicator } from '../../utils/complaintHelpers';
+import { formatStatusDisplay, getRawDisplayStatus, getActionButtons, getPerformanceIndicator, localizeTopic } from '../../utils/complaintHelpers';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -339,8 +339,8 @@ export default function AdminComplaint({ onNavigate }) {
                 ticket.id,
                 ticket.date,
                 ticket.customer,
-                ticket.topic,
-                ticket.technician,
+                localizeTopic(ticket.topic, t),
+                ticket.technician === 'Unassigned' ? t('complaint.table_col.waiting_tech', 'Menunggu Teknisi') : ticket.technician,
                 formatStatusDisplay(ticket.status, 'admin').toUpperCase()
             ];
             tableRows.push(ticketData);
@@ -353,8 +353,10 @@ export default function AdminComplaint({ onNavigate }) {
             startY: 40,
             theme: 'grid',
             headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontStyle: 'bold' },
-            styles: { fontSize: 8, cellPadding: 2 },
-            alternateRowStyles: { fillColor: [245, 245, 245] }
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid'
         });
 
         // Download
@@ -506,14 +508,18 @@ export default function AdminComplaint({ onNavigate }) {
         doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.line(14, 58, 65, 58);
 
+        const localizedTech = ticket.technician === 'Unassigned' 
+            ? t('complaint.table_col.waiting_tech', 'Menunggu Teknisi') 
+            : ticket.technician;
+
         doc.setFontSize(10);
         const infoData = [
-            [t('export.row_technician', 'Teknisi'), `: ${ticket.technician} (${ticket.technicianInfo?.phone || '-'})`],
-            [t('export.row_tech_rating', 'Rating Teknisi'), `: ${ticket.rating !== '-' ? ticket.rating + '/5' : t('export.val_not_rated', 'Belum dinilai')}`],
+            [t('export.row_technician', 'Teknisi'), `: ${localizedTech} (${ticket.technicianInfo?.phone || '-'})`],
+            [t('export.row_tech_rating', 'Rating Layanan'), `: ${ticket.rating !== '-' ? ticket.rating + '/5' : t('export.val_not_rated', 'Belum dinilai')}`],
             [t('export.row_customer_name', 'Nama Pelanggan'), `: ${ticket.customer}`],
             [t('export.row_address', 'Alamat'), `: ${ticket.location}`],
-            [t('export.row_topic', 'Topik Kendala'), `: ${ticket.topic || '-'}`],
-            [t('export.row_category', 'Kategori'), `: ${ticket.category || 'Umum'}`],
+            [t('export.row_topic', 'Topik Kendala'), `: ${localizeTopic(ticket.topic, t) || '-'}`],
+            [t('export.row_category', 'Kategori'), `: ${ticket.category ? t(`complaint.category_${ticket.category.toLowerCase().replace(/\s+/g, '_')}`, ticket.category) : t('history.category_others', 'Lainnya')}`],
             [t('export.row_desc', 'Deskripsi Masalah'), `: ${ticket.description || '-'}`],
             [t('export.row_photos', 'Lampiran Foto'), `: ${ticket.photos && ticket.photos.length > 0 ? t('export.val_photos_count', '{{count}} Foto (Tersedia di Dashboard)', { count: ticket.photos.length }) : t('export.val_no_photos', 'Tidak ada foto')}`],
             [t('export.row_created_at', 'Waktu Dibuat'), `: ${new Date(ticket.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`],
@@ -525,9 +531,11 @@ export default function AdminComplaint({ onNavigate }) {
             startY: 65,
             body: infoData,
             theme: 'plain',
-            styles: { fontSize: 10, cellPadding: 2 },
-            columnStyles: { 0: { fontStyle: 'bold', width: 40 }, 1: { cellWidth: 'auto' } },
-            margin: { bottom: 25 }
+            styles: { fontSize: 10, cellPadding: 2, overflow: 'linebreak' },
+            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45 }, 1: { cellWidth: 'auto' } },
+            margin: { bottom: 25 },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid'
         });
 
         // Section 2: SLA Performance Metrics
@@ -556,10 +564,24 @@ export default function AdminComplaint({ onNavigate }) {
 
         const statusOntime = t('export.status_ontime', 'SESUAI SLA');
         const statusOverdue = t('export.status_overdue', 'OVERDUE');
+        const targetResponseVal = i18n.language === 'id' ? '15 Menit' : '15 Minutes';
+        const targetRepairVal = i18n.language === 'id' ? '48 Jam' : '48 Hours';
+
+        const isResponseOverdue = responseTime !== '-' && (
+            responseTime.includes('Hari') || 
+            responseTime.includes('Day') || 
+            parseInt(responseTime.split(':')[0]) > 0 || 
+            parseInt(responseTime.split(':')[1]) > 15
+        );
+        const isRepairOverdue = repairTime !== '-' && (
+            repairTime.includes('Hari') || 
+            repairTime.includes('Day') || 
+            parseInt(repairTime.split(':')[0]) >= 48
+        );
 
         const slaData = [
-            [t('export.sla_response', 'Respon Teknisi'), '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime, `${resPts} Pts`],
-            [t('export.sla_repair', 'Perbaikan Unit'), '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime, `${repPts} Pts`]
+            [t('export.sla_response', 'Respon Teknisi'), targetResponseVal, responseTime, isResponseOverdue ? statusOverdue : statusOntime, `${resPts} Pts`],
+            [t('export.sla_repair', 'Perbaikan Unit'), targetRepairVal, repairTime, isRepairOverdue ? statusOverdue : statusOntime, `${repPts} Pts`]
         ];
 
         autoTable(doc, {
@@ -567,10 +589,12 @@ export default function AdminComplaint({ onNavigate }) {
             head: [[t('export.col_sla_aspect', 'Aspek SLA'), t('export.col_target', 'Target'), t('export.col_achieved', 'Capaian'), t('export.col_status', 'Status'), t('export.col_points', 'Poin')]],
             body: slaData,
             theme: 'grid',
-            styles: { fontSize: 9, cellPadding: 3 },
+            styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak' },
             headStyles: { fillColor: [240, 240, 240], textColor: [40, 40, 40], fontStyle: 'bold' },
             columnStyles: { 3: { fontStyle: 'bold' }, 4: { fontStyle: 'bold', halign: 'center' } },
             margin: { bottom: 25 },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid',
             didParseCell: (data) => {
                 if (data.column.index === 3 && data.cell.section === 'body') {
                     if (data.cell.text[0] === statusOverdue) data.cell.styles.textColor = [220, 38, 38];
@@ -614,7 +638,9 @@ export default function AdminComplaint({ onNavigate }) {
                 1: { cellWidth: 35, fontStyle: 'bold', halign: 'left' },
                 2: { cellWidth: 'auto', halign: 'left' }
             },
-            margin: { bottom: 25 }
+            margin: { bottom: 25 },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid'
         });
 
         // Footer & Page Numbers
@@ -947,7 +973,7 @@ export default function AdminComplaint({ onNavigate }) {
 
 
     return (
-        <SuperAdminLayout activeMenu="Pengaduan" onNavigate={onNavigate} title="Manajemen Pengaduan">
+        <SuperAdminLayout activeMenu="Pengaduan" onNavigate={onNavigate} title={t('tooltip.manage_complaint')}>
             <style>
                 {`
                 .custom-scrollbar-x::-webkit-scrollbar { height: 10px; }

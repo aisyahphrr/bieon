@@ -267,6 +267,9 @@ export function ManajemenAkunPage({ onNavigate }) {
             headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontSize: 10, fontStyle: 'bold' },
             bodyStyles: { fontSize: 9, cellPadding: 4 },
             alternateRowStyles: { fillColor: [245, 248, 247] },
+            styles: { overflow: 'linebreak' },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid',
             margin: { left: 14, right: 14 }
         });
 
@@ -555,14 +558,14 @@ export function ManajemenAkunPage({ onNavigate }) {
                                                     <button
                                                         onClick={() => { setSelectedHomeowner(ho); setIsDetailModalOpen(true); }}
                                                         className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-bieon-eco hover:border-bieon-eco hover:bg-bieon-eco/10 rounded-xl transition-all shadow-sm"
-                                                        title="Lihat Detail"
+                                                        title={t('tooltip.view_detail')}
                                                     >
                                                         <Eye className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteHomeowner(ho)}
                                                         className="p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm"
-                                                        title="Hapus Klien"
+                                                        title={t('tooltip.delete_client')}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>

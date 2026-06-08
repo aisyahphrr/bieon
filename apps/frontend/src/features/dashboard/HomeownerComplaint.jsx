@@ -365,7 +365,9 @@ export function HomeownerComplaint({ onNavigate }) {
             headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica' },
             bodyStyles: { font: 'helvetica' },
             footStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica' },
-            styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
+            styles: { fontSize: 8, cellPadding: 2, font: 'helvetica', overflow: 'linebreak' },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid',
             alternateRowStyles: { fillColor: [245, 245, 245] }
         });
 

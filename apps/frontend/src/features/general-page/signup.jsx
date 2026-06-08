@@ -61,7 +61,7 @@ const Signup = ({ setTempData }) => {
       console.log("DEBUG: Google Login Response Data:", data);
       
       if (!response.ok) {
-        throw new Error(data.message || 'Login Google gagal');
+        throw new Error(data.message || t('auth.errors.google_failed'));
       }
 
       // Simpan token untuk session saat ini agar bisa hit API yang butuh auth
@@ -96,7 +96,7 @@ const Signup = ({ setTempData }) => {
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Gagal mendaftar menggunakan Google');
+      setError(err.message || t('auth.errors.google_failed'));
     } finally {
       setLoading(false);
     }
@@ -202,7 +202,7 @@ const Signup = ({ setTempData }) => {
                  disabled={loading}
                  className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2 disabled:opacity-70"
                >
-                 <span className="relative z-10">{loading ? 'Memproses...' : t('auth.signup.btn_signup')}</span>
+                 <span className="relative z-10">{loading ? t('auth.loading.processing') : t('auth.signup.btn_signup')}</span>
                  {!loading && <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />}
                  <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
                </button>
@@ -227,7 +227,7 @@ const Signup = ({ setTempData }) => {
               <GoogleIcon />
             </div>
             <span className="text-[14px] font-bold text-slate-700">
-              {loading ? 'Silakan Tunggu...' : t('auth.signup.btn_google')}
+              {loading ? t('auth.loading.please_wait') : t('auth.signup.btn_google')}
             </span>
           </button>
 

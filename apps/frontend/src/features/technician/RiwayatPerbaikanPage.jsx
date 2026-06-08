@@ -482,9 +482,12 @@ export function RiwayatPerbaikanPage() {
     const statusOverdue = t('export.status_overdue', 'OVERDUE');
     const statusOntime = t('export.status_ontime', 'SESUAI SLA');
 
+    const targetResponseVal = i18n.language === 'id' ? '15 Menit' : '15 Minutes';
+    const targetRepairVal = i18n.language === 'id' ? '48 Jam' : '48 Hours';
+
     const slaData = [
-      [t('export.sla_response', 'Respon Teknisi'), '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime],
-      [t('export.sla_repair', 'Perbaikan Unit'), '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime]
+      [t('export.sla_response', 'Respon Teknisi'), targetResponseVal, responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || responseTime.includes('Days') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime],
+      [t('export.sla_repair', 'Perbaikan Unit'), targetRepairVal, repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || repairTime.includes('Days') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime]
     ];
 
     autoTable(doc, {
