@@ -736,7 +736,6 @@ exports.sendRemoteCommand = async (req, res) => {
             if (obj.protocol) inferredProtocol = inferredProtocol || String(obj.protocol);
             return !!(raw_hex || bits);
         };
-
         // 1) If rawBitText is JSON-encoded, parse and extract
         if (rawBitText && typeof rawBitText === 'string') {
             let parsed = null;
@@ -762,9 +761,22 @@ exports.sendRemoteCommand = async (req, res) => {
                         }
                     }
                 }
+            } else {
+                // FALLBACK REGEX: if JSON parsing failed due to historical truncation in the database
+                const hexMatch = rawBitText.match(/raw(?:_hex|_value)?["']?\s*[:=]\s*["']?(0x[0-9a-fA-F]+)/i);
+                if (hexMatch) {
+                    raw_hex = raw_hex || hexMatch[1];
+                }
+                const bitsMatch = rawBitText.match(/(?:bits|bit_length|bit_count)["']?\s*[:=]\s*["']?(\d+)/i);
+                if (bitsMatch) {
+                    bits = bits || Number(bitsMatch[1]);
+                }
+                const protoMatch = rawBitText.match(/protocol["']?\s*[:=]\s*["']?(\d+)/i);
+                if (protoMatch) {
+                    inferredProtocol = inferredProtocol || protoMatch[1];
+                }
             }
         }
-
         // 2) If rawBitBinary provided as bit string
         if ((!raw_hex || raw_hex === '') && rawBitBinary) {
             const bin = String(rawBitBinary || '').replace(/[^01]/g, '');
