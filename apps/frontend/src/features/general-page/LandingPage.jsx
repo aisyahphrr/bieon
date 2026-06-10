@@ -22,7 +22,9 @@ import {
   Bell,
   Cloud,
   Rocket,
-  ChevronDown
+  ChevronDown,
+  Search,
+  X
 } from 'lucide-react';
 
 const StatCard = ({ icon: Icon, target, label, suffix = "+", colorClass = "text-emerald-500" }) => {
@@ -137,21 +139,26 @@ import { useTranslation } from 'react-i18next';
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+    <div 
+      className={`group bg-white border border-slate-200 rounded-[2rem] overflow-hidden transition-all duration-500 ease-out flex flex-col ${isOpen ? 'shadow-[0_8px_30px_rgb(0,0,0,0.08)] border-[#009b7c]/30 -translate-y-1' : 'shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1'}`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between text-left focus:outline-none"
+        className="w-full p-6 lg:p-8 flex items-start justify-between text-left focus:outline-none gap-4"
       >
-        <span className="font-bold text-slate-800 pr-4">{question}</span>
-        <ChevronDown 
-          className={`shrink-0 text-[#009b7c] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
-          size={20} 
-        />
+        <span className={`font-bold text-lg md:text-xl transition-colors duration-300 ${isOpen ? 'text-[#009b7c]' : 'text-slate-800 group-hover:text-[#009b7c]'}`}>
+          {question}
+        </span>
+        <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-[#009b7c] text-white rotate-180' : 'bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-[#009b7c]'}`}>
+          <ChevronDown size={20} className="transition-transform duration-500" />
+        </div>
       </button>
       <div 
-        className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+        className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'}`}
       >
-        <div className="px-6 pb-4 text-slate-500 font-medium leading-relaxed">
+        <div className="px-6 lg:px-8 text-slate-500 font-medium leading-relaxed text-base">
           {answer}
         </div>
       </div>
@@ -163,6 +170,7 @@ const LandingPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
+  const [faqSearchQuery, setFaqSearchQuery] = useState('');
 
   const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
 
@@ -701,25 +709,74 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* FAQ Section */}
-        <section className="py-20 bg-white border-t border-slate-100 relative overflow-hidden">
-          <div className="w-full max-w-[800px] mx-auto px-6 md:px-12 relative z-10">
-            <Reveal className="text-center mb-10">
+        {/* FAQ Section - Search & Bento Layout */}
+        <section className="py-20 lg:py-28 bg-[#f8fafc] border-t border-slate-100 relative overflow-hidden">
+          {/* Subtle blurred backgrounds for aesthetics */}
+          <div className="absolute top-0 left-[-10%] w-[40%] h-[50%] bg-emerald-50 blur-[100px] rounded-full pointer-events-none"></div>
+          <div className="absolute bottom-0 right-[-10%] w-[30%] h-[60%] bg-[#129cc0]/5 blur-[120px] rounded-full pointer-events-none"></div>
+          
+          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 relative z-10">
+            <Reveal className="text-center mb-12 max-w-3xl mx-auto">
               <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
                 {t('landing.faq.title')}
               </div>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight drop-shadow-sm mb-8">
                 {t('landing.faq.heading')}
               </h2>
+
+              {/* Dynamic Search Bar */}
+              <div className="relative max-w-2xl mx-auto group">
+                <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                  <Search className="h-6 w-6 text-slate-400 group-focus-within:text-[#009b7c] transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={currentLang === 'id' ? "Cari pertanyaan Anda..." : "Search for questions..."}
+                  className="block w-full pl-16 pr-12 py-5 bg-white border-2 border-slate-100 rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-lg font-medium"
+                  value={faqSearchQuery}
+                  onChange={(e) => setFaqSearchQuery(e.target.value)}
+                />
+                {faqSearchQuery && (
+                  <button 
+                    onClick={() => setFaqSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    <X className="h-5 w-5 bg-slate-100 rounded-full p-0.5" />
+                  </button>
+                )}
+              </div>
             </Reveal>
 
-            <Reveal delay="0.1s" className="flex flex-col gap-4">
-              {Array.isArray(t('landing.faq.items', { returnObjects: true })) 
-                ? t('landing.faq.items', { returnObjects: true }).map((item, index) => (
-                    <FAQItem key={index} question={item.q} answer={item.a} />
-                  ))
-                : null
-              }
+            {/* Bento Grid */}
+            <Reveal delay="0.1s" className="max-w-5xl mx-auto">
+              {(() => {
+                const items = t('landing.faq.items', { returnObjects: true });
+                const faqItems = Array.isArray(items) ? items : [];
+                const filteredItems = faqItems.filter(item => 
+                  (item.q?.toLowerCase() || '').includes(faqSearchQuery.toLowerCase()) || 
+                  (item.a?.toLowerCase() || '').includes(faqSearchQuery.toLowerCase())
+                );
+
+                if (filteredItems.length === 0) {
+                  return (
+                    <div className="text-center py-16 px-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                        <Search size={24} />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-700 mb-2">{currentLang === 'id' ? 'Pencarian Tidak Ditemukan' : 'No Results Found'}</h3>
+                      <p className="text-slate-500">{currentLang === 'id' ? "Kami tidak dapat menemukan jawaban untuk \"" + faqSearchQuery + "\". Coba kata kunci lain." : "We couldn't find an answer for \"" + faqSearchQuery + "\". Try different keywords."}</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    {filteredItems.map((item, index) => (
+                      <FAQItem key={index} question={item.q} answer={item.a} />
+                    ))}
+                  </div>
+                );
+              })()}
             </Reveal>
           </div>
         </section>
