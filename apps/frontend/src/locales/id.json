@@ -2002,12 +2002,14 @@
     "save_success": "Perangkat berhasil disimpan!",
     "delete_success": "Perangkat berhasil dihapus!",
     "delete_confirm": "Apakah Anda yakin ingin menghapus perangkat ini?",
+    "environment_setup_desc": "Pengaturan berdasarkan parameter aspek-aspek sensor",
+    "schedule_setup_desc": "Pengaturan berdasarkan waktu/jadwal harian",
     "aspects": {
       "comfort": "Kenyamanan",
       "security": "Keamanan",
       "water_quality": "Kualitas Air",
-      "environment": "Parameter Lingkungan",
-      "schedule": "Jadwal Otomatis"
+      "environment": "Parameter Aspek Sensor",
+      "schedule": "Jadwal Harian"
     },
     "params": {
       "temperature": "Suhu (Temperature)",

@@ -8,14 +8,14 @@ function parseTime(timeStr) {
     if (!timeStr) return null;
     let [time, modifier] = timeStr.trim().split(' ');
     let [hours, minutes] = time.split(':');
-    
+
     if (hours === '12' && (!modifier || modifier.toUpperCase() === 'AM')) {
         hours = '00';
     }
     if (modifier && modifier.toUpperCase() === 'PM' && hours !== '12') {
         hours = parseInt(hours, 10) + 12;
     }
-    
+
     return {
         hours: parseInt(hours, 10),
         minutes: parseInt(minutes, 10)
@@ -40,7 +40,7 @@ const startScheduler = () => {
                 weekday: 'long'
             });
             const parts = formatter.formatToParts(now);
-            
+
             let currentHour, currentMinute, currentWeekday;
             parts.forEach(p => {
                 if (p.type === 'hour') currentHour = parseInt(p.value, 10);
@@ -48,7 +48,7 @@ const startScheduler = () => {
                 if (p.type === 'weekday') currentWeekday = p.value; // e.g., 'Monday'
             });
 
-            // Konversi weekday English to Indonesia
+            // Konversi weekday English ke Indonesia (sesuai format yang disimpan frontend)
             const mapDay = {
                 'Sunday': 'Minggu',
                 'Monday': 'Senin',
@@ -60,14 +60,14 @@ const startScheduler = () => {
             };
             const currentHari = mapDay[currentWeekday];
 
-            // Cari semua perangkat dengan Mode 'Jadwal'
-            const scheduledDevices = await KendaliPerangkat.find({ 
+            // Cari semua perangkat dengan Mode 'Jadwal', populate hubId untuk akses bieonId
+            const Hub = require('../models/Hub');
+            const scheduledDevices = await KendaliPerangkat.find({
                 controlMethod: 'Jadwal'
-            });
+            }).lean();
 
-            if(scheduledDevices.length > 0) {
-                // Silent check, can be un-commented for deep debugging
-                // console.log(`[Scheduler] Pengecekan rutin... Jam ${currentHour}:${currentMinute} WIB (${currentHari}). Ada ${scheduledDevices.length} alat dengan mode Jadwal.`);
+            if (scheduledDevices.length > 0) {
+                console.log(`[Scheduler] ⏰ Pengecekan Jam ${currentHour}:${String(currentMinute).padStart(2, '0')} WIB (${currentHari}). Ada ${scheduledDevices.length} alat mode Jadwal.`);
             }
 
             for (const device of scheduledDevices) {
@@ -104,19 +104,52 @@ const startScheduler = () => {
                     }
                 }
 
+                // Ambil bieonId dari device atau hub
+                let bieonId = device.bieonId || null;
+                let hubObjectId = device.hubId;
+
+                if (!bieonId && device.hubId) {
+                    const hub = await Hub.findById(device.hubId).lean();
+                    if (hub) {
+                        bieonId = hub.bieonId;
+                    }
+                }
+
+                // Normalize IEEE address (sama seperti toggleDevice di controller)
+                const normalizedIeee = String(device.device_ieee || device.modelId || device.name || '').replace(/[:\-\s]/g, '').toLowerCase();
+
                 // Enforce status based on whether it should be on
                 if (shouldBeOn) {
                     if (String(device.status) !== '1') {
-                        console.log(`[Scheduler] ⏰ WAKTUNYA NYALA untuk ${device.name}`);
-                        
-                        const topicCommand = `bieon/${device.name.replace(/\s+/g, '_')}/command`;
-                        publishCommand(topicCommand, '1');
-                        
+                        console.log(`[Scheduler] ⚡ WAKTUNYA NYALA untuk "${device.name}" | bieonId: ${bieonId} | ieee: ${normalizedIeee}`);
+
+                        // Kirim MQTT ke topic admin (SAMA PERSIS dengan toggleDevice)
+                        if (bieonId) {
+                            const adminTopic = `bieon/${bieonId}/admin/command`;
+                            const adminPayload = {
+                                command: 'on',
+                                action: 'on',
+                                status: '1',
+                                bieon_id: bieonId,
+                                ieee: normalizedIeee,
+                                device_ieee: normalizedIeee,
+                                device_id: String(device._id),
+                                command_id: `cmd_${Date.now()}`,
+                                requested_by: String(device.owner),
+                                timestamp: Date.now()
+                            };
+                            publishCommand(adminTopic, adminPayload);
+                            console.log(`[Scheduler] 📡 Published ON to ${adminTopic} | payload:`, JSON.stringify(adminPayload));
+                        } else {
+                            console.warn(`[Scheduler] ⚠️  bieonId tidak tersedia untuk "${device.name}", skip MQTT publish.`);
+                        }
+
                         await KendaliPerangkat.findByIdAndUpdate(device._id, { status: '1', lastActivity: new Date() });
-                        
+
                         // LOGGING KE AKTIVITAS TERBARU
                         await new Activity({
                             user: device.owner,
+                            hub: hubObjectId,
                             room: device.location,
                             actuator: device.name,
                             status: 'ON',
@@ -124,7 +157,7 @@ const startScheduler = () => {
                             trigger: 'Otomasi (Jadwal)'
                         }).save();
 
-                        broadcastDeviceTelemetry(device.hubId, {
+                        broadcastDeviceTelemetry(hubObjectId, {
                             _id: device._id,
                             status: '1'
                         });
@@ -132,16 +165,35 @@ const startScheduler = () => {
                 } else {
                     // Jika di luar jadwal, paksa MATI
                     if (String(device.status) !== '0') {
-                        console.log(`[Scheduler] ⏰ WAKTUNYA MATI untuk ${device.name}`);
+                        console.log(`[Scheduler] ⚡ WAKTUNYA MATI untuk "${device.name}" | bieonId: ${bieonId} | ieee: ${normalizedIeee}`);
 
-                        const topicCommand = `bieon/${device.name.replace(/\s+/g, '_')}/command`;
-                        publishCommand(topicCommand, '0');
-                        
+                        // Kirim MQTT ke topic admin (SAMA PERSIS dengan toggleDevice)
+                        if (bieonId) {
+                            const adminTopic = `bieon/${bieonId}/admin/command`;
+                            const adminPayload = {
+                                command: 'off',
+                                action: 'off',
+                                status: '0',
+                                bieon_id: bieonId,
+                                ieee: normalizedIeee,
+                                device_ieee: normalizedIeee,
+                                device_id: String(device._id),
+                                command_id: `cmd_${Date.now()}`,
+                                requested_by: String(device.owner),
+                                timestamp: Date.now()
+                            };
+                            publishCommand(adminTopic, adminPayload);
+                            console.log(`[Scheduler] 📡 Published OFF to ${adminTopic} | payload:`, JSON.stringify(adminPayload));
+                        } else {
+                            console.warn(`[Scheduler] ⚠️  bieonId tidak tersedia untuk "${device.name}", skip MQTT publish.`);
+                        }
+
                         await KendaliPerangkat.findByIdAndUpdate(device._id, { status: '0', lastActivity: new Date() });
-                        
+
                         // LOGGING KE AKTIVITAS TERBARU
                         await new Activity({
                             user: device.owner,
+                            hub: hubObjectId,
                             room: device.location,
                             actuator: device.name,
                             status: 'OFF',
@@ -149,7 +201,7 @@ const startScheduler = () => {
                             trigger: 'Otomasi (Jadwal)'
                         }).save();
 
-                        broadcastDeviceTelemetry(device.hubId, {
+                        broadcastDeviceTelemetry(hubObjectId, {
                             _id: device._id,
                             status: '0'
                         });
@@ -178,6 +230,6 @@ const stopScheduler = () => {
         clearInterval(schedulerInterval);
         console.log('🛑 Scheduler Otomatis dihentikan.');
     }
-}
+};
 
 module.exports = { startScheduler, stopScheduler };

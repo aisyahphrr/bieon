@@ -385,11 +385,28 @@ export function DeviceControlPage({ onNavigate }) {
   const [remoteRegistrationDeviceId, setRemoteRegistrationDeviceId] = useState(null);
   const [remoteCatalogLoading, setRemoteCatalogLoading] = useState(false);
   const [remoteMappingDraft, setRemoteMappingDraft] = useState(null);
+  const [remoteRegCountdown, setRemoteRegCountdown] = useState(0);
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
   const [leavingDevices, setLeavingDevices] = useState({}); // { deviceId: seconds }
   const [pendingOpenJoinDevice, setPendingOpenJoinDevice] = useState(null);
   const [pendingOpenJoinAction, setPendingOpenJoinAction] = useState(null); // 'save' | 'configure'
-  const openJoinSubmitLockRef = useRef(false);
+  const isControlActuator = useMemo(() => {
+    const categoryLower = String(selectedCategory || "").toLowerCase();
+    const typeLower = String(selectedDeviceType || "").toLowerCase();
+    const nameLower = String(deviceForm.name || "").toLowerCase();
+    const productAspectLower = String(selectedProduct?.aspect || "").toLowerCase();
+
+    return categoryLower !== "sensor" ||
+      typeLower.includes('remote') ||
+      typeLower.includes('switch') ||
+      typeLower.includes('plug') ||
+      nameLower.includes('remote') ||
+      nameLower.includes('switch') ||
+      nameLower.includes('plug') ||
+      productAspectLower.includes('remote') ||
+      productAspectLower.includes('switch') ||
+      productAspectLower.includes('plug');
+  }, [selectedCategory, selectedDeviceType, deviceForm.name, selectedProduct]);
 
   // Efek Hitung Mundur untuk Pembuangan Perangkat
   useEffect(() => {
@@ -443,6 +460,36 @@ export function DeviceControlPage({ onNavigate }) {
     }
     return () => clearInterval(interval);
   }, [isScanning, scanTimer]);
+
+  // Efek Hitung Mundur untuk Registrasi Remote (30 detik)
+  useEffect(() => {
+    let timer;
+    if (remoteRegCountdown > 0) {
+      timer = setInterval(() => {
+        setRemoteRegCountdown((prev) => {
+          if (prev <= 1) {
+            // Ketika hitung mundur selesai, reset status registrasi remote ke idle secara lokal
+            const bieonId = currentBieon?.bieonId;
+            if (bieonId) {
+              setRemoteRegistrationStateByBieon((states) => ({
+                ...states,
+                [bieonId]: {
+                  ...(states[bieonId] || {}),
+                  state: 'idle',
+                  active: false
+                }
+              }));
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [remoteRegCountdown, currentBieon?.bieonId]);
 
   const toggleJoinDevice = (deviceId) => {
     if (joinedDevicesPool.includes(deviceId)) {
@@ -666,9 +713,9 @@ export function DeviceControlPage({ onNavigate }) {
           hubs: sys.hubs.map(hub => ({
             ...hub,
             devices: hub.devices.map(dev => {
-                      const devIeee = normalizeIeee(dev.device_ieee || dev.id || dev._id || '');
-                      const updIeee = normalizeIeee(updatedDevice.device_ieee || updatedDevice._id || updatedDevice.id || '');
-                      const isMatch = devIeee && updIeee ? devIeee === updIeee : (String(dev._id) === String(updatedDevice._id) || String(dev.id) === String(updatedDevice._id));
+              const devIeee = normalizeIeee(dev.device_ieee || dev.id || dev._id || '');
+              const updIeee = normalizeIeee(updatedDevice.device_ieee || updatedDevice._id || updatedDevice.id || '');
+              const isMatch = devIeee && updIeee ? devIeee === updIeee : (String(dev._id) === String(updatedDevice._id) || String(dev.id) === String(updatedDevice._id));
               if (isMatch) {
                 return {
                   ...dev,
@@ -746,6 +793,12 @@ export function DeviceControlPage({ onNavigate }) {
     socket.on('remote_registration_state', (registrationState) => {
       const bieonId = String(registrationState?.bieonId || currentBieon?.bieonId || '').trim();
       if (!bieonId) return;
+
+      if (registrationState.active) {
+        setRemoteRegCountdown(prev => prev > 0 ? prev : 30);
+      } else {
+        setRemoteRegCountdown(0);
+      }
 
       setRemoteRegistrationStateByBieon(prev => ({
         ...prev,
@@ -1259,6 +1312,7 @@ export function DeviceControlPage({ onNavigate }) {
           updatedAt: Date.now()
         }
       }));
+      setRemoteRegCountdown(30);
 
       alert('Mode registrasi remote aktif. Silakan tekan tombol remote untuk menangkap bit.');
     } catch (error) {
@@ -1615,7 +1669,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const rawControl = forcedMode || (isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : "manual"));
+      const rawControl = forcedMode || (isTechnicianMode ? null : ((selectedCategory === "sensor" && !isControlActuator) ? "sensor" : "manual"));
       const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(selectedCategory, selectedDeviceType, rawControl, activeSensorAspect);
 
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
@@ -1635,6 +1689,7 @@ export function DeviceControlPage({ onNavigate }) {
         productId: selectedProduct?.productId || selectedProduct?.id || pendingOpenJoinDevice?.id || pendingOpenJoinDevice?.device_ieee || deviceForm?.name || null,
         controlledDevice: remoteTargets.map(t => remoteRooms[t] ? `${t} (${remoteRooms[t]})` : t).join(", "),
         sensorParams: (selectedCategory === "sensor" || backendControl === "Lingkungan") ? transformSensorParams(sensorConfig, activeSensorAspect) : null,
+        scheduleSettings: backendControl === "Jadwal" ? scheduleConfig : null,
         sensorData: selectedCategory === "sensor" ? generateMockSensorData(selectedDeviceType) : null,
         remoteConfig: targetConfigs
       };
@@ -1795,7 +1850,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const rawControl = isTechnicianMode ? null : (selectedCategory === "sensor" ? "sensor" : configMode);
+      const rawControl = isTechnicianMode ? null : ((selectedCategory === "sensor" && !isControlActuator) ? "sensor" : configMode);
       const { backendCategory, backendType, backendControl, backendAspect } = mapToBackendData(selectedCategory, selectedDeviceType, rawControl, activeSensorAspect);
 
       const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
@@ -2282,9 +2337,18 @@ export function DeviceControlPage({ onNavigate }) {
         setSensorConfig(mappedConfig);
       }
     } else {
-      setConfigMode(device.controlMethod || "manual");
-      if (device.scheduleSettings) {
+      // PENTING: Normalisasi nilai backend ke nilai frontend
+      // Backend: 'Jadwal' → Frontend: 'schedule'
+      // Backend: 'Lingkungan' → Frontend: 'sensor' (sudah ditangani di if-block atas)
+      // Backend: 'Manual' → Frontend: 'manual'
+      const normalizedMode = (device.controlMethod === 'Jadwal' || device.controlMethod === 'schedule')
+        ? 'schedule'
+        : 'manual';
+      setConfigMode(normalizedMode);
+      if (device.scheduleSettings && device.scheduleSettings.length > 0) {
         setScheduleConfig([...device.scheduleSettings]);
+      } else {
+        setScheduleConfig([]); // Reset jika tidak ada jadwal
       }
     }
 
@@ -2421,13 +2485,15 @@ export function DeviceControlPage({ onNavigate }) {
   };
 
   const getDeviceCategoryKey = (device) => {
+    const name = String(device.name || "").trim().toLowerCase();
     const category = String(device.category || "").trim().toLowerCase();
     const type = String(device.type || device.deviceType || "").trim().toLowerCase();
 
+    if (name.includes("remote") || category.includes("remote") || type.includes("remote")) return "control";
     if (category.includes("sensor")) return "sensor";
-    if (category.includes("control") || category.includes("actuator") || category.includes("remote")) return "control";
+    if (category.includes("control") || category.includes("actuator")) return "control";
     if (type.includes("sensor")) return "sensor";
-    if (type.includes("plug") || type.includes("switch") || type.includes("remote") || type.includes("control")) return "control";
+    if (type.includes("plug") || type.includes("switch") || type.includes("control")) return "control";
     return "";
   };
 
@@ -2847,12 +2913,16 @@ export function DeviceControlPage({ onNavigate }) {
                     <div className="space-y-4">
                       {getFilteredDevices().map((device) => {
                         const isRemote = (device.controlledDevice && device.controlledDevice.trim() !== "");
+                        const isDeviceRemote = String(device.name || "").toLowerCase().includes("remote") ||
+                                               String(device.type || device.deviceType || "").toLowerCase().includes("remote") ||
+                                               String(device.category || "").toLowerCase().includes("remote");
                         const deviceCategoryKey = getDeviceCategoryKey(device);
                         const deviceCategoryLabel = getDeviceCategoryLabel(device);
                         const isAnySubOn = device.controls && Object.keys(device.controls).some(key => key.endsWith('_power') && device.controls[key] === 1);
                         const isActuallyOn = String(device.status) === "1" || (isRemote && isAnySubOn);
                         const isWaterQuality = (device.deviceType === "Kualitas Air" || device.deviceType === "Sensor Kualitas Air" || device.environmentAspect?.toLowerCase() === "kualitas air" || (device.name || "").toLowerCase().includes("bluecheck"));
                         const isActuatorDevice = (
+                          isDeviceRemote ||
                           (Array.isArray(device.remoteMappings) && device.remoteMappings.length > 0) ||
                           (Array.isArray(device.remoteState?.mappings) && device.remoteState.mappings.length > 0) ||
                           (String(device.controlledDevice || '').trim() !== '') ||
@@ -2877,11 +2947,10 @@ export function DeviceControlPage({ onNavigate }) {
                             {/* Slim Header - Always visible */}
                             <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedDevice(expandedDevice === device.id ? null : device.id)}>
                               <div className="flex items-start gap-3">
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-                                  deviceCategoryKey === "sensor"
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${deviceCategoryKey === "sensor"
                                     ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]"
                                     : (isActuallyOn ? "bg-bieon-eco shadow-[0_0_15px_rgba(16,185,129,0.4)]" : "bg-gray-900")
-                                }`}>
+                                  }`}>
                                   {deviceCategoryKey === "sensor" ? (
                                     <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                   ) : (
@@ -2933,15 +3002,15 @@ export function DeviceControlPage({ onNavigate }) {
                               <div className="mt-5 pt-5 border-t border-gray-100">
 
                                 {/* NEW: HASIL MONITORING REAL-TIME SECTION */}
-                                {(device.category?.toLowerCase() === 'sensor' || device.type?.toLowerCase() === 'sensor') && (() => {
+                                {!isDeviceRemote && (device.category?.toLowerCase() === 'sensor' || device.type?.toLowerCase() === 'sensor') && (() => {
                                   const hasParams = device.sensorParams && Object.keys(device.sensorParams).length > 0;
-                                  
+
                                   if (isWaterQuality) {
                                     const showPh = !hasParams || device.sensorParams?.ph !== undefined;
                                     const showTurbidity = !hasParams || device.sensorParams?.turbidity !== undefined;
                                     const showTds = !hasParams || device.sensorParams?.tds !== undefined;
                                     const showWaterTemp = !hasParams || device.sensorParams?.temperature !== undefined;
-                                    
+
                                     return (
                                       <div className="mb-8 animate-in fade-in duration-500">
                                         <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
@@ -2959,7 +3028,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                             </div>
                                           )}
-                                          
+
                                           {showTurbidity && (
                                             <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                               <div className="flex items-center gap-2 mb-2">
@@ -2974,7 +3043,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                             </div>
                                           )}
-                                          
+
                                           {showTds && (
                                             <div className="bg-gradient-to-br from-teal-50 to-white p-4 rounded-2xl border border-teal-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                               <div className="flex items-center gap-2 mb-2">
@@ -2989,7 +3058,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                             </div>
                                           )}
-                                          
+
                                           {showWaterTemp && (
                                             <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                               <div className="flex items-center gap-2 mb-2">
@@ -3025,11 +3094,11 @@ export function DeviceControlPage({ onNavigate }) {
                                       </div>
                                     );
                                   }
-                                  
+
                                   // Default for Comfort or other sensors
                                   const showTemp = !hasParams || device.sensorParams?.temperature !== undefined;
                                   const showHumid = !hasParams || device.sensorParams?.humidity !== undefined;
-                                  
+
                                   return (
                                     <div className="mb-8 animate-in fade-in duration-500">
                                       <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
@@ -3048,7 +3117,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             </div>
                                           </div>
                                         )}
-                                        
+
                                         {showHumid && (
                                           <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
@@ -3063,7 +3132,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             </div>
                                           </div>
                                         )}
-                                        
+
                                         <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                           <div className="flex items-center gap-2 mb-2">
                                             <Zap className="w-4 h-4 text-bieon-eco" />
@@ -3166,19 +3235,24 @@ export function DeviceControlPage({ onNavigate }) {
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Remote Registration</p>
                                         <h4 className="text-sm font-bold text-gray-900 mt-1">Raw bit catalog untuk {device.name}</h4>
                                         <p className="text-xs text-gray-500 mt-1">
-                                          {currentRemoteRegistration?.active ? 'Mode registrasi aktif. Tekan tombol remote untuk menangkap raw bit.' : 'Tekan Register untuk memulai tangkap raw bit.'}
+                                          {remoteRegCountdown > 0 ? `Mode registrasi aktif (${remoteRegCountdown} detik). Tekan tombol remote untuk menangkap raw bit.` : currentRemoteRegistration?.active ? 'Mode registrasi aktif. Tekan tombol remote untuk menangkap raw bit.' : 'Tekan Register untuk memulai tangkap raw bit.'}
                                         </p>
                                       </div>
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${currentRemoteRegistration?.active ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
-                                          {currentRemoteRegistration?.active ? 'Registering' : 'Idle'}
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${currentRemoteRegistration?.active || remoteRegCountdown > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                          {remoteRegCountdown > 0 ? `Registering (${remoteRegCountdown}s)` : currentRemoteRegistration?.active ? 'Registering' : 'Idle'}
                                         </span>
                                         <button
                                           type="button"
+                                          disabled={remoteRegCountdown > 0 || currentRemoteRegistration?.active}
                                           onClick={() => handleStartRemoteRegistration(device)}
-                                          className="px-4 py-2 rounded-xl bg-bieon-eco text-white text-xs font-black uppercase tracking-widest shadow-sm hover:bg-bieon-eco/90 transition-all"
+                                          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-sm transition-all ${
+                                            (remoteRegCountdown > 0 || currentRemoteRegistration?.active)
+                                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                              : 'bg-bieon-eco text-white hover:bg-bieon-eco/90 active:scale-95'
+                                          }`}
                                         >
-                                          Register
+                                          {remoteRegCountdown > 0 ? `Registering (${remoteRegCountdown}s)` : currentRemoteRegistration?.active ? 'Registering' : 'Register'}
                                         </button>
                                       </div>
                                     </div>
@@ -3249,7 +3323,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         <div className="flex items-center justify-between gap-3 mb-4">
                                           <div>
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-bieon-eco">Mapping Bit</p>
-                                              <p className="text-sm font-bold text-gray-900 break-all mt-1">{extractBitsFromCatalog(remoteMappingDraft)}</p>
+                                            <p className="text-sm font-bold text-gray-900 break-all mt-1">{extractBitsFromCatalog(remoteMappingDraft)}</p>
                                           </div>
                                           <button
                                             type="button"
@@ -3540,7 +3614,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         </div>
                                       ) : (
                                         <div className="flex flex-wrap gap-4">
-                                          {device.category?.toLowerCase() !== "sensor" && (
+                                          {(device.category?.toLowerCase() !== "sensor" || isDeviceRemote) && (
                                             <button
                                               onClick={() => toggleDevicePower(device.id)}
                                               className={`flex-1 min-w-[200px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 font-medium active:scale-95
@@ -3604,7 +3678,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               <span className="text-sm  text-gray-700 w-12">{device.controls?.brightness || 100}%</span>
                                             </div>
                                           )}
-                                          {device.category?.toLowerCase() === "sensor" && !isTechnicianMode && (
+                                          {device.category?.toLowerCase() === "sensor" && !isDeviceRemote && !isTechnicianMode && (
                                             <button
                                               onClick={() => toggleDevicePower(device.id)}
                                               className={`flex-1 min-w-[200px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 font-medium active:scale-95
@@ -3631,7 +3705,7 @@ export function DeviceControlPage({ onNavigate }) {
 
 
                                 {/* Sensor Only Data Block - Single Row Compact Version */}
-                                {device.category?.toLowerCase() === "sensor" && device.status === "1" && device.currentValues && (
+                                {device.category?.toLowerCase() === "sensor" && !isDeviceRemote && device.status === "1" && device.currentValues && (
                                   <div className="mb-6 flex flex-wrap items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-gray-100">
                                     {/* Compact Eligibility Badge */}
                                     {(() => {
@@ -3720,7 +3794,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 <div className="grid grid-cols-2 gap-y-4 gap-x-8 mb-6">
                                   <div>
                                     <p className="text-xs  text-gray-500 mb-1">Kategori</p>
-                                    <p className="text-sm text-gray-900  capitalize">{device.category}</p>
+                                    <p className="text-sm text-gray-900  capitalize">{isDeviceRemote ? "Control Actuator System" : device.category}</p>
                                   </div>
                                   <div>
                                     <p className="text-xs  text-gray-500 mb-1">Hub Node</p>
@@ -3894,8 +3968,8 @@ export function DeviceControlPage({ onNavigate }) {
                             (hub?.devices || []).some(d => {
                               const dbIeee = normalizeIeee(d?.device_ieee || d?.id || '');
                               return d?.modelId === dev?.id ||
-                                     d?.productId === dev?.id ||
-                                     (devIeee && dbIeee && devIeee === dbIeee);
+                                d?.productId === dev?.id ||
+                                (devIeee && dbIeee && devIeee === dbIeee);
                             })
                           );
                           return !isAlreadyInDb;
@@ -3979,18 +4053,16 @@ export function DeviceControlPage({ onNavigate }) {
                             <div className="grid gap-3">
                               {allCandidates.map((dev) => {
                                 const isJoined = joinedDevicesPool.includes(dev.id) || dev.isFromDb;
-                                const isSensor = (dev.type || "").toLowerCase().includes("sensor") || 
-                                                 dev.category === 'sensor' ||
-                                                 registeredProducts.find(p => p.productId === dev.id)?.category === 'sensor';
-                                
+                                const isSensor = (dev.type || "").toLowerCase().includes("sensor") ||
+                                  dev.category === 'sensor' ||
+                                  registeredProducts.find(p => p.productId === dev.id)?.category === 'sensor';
+
                                 return (
                                   <div
                                     key={dev.id}
-                                    className={`w-full flex items-center justify-between p-3 bg-white border ${
-                                      isJoined ? 'border-bieon-eco shadow-md ring-1 ring-bieon-eco/20' : 'border-gray-100'
-                                    } ${
-                                      isSensor ? 'hover:bg-[#f0fdf4] hover:border-bieon-eco/20' : 'hover:bg-blue-50/50 hover:border-blue-200'
-                                    } rounded-2xl transition-all group animate-in fade-in slide-in-from-bottom-4 duration-500`}
+                                    className={`w-full flex items-center justify-between p-3 bg-white border ${isJoined ? 'border-bieon-eco shadow-md ring-1 ring-bieon-eco/20' : 'border-gray-100'
+                                      } ${isSensor ? 'hover:bg-[#f0fdf4] hover:border-bieon-eco/20' : 'hover:bg-blue-50/50 hover:border-blue-200'
+                                      } rounded-2xl transition-all group animate-in fade-in slide-in-from-bottom-4 duration-500`}
                                   >
                                     <div className="min-w-0 pr-3 flex-1 text-left">
                                       <div className="flex items-center gap-2 mb-0.5">
@@ -3998,7 +4070,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         {(() => {
                                           const registeredMatch = registeredProducts.find(p => p.productId === dev.id || p.productId === dev.originalDevice?.productId || p.productId === dev.originalProduct?.productId);
                                           const aspect = registeredMatch?.aspect || dev.originalDevice?.aspect || dev.originalProduct?.aspect;
-                                          
+
                                           let aspectLabel = aspect;
                                           if (isSensor) {
                                             aspectLabel = "sensor";
@@ -4006,7 +4078,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             const nameLower = (dev.name || "").toLowerCase();
                                             const typeLower = (dev.type || "").toLowerCase();
                                             const isControl = nameLower.includes("plug") || nameLower.includes("control") || typeLower.includes("control") || typeLower.includes("plug") ||
-                                                              (registeredMatch && registeredMatch.category === 'control') || dev.originalProduct?.category === 'control';
+                                              (registeredMatch && registeredMatch.category === 'control') || dev.originalProduct?.category === 'control';
                                             if (isControl) {
                                               aspectLabel = "controll";
                                             } else if (typeLower.includes("air") || typeLower.includes("water") || typeLower.includes("bluecheck")) {
@@ -4017,15 +4089,14 @@ export function DeviceControlPage({ onNavigate }) {
                                               aspectLabel = "keamanan";
                                             }
                                           }
-                                          
+
                                           if (!aspectLabel) return null;
                                           return (
-                                            <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${
-                                              (aspectLabel === 'kenyamanan' || aspectLabel === 'sensor') ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' : 
-                                              aspectLabel === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
-                                              aspectLabel === 'controll' ? 'text-blue-500 border-blue-100 bg-blue-50' : 
-                                              'text-orange-500 border-orange-100 bg-orange-50'
-                                            }`}>
+                                            <span className={`text-[7px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${(aspectLabel === 'kenyamanan' || aspectLabel === 'sensor') ? 'text-bieon-eco border-bieon-eco/20 bg-bieon-eco/5' :
+                                                aspectLabel === 'air' ? 'text-blue-500 border-blue-100 bg-blue-50' :
+                                                  aspectLabel === 'controll' ? 'text-blue-500 border-blue-100 bg-blue-50' :
+                                                    'text-orange-500 border-orange-100 bg-orange-50'
+                                              }`}>
                                               {aspectLabel}
                                             </span>
                                           );
@@ -4061,9 +4132,8 @@ export function DeviceControlPage({ onNavigate }) {
                                                 handleEditDevice(dev.originalDevice);
                                               }
                                             }}
-                                            className={`px-3 py-2 ${
-                                              isSensor ? 'bg-bieon-eco hover:bg-bieon-eco/90 shadow-bieon-eco/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
-                                            } text-white text-[9px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap shadow-sm`}
+                                            className={`px-3 py-2 ${isSensor ? 'bg-bieon-eco hover:bg-bieon-eco/90 shadow-bieon-eco/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                                              } text-white text-[9px] font-bold rounded-xl transition-all uppercase tracking-wider whitespace-nowrap shadow-sm`}
                                           >
                                             Atur Sekarang
                                           </button>
@@ -4083,83 +4153,83 @@ export function DeviceControlPage({ onNavigate }) {
                                           </button>
                                         </>
                                       ) : (
-                                    <>
-                                      {/* TOMBOL + (JOIN) */}
-                                      <button
-                                        onClick={() => !isJoined && leavingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
-                                        disabled={isJoined || leavingDevices[dev.id] !== undefined}
-                                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isJoined
-                                          ? 'bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20 cursor-default'
-                                          : leavingDevices[dev.id] !== undefined
-                                            ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
-                                            : 'bg-bieon-eco/5 text-bieon-eco hover:bg-bieon-eco hover:text-white border border-bieon-eco/20'
-                                          }`}
-                                        title={isJoined ? "Sudah masuk antrean" : leavingDevices[dev.id] !== undefined ? "Sedang leave, tidak bisa ditambah" : "Tambahkan ke antrean"}
-                                      >
-                                        {isJoined ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                                      </button>
+                                        <>
+                                          {/* TOMBOL + (JOIN) */}
+                                          <button
+                                            onClick={() => !isJoined && leavingDevices[dev.id] === undefined && toggleJoinDevice(dev.id)}
+                                            disabled={isJoined || leavingDevices[dev.id] !== undefined}
+                                            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isJoined
+                                              ? 'bg-bieon-eco text-white shadow-lg shadow-bieon-eco/20 cursor-default'
+                                              : leavingDevices[dev.id] !== undefined
+                                                ? 'bg-gray-100 text-gray-300 cursor-not-allowed border-gray-200'
+                                                : 'bg-bieon-eco/5 text-bieon-eco hover:bg-bieon-eco hover:text-white border border-bieon-eco/20'
+                                              }`}
+                                            title={isJoined ? "Sudah masuk antrean" : leavingDevices[dev.id] !== undefined ? "Sedang leave, tidak bisa ditambah" : "Tambahkan ke antrean"}
+                                          >
+                                            {isJoined ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                          </button>
 
-                                      {/* TOMBOL - (LEAVE) WITH CIRCULAR TIMER */}
-                                      <div className="relative w-10 h-10 flex items-center justify-center">
-                                        <button
-                                          onClick={() => {
-                                            if (leavingDevices[dev.id] === undefined) {
-                                              setLeavingDevices(prev => ({ ...prev, [dev.id]: 50 }));
-                                            }
-                                          }}
-                                          disabled={leavingDevices[dev.id] !== undefined}
-                                          className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${leavingDevices[dev.id] !== undefined
-                                            ? 'bg-transparent border-transparent'
-                                            : 'bg-pink-50 text-pink-500 hover:bg-pink-500 hover:text-white border-pink-100'
-                                            }`}
-                                        >
-                                          {leavingDevices[dev.id] !== undefined ? (
-                                            <>
-                                              {/* CIRCULAR PROGRESS SVG */}
-                                              <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                                <circle
-                                                  cx="20"
-                                                  cy="20"
-                                                  r="18"
-                                                  stroke="currentColor"
-                                                  strokeWidth="3.5"
-                                                  fill="transparent"
-                                                  className="text-pink-100"
-                                                />
-                                                <circle
-                                                  cx="20"
-                                                  cy="20"
-                                                  r="18"
-                                                  stroke="currentColor"
-                                                  strokeWidth="3.5"
-                                                  fill="transparent"
-                                                  strokeDasharray={113.1}
-                                                  strokeDashoffset={113.1 - (leavingDevices[dev.id] / 50) * 113.1}
-                                                  strokeLinecap="round"
-                                                  className="text-pink-500 transition-all duration-1000 ease-linear"
-                                                />
-                                              </svg>
-                                              <span className="relative z-10 text-[10px] font-black text-pink-600">
-                                                {leavingDevices[dev.id]}
-                                              </span>
-                                            </>
-                                          ) : (
-                                            <Minus className="w-5 h-5" />
-                                          )}
-                                        </button>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                                          {/* TOMBOL - (LEAVE) WITH CIRCULAR TIMER */}
+                                          <div className="relative w-10 h-10 flex items-center justify-center">
+                                            <button
+                                              onClick={() => {
+                                                if (leavingDevices[dev.id] === undefined) {
+                                                  setLeavingDevices(prev => ({ ...prev, [dev.id]: 50 }));
+                                                }
+                                              }}
+                                              disabled={leavingDevices[dev.id] !== undefined}
+                                              className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${leavingDevices[dev.id] !== undefined
+                                                ? 'bg-transparent border-transparent'
+                                                : 'bg-pink-50 text-pink-500 hover:bg-pink-500 hover:text-white border-pink-100'
+                                                }`}
+                                            >
+                                              {leavingDevices[dev.id] !== undefined ? (
+                                                <>
+                                                  {/* CIRCULAR PROGRESS SVG */}
+                                                  <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                                    <circle
+                                                      cx="20"
+                                                      cy="20"
+                                                      r="18"
+                                                      stroke="currentColor"
+                                                      strokeWidth="3.5"
+                                                      fill="transparent"
+                                                      className="text-pink-100"
+                                                    />
+                                                    <circle
+                                                      cx="20"
+                                                      cy="20"
+                                                      r="18"
+                                                      stroke="currentColor"
+                                                      strokeWidth="3.5"
+                                                      fill="transparent"
+                                                      strokeDasharray={113.1}
+                                                      strokeDashoffset={113.1 - (leavingDevices[dev.id] / 50) * 113.1}
+                                                      strokeLinecap="round"
+                                                      className="text-pink-500 transition-all duration-1000 ease-linear"
+                                                    />
+                                                  </svg>
+                                                  <span className="relative z-10 text-[10px] font-black text-pink-600">
+                                                    {leavingDevices[dev.id]}
+                                                  </span>
+                                                </>
+                                              ) : (
+                                                <Minus className="w-5 h-5" />
+                                              )}
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
-                  {/* ACTION BOX: POOL ACTIONS [NEW REFINED] */}
+                      {/* ACTION BOX: POOL ACTIONS [NEW REFINED] */}
                       {joinedDevicesPool.length === 0 ? null : (
                         <div className="mt-8 p-6 bg-bieon-eco rounded-[2rem] shadow-xl shadow-bieon-eco/20 animate-in zoom-in-95 duration-300">
                           <div className="flex items-center justify-between mb-5">
@@ -5157,7 +5227,7 @@ export function DeviceControlPage({ onNavigate }) {
                         ? (deviceForm.name && remoteTargets.length > 0 && !remoteTargets.some(t => !remoteRooms[t]))
                         : (deviceForm.name && isValidLocation);
 
-                      if (isRemoteType) {
+                      if (isControlActuator) {
                         return (
                           <>
                             <button
@@ -5172,7 +5242,7 @@ export function DeviceControlPage({ onNavigate }) {
                               disabled={!isFormValid}
                               className={`flex-[1.5] py-4 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-bieon-eco text-white shadow-xl shadow-bieon-eco/20 hover:scale-[1.02] active:scale-[0.98]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                             >
-                              Lanjut ke Mode Otomatis
+                              Lanjut ke Metode Otomatis
                             </button>
                           </>
                         );
@@ -5183,7 +5253,7 @@ export function DeviceControlPage({ onNavigate }) {
                             disabled={!isFormValid}
                             className={`flex-1 py-4 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-bieon-eco text-white shadow-xl shadow-bieon-eco/20 hover:scale-[1.02] active:scale-[0.98]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                           >
-                            {selectedCategory === "sensor" ? "Lanjut ke Parameter" : "Lanjut ke Mode Otomatis"}
+                            Lanjut ke Parameter
                           </button>
                         );
                       }
@@ -5198,8 +5268,8 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-6 mt-8 sm:mt-12 mb-20">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">{selectedCategory === "sensor" ? "Konfigurasi Parameter" : "Pilih Metode Pengaturan"}</h2>
-                      <p className="text-sm text-gray-600">{selectedCategory === "sensor" ? "Tentukan batas/nilai referensi untuk sensor ini" : "Parameter lingkungan atau jadwal otomatis"}</p>
+                      <h2 className="text-2xl font-bold text-gray-900">{!isControlActuator ? "Konfigurasi Parameter" : "Pilih Metode Pengaturan"}</h2>
+                      <p className="text-sm text-gray-600">{!isControlActuator ? "Tentukan batas/nilai referensi untuk sensor ini" : "Parameter aspek sensor atau jadwal harian"}</p>
                     </div>
                     <button
                       onClick={() => setStep("add-device-form")}
@@ -5208,7 +5278,7 @@ export function DeviceControlPage({ onNavigate }) {
                       <X className="w-6 h-6 text-gray-500" />
                     </button>
                   </div>
-                  {selectedCategory !== "sensor" && (
+                  {isControlActuator && (
                     <>
                       {(selectedProduct?.aspect === 'remote' || selectedDeviceType.toLowerCase().includes('remote')) && !activeSensorAspect ? (
                         <div className="space-y-10 mb-8">
@@ -5256,8 +5326,8 @@ export function DeviceControlPage({ onNavigate }) {
                                   >
                                     <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                                     <div className="text-center sm:text-left">
-                                      <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Parameter Lingkungan</h3>
-                                      <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Kondisi Lingkungan</p>
+                                      <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.environment', 'Parameter Aspek Sensor')}</h3>
+                                      <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.environment_setup_desc', 'Pengaturan berdasarkan parameter aspek-aspek sensor')}</p>
                                     </div>
                                   </button>
 
@@ -5270,8 +5340,8 @@ export function DeviceControlPage({ onNavigate }) {
                                   >
                                     <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                                     <div className="text-center sm:text-left">
-                                      <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">Jadwal Otomatis</h3>
-                                      <p className="text-xs text-gray-500 hidden sm:block">Pengaturan Berdasarkan Waktu</p>
+                                      <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.schedule', 'Jadwal Harian')}</h3>
+                                      <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.schedule_setup_desc', 'Pengaturan berdasarkan waktu/jadwal harian')}</p>
                                     </div>
                                   </button>
                                 </div>
@@ -5347,8 +5417,8 @@ export function DeviceControlPage({ onNavigate }) {
                           >
                             <Settings className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                             <div className="text-center sm:text-left">
-                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.environment', 'Parameter Lingkungan')}</h3>
-                              <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.environment_setup_desc', 'Pengaturan Berdasarkan Kondisi Lingkungan')}</p>
+                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.environment', 'Parameter Aspek Sensor')}</h3>
+                              <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.environment_setup_desc', 'Pengaturan berdasarkan parameter aspek-aspek sensor')}</p>
                             </div>
                           </button>
                           <button
@@ -5357,8 +5427,8 @@ export function DeviceControlPage({ onNavigate }) {
                           >
                             <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-bieon-eco hidden sm:block" />
                             <div className="text-center sm:text-left">
-                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.schedule', 'Jadwal Otomatis')}</h3>
-                              <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.schedule_setup_desc', 'Pengaturan Berdasarkan Waktu')}</p>
+                              <h3 className=" text-gray-900 text-sm sm:text-base mb-0.5">{t('kendali.aspects.schedule', 'Jadwal Harian')}</h3>
+                              <p className="text-xs text-gray-500 hidden sm:block">{t('kendali.schedule_setup_desc', 'Pengaturan berdasarkan waktu/jadwal harian')}</p>
                             </div>
                           </button>
                         </div>
@@ -5423,7 +5493,7 @@ export function DeviceControlPage({ onNavigate }) {
                             </div>
                           ) : (
                             <div className="space-y-6">
-                              {selectedCategory !== "sensor" && (
+                              {isControlActuator && (
                                 <button
                                   onClick={() => setActiveSensorAspect(null)}
                                   className="flex items-center gap-2 text-bieon-eco  hover:text-bieon-eco/90 transition-colors group mb-2"

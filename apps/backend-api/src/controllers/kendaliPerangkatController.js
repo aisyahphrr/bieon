@@ -252,21 +252,29 @@ exports.configureDevice = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk mengonfigurasi perangkat ini.' });
         }
 
+        // Bangun objek update secara kondisional
+        // scheduleSettings HANYA diupdate jika nilainya dikirim secara eksplisit (bukan null)
+        // Ini mencegah jadwal terhapus saat menyimpan perubahan lain (nama, lokasi, dll)
+        const updateFields = {
+            name,
+            location,
+            notes,
+            thresholds: sensorParams || thresholds,
+            controlMethod: controlMode || controlMethod,
+            environmentAspect,
+            controlledDevice,
+            remoteState,
+            status: 'Active',
+            lastActivity: new Date()
+        };
+
+        if (scheduleSettings !== null && scheduleSettings !== undefined) {
+            updateFields.scheduleSettings = scheduleSettings;
+        }
+
         const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(
             id,
-            { 
-                name, 
-                location, 
-                notes,
-                thresholds: sensorParams || thresholds, 
-                controlMethod: controlMode || controlMethod, 
-                environmentAspect,
-                scheduleSettings,
-                controlledDevice,
-                remoteState,
-                status: 'Active',
-                lastActivity: new Date()
-            },
+            updateFields,
             { new: true, returnDocument: 'after', runValidators: true }
         );
 

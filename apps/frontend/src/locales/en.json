@@ -2005,12 +2005,14 @@
     "save_success": "Device successfully saved!",
     "delete_success": "Device successfully deleted!",
     "delete_confirm": "Are you sure you want to delete this device?",
+    "environment_setup_desc": "Configuration based on sensor aspect parameters",
+    "schedule_setup_desc": "Configuration based on daily schedule",
     "aspects": {
       "comfort": "Comfort",
       "security": "Security",
       "water_quality": "Water Quality",
-      "environment": "Environmental Parameters",
-      "schedule": "Automatic Schedule"
+      "environment": "Sensor Aspect Parameters",
+      "schedule": "Daily Schedule"
     },
     "params": {
       "temperature": "Temperature",
