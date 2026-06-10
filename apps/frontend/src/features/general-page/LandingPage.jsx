@@ -21,7 +21,8 @@ import {
   Boxes,
   Bell,
   Cloud,
-  Rocket
+  Rocket,
+  ChevronDown
 } from 'lucide-react';
 
 const StatCard = ({ icon: Icon, target, label, suffix = "+", colorClass = "text-emerald-500" }) => {
@@ -132,6 +133,31 @@ const Logo = ({ className = "" }) => (
 
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+
+const FAQItem = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-6 py-4 flex items-center justify-between text-left focus:outline-none"
+      >
+        <span className="font-bold text-slate-800 pr-4">{question}</span>
+        <ChevronDown 
+          className={`shrink-0 text-[#009b7c] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+          size={20} 
+        />
+      </button>
+      <div 
+        className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+      >
+        <div className="px-6 pb-4 text-slate-500 font-medium leading-relaxed">
+          {answer}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const LandingPage = () => {
   const { t, i18n } = useTranslation();
@@ -672,6 +698,29 @@ const LandingPage = () => {
               </div>
             </Reveal>
 
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-20 bg-white border-t border-slate-100 relative overflow-hidden">
+          <div className="w-full max-w-[800px] mx-auto px-6 md:px-12 relative z-10">
+            <Reveal className="text-center mb-10">
+              <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+                {t('landing.faq.title')}
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
+                {t('landing.faq.heading')}
+              </h2>
+            </Reveal>
+
+            <Reveal delay="0.1s" className="flex flex-col gap-4">
+              {Array.isArray(t('landing.faq.items', { returnObjects: true })) 
+                ? t('landing.faq.items', { returnObjects: true }).map((item, index) => (
+                    <FAQItem key={index} question={item.q} answer={item.a} />
+                  ))
+                : null
+              }
+            </Reveal>
           </div>
         </section>
 

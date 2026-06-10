@@ -2405,6 +2405,32 @@
       "complaint": "Pusat Pengaduan",
       "contact_info": "Informasi Kontak",
       "copyright": "© 2026 BIEON - Smart Green Living Monitoring System. Hak Cipta Dilindungi Undang-Undang."
+    },
+    "faq": {
+      "title": "FAQ",
+      "heading": "Pertanyaan yang Sering Diajukan",
+      "items": [
+        {
+          "q": "Apa itu BIEON EcoSense?",
+          "a": "BIEON adalah sistem pemantauan pintar berbasis IoT yang membantu Anda memonitor penggunaan energi (listrik), air, kualitas lingkungan, dan keamanan bangunan secara real-time melalui satu dashboard."
+        },
+        {
+          "q": "Siapa saja yang cocok menggunakan BIEON?",
+          "a": "Sistem kami dirancang fleksibel, mulai dari pemakaian rumah tangga (Home Owner), bisnis komersial (gedung/kantor), hingga skala industri dan pemerintahan."
+        },
+        {
+          "q": "Apakah instalasinya merepotkan?",
+          "a": "Tidak. Proses instalasi dilakukan sepenuhnya oleh tim teknisi profesional kami. Anda hanya perlu menjadwalkan survei, dan kami yang akan menangani sisanya hingga dashboard siap digunakan."
+        },
+        {
+          "q": "Bagaimana dengan keamanan data saya?",
+          "a": "Sangat aman. Seluruh data yang dikirim dari sensor ke cloud telah dienkripsi dengan standar keamanan tinggi. Kami tidak membagikan data Anda kepada pihak ketiga."
+        },
+        {
+          "q": "Bagaimana jika sensor mengalami masalah?",
+          "a": "BIEON memiliki fitur Pengaduan Klien / Smart Alert. Jika ada sensor yang offline atau bermasalah, Anda bisa langsung melaporkannya via sistem, dan teknisi kami akan segera melakukan perbaikan."
+        }
+      ]
     }
   },
   "alerts": {

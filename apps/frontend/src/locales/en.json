@@ -2405,6 +2405,32 @@
       "complaint": "Complaint Center",
       "contact_info": "Contact Info",
       "copyright": "© 2026 BIEON - Smart Green Living Monitoring System. All rights reserved."
+    },
+    "faq": {
+      "title": "FAQ",
+      "heading": "Frequently Asked Questions",
+      "items": [
+        {
+          "q": "What is BIEON EcoSense?",
+          "a": "BIEON is an IoT-based smart monitoring system that helps you monitor energy (electricity) usage, water quality, environmental conditions, and building security in real-time through a single dashboard."
+        },
+        {
+          "q": "Who is suitable for using BIEON?",
+          "a": "Our system is designed flexibly, from household use (Home Owner), commercial businesses (buildings/offices), to industrial and government scales."
+        },
+        {
+          "q": "Is the installation complicated?",
+          "a": "No. The installation process is handled entirely by our professional technician team. You just need to schedule a survey, and we will handle the rest until the dashboard is ready to use."
+        },
+        {
+          "q": "How about my data security?",
+          "a": "Very secure. All data sent from sensors to the cloud is encrypted with high security standards. We do not share your data with third parties."
+        },
+        {
+          "q": "What if the sensor has a problem?",
+          "a": "BIEON has a Client Complaint / Smart Alert feature. If any sensor is offline or problematic, you can report it directly via the system, and our technician will fix it immediately."
+        }
+      ]
     }
   },
   "alerts": {
