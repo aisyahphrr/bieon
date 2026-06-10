@@ -27,6 +27,7 @@ import { SuperAdminLayout } from './SuperAdminLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
+import { localizeTopic } from '../../utils/complaintHelpers';
 
 export default function AdminHistory({ onNavigate }) {
     const { t, i18n } = useTranslation();
@@ -215,10 +216,11 @@ export default function AdminHistory({ onNavigate }) {
 
     const formatDateTime = (dateStr) => {
         const date = new Date(dateStr);
-        return date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
+        const formatted = date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
             day: '2-digit', month: 'short', year: 'numeric',
             hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
+        return i18n.language === 'id' ? formatted.replace(/\./g, ':') : formatted;
     };
 
     const formatDateDisplay = (isoDate) => {
@@ -404,10 +406,20 @@ export default function AdminHistory({ onNavigate }) {
         if (processedData.length === 0) return alert(t('history.export.alert_no_data'));
         const doc = new jsPDF('l', 'mm', 'a4');
         doc.setFontSize(20); doc.setTextColor(5, 155, 39);
-        doc.text(t('history.export.pdf_header', { tab: activeTab }), 15, 20);
+        const translatedTabName = tabs.find(tb => tb.id === activeTab)?.full || activeTab;
+        doc.text(t('history.export.pdf_header', { tab: translatedTabName }), 15, 20);
         const { headers, body } = generateTableConfig(activeTab, processedData);
-        autoTable(doc, { startY: 38, head: headers, body: body, theme: 'striped', headStyles: { fillColor: [5, 155, 39] } });
-        doc.save(`${t('history.export.filename_prefix', 'Laporan_Riwayat_BIEON')}_${activeTab}.pdf`);
+        autoTable(doc, { 
+            startY: 38, 
+            head: headers, 
+            body: body, 
+            theme: 'striped', 
+            headStyles: { fillColor: [5, 155, 39] },
+            styles: { overflow: 'linebreak' },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid'
+        });
+        doc.save(`${t('history.export.filename_prefix', 'Laporan_Riwayat_BIEON')}_${translatedTabName}.pdf`);
     };
 
     const handleExportAllPDF = async () => {
@@ -494,7 +506,10 @@ export default function AdminHistory({ onNavigate }) {
                             theme: 'striped',
                             headStyles: { fillColor: [5, 155, 39], fontSize: 10, halign: 'center' },
                             bodyStyles: { fontSize: 9, halign: 'center' },
-                            margin: { top: 25, bottom: 20 }
+                            margin: { top: 25, bottom: 20 },
+                            styles: { overflow: 'linebreak' },
+                            pageBreak: 'auto',
+                            rowPageBreak: 'avoid'
                         });
                     }
                 } catch (tabErr) {
@@ -538,7 +553,7 @@ export default function AdminHistory({ onNavigate }) {
         }
         else if (tabId === 'Pengaduan') {
             headers = [[t('history.columns.time'), t('history.columns.ticket_id'), t('history.columns.customer'), t('history.columns.category'), t('history.columns.topic'), t('history.columns.technician'), t('history.columns.rating'), t('history.columns.status')]];
-            body = data.map(e => [formatDateTime(e.rawTime), e.id, e.customer, t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), e.topic, e.technician, e.rating, localizeStatus(e.status)]);
+            body = data.map(e => [formatDateTime(e.rawTime), e.id, e.customer, t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_') || 'unknown'}`, e.rawCategory), localizeTopic(e.topic, t), e.technician === 'Menunggu Teknisi' ? t('complaint.waiting_technician', 'Menunggu Teknisi') : e.technician, e.rating, localizeStatus(e.status)]);
         }
         return { headers, body };
     };

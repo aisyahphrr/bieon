@@ -1020,7 +1020,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                                 <button
                                                     onClick={() => handleViewDetail(tech)}
                                                     className="p-2 bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 rounded-lg transition-all"
-                                                    title="Lihat Detail"
+                                                    title={t('tooltip.view_detail')}
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </button>
@@ -1958,7 +1958,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             disabled={true}
                                             type="text"
                                             className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
-                                            placeholder="Budi Santoso"
+                                            placeholder={t('admin_technician.form_modal.ph_name')}
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -1969,7 +1969,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             disabled={true}
                                             type="email"
                                             className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
-                                            placeholder="budi.santoso@bieon.id"
+                                            placeholder={t('admin_technician.form_modal.ph_email')}
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -1980,7 +1980,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             disabled={true}
                                             type="text"
                                             className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
-                                            placeholder="+62 812-3456-7890"
+                                            placeholder={t('admin_technician.form_modal.ph_phone')}
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -2001,7 +2001,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             disabled={true}
                                             rows="2"
                                             className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed outline-none"
-                                            placeholder="Jl. Sudirman No. 45, Jakarta Pusat"
+                                            placeholder={t('admin_technician.form_modal.ph_address')}
                                         ></textarea>
                                     </div>
                                 </div>
@@ -2024,7 +2024,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                                             onChange={handleInputChange}
                                             type="text"
                                             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-bieon-eco transition-all"
-                                            placeholder="Senior Technician"
+                                            placeholder={t('admin_technician.form_modal.ph_position')}
                                         />
                                     </div>
                                     <div className="space-y-2">

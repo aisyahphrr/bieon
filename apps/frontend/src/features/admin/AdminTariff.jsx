@@ -462,8 +462,8 @@ export default function AdminTariff({ onNavigate }) {
         ];
 
         const tableRows = sortedHistory.map(item => [
-            item.category,
-            `Rp ${item.tariff.toLocaleString()}`,
+            translatePlnCategory(item.category),
+            `Rp ${item.tariff.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`,
             item.date,
             item.author,
             item.note
@@ -476,10 +476,14 @@ export default function AdminTariff({ onNavigate }) {
             theme: 'striped',
             headStyles: { fillColor: [5, 155, 39], fontSize: 10, halign: 'center' },
             bodyStyles: { fontSize: 9, halign: 'center' },
+            styles: { overflow: 'linebreak' },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid',
             margin: { top: 35 }
         });
 
-        doc.save(`BIEON_Tariff_History_${new Date().getTime()}.pdf`);
+        const fileName = i18n.language === 'en' ? `BIEON_Tariff_History_${new Date().getTime()}.pdf` : `BIEON_Riwayat_Tarif_${new Date().getTime()}.pdf`;
+        doc.save(fileName);
     };
 
     const totalPages = Math.max(1, Math.ceil(sortedHistory.length / rowsPerPage));

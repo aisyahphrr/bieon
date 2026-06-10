@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Html5Qrcode } from "html5-qrcode";
 import { io } from "socket.io-client";
 import { 
@@ -38,6 +39,7 @@ const LOCAL_DEVICE_IDENTIFIER = {
 };
 
 const DeviceScanner = ({ onScanSuccess, onCancel }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState("idle"); // idle, scanning, detected, pairing, success
   const [detectedDevice, setDetectedDevice] = useState(null);
   const [manualInput, setManualInput] = useState("");
@@ -188,7 +190,7 @@ const DeviceScanner = ({ onScanSuccess, onCancel }) => {
                 <Keyboard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Atau masukkan kode manual"
+                  placeholder={t('placeholder.enter_manual_code')}
                   value={manualInput}
                   onChange={(e) => setManualInput(e.target.value)}
                   className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-eco outline-none font-bold"

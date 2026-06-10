@@ -30,7 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
-import { formatStatusDisplay, getActionButtons } from '../../utils/complaintHelpers';
+import { formatStatusDisplay, getActionButtons, localizeTopic } from '../../utils/complaintHelpers';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -161,7 +161,7 @@ export function HomeownerComplaint({ onNavigate }) {
                         ...item,
                         originalId: safeId, // Save DB ID to hit PUT endpoints
                         id: safeId ? `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}` : 'TCK-000000',
-                        description: item.desc || 'No Description',
+                        description: item.desc || t('complaint.no_description', 'Tidak ada deskripsi.'),
                         createdAt: item.createdAt,
                         date: new Date(item.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                         technician: item.technician ? item.technician.fullName : 'Menunggu Teknisi',
@@ -199,7 +199,7 @@ export function HomeownerComplaint({ onNavigate }) {
                     ...item,
                     originalId: safeId, // Save DB ID to hit PUT endpoints
                     id: safeId ? `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}` : 'TCK-000000',
-                    description: item.desc || 'No Description',
+                    description: item.desc || t('complaint.no_description', 'Tidak ada deskripsi.'),
                     createdAt: item.createdAt,
                     date: new Date(item.createdAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':'),
                     technician: item.technician ? item.technician.fullName : 'Menunggu Teknisi',
@@ -348,7 +348,7 @@ export function HomeownerComplaint({ onNavigate }) {
             const ticketData = [
                 ticket.id,
                 ticket.date,
-                ticket.topic,
+                localizeTopic(ticket.topic, t),
                 ticket.device,
                 ticket.technician === 'Menunggu Teknisi' ? t('complaint.waiting_technician', 'Menunggu Teknisi') : ticket.technician,
                 formatStatusDisplay(ticket.status, 'homeowner').toUpperCase()
@@ -365,7 +365,9 @@ export function HomeownerComplaint({ onNavigate }) {
             headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica' },
             bodyStyles: { font: 'helvetica' },
             footStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica' },
-            styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
+            styles: { fontSize: 8, cellPadding: 2, font: 'helvetica', overflow: 'linebreak' },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid',
             alternateRowStyles: { fillColor: [245, 245, 245] }
         });
 
@@ -748,7 +750,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                                 {ticket.id}
                                             </td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.date}</td>
-                                            <td className="py-3 md:py-4 pr-2 md:pr-4 truncate max-w-[200px]" title={ticket.topic}>{ticket.topic}</td>
+                                            <td className="py-3 md:py-4 pr-2 md:pr-4 truncate max-w-[200px]" title={localizeTopic(ticket.topic, t)}>{localizeTopic(ticket.topic, t)}</td>
                                             <td className="py-3 md:py-4 pr-2 md:pr-4">{ticket.device}</td>
                                             <td className={`py-3 md:py-4 pr-2 md:pr-4 ${ticket.technician === 'Menunggu Teknisi' ? 'italic text-gray-500' : 'font-medium text-gray-900'}`}>
                                                 {ticket.technician === 'Menunggu Teknisi' ? t('complaint.waiting_technician', 'Menunggu Teknisi') : ticket.technician}
@@ -782,7 +784,7 @@ export function HomeownerComplaint({ onNavigate }) {
                         {isLoading ? (
                             <div className="py-12 flex flex-col items-center justify-center text-gray-500">
                                 <div className="w-6 h-6 border-2 border-eco border-t-transparent rounded-full animate-spin mb-2"></div>
-                                <span className="text-sm">Memuat data pengaduan...</span>
+                                <span className="text-sm">{t('history.loading_data', 'Memuat data pengaduan...')}</span>
                             </div>
                         ) : currentComplaints.length > 0 ? (
                             currentComplaints.map(ticket => (
@@ -793,7 +795,7 @@ export function HomeownerComplaint({ onNavigate }) {
                                         </span>
                                         <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">{ticket.date}</span>
                                     </div>
-                                    <h3 className="font-bold text-gray-900 text-sm mb-1">{ticket.topic}</h3>
+                                    <h3 className="font-bold text-gray-900 text-sm mb-1">{localizeTopic(ticket.topic, t)}</h3>
                                     <div className="text-xs text-gray-500 mb-3 flex items-start gap-1">
                                         <Cpu className="w-3.5 h-3.5 mt-0.5 text-gray-400" />
                                         <span>{ticket.device}</span>

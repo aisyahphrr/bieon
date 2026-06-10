@@ -29,7 +29,7 @@ import autoTable from 'jspdf-autotable';
 import { ComplaintDetailModal } from '../complaints/ComplaintDetailModal';
 import { TicketStatusBadge } from '../../shared/TicketStatusBadge';
 import { useSLA } from '../../hooks/useSLA';
-import { formatStatusDisplay, getActionButtons } from '../../utils/complaintHelpers';
+import { formatStatusDisplay, getActionButtons, localizeTopic } from '../../utils/complaintHelpers';
 
 const TechnicianComplaintCard = ({ item, handleStartProcess, setSelectedTicket }) => {
     const { t } = useTranslation();
@@ -215,7 +215,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
             const ticketData = [
                 ticket.id,
                 ticket.date,
-                ticket.topic,
+                localizeTopic(ticket.topic, t),
                 ticket.customer,
                 ticket.location,
                 formatStatusDisplay(ticket.status, 'technician').toUpperCase()

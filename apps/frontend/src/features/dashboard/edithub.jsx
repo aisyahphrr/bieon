@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ArrowLeft,
     Save,
@@ -29,6 +30,7 @@ const CATEGORY_LABELS = {
 };
 
 export function EditHubNodePage({ device, bieonSystem, onSave, onCancel, isTechnicianMode = false }) {
+    const { t } = useTranslation();
     // ==================== STATE MANAGEMENT ====================
     const [formData, setFormData] = useState({
         name: device.name,
@@ -82,11 +84,11 @@ export function EditHubNodePage({ device, bieonSystem, onSave, onCancel, isTechn
 
     const handleSave = () => {
         if (!formData.name.trim()) {
-            alert('Nama device tidak boleh kosong!');
+            alert(t('alerts.device_name_required'));
             return;
         }
         if (!formData.deviceType) {
-            alert('Tipe device harus dipilih!');
+            alert(t('alerts.device_type_required'));
             return;
         }
 

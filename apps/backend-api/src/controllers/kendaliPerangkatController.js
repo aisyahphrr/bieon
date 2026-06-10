@@ -680,7 +680,8 @@ exports.sendRemoteCommand = async (req, res) => {
             sourceRemoteId,
             functionKey,
             functionLabel,
-            label
+            label,
+            protocol
         } = req.body;
 
         const device = await KendaliPerangkat.findById(id);
@@ -710,6 +711,22 @@ exports.sendRemoteCommand = async (req, res) => {
         // Determine raw hex and bit count for firmware compatibility
         let raw_hex = rawBitHex || '';
         let bits = 0;
+        let inferredProtocol = protocol || req.body.protocol || undefined;
+
+        // Try to infer protocol and bits from rawSignature (format: protocol|bits|hex)
+        if (rawSignature && typeof rawSignature === 'string') {
+            const sigParts = rawSignature.split('|');
+            if (sigParts.length >= 3) {
+                const sigProtocol = sigParts[0];
+                const sigBits = Number(sigParts[1]);
+                if (!inferredProtocol && sigProtocol && sigProtocol !== 'unknown') {
+                    inferredProtocol = sigProtocol;
+                }
+                if (!bits && sigBits && !isNaN(sigBits)) {
+                    bits = sigBits;
+                }
+            }
+        }
 
         // Helper: attempt to set raw_hex/bits from a parsed object
         const tryExtractFromObject = (obj) => {
@@ -724,9 +741,9 @@ exports.sendRemoteCommand = async (req, res) => {
             if (obj.bits && Number(obj.bits)) bits = bits || Number(obj.bits);
             if (obj.bit_length && Number(obj.bit_length)) bits = bits || Number(obj.bit_length);
             if (obj.bit_count && Number(obj.bit_count)) bits = bits || Number(obj.bit_count);
+            if (obj.protocol) inferredProtocol = inferredProtocol || String(obj.protocol);
             return !!(raw_hex || bits);
         };
-
         // 1) If rawBitText is JSON-encoded, parse and extract
         if (rawBitText && typeof rawBitText === 'string') {
             let parsed = null;
@@ -748,12 +765,26 @@ exports.sendRemoteCommand = async (req, res) => {
                             const v = kv[1].trim();
                             if ((k === 'raw' || k === 'raw_hex') && v) raw_hex = raw_hex || v;
                             if ((k === 'bits' || k === 'bit_length' || k === 'bit_count') && Number(v)) bits = bits || Number(v);
+                            if (k === 'protocol' && v) inferredProtocol = inferredProtocol || v;
                         }
                     }
                 }
+            } else {
+                // FALLBACK REGEX: if JSON parsing failed due to historical truncation in the database
+                const hexMatch = rawBitText.match(/raw(?:_hex|_value)?["']?\s*[:=]\s*["']?(0x[0-9a-fA-F]+)/i);
+                if (hexMatch) {
+                    raw_hex = raw_hex || hexMatch[1];
+                }
+                const bitsMatch = rawBitText.match(/(?:bits|bit_length|bit_count)["']?\s*[:=]\s*["']?(\d+)/i);
+                if (bitsMatch) {
+                    bits = bits || Number(bitsMatch[1]);
+                }
+                const protoMatch = rawBitText.match(/protocol["']?\s*[:=]\s*["']?(\d+)/i);
+                if (protoMatch) {
+                    inferredProtocol = inferredProtocol || protoMatch[1];
+                }
             }
         }
-
         // 2) If rawBitBinary provided as bit string
         if ((!raw_hex || raw_hex === '') && rawBitBinary) {
             const bin = String(rawBitBinary || '').replace(/[^01]/g, '');
@@ -792,7 +823,7 @@ exports.sendRemoteCommand = async (req, res) => {
         }
 
         const payload = {
-            command: 'remote_command',
+            command: req.body.command || 'transmit', // firmware expects transmit/send/run
             action: functionKey || 'remote',
             rawBitText: rawBitText || undefined,
             rawBitHex: rawBitHex || undefined,
@@ -800,7 +831,8 @@ exports.sendRemoteCommand = async (req, res) => {
             raw_signature: rawSignature || undefined,
             raw_hex: raw_hex || undefined,
             raw_value: raw_hex || undefined,
-            bits: bits || undefined,
+            bits: bits ? String(bits) : undefined, // force string format for raw JSON parser on firmware
+            protocol: inferredProtocol ? String(inferredProtocol) : undefined, // force string format
             sourceRemoteIeee: sourceRemoteIeee || undefined,
             sourceRemoteId: sourceRemoteId || undefined,
             // Include both target_ieee and ieee to match firmware expectations

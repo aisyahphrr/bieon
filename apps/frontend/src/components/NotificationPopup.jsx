@@ -497,7 +497,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
         <button 
           onClick={onClose}
           className="w-12 h-1.5 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors"
-          title="Tutup"
+          title={t('notification.ui.close')}
         />
       </div>
     </div>

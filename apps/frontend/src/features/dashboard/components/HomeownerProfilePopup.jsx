@@ -94,11 +94,11 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
         setView('main');
         window.location.reload();
       } else {
-        alert('Gagal menyimpan pembaruan profil');
+        alert(t('alerts.profile_update_failed'));
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan saat menyimpan profil');
+      alert(t('alerts.profile_update_error'));
     }
   };
 

@@ -21,7 +21,10 @@ import {
   Boxes,
   Bell,
   Cloud,
-  Rocket
+  Rocket,
+  ChevronDown,
+  Search,
+  X
 } from 'lucide-react';
 
 const StatCard = ({ icon: Icon, target, label, suffix = "+", colorClass = "text-emerald-500" }) => {
@@ -131,10 +134,50 @@ const Logo = ({ className = "" }) => (
 );
 
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
+const FAQItem = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div 
+      className={`group bg-white border border-slate-200 rounded-[2rem] overflow-hidden transition-all duration-500 ease-out flex flex-col ${isOpen ? 'shadow-[0_8px_30px_rgb(0,0,0,0.08)] border-[#009b7c]/30 -translate-y-1' : 'shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1'}`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-6 lg:p-8 flex items-start justify-between text-left focus:outline-none gap-4"
+      >
+        <span className={`font-bold text-lg md:text-xl transition-colors duration-300 ${isOpen ? 'text-[#009b7c]' : 'text-slate-800 group-hover:text-[#009b7c]'}`}>
+          {question}
+        </span>
+        <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? 'bg-[#009b7c] text-white rotate-180' : 'bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-[#009b7c]'}`}>
+          <ChevronDown size={20} className="transition-transform duration-500" />
+        </div>
+      </button>
+      <div 
+        className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'}`}
+      >
+        <div className="px-6 lg:px-8 text-slate-500 font-medium leading-relaxed text-base">
+          {answer}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const LandingPage = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
+  const [faqSearchQuery, setFaqSearchQuery] = useState('');
+
+  const currentLang = i18n.language?.startsWith('id') ? 'id' : 'en';
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('bieon_language', lang);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -160,20 +203,30 @@ const LandingPage = () => {
 
         <div className="flex items-center gap-8 lg:gap-12">
           <nav className="hidden md:flex gap-8 items-center list-none font-bold text-[13px] tracking-wide text-slate-600">
-            <a href="#home" className="hover:text-emerald-600 transition-colors">Home</a>
-            <a href="#features" className="hover:text-emerald-600 transition-colors">Features</a>
-            <a href="#about" className="hover:text-emerald-600 transition-colors">About</a>
-            <a href="#contact" className="hover:text-emerald-600 transition-colors">Contact</a>
+            <a href="#home" className="hover:text-emerald-600 transition-colors">{t('landing.nav.home')}</a>
+            <a href="#features" className="hover:text-emerald-600 transition-colors">{t('landing.nav.features')}</a>
+            <a href="#about" className="hover:text-emerald-600 transition-colors">{t('landing.nav.about')}</a>
+            <a href="#contact" className="hover:text-emerald-600 transition-colors">{t('landing.nav.contact')}</a>
           </nav>
 
           <div className="flex items-center gap-4">
-            <div className="hidden lg:flex items-center gap-2 text-sm font-bold text-slate-600 border border-slate-200 rounded-lg px-3 py-1 bg-white/50">
-              <span className="text-[#009b7c]">ID</span>
+            <div className="hidden lg:flex items-center gap-2 text-sm font-bold text-slate-600 border border-slate-200 rounded-lg px-3 py-1 bg-white/50 select-none">
+              <span
+                onClick={() => handleLanguageChange('id')}
+                className={`cursor-pointer transition-colors ${currentLang === 'id' ? 'text-[#009b7c]' : 'hover:text-[#009b7c]'}`}
+              >
+                ID
+              </span>
               <span className="text-slate-300">|</span>
-              <span className="hover:text-[#009b7c] cursor-pointer transition-colors">EN</span>
+              <span
+                onClick={() => handleLanguageChange('en')}
+                className={`cursor-pointer transition-colors ${currentLang === 'en' ? 'text-[#009b7c]' : 'hover:text-[#009b7c]'}`}
+              >
+                EN
+              </span>
             </div>
             <button onClick={() => navigate('/login')} className="group relative bg-[#009b7c] hover:bg-emerald-600 text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 border border-white/10 overflow-hidden flex items-center gap-2">
-              <span className="relative z-10">Log in</span>
+              <span className="relative z-10">{t('landing.nav.login')}</span>
               <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
               <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
             </button>
@@ -192,29 +245,27 @@ const LandingPage = () => {
                 <img src="/ecosense.png" alt="EcoSense" className="h-16 lg:h-24 w-auto object-contain" />
               </div>
               <h1 className="text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-[1.2]">
-                Smart Living <br className="hidden lg:block" />
-                Monitoring System
+                {t('landing.hero.title')}
               </h1>
             </div>
 
             <h2 className="text-xl lg:text-2xl font-bold text-slate-800 mb-4 mt-8 tracking-wide">
-              Monitor Today, Sustain Tomorrow.
+              {t('landing.hero.subtitle')}
             </h2>
 
             <div className="text-base lg:text-lg text-slate-500 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
-              <p>Real-time monitoring untuk energi, air, udara, dan lingkungan.</p>
-              <p>Data akurat, keputusan lebih cepat, hidup lebih berkelanjutan.</p>
+              <p>{t('landing.hero.desc')}</p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
               <button onClick={() => navigate('/signup')} className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-full font-bold transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2">
-                Mulai Sekarang <ArrowRight className="w-4 h-4" />
+                {t('landing.hero.btn_start')} <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => window.open('https://wa.me/6282320007800', '_blank')}
                 className="w-full sm:w-auto bg-white/80 hover:bg-white backdrop-blur-md border border-slate-200 text-slate-700 px-8 py-3.5 rounded-full font-bold transition-all duration-300 hover:border-emerald-200 hover:shadow-lg shadow-sm flex items-center justify-center gap-2 group"
               >
-                <PlayCircle className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform" /> Lihat Demo
+                <PlayCircle className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform" /> {t('landing.hero.btn_demo')}
               </button>
             </div>
 
@@ -229,7 +280,7 @@ const LandingPage = () => {
                 </div>
               </div>
               <div className="text-sm font-medium text-slate-500">
-                Dipercaya oleh <span className="font-bold text-slate-800">2,000+</span> Homeowners.
+                {t('landing.hero.trusted')}
               </div>
             </div>
           </Reveal>
@@ -266,11 +317,10 @@ const LandingPage = () => {
                 {/* Title Section moved inside Left Content */}
                 <Reveal className="w-full text-center lg:text-left mb-10">
                   <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
-                    PROBLEM
+                    {t('landing.problem.title')}
                   </div>
                   <h2 className="text-3xl lg:text-4xl font-black text-slate-900 leading-tight tracking-tight max-w-2xl mx-auto lg:mx-0">
-                    Masih Mengandalkan <br className="hidden sm:inline" />
-                    Data Manual?
+                    {t('landing.problem.heading')}
                   </h2>
                 </Reveal>
 
@@ -279,44 +329,44 @@ const LandingPage = () => {
                   {/* 1. Tidak Real Time */}
                   <Reveal delay="0.1s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
                     <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/1tidakrealtime.png" alt="Tidak Real Time" className="w-full h-full object-cover rounded-xl transition-all" />
+                      <img src="/1tidakrealtime.png" alt={t('landing.problem.item1.title')} className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
                     <div>
-                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Tidak Real Time</h4>
-                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Data seringkali terlambat dan tidak akurat.</p>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">{t('landing.problem.item1.title')}</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">{t('landing.problem.item1.desc')}</p>
                     </div>
                   </Reveal>
 
                   {/* 2. Sulit Monitoring */}
                   <Reveal delay="0.2s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
                     <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/2sulitmonitoring.png" alt="Sulit Monitoring" className="w-full h-full object-cover rounded-xl transition-all" />
+                      <img src="/2sulitmonitoring.png" alt={t('landing.problem.item2.title')} className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
                     <div>
-                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Sulit Monitoring</h4>
-                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Pemantauan manual memakan waktu.</p>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">{t('landing.problem.item2.title')}</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">{t('landing.problem.item2.desc')}</p>
                     </div>
                   </Reveal>
 
                   {/* 3. Keputusan Lambat */}
                   <Reveal delay="0.3s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
                     <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/3keputusanlambat.png" alt="Keputusan Lambat" className="w-full h-full object-cover rounded-xl transition-all" />
+                      <img src="/3keputusanlambat.png" alt={t('landing.problem.item3.title')} className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
                     <div>
-                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Keputusan Lambat</h4>
-                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Keterlambatan aksi saat kondisi kritis.</p>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">{t('landing.problem.item3.title')}</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">{t('landing.problem.item3.desc')}</p>
                     </div>
                   </Reveal>
 
                   {/* 4. Potensi Pemborosan */}
                   <Reveal delay="0.4s" className="flex flex-col items-center text-center sm:items-start sm:text-left gap-4 p-5 rounded-[1.5rem] bg-white border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
                     <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
-                      <img src="/4potensipemborosan.png" alt="Potensi Pemborosan" className="w-full h-full object-cover rounded-xl transition-all" />
+                      <img src="/4potensipemborosan.png" alt={t('landing.problem.item4.title')} className="w-full h-full object-cover rounded-xl transition-all" />
                     </div>
                     <div>
-                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">Potensi Pemborosan</h4>
-                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">Kerugian biaya karena inefisiensi.</p>
+                      <h4 className="text-base font-extrabold text-slate-800 mb-1.5">{t('landing.problem.item4.title')}</h4>
+                      <p className="text-[14px] text-slate-500 font-medium leading-relaxed">{t('landing.problem.item4.desc')}</p>
                     </div>
                   </Reveal>
                 </Reveal>
@@ -342,41 +392,41 @@ const LandingPage = () => {
         <section className="bg-white py-16 border-b border-slate-100 relative overflow-hidden">
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
-              <p className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">SOLUTION</p>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">ONE PLATFORM. TOTAL MONITORING</h2>
+              <p className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">{t('landing.solution.title')}</p>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">{t('landing.solution.heading')}</h2>
             </Reveal>
 
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
               {/* 1. Energi */}
               <Reveal delay="0.1s" className="flex flex-col items-center group">
                 <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/5ENERGY.png" alt="Energi" className="w-full h-full object-cover rounded-[2rem] transition-all" />
+                  <img src="/5ENERGY.png" alt={t('landing.solution.energy')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Energi</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.energy')}</span>
               </Reveal>
 
               {/* 2. Air */}
               <Reveal delay="0.2s" className="flex flex-col items-center group">
                 <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/6AIR.png" alt="Air" className="w-full h-full object-cover rounded-[2rem] transition-all" />
+                  <img src="/6AIR.png" alt={t('landing.solution.water')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Air</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.water')}</span>
               </Reveal>
 
               {/* 3. Lingkungan */}
               <Reveal delay="0.3s" className="flex flex-col items-center group">
                 <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/7LINGKUNGAN.png" alt="Lingkungan" className="w-full h-full object-cover rounded-[2rem] transition-all" />
+                  <img src="/7LINGKUNGAN.png" alt={t('landing.solution.environment')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Lingkungan</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.environment')}</span>
               </Reveal>
 
               {/* 4. Keamanan */}
               <Reveal delay="0.4s" className="flex flex-col items-center group">
                 <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/8PROTEKSI.png" alt="Keamanan" className="w-full h-full object-cover rounded-[2rem] transition-all" />
+                  <img src="/8PROTEKSI.png" alt={t('landing.solution.security')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">Keamanan</span>
+                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.security')}</span>
               </Reveal>
             </div>
           </div>
@@ -386,10 +436,10 @@ const LandingPage = () => {
         <section id="features" className="py-10 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto">
           <div className="text-center mb-8 max-w-2xl mx-auto">
             <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
-              Platform Features
+              {t('landing.features.title')}
             </div>
             <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 mb-6 drop-shadow-sm">
-              FITUR
+              {t('landing.features.heading')}
             </h2>
           </div>
 
@@ -399,14 +449,14 @@ const LandingPage = () => {
             <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/1REAL TIME MONITORING.png" alt="Real Time Monitoring" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/1REAL TIME MONITORING.png" alt={t('landing.features.item1.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
-                  <Activity size={18} /> Real Time Monitoring
+                  <Activity size={18} /> {t('landing.features.item1.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Pengguna dapat memantau seluruh parameter secara langsung dan real-time untuk pengambilan keputusan yang lebih cepat dan akurat.
+                  {t('landing.features.item1.desc')}
                 </p>
               </div>
             </Reveal>
@@ -415,14 +465,14 @@ const LandingPage = () => {
             <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-amber-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/2ANALYTICS.png" alt="Analytics" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/2ANALYTICS.png" alt={t('landing.features.item2.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-amber-500 mb-4 flex items-center justify-center gap-2">
-                  <BarChart3 size={18} /> Analytics
+                  <BarChart3 size={18} /> {t('landing.features.item2.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Data diolah menjadi insight dan visualisasi yang membantu analisis tren, efisiensi, dan kondisi sistem secara lebih mendalam.
+                  {t('landing.features.item2.desc')}
                 </p>
               </div>
             </Reveal>
@@ -431,14 +481,14 @@ const LandingPage = () => {
             <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-500/20 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/3SMART ALERT.png" alt="Smart Alert" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/3SMART ALERT.png" alt={t('landing.features.item3.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-slate-600 mb-4 flex items-center justify-center gap-2">
-                  <Bell size={18} /> Smart Alert
+                  <Bell size={18} /> {t('landing.features.item3.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Sistem memberikan notifikasi otomatis ketika terjadi kondisi abnormal atau parameter melewati batas tertentu.
+                  {t('landing.features.item3.desc')}
                 </p>
               </div>
             </Reveal>
@@ -447,14 +497,14 @@ const LandingPage = () => {
             <Reveal delay="0.4s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-teal-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/4DASHBOARD.png" alt="Cloud Dashboard" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/4DASHBOARD.png" alt={t('landing.features.item4.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-[#009b7c] mb-4 flex items-center justify-center gap-2">
-                  <Cloud size={18} /> Cloud Dashboard
+                  <Cloud size={18} /> {t('landing.features.item4.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Seluruh data dapat diakses kapan saja dan di mana saja melalui dashboard berbasis cloud yang terintegrasi.
+                  {t('landing.features.item4.desc')}
                 </p>
               </div>
             </Reveal>
@@ -466,10 +516,10 @@ const LandingPage = () => {
         <section id="products" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
           <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
             <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
-              Our Products
+              {t('landing.products.title')}
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
-              Products Line
+              {t('landing.products.heading')}
             </h2>
           </div>
 
@@ -479,14 +529,14 @@ const LandingPage = () => {
             <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/8ECO ENERGY.png" alt="EcoSense Energy" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/8ECO ENERGY.png" alt={t('landing.products.item1.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-blue-700 mb-4 flex items-center justify-center gap-2">
-                  <Zap size={18} /> EcoSense Energy
+                  <Zap size={18} /> {t('landing.products.item1.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Sistem monitoring energi cerdas untuk memantau konsumsi listrik, efisiensi penggunaan energi, dan performa sistem secara real-time.
+                  {t('landing.products.item1.desc')}
                 </p>
               </div>
             </Reveal>
@@ -495,14 +545,14 @@ const LandingPage = () => {
             <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-cyan-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/9ECOWATER.png" alt="EcoSense Water" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/9ECOWATER.png" alt={t('landing.products.item2.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-cyan-600 mb-4 flex items-center justify-center gap-2">
-                  <Droplets size={18} /> EcoSense Water
+                  <Droplets size={18} /> {t('landing.products.item2.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Solusi monitoring kualitas dan penggunaan air untuk membantu menjaga kesehatan, keamanan, efisiensi dan keberlanjutan sumber daya air.
+                  {t('landing.products.item2.desc')}
                 </p>
               </div>
             </Reveal>
@@ -511,14 +561,14 @@ const LandingPage = () => {
             <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/9ECO ENVIRONMENT.png" alt="EcoSense Environment" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/9ECO ENVIRONMENT.png" alt={t('landing.products.item3.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
-                  <ThermometerSun size={18} /> EcoSense Environment
+                  <ThermometerSun size={18} /> {t('landing.products.item3.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Platform monitoring lingkungan yang mengukur berbagai parameter seperti kualitas udara, suhu, kelembaban, dan kondisi lingkungan lainnya secara terintegrasi.
+                  {t('landing.products.item3.desc')}
                 </p>
               </div>
             </Reveal>
@@ -527,14 +577,14 @@ const LandingPage = () => {
             <Reveal delay="0.4s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-900/10 hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
                 <div className="absolute inset-0 bg-slate-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/10ECO SECURITY.png" alt="EcoSense Security" className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/10ECO SECURITY.png" alt={t('landing.products.item4.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-4 pb-6 text-center">
                 <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center justify-center gap-2">
-                  <ShieldCheck size={18} /> EcoSense Security
+                  <ShieldCheck size={18} /> {t('landing.products.item4.title')}
                 </h3>
                 <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  Sistem monitoring dan notifikasi cerdas untuk meningkatkan keamanan area, aset, dan infrastruktur melalui pemantauan real-time dan smart alert system.
+                  {t('landing.products.item4.desc')}
                 </p>
               </div>
             </Reveal>
@@ -542,56 +592,55 @@ const LandingPage = () => {
           </div>
         </section>
 
-
         {/* Customer Kami Section */}
         <section className="bg-[#f8fafc] py-16 border-t border-slate-100 relative overflow-hidden">
           <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
             <Reveal>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">Customer Kami</h2>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">{t('landing.customers.title')}</h2>
             </Reveal>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8 lg:gap-12 items-start mt-8">
               {/* 1. Home Owner */}
               <Reveal delay="0.1s" className="flex flex-col items-center group text-center">
                 <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/13HOME OWNER.png" alt="Home Owner" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/13HOME OWNER.png" alt={t('landing.customers.item1.title')} className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Home Owner</h3>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">{t('landing.customers.item1.title')}</h3>
                 <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
-                  Solusi monitoring cerdas untuk membantu rumah lebih efisien, nyaman, dan berkelanjutan melalui pemantauan energi, air, dan lingkungan secara real-time.
+                  {t('landing.customers.item1.desc')}
                 </p>
               </Reveal>
 
               {/* 2. Business */}
               <Reveal delay="0.2s" className="flex flex-col items-center group text-center">
                 <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/14BUSINESS.png" alt="Business" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/14BUSINESS.png" alt={t('landing.customers.item2.title')} className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Business</h3>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">{t('landing.customers.item2.title')}</h3>
                 <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
-                  Membantu bisnis memantau operasional, efisiensi sumber daya, dan kualitas lingkungan untuk mendukung produktivitas dan pengambilan keputusan berbasis data.
+                  {t('landing.customers.item2.desc')}
                 </p>
               </Reveal>
 
               {/* 3. Industry */}
               <Reveal delay="0.3s" className="flex flex-col items-center group text-center">
                 <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/15INDUSTRY.png" alt="Industry" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/15INDUSTRY.png" alt={t('landing.customers.item3.title')} className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Industry</h3>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">{t('landing.customers.item3.title')}</h3>
                 <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
-                  Sistem monitoring terintegrasi untuk industri dalam meningkatkan efisiensi, kontrol operasional, keamanan, dan sustainability secara lebih optimal.
+                  {t('landing.customers.item3.desc')}
                 </p>
               </Reveal>
 
               {/* 4. Government */}
               <Reveal delay="0.4s" className="flex flex-col items-center group text-center">
                 <div className="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/16GOVERNMENT.png" alt="Government" className="w-full h-full object-cover rounded-2xl transition-all" />
+                  <img src="/16GOVERNMENT.png" alt={t('landing.customers.item4.title')} className="w-full h-full object-cover rounded-2xl transition-all" />
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-800 mb-3">Government</h3>
+                <h3 className="text-lg font-extrabold text-slate-800 mb-3">{t('landing.customers.item4.title')}</h3>
                 <p className="text-[14px] text-slate-500 font-medium leading-relaxed">
-                  Mendukung pemerintah dalam pengelolaan data lingkungan, infrastruktur, dan utilitas publik melalui sistem monitoring cerdas yang terhubung dan real-time.
+                  {t('landing.customers.item4.desc')}
                 </p>
               </Reveal>
             </div>
@@ -603,10 +652,10 @@ const LandingPage = () => {
           <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16">
             <Reveal className="text-center mb-12 max-w-2xl mx-auto">
               <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
-                HOW IT WORKS
+                {t('landing.works.title')}
               </div>
               <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
-                Bagaimana Sistem Ini Bekerja
+                {t('landing.works.heading')}
               </h2>
             </Reveal>
 
@@ -624,10 +673,10 @@ const LandingPage = () => {
         <section id="dampak" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
           <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
             <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
-              Platform Benefit
+              {t('landing.benefit.title')}
             </div>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
-              DAMPAK
+              {t('landing.benefit.heading')}
             </h2>
           </div>
 
@@ -660,6 +709,78 @@ const LandingPage = () => {
           </div>
         </section>
 
+        {/* FAQ Section - Search & Bento Layout */}
+        <section className="py-20 lg:py-28 bg-[#f8fafc] border-t border-slate-100 relative overflow-hidden">
+          {/* Subtle blurred backgrounds for aesthetics */}
+          <div className="absolute top-0 left-[-10%] w-[40%] h-[50%] bg-emerald-50 blur-[100px] rounded-full pointer-events-none"></div>
+          <div className="absolute bottom-0 right-[-10%] w-[30%] h-[60%] bg-[#129cc0]/5 blur-[120px] rounded-full pointer-events-none"></div>
+          
+          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 relative z-10">
+            <Reveal className="text-center mb-12 max-w-3xl mx-auto">
+              <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+                {t('landing.faq.title')}
+              </div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight drop-shadow-sm mb-8">
+                {t('landing.faq.heading')}
+              </h2>
+
+              {/* Dynamic Search Bar */}
+              <div className="relative max-w-2xl mx-auto group">
+                <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                  <Search className="h-6 w-6 text-slate-400 group-focus-within:text-[#009b7c] transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={currentLang === 'id' ? "Cari pertanyaan Anda..." : "Search for questions..."}
+                  className="block w-full pl-16 pr-12 py-5 bg-white border-2 border-slate-100 rounded-full text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-lg font-medium"
+                  value={faqSearchQuery}
+                  onChange={(e) => setFaqSearchQuery(e.target.value)}
+                />
+                {faqSearchQuery && (
+                  <button 
+                    onClick={() => setFaqSearchQuery('')}
+                    className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    <X className="h-5 w-5 bg-slate-100 rounded-full p-0.5" />
+                  </button>
+                )}
+              </div>
+            </Reveal>
+
+            {/* Bento Grid */}
+            <Reveal delay="0.1s" className="max-w-5xl mx-auto">
+              {(() => {
+                const items = t('landing.faq.items', { returnObjects: true });
+                const faqItems = Array.isArray(items) ? items : [];
+                const filteredItems = faqItems.filter(item => 
+                  (item.q?.toLowerCase() || '').includes(faqSearchQuery.toLowerCase()) || 
+                  (item.a?.toLowerCase() || '').includes(faqSearchQuery.toLowerCase())
+                );
+
+                if (filteredItems.length === 0) {
+                  return (
+                    <div className="text-center py-16 px-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                        <Search size={24} />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-700 mb-2">{currentLang === 'id' ? 'Pencarian Tidak Ditemukan' : 'No Results Found'}</h3>
+                      <p className="text-slate-500">{currentLang === 'id' ? "Kami tidak dapat menemukan jawaban untuk \"" + faqSearchQuery + "\". Coba kata kunci lain." : "We couldn't find an answer for \"" + faqSearchQuery + "\". Try different keywords."}</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                    {filteredItems.map((item, index) => (
+                      <FAQItem key={index} question={item.q} answer={item.a} />
+                    ))}
+                  </div>
+                );
+              })()}
+            </Reveal>
+          </div>
+        </section>
+
         {/* CTA Section - Mulai Transformasi */}
         <section className="relative py-20 lg:py-28 overflow-hidden bg-gradient-to-br from-[#f0fdf9] via-white to-[#e0f7f1]">
           {/* Subtle ambient blurs */}
@@ -672,42 +793,37 @@ const LandingPage = () => {
               {/* Left Content */}
               <Reveal className="flex-1 w-full text-center lg:text-left">
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.15] mb-6">
-                  MULAI<br />
-                  TRANSFORMASI<br />
-                  SISTEM ANDA<br />
-                  SAAT INI!
+                  {t('landing.cta.heading')}
                 </h2>
                 <p className="text-base lg:text-lg text-slate-500 font-medium leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
-                  Tingkatkan efisiensi, kurangi biaya,<br className="hidden sm:inline" />
-                  dan ciptakan masa depan yang lebih cerdas<br className="hidden sm:inline" />
-                  dengan EcoSense.
+                  {t('landing.cta.desc')}
                 </p>
 
                 {/* 4 Benefit Icons */}
-                <div className="flex flex-wrap gap-6 sm:gap-8 mb-10 max-w-lg mx-0">
+                <div className="flex flex-wrap gap-6 sm:gap-8 mb-10 max-w-2xl mx-0">
                   <Reveal delay="0.1s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                      <img src="/9EFISIENSI MENINGKAT.png" alt="Efisiensi Meningkat" className="w-full h-full object-cover rounded-2xl" />
+                      <img src="/9EFISIENSI MENINGKAT.png" alt={t('landing.cta.benefit1')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Efisiensi<br />Meningkat</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit1')}</span>
                   </Reveal>
                   <Reveal delay="0.15s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                      <img src="/10BIAYA BERKURANG.png" alt="Biaya Berkurang" className="w-full h-full object-cover rounded-2xl" />
+                      <img src="/10BIAYA BERKURANG.png" alt={t('landing.cta.benefit2')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Biaya<br />Berkurang</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit2')}</span>
                   </Reveal>
                   <Reveal delay="0.2s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                      <img src="/11OPERASIONAL HIJAU.png" alt="Operasional Lebih Hijau" className="w-full h-full object-cover rounded-2xl" />
+                      <img src="/11OPERASIONAL HIJAU.png" alt={t('landing.cta.benefit3')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Operasional<br />Lebih Hijau</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit3')}</span>
                   </Reveal>
                   <Reveal delay="0.25s" className="flex flex-col items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                      <img src="/12KEPUTUSAN CEPAT.png" alt="Keputusan Lebih Cepat" className="w-full h-full object-cover rounded-2xl" />
+                      <img src="/12KEPUTUSAN CEPAT.png" alt={t('landing.cta.benefit4')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">Keputusan<br />Lebih Cepat</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit4')}</span>
                   </Reveal>
                 </div>
 
@@ -718,13 +834,13 @@ const LandingPage = () => {
                     className="group relative bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-full font-bold text-base transition-all duration-300 shadow-xl shadow-slate-900/20 hover:shadow-2xl hover:-translate-y-1 flex items-center gap-3 overflow-hidden"
                   >
                     <Rocket className="w-6 h-6 self-center relative z-10" />
-                    <span className="relative z-10 leading-none">MULAI SEKARANG</span>
+                    <span className="relative z-10 leading-none">{t('landing.cta.btn')}</span>
                     <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                     <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-500 ease-in-out"></div>
                   </button>
                   <div className="flex items-center gap-2 text-slate-400 text-sm font-medium">
                     <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <span>Aman, Terpercaya, dan Terintegrasi</span>
+                    <span>{t('landing.cta.trust')}</span>
                   </div>
                 </div>
               </Reveal>
@@ -755,9 +871,7 @@ const LandingPage = () => {
           <div className="max-w-[400px]">
             <img src="/logo_bieon_footer.png" alt="BIEON Footer" className="max-w-[280px] w-full h-auto object-contain mb-4 md:ml-[32px] drop-shadow-sm" />
             <p className="text-[14px] text-white/90 mb-8 leading-relaxed font-medium md:ml-[32px]">
-              Sistem pemantauan gaya hidup cerdas<br className="hidden md:block" />
-              berbasis IoT. Mewujudkan lingkungan tempat<br className="hidden md:block" />
-              tinggal yang lebih sehat, aman, dan efisien.
+              {t('landing.footer.desc')}
             </p>
             <div className="flex gap-4 items-center md:ml-[32px]">
               <a href="#" className="hover:text-emerald-200 transition-colors"><Instagram size={22} /></a>
@@ -769,25 +883,25 @@ const LandingPage = () => {
 
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-4 md:mr-8 lg:mr-0">
             <div className="w-full text-center sm:text-left">
-              <h4 className="font-bold font-sans text-[15px] pb-2 border-b border-white/30 text-white mb-4">Quick Link</h4>
+              <h4 className="font-bold font-sans text-[15px] pb-2 border-b border-white/30 text-white mb-4">{t('landing.footer.quick_link')}</h4>
               <ul className="space-y-3 text-[14px] text-white/80 font-medium">
-                <li><a href="#home" className="hover:text-white transition-colors">Home</a></li>
-                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#about" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
+                <li><a href="#home" className="hover:text-white transition-colors">{t('landing.nav.home')}</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors">{t('landing.nav.features')}</a></li>
+                <li><a href="#about" className="hover:text-white transition-colors">{t('landing.nav.about')}</a></li>
+                <li><a href="#contact" className="hover:text-white transition-colors">{t('landing.nav.contact')}</a></li>
               </ul>
             </div>
             <div className="w-full text-center sm:text-left">
-              <h4 className="font-bold font-sans text-[15px] pb-2 border-b border-white/30 text-white mb-4">Layanan Sistem</h4>
+              <h4 className="font-bold font-sans text-[15px] pb-2 border-b border-white/30 text-white mb-4">{t('landing.footer.services')}</h4>
               <ul className="space-y-3 text-[14px] text-white/80 font-medium">
-                <li><a href="#" className="hover:text-white transition-colors">Dashboard Monitoring</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Kendali Perangkat</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Riwayat & Data Log</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pusat Pengaduan</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.monitoring')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.control')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.history')}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t('landing.footer.complaint')}</a></li>
               </ul>
             </div>
             <div className="w-full text-center sm:text-left">
-              <h4 className="font-bold font-sans text-[15px] pb-2 border-b border-white/30 text-white mb-4">Contact Info</h4>
+              <h4 className="font-bold font-sans text-[15px] pb-2 border-b border-white/30 text-white mb-4">{t('landing.footer.contact_info')}</h4>
               <ul className="space-y-3 text-[14px] text-white/80 font-medium">
                 <li className="flex items-start gap-3 justify-center sm:justify-start group">
                   <MapPin size={18} className="shrink-0 mt-0.5 text-white/60 group-hover:text-white transition-colors" />
@@ -810,7 +924,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="text-center text-[13px] text-white/60 font-medium pt-6 mt-8 border-t border-white/10 max-w-7xl mx-auto relative z-10">
-          © Copyright 2026 | BIEON - Smart Green Living Monitoring System | All right reserved
+          {t('landing.footer.copyright')}
         </div>
       </footer>
     </div>

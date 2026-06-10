@@ -18,7 +18,7 @@ function TechReportModal({ isOpen, onClose, onSubmit }) {
         <textarea
           value={report}
           onChange={(e) => setReport(e.target.value)}
-          placeholder="Tuliskan aktivitas dan status perangkat yang dikonfigurasi..."
+          placeholder={t('technician.exit_session_placeholder')}
           className="w-full bg-slate-50 border-0 rounded-xl p-4 focus:outline-none focus:bg-white focus:ring-4 focus:ring-orange-500/15 min-h-[120px] mb-4 text-sm resize-none transition-all placeholder:text-gray-400"
         />
         <div className="flex justify-end gap-2">
@@ -115,7 +115,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
     if (techAccess === 'true') {
       const checkExpiry = () => {
         if (techExpiry && Date.now() > parseInt(techExpiry)) {
-          alert("Sesi Teknisi Anda telah berakhir (30 menit). Anda telah di-logout otomatis.");
+          alert(t('alerts.session_expired'));
           localStorage.removeItem('bieon_tech_access');
           localStorage.removeItem('bieon_tech_access_expiry');
           setIsTechnicianMode(false);
@@ -165,7 +165,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
 
       const data = await response.json();
       if (!response.ok) {
-        alert("Gagal mengirim laporan: " + data.message);
+        alert(t('alerts.send_report_failed', { message: data.message }));
         return;
       }
 
@@ -188,7 +188,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       navigate('/teknisi');
     } catch (error) {
       console.error("Error submit report:", error);
-      alert("Terjadi kesalahan teknis saat mengirim laporan.");
+      alert(t('alerts.send_report_error'));
     }
   };
 
@@ -338,7 +338,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       {/* Technician Limited Access Banner */}
       {isTechnicianMode && (
         <div className="bg-gradient-to-r from-red-600 to-red-800 text-white py-2 px-4 text-center text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] shadow-lg sticky top-0 z-[100]">
-          ⚠️ PERHATIAN: Harap hati-hati karena sedang di halaman Homeowner! ⚠️
+          {t('technician.control_warning')}
         </div>
       )}
 

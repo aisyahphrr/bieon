@@ -168,7 +168,10 @@ export function RiwayatPerbaikanPage() {
                 originalId: safeId,
                 id: `TCK-${safeId.substring(Math.max(0, safeId.length - 6)).toUpperCase()}`,
                 date: new Date(item.createdAt).toLocaleDateString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }),
-                finishedDate: new Date(item.completedAt || item.updatedAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                finishedDate: (() => {
+                  const formatted = new Date(item.completedAt || item.updatedAt).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                  return i18n.language === 'id' ? formatted.replace(/\./g, ':') : formatted;
+                })(),
                 client: item.homeowner?.fullName || 'Pelanggan Bieon',
                 location: item.homeowner?.address || '-',
                 duration: calculateDuration(item.createdAt, item.completedAt || item.updatedAt, t),
@@ -272,7 +275,10 @@ export function RiwayatPerbaikanPage() {
 
     doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text(`${t('export.printed_at', 'Dicetak pada')}: ${new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`, 14, 30);
+    doc.text(`${t('export.printed_at', 'Dicetak pada')}: ${(() => {
+      const formatted = new Date().toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US');
+      return i18n.language === 'id' ? formatted.replace(/\./g, ':') : formatted;
+    })()}`, 14, 30);
 
     // Columns matching the UI table order
     const tableColumn = [
@@ -476,9 +482,12 @@ export function RiwayatPerbaikanPage() {
     const statusOverdue = t('export.status_overdue', 'OVERDUE');
     const statusOntime = t('export.status_ontime', 'SESUAI SLA');
 
+    const targetResponseVal = i18n.language === 'id' ? '15 Menit' : '15 Minutes';
+    const targetRepairVal = i18n.language === 'id' ? '48 Jam' : '48 Hours';
+
     const slaData = [
-      [t('export.sla_response', 'Respon Teknisi'), '15 Menit', responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime],
-      [t('export.sla_repair', 'Perbaikan Unit'), '48 Jam', repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime]
+      [t('export.sla_response', 'Respon Teknisi'), targetResponseVal, responseTime, (responseTime !== '-' && (responseTime.includes('Hari') || responseTime.includes('Days') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusOverdue : statusOntime],
+      [t('export.sla_repair', 'Perbaikan Unit'), targetRepairVal, repairTime, (repairTime !== '-' && (repairTime.includes('Hari') || repairTime.includes('Days') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusOverdue : statusOntime]
     ];
 
     autoTable(doc, {

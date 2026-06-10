@@ -23,8 +23,8 @@ import NotificationPopup from '../../components/NotificationPopup';
 import HomeownerLayout from './HomeownerLayout';
 import { StatusBadge } from '../../shared/StatusBadge';
 import { useTranslation } from 'react-i18next';
-import i18n_core from 'i18next';
 import { mockHistoryData } from './homeownerMockData';
+import { translateNotificationMessage } from '../../utils/notificationI18nHelper';
 
 // Helper to decode JWT token safely in browser
 function getEmailFromToken() {
@@ -98,7 +98,7 @@ export function HomeownerHistory({ onNavigate }) {
 
     const formatDateTime = (dateStr) => {
         const date = new Date(dateStr);
-        return date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
+        const formatted = date.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
@@ -106,6 +106,7 @@ export function HomeownerHistory({ onNavigate }) {
             minute: '2-digit',
             second: '2-digit'
         });
+        return i18n.language === 'id' ? formatted.replace(/\./g, ':') : formatted;
     };
 
     const localizeStatus = (s) => {
@@ -118,6 +119,23 @@ export function HomeownerHistory({ onNavigate }) {
         if (!trig) return trig;
         const key = trig.toLowerCase();
         return t(`history.trigger.${key}`, trig);
+    };
+
+    const localizeRoom = (room) => {
+        if (!room) return room;
+        const key = room.toLowerCase().replace(/\s+/g, '_');
+        return t(`history.rooms.${key}`, room);
+    };
+
+    const localizeFilter = (val) => {
+        if (!val) return val;
+        if (['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) {
+            return t(`history.devices.${val.toLowerCase().replace(/\s+/g, '_')}`, val);
+        }
+        if (activeTab === 'Notifikasi & Alert') {
+            return t(`notification.category.${val.toLowerCase().replace(/\s+/g, '_')}`, val);
+        }
+        return localizeRoom(val);
     };
 
     const mapItemData = (tabId, item, index) => {
@@ -343,61 +361,23 @@ export function HomeownerHistory({ onNavigate }) {
 
         if (tabId === 'Kenyamanan') {
             headers = [[t('history.columns.time'), t('history.columns.room'), t('history.columns.temperature'), t('history.columns.humidity'), t('history.columns.status')]];
-            body = data.map(e => [formatDateTime(e.rawTime), e.room, `${e.temp}°C`, e.humidity, localizeStatus(e.rawStatus)]);
+            body = data.map(e => [formatDateTime(e.rawTime), localizeRoom(e.room), `${e.temp}°C`, e.humidity, localizeStatus(e.rawStatus)]);
         } else if (tabId === 'Keamanan') {
             headers = [[t('history.columns.time'), t('history.columns.room'), t('history.columns.door_sensor'), t('history.columns.motion_sensor'), t('history.columns.status')]];
-            body = data.map(e => [formatDateTime(e.rawTime), e.room, localizeStatus(e.rawDoor), localizeStatus(e.rawMotion), localizeStatus(e.rawStatus)]);
+            body = data.map(e => [formatDateTime(e.rawTime), localizeRoom(e.room), localizeStatus(e.rawDoor), localizeStatus(e.rawMotion), localizeStatus(e.rawStatus)]);
         } else if (tabId === 'Kualitas Air') {
             headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.ph'), t('history.columns.turbidity'), t('history.columns.temperature'), t('history.columns.tds'), t('history.columns.status')]];
-            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.ph, e.turbidity, e.temp, e.tds, localizeStatus(e.rawStatus)]);
+            body = data.map(e => [formatDateTime(e.rawTime), t(`history.devices.${e.device?.toLowerCase().replace(/\s+/g, '_')}`, e.device), e.ph, e.turbidity, e.temp, e.tds, localizeStatus(e.rawStatus)]);
         } else if (tabId === 'Konsumsi Energi') {
             headers = [[t('history.columns.time'), t('history.columns.device'), t('history.columns.energy'), t('history.columns.voltage'), t('history.columns.current'), t('history.columns.power_load'), t('history.columns.power_factor')]];
-            body = data.map(e => [formatDateTime(e.rawTime), e.device, e.kwh, e.voltage, e.current, e.power, e.pf]);
+            body = data.map(e => [formatDateTime(e.rawTime), t(`history.devices.${e.device?.toLowerCase().replace(/\s+/g, '_')}`, e.device), e.kwh, e.voltage, e.current, e.power, e.pf]);
         } else if (tabId === 'Log Perangkat') {
             headers = [[t('history.columns.time'), t('history.columns.room'), t('history.columns.actuator'), t('history.columns.status'), t('history.columns.trigger')]];
-            body = data.map(e => [formatDateTime(e.rawTime), e.room, e.actuator, localizeStatus(e.rawStatus), localizeTrigger(e.trigger)]);
+            body = data.map(e => [formatDateTime(e.rawTime), localizeRoom(e.room), t(`history.devices.${e.actuator?.toLowerCase().replace(/\s+/g, '_')}`, e.actuator), localizeStatus(e.rawStatus), localizeTrigger(e.trigger)]);
         } else if (tabId === 'Notifikasi & Alert') {
             headers = [[t('history.columns.time'), t('history.columns.category'), t('history.columns.status'), t('history.columns.message_detail')]];
             body = data.map(e => {
-                const titleStr = (e.rawStatus || "").toLowerCase();
-                const msgStr = (e.rawMessage || "").toLowerCase();
-                let smartType = null;
-
-                // Detection Logic (Check Title first, then Message)
-                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
-                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
-                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
-                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
-                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
-                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
-                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
-                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
-                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
-                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
-
-                let localizedMsg = e.messageKey ? t(e.messageKey, e.metadata) : e.rawMessage;
-                const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
-                const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
-
-                if (smartType && dynamicBody !== '___MISSING___') {
-                    // Regex to find ticket ID in quotes or 8-char alphanumeric
-                    const ticketMatch = e.rawMessage.match(/"([^"]+)"/) || e.rawMessage.match(/\b[a-z0-9]{8}\b/);
-                    const extractedTicket = e.metadata?.ticketId || e.metadata?.ticket || e.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
-
-                    localizedMsg = t(dynamicBodyKey, {
-                        ...e.metadata,
-                        ticket: extractedTicket,
-                        technician: e.metadata?.technicianName || e.metadata?.technician || e.metadata?.senderName || '',
-                        topic: e.metadata?.topic || '',
-                        name: e.metadata?.senderName || e.metadata?.name || '',
-                        hubId: e.metadata?.hubId || '',
-                        deviceName: e.metadata?.deviceName || '',
-                        status: e.metadata?.status || '',
-                        location: e.metadata?.location || '',
-                        percent: e.metadata?.percent || ''
-                    });
-                }
-
+                const localizedMsg = translateNotificationMessage(e.rawMessage, e.metadata || {}, t, e.messageKey);
                 return [
                     formatDateTime(e.rawTime),
                     t(`notification.category.${e.rawCategory?.toLowerCase().replace(/\s+/g, '_')}`, e.rawCategory),
@@ -416,9 +396,13 @@ export function HomeownerHistory({ onNavigate }) {
             const doc = new jsPDF('l', 'mm', 'a4');
             const pageWidth = doc.internal.pageSize.width;
 
+            const tabConfig = tabs.find(tb => tb.id === activeTab);
+            const translatedTab = tabConfig ? tabConfig.full : activeTab;
+            const safeTabName = translatedTab.replace(/\s+/g, '_');
+
             doc.setFontSize(22);
             doc.setTextColor(5, 155, 39);
-            doc.text(t('history.export.pdf_header', { tab: activeTab }), 15, 20);
+            doc.text(t('history.export.pdf_header', { tab: translatedTab }), 15, 20);
 
             doc.setFontSize(10);
             doc.setTextColor(100);
@@ -438,7 +422,7 @@ export function HomeownerHistory({ onNavigate }) {
                 margin: { left: 15, right: 15 }
             });
 
-            doc.save(`${t('history.export.filename_prefix', 'BIEON_History')}_${activeTab}_${new Date().getTime()}.pdf`);
+            doc.save(`${t('history.export.filename_prefix', 'BIEON_History')}_${safeTabName}_${new Date().getTime()}.pdf`);
         } catch (pdfError) {
             console.error('PDF ERROR:', pdfError);
             alert(t('history.export.alert_error_pdf', 'Gagal membuat PDF.'));
@@ -462,7 +446,7 @@ export function HomeownerHistory({ onNavigate }) {
             doc.text(t('history.export.system_tagline', 'Smart Green Living Monitoring System'), pageWidth / 2, 92, { align: 'center' });
 
             doc.setFontSize(12);
-            doc.text(`${t('history.export.report_period', 'Periode Laporan')}: ${new Date().toLocaleDateString(i18n_core.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
+            doc.text(`${t('history.export.report_period', 'Periode Laporan')}: ${new Date().toLocaleDateString(i18n.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
             doc.text(t('history.export.print_date', { date: formatDateTime(new Date()) }), pageWidth / 2, 118, { align: 'center' });
 
             doc.setDrawColor(5, 155, 39);
@@ -597,7 +581,7 @@ export function HomeownerHistory({ onNavigate }) {
                             >
                                 <Filter className={`w-4 h-4 transition-colors ${showFilterDropdown || selectedRoomFilter ? 'text-eco' : 'text-gray-400'}`} />
                                 <span className={`hidden sm:inline ${selectedRoomFilter ? 'text-gray-900' : 'text-gray-500'}`}>
-                                    {selectedRoomFilter ? (activeTab === 'Notifikasi & Alert' ? t(`notification.category.${selectedRoomFilter?.toLowerCase().replace(/\s+/g, '_')}`, selectedRoomFilter) : selectedRoomFilter) : (
+                                    {selectedRoomFilter ? localizeFilter(selectedRoomFilter) : (
                                         ['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)
                                             ? t('history.all_devices')
                                             : activeTab === 'Notifikasi & Alert'
@@ -636,7 +620,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                 }}
                                                 className={`w-full text-left px-4 py-1.5 text-sm transition-colors ${selectedRoomFilter === r ? 'text-eco bg-eco/5 font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
                                             >
-                                                {activeTab === 'Notifikasi & Alert' ? t(`notification.category.${r?.toLowerCase().replace(/\s+/g, '_')}`, r) : r}
+                                                {localizeFilter(r)}
                                             </button>
                                         ))}
                                     </div>
@@ -807,9 +791,9 @@ export function HomeownerHistory({ onNavigate }) {
                                                 )}
 
                                                 {['Kualitas Air', 'Konsumsi Energi'].includes(activeTab) ? (
-                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.device}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{t(`history.devices.${item.device?.toLowerCase().replace(/\s+/g, '_')}`, item.device)}</td>
                                                 ) : activeTab === 'Notifikasi & Alert' ? null : (
-                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.room}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{localizeRoom(item.room)}</td>
                                                 )}
 
                                                 {activeTab === 'Kenyamanan' && (
@@ -846,7 +830,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                 )}
 
                                                 {activeTab === 'Log Perangkat' && (
-                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{item.actuator}</td>
+                                                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 whitespace-nowrap">{t(`history.devices.${item.actuator?.toLowerCase().replace(/\s+/g, '_')}`, item.actuator)}</td>
                                                 )}
 
                                                 {activeTab !== 'Konsumsi Energi' && activeTab !== 'Log Perangkat' && activeTab !== 'Notifikasi & Alert' && (
@@ -870,46 +854,7 @@ export function HomeownerHistory({ onNavigate }) {
                                                             <StatusBadge status={localizeStatus(item.rawStatus)} />
                                                         </td>
                                                         <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-gray-600 min-w-[280px]">
-                                                            {(() => {
-                                                                const titleStr = (item.rawStatus || "").toLowerCase();
-                                                                const msgStr = (item.rawMessage || "").toLowerCase();
-                                                                let smartType = null;
-
-                                                                // Detection Logic (Check Title first, then Message)
-                                                                if (titleStr.includes('overdue') || titleStr.includes('sla') || msgStr.includes('melewati batas waktu')) smartType = 'SLA_OVERDUE';
-                                                                else if (titleStr.includes('ping') || titleStr.includes('teguran') || titleStr.includes('action required') || msgStr.includes('ping') || msgStr.includes('teguran')) smartType = 'ACTION_REQUIRED';
-                                                                else if (titleStr.includes('tugas perbaikan baru') || titleStr.includes('new task') || titleStr.includes('task assigned') || (msgStr.includes('tugas baru') || msgStr.includes('new task'))) smartType = 'NEW_TASK';
-                                                                else if (titleStr.includes('teknisi ditugaskan') || titleStr.includes('tech assigned') || titleStr.includes('technician assigned') || msgStr.includes('ditugaskan') || msgStr.includes('has been assigned')) smartType = 'TECH_ASSIGNED';
-                                                                else if (titleStr.includes('mulai memproses') || titleStr.includes('started processing') || titleStr.includes('technician started') || titleStr.includes('mengerjakan') || msgStr.includes('mulai memproses') || msgStr.includes('mulai mengerjakan') || msgStr.includes('started processing')) smartType = 'TECH_PROCESSING';
-                                                                else if (titleStr.includes('pengaduan baru') || titleStr.includes('new complaint') || msgStr.includes('pengaduan baru') || msgStr.includes('new complaint')) smartType = 'NEW_COMPLAINT_TICKET';
-                                                                else if (titleStr.includes('terkirim') || titleStr.includes('submitted') || titleStr.includes('complaint sent') || msgStr.includes('berhasil dibuat') || msgStr.includes('successfully created')) smartType = 'COMPLAINT_SENT';
-                                                                else if (titleStr.includes('selesai') || titleStr.includes('finished') || titleStr.includes('rating') || msgStr.includes('selesai dikerjakan') || msgStr.includes('perbaikan selesai')) smartType = 'REPAIR_FINISHED';
-                                                                else if (titleStr.includes('dibatalkan') || titleStr.includes('cancelled') || titleStr.includes('cancel') || msgStr.includes('dibatalkan')) smartType = 'TICKET_CANCELLED';
-                                                                else if (titleStr.includes('eskalasi') || titleStr.includes('escalated') || msgStr.includes('dieskalasi')) smartType = 'TICKET_ESCALATED';
-
-                                                                const dynamicBodyKey = `notifications.dynamic.${smartType}.body`;
-                                                                const dynamicBody = smartType ? t(dynamicBodyKey, { defaultValue: '___MISSING___' }) : '___MISSING___';
-
-                                                                if (smartType && dynamicBody !== '___MISSING___') {
-                                                                    // Regex to find ticket ID in quotes or 8-char alphanumeric
-                                                                    const ticketMatch = item.rawMessage.match(/"([^"]+)"/) || item.rawMessage.match(/\b[a-z0-9]{8}\b/);
-                                                                    const extractedTicket = item.metadata?.ticketId || item.metadata?.ticket || item.metadata?.topic || (ticketMatch ? ticketMatch[1] || ticketMatch[0] : '');
-
-                                                                    return t(dynamicBodyKey, {
-                                                                        ...item.metadata,
-                                                                        ticket: extractedTicket,
-                                                                        technician: item.metadata?.technicianName || item.metadata?.technician || item.metadata?.senderName || '',
-                                                                        topic: item.metadata?.topic || '',
-                                                                        name: item.metadata?.senderName || item.metadata?.name || '',
-                                                                        hubId: item.metadata?.hubId || '',
-                                                                        deviceName: item.metadata?.deviceName || '',
-                                                                        status: item.metadata?.status || '',
-                                                                        location: item.metadata?.location || '',
-                                                                        percent: item.metadata?.percent || ''
-                                                                    });
-                                                                }
-                                                                return item.messageKey ? t(item.messageKey, item.metadata) : item.rawMessage;
-                                                            })()}
+                                                            {(() => translateNotificationMessage(item.rawMessage, item.metadata || {}, t, item.messageKey))()}
                                                         </td>
                                                     </>
                                                 )}
@@ -919,7 +864,7 @@ export function HomeownerHistory({ onNavigate }) {
                                         <tr>
                                             <td colSpan={(['Kualitas Air', 'Konsumsi Energi'].includes(activeTab)) ? 7 : 5} className="px-6 py-20 text-center text-gray-500">
                                                 {isLoading ? t('history.loading_data') : (error ? `Error: ${error}` : t('history.no_data'))}
-                                                {!isLoading && !error && <p className="text-[11px] text-gray-400 mt-2">{t('history.no_data_desc')}</p>}
+                                                {!isLoading && !error && <p className="text-[11px] text-gray-400 mt-2">{t('history.no_data_desc_category')}</p>}
                                             </td>
                                         </tr>
                                     )

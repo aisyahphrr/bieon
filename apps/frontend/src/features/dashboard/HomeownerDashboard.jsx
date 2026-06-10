@@ -149,7 +149,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
       }, 2000);
     } catch (err) {
       console.error(err);
-      alert('Gagal mengirim pengaduan. Silakan coba lagi.');
+      alert(t('alerts.complaint_send_failed'));
     } finally {
       setLoading(false);
     }
@@ -265,7 +265,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
                 rows={4}
-                placeholder="Jelaskan masalah yang Anda alami secara detail..."
+                placeholder={t('placeholder.describe_problem')}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sense/20 focus:border-sense resize-none"
               />
             </div>
@@ -298,6 +298,11 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
   );
 }
 
+const translateMonth = (month, t) => {
+  if (!month) return '';
+  return t(`dashboard.month_${month.toLowerCase()}`, month);
+};
+
 function DataModal({ isOpen, onClose, chartType, energySummary }) {
   const { t, i18n } = useTranslation();
   if (!isOpen) return null;
@@ -323,10 +328,10 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
 
     data.forEach(item => {
       const rowData = [
-        'time' in item ? item.time : item.month,
+        'time' in item ? item.time : translateMonth(item.month, t),
         (item.kwh || 0).toFixed(3),
         chartType === 'daily' ? (item.kwh * 1000).toFixed(0) : undefined,
-        `Rp ${(item.cost || 0).toLocaleString('id-ID')}`
+        `Rp ${(item.cost || 0).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}`
       ].filter(val => val !== undefined);
       tableRows.push(rowData);
     });
@@ -350,8 +355,10 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
       startY: 35,
       theme: 'grid',
       headStyles: { fillColor: [5, 155, 39], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica' },
-      bodyStyles: { font: 'helvetica' },
+      bodyStyles: { font: 'helvetica', overflow: 'linebreak' },
       footStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold', font: 'helvetica' },
+      pageBreak: 'auto',
+      rowPageBreak: 'avoid'
     });
 
     doc.save(`BIEON_Laporan_Energi_${chartType}_${new Date().getTime()}.pdf`);
@@ -409,7 +416,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
                     className="hover:bg-slate-50 transition-colors"
                   >
                     <td className="px-6 py-4 font-semibold text-slate-700">
-                      {'time' in item ? item.time : item.month}
+                      {'time' in item ? item.time : translateMonth(item.month, t)}
                     </td>
                     <td className="px-6 py-4 text-slate-700">
                       {(item.kwh || 0).toFixed(3)} kWh
@@ -418,7 +425,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
                       <td className="px-6 py-4 text-slate-700">{(item.kwh * 1000).toFixed(0)} W</td>
                     )}
                     <td className="px-6 py-4 font-semibold text-eco">
-                      Rp {(item.cost || 0).toLocaleString('id-ID')}
+                      Rp {(item.cost || 0).toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}
                     </td>
                   </tr>
                 ))}
@@ -429,7 +436,7 @@ function DataModal({ isOpen, onClose, chartType, energySummary }) {
                   <td className="px-6 py-4">{totalKwh.toFixed(3)} kWh</td>
                   {chartType === 'daily' && <td className="px-6 py-4">-</td>}
                   <td className="px-6 py-4 text-eco">
-                    Rp {totalCost.toLocaleString('id-ID')}
+                    Rp {totalCost.toLocaleString(i18n.language === 'id' ? 'id-ID' : 'en-US')}
                   </td>
                 </tr>
               </tfoot>
@@ -1369,7 +1376,7 @@ export function HomeownerDashboard() {
 
               return (
                 <>
-                  <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">{t('dashboard.security', 'Keamanan')}</h2>
+                  <h2 className="text-lg font-bold text-slate-700 mb-3 mt-6 first:mt-0">{t('dashboard.security.title', 'Keamanan')}</h2>
                   <div id="section-keamanan" className="mb-6">
                     <div className="flex flex-col md:flex-row gap-4 w-full items-stretch">
                       {/* Kiri (Master - Status) */}
@@ -1462,7 +1469,7 @@ export function HomeownerDashboard() {
                                           {sensor.room}
                                         </span>
                                         <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold tracking-wide shrink-0">
-                                          Last: {securityLastUpdated || 'Baru saja'}
+                                          {t('dashboard.security.last_time', { time: securityLastUpdated || t('dashboard.just_now', 'Baru saja') }, `Terakhir: ${securityLastUpdated || 'Baru saja'}`)}
                                         </span>
                                       </div>
                                     </div>
@@ -2099,7 +2106,7 @@ export function HomeownerDashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-semibold text-text-headline leading-tight mb-0.5">{activity.device}</div>
-                        <div className="text-[10px] text-text-dim font-medium uppercase tracking-wider">{getLocalizedAction(activity.action)} • {t('activity.platform_source', { platform: activity.platform || 'Web' })}</div>
+                        <div className="text-[10px] text-text-dim font-medium tracking-wider">{getLocalizedAction(activity.action)?.toUpperCase()} • {t('activity.platform_source', { platform: activity.platform || 'Web' })}</div>
                       </div>
                       <div className="text-[10px] font-semibold text-text-dim bg-slate-100/50 px-2 py-1 rounded-lg">{activity.time}</div>
                     </div>

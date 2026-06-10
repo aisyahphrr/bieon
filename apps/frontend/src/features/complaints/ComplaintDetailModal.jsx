@@ -24,7 +24,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useNavigate } from 'react-router-dom';
-import { formatStatusDisplay, getPerformanceIndicator } from '../../utils/complaintHelpers';
+import { formatStatusDisplay, getPerformanceIndicator, localizeTopic } from '../../utils/complaintHelpers';
 import { useSLA } from '../../hooks/useSLA';
 import { useTranslation } from 'react-i18next';
 
@@ -173,9 +173,7 @@ export function ComplaintDetailModal({
                     </div>
                 )}
 
-                {role !== 'homeowner' && (
-                    <p className="hidden md:block text-[10px] text-gray-400 italic text-center">{t('complaint.detail_box.actions_notice', 'Aksi tersedia dapat dilihat di panel bawah pada desktop atau scroll ke bawah.')}</p>
-                )}
+
             </div>
         );
     };
@@ -460,7 +458,8 @@ export function ComplaintDetailModal({
             const count = matchCount ? matchCount[1] : '1';
             const matchUrg = cleaned.match(/(?:menjadi|to):\s*(.*)/i);
             const urgency = matchUrg ? matchUrg[1].replace(/\.$/, '').trim() : 'MEDIUM';
-            return t('complaint.timeline_events.ping_sent', 'SuperAdmin mengirimkan PING (Teguran ke-{{count}}). Urgensi ditingkatkan menjadi: {{urgency}}.', { count, urgency });
+            const localizedUrgency = t('complaint.urgency_' + urgency.toLowerCase().replace(/\s+/g, '_'), urgency);
+            return t('complaint.timeline_events.ping_sent', 'SuperAdmin mengirimkan PING (Teguran ke-{{count}}). Urgensi ditingkatkan menjadi: {{urgency}}.', { count, urgency: localizedUrgency });
         }
         
         // Completing & Rejection
@@ -510,20 +509,25 @@ export function ComplaintDetailModal({
 
         // 2. SECTION: INFORMASI PENGADUAN
         doc.setTextColor(40, 40, 40);
-        doc.setFontSize(16);
-        doc.text(t('export.section_info', 'INFORMASI PENGADUAN'), 14, 45);
+        doc.setFontSize(14);
+        doc.text(t('export.section_info', 'INFORMASI PENGADUAN'), 14, 42);
         doc.setDrawColor(...primaryGreen);
         doc.setLineWidth(1);
-        doc.line(14, 48, 65, 48);
+        doc.line(14, 45, 65, 45);
+
+        const techVal = (localTicket.technicianInfo?.name || localTicket.technician?.fullName || localTicket.technician || '');
+        const localizedTech = (techVal === '-' || techVal === 'Unassigned' || techVal === 'Menunggu Teknisi' || !techVal) 
+            ? t('complaint.waiting_technician', 'Menunggu Teknisi') 
+            : techVal;
 
         // Data Rows for Info
         const infoData = [
-            [t('export.row_technician', 'Teknisi'), `: ${localTicket.technicianInfo?.name || localTicket.technician?.fullName || '-'}` + (localTicket.technicianInfo?.phone ? ` (${localTicket.technicianInfo.phone})` : '')],
+            [t('export.row_technician', 'Teknisi'), `: ${localizedTech}` + (localTicket.technicianInfo?.phone ? ` (${localTicket.technicianInfo.phone})` : '')],
             [t('export.row_tech_rating', 'Rating Teknisi'), `: ${localTicket.rating?.stars || localTicket.rating || '-'} / 5`],
             [t('export.row_customer_name', 'Nama Pelanggan'), `: ${localTicket.clientInfo?.name || localTicket.client || localTicket.homeowner?.fullName || '-'}`],
             [t('export.row_address', 'Alamat'), `: ${localTicket.clientInfo?.address || localTicket.homeowner?.address || '-'}`],
-            [t('export.row_topic', 'Topik Kendala'), `: ${localTicket.topic || '-'}`],
-            [t('export.row_category', 'Kategori'), `: ${localTicket.category || '-'}`],
+            [t('export.row_topic', 'Topik Kendala'), `: ${localizeTopic(localTicket.topic, t) || '-'}`],
+            [t('export.row_category', 'Kategori'), `: ${localTicket.category ? t(`complaint.category_${localTicket.category.toLowerCase().replace(/\s+/g, '_')}`, localTicket.category) : t('history.category_others', 'Lainnya')}`],
             [t('complaint.detail_box.status_label', 'Status'), `: ${formatStatusDisplay(localTicket.status, activeRole).toUpperCase()}`],
             [t('export.row_desc', 'Deskripsi Masalah'), `: ${localTicket.description || localTicket.desc || '-'}`],
             [t('export.row_photos', 'Lampiran Foto'), `: ${localTicket.files && localTicket.files.length > 0 ? t('export.val_photos_count_short', '{{count}} Foto', { count: localTicket.files.length }) : t('export.val_no_photos', 'Tidak ada foto')}`],
@@ -532,33 +536,51 @@ export function ComplaintDetailModal({
             [t('export.row_duration', 'Durasi Pengerjaan'), `: ${getDurationFromTimeline('repair')}`]
         ];
 
-        let currentY = 65;
-        doc.setFontSize(10);
-        infoData.forEach(row => {
-            doc.setFont('helvetica', 'bold');
-            doc.text(row[0], 18, currentY);
-            doc.setFont('helvetica', 'normal');
-            doc.text(row[1], 80, currentY);
-            currentY += 10;
+        autoTable(doc, {
+            startY: 50,
+            body: infoData,
+            theme: 'plain',
+            styles: { 
+                fontSize: 9, 
+                cellPadding: 2.5, 
+                font: 'helvetica',
+                overflow: 'linebreak',
+                valign: 'top'
+            },
+            columnStyles: {
+                0: { cellWidth: 50, fontStyle: 'bold', textColor: [80, 80, 80] },
+                1: { cellWidth: 'auto', textColor: [40, 40, 40] }
+            },
+            margin: { left: 14, right: 14 },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid'
         });
 
         // 3. SECTION: SLA PERFORMANCE & POINTS
-        currentY += 10;
-        doc.setFontSize(16);
+        let currentY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.setTextColor(40, 40, 40);
         doc.setFont('helvetica', 'bold');
         doc.text(t('export.section_sla', 'SLA PERFORMANCE & POINTS'), 14, currentY);
         doc.setLineWidth(1);
         doc.line(14, currentY + 3, 85, currentY + 3);
-        currentY += 10;
+        currentY += 8;
 
         const statusOntime = t('export.status_ontime', 'SESUAI SLA');
         const statusLate = t('export.status_late', 'TERLAMBAT');
+        const targetResponseVal = i18n.language === 'id' ? '15 Menit' : '15 Minutes';
+        const targetRepairVal = i18n.language === 'id' ? '48 Jam' : '48 Hours';
+
+        const responseTime = getDurationFromTimeline('response');
+        const repairTime = getDurationFromTimeline('repair');
 
         const slaBody = [
-            [t('export.sla_aspect', 'Aspek SLA'), '15 Min', getDurationFromTimeline('response'), 
-             localTicket.responsePoints >= 100 ? statusOntime : statusLate, `${localTicket.responsePoints || 0} Pts`],
-            [t('export.sla_repair', 'Perbaikan Unit'), '48 Hours', getDurationFromTimeline('repair'), 
-             localTicket.repairPoints >= 100 ? statusOntime : statusLate, `${localTicket.repairPoints || 0} Pts`]
+            [t('export.sla_response', 'Respon Teknisi'), targetResponseVal, responseTime, 
+             (responseTime !== '-' && (responseTime.includes('Hari') || responseTime.includes('Days') || parseInt(responseTime.split(':')[0]) > 0 || parseInt(responseTime.split(':')[1]) > 15)) ? statusLate : statusOntime, 
+             `${localTicket.responsePoints || 0} Pts`],
+            [t('export.sla_repair', 'Perbaikan Unit'), targetRepairVal, repairTime, 
+             (repairTime !== '-' && (repairTime.includes('Hari') || repairTime.includes('Days') || parseInt(repairTime.split(':')[0]) >= 48)) ? statusLate : statusOntime, 
+             `${localTicket.repairPoints || 0} Pts`]
         ];
 
         autoTable(doc, {
@@ -567,7 +589,9 @@ export function ComplaintDetailModal({
             body: slaBody,
             theme: 'grid',
             headStyles: { fillColor: [240, 240, 240], textColor: [40, 40, 40], fontStyle: 'bold' },
-            styles: { fontSize: 9, cellPadding: 5 },
+            styles: { fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid',
             didDrawCell: (data) => {
                 if (data.section === 'body' && data.column.index === 3) {
                     const statusText = data.cell.raw;
@@ -594,13 +618,14 @@ export function ComplaintDetailModal({
         doc.text(t('export.overall_perf', 'OVERALL PERFORMANCE: {{points}} POINTS - {{status}}', { points: totalPoints, status: perfStatus }), 105, finalY_SLA + 6.5, { align: 'center' });
 
         // 4. SECTION: RIWAYAT PROGRES PENGADUAN
-        currentY = finalY_SLA + 30;
+        currentY = finalY_SLA + 25;
         doc.setTextColor(40, 40, 40);
-        doc.setFontSize(16);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
         doc.text(t('export.section_timeline', 'RIWAYAT PROGRES PENGADUAN'), 14, currentY);
         doc.setLineWidth(1);
         doc.line(14, currentY + 3, 90, currentY + 3);
-        currentY += 10;
+        currentY += 8;
 
         autoTable(doc, {
             startY: currentY,
@@ -624,7 +649,9 @@ export function ComplaintDetailModal({
                 1: { cellWidth: 40 }, // Activity column
                 2: { cellWidth: 'auto' } // Notes column (flexible)
             },
-            margin: { left: 14, right: 14 }
+            margin: { left: 14, right: 14 },
+            pageBreak: 'auto',
+            rowPageBreak: 'avoid'
         });
 
         // Save
@@ -653,7 +680,7 @@ export function ComplaintDetailModal({
                     level === 'amber' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                         'bg-eco/5 text-eco border-eco/20'
                 }`}>
-                SLA: {type} {isOverdue ? 'OVERDUE' : ''}
+                {t('complaint.sla_timer_label', 'SLA: {{type}}', { type: type === 'Repair' ? t('complaint.sla_repair_short', 'Perbaikan') : t('complaint.sla_response_short', 'Respons') })} {isOverdue ? t('complaint.sla_overdue_label', 'OVERDUE') : ''}
             </span>
         ) : null;
 
@@ -667,7 +694,7 @@ export function ComplaintDetailModal({
                 </span>
                 {badgeTicket.isEscalated && !['selesai', 'ditolak'].includes(badgeTicket.status?.toLowerCase()) && (
                     <span className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-[0_2px_4px_rgba(239,68,68,0.3)] flex items-center gap-1 animate-pulse">
-                        <AlertCircle className="w-2.5 h-2.5" /> PRIORITAS
+                        <AlertCircle className="w-2.5 h-2.5" /> {t('complaint.priority', 'PRIORITAS').toUpperCase()}
                     </span>
                 )}
                 {slaTimer}
@@ -727,7 +754,7 @@ export function ComplaintDetailModal({
                             <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-100 shadow-sm">
                                 <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6 pb-4 border-b border-gray-100">
                                     <div className="text-start">
-                                        <h3 className="text-lg font-bold text-gray-900 leading-tight">{localTicket.topic}</h3>
+                                        <h3 className="text-lg font-bold text-gray-900 leading-tight">{localizeTopic(localTicket.topic, t)}</h3>
                                         <p className="text-[11px] text-gray-500 font-medium">{t('complaint.detail_box.ticket_id', 'ID Tiket')}: {localTicket.id}</p>
                                     </div>
                                     <div className="shrink-0">
@@ -933,7 +960,7 @@ export function ComplaintDetailModal({
                                                         }`}>
                                                         <span className="text-[9px] font-black uppercase">
                                                             {(localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1) >= 70 ? t('complaint.perf.safe', 'Aman') : t('complaint.perf.danger', 'Bahaya')}
-                                                            {['admin', 'superadmin'].includes(role?.toLowerCase()) && ` ΓÇó ${Math.round((localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1))}`}
+                                                            {['admin', 'superadmin'].includes(role?.toLowerCase()) && ` \u2022 ${Math.round((localTicket.responsePoints + localTicket.repairPoints) / (localTicket.repairPoints > 0 ? 2 : 1))}`}
                                                         </span>
                                                     </div>
                                                 )}

@@ -65,12 +65,12 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
       const data = await parseJsonSafely(response);
       
       if (!response.ok) {
-        throw new Error(data.message || 'Login Google gagal');
+        throw new Error(data.message || t('auth.errors.google_failed'));
       }
 
       const userRole = data.user?.role || 'Homeowner';
       if (userRole !== expectedRole) {
-        throw new Error(`Akses ditolak. Akun Anda tidak memiliki izin untuk masuk melalui portal ini.`);
+        throw new Error(t('auth.errors.access_denied'));
       }
 
       // Use the same key used across the app
@@ -98,7 +98,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Gagal login menggunakan Google');
+      setError(err.message || t('auth.errors.google_failed'));
     } finally {
       setGoogleLoading(false);
     }
@@ -107,7 +107,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Email dan Password wajib diisi');
+      setError(t('auth.errors.fields_required'));
       return;
     }
 
@@ -126,12 +126,12 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
       const data = await parseJsonSafely(response);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login gagal. Pastikan backend berjalan dan kredensial Anda benar.');
+        throw new Error(data.message || t('auth.errors.login_failed'));
       }
 
       const userRole = data.user?.role || 'Homeowner';
       if (userRole !== expectedRole) {
-        throw new Error(`Akses ditolak. Akun Anda tidak memiliki izin untuk masuk melalui portal ini.`);
+        throw new Error(t('auth.errors.access_denied'));
       }
 
       // Simpan data ke local storage
@@ -165,7 +165,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     if (!email) {
-      setError('Email wajib diisi');
+      setError(t('auth.errors.email_required'));
       return;
     }
 
@@ -186,10 +186,10 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
       }
 
       // Show generic success message (prevent user enumeration)
-      setInfo('Jika akun terdaftar, OTP telah dikirim. Silakan cek email atau WhatsApp Anda.');
+      setInfo(t('auth.info.otp_sent'));
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Gagal mengirim OTP. Coba lagi nanti.');
+      setError(err.message || t('auth.errors.otp_failed'));
     } finally {
       setGoogleLoading(false);
     }
@@ -298,7 +298,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
                 disabled={loading}
                 className="w-full relative group bg-[#009b7c] hover:bg-emerald-600 text-white font-bold rounded-xl py-3.5 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 overflow-hidden flex items-center justify-center gap-2 disabled:bg-slate-400 disabled:hover:translate-y-0"
               >
-                <span className="relative z-10">{loading ? 'Memproses...' : t('auth.login.btn_login')}</span>
+                <span className="relative z-10">{loading ? t('auth.loading.processing') : t('auth.login.btn_login')}</span>
                 {!loading ? (
                   <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform border border-emerald-400/30 rounded-full bg-white/10 p-0.5 ml-1" />
                 ) : (
@@ -331,7 +331,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
               </div>
             )}
             <span className="text-[14px] font-bold text-slate-700">
-              {googleLoading ? 'Memproses Google...' : t('auth.login.btn_google')}
+              {googleLoading ? t('auth.loading.connecting_google') : t('auth.login.btn_google')}
             </span>
           </button>
 

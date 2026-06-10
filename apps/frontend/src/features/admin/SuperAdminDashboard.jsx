@@ -119,6 +119,41 @@ const ThreeDBar = (props) => {
 export default function SuperAdminDashboard({ onNavigate }) {
   const { t, i18n } = useTranslation();
 
+  const getLocalizedDate = (dateStr, lang) => {
+    if (!dateStr) return '';
+    if (lang === 'en') {
+      const monthMap = {
+        'Januari': 'January',
+        'Februari': 'February',
+        'Maret': 'March',
+        'April': 'April',
+        'Mei': 'May',
+        'Juni': 'June',
+        'Juli': 'July',
+        'Agustus': 'August',
+        'September': 'September',
+        'Oktober': 'October',
+        'November': 'November',
+        'Desember': 'December'
+      };
+      let localized = dateStr;
+      Object.keys(monthMap).forEach(idMonth => {
+        localized = localized.replace(idMonth, monthMap[idMonth]);
+      });
+      return localized;
+    }
+    return dateStr;
+  };
+
+  const translatePlnCategory = (label) => {
+    if (!label) return '-';
+    if (i18n.language !== 'en') return label;
+    return label
+      .replace('(Subsidi)', '(Subsidized)')
+      .replace('(Non-Subsidi)', '(Non-Subsidized)')
+      .replace('Penerangan Jalan Umum', 'Public Street Lighting');
+  };
+
   // Dynamic month labels based on current language
   const MONTH_LABELS = useMemo(() => {
     return Array.from({ length: 12 }, (_, i) => {
@@ -353,7 +388,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
       body: data,
       foot: isNumericData ? [[t('admin_dashboard.export.footer_total'), total]] : null,
       startY: 25,
-      styles: { fontSize: 9 },
+      styles: { fontSize: 9, overflow: 'linebreak' },
+      pageBreak: 'auto',
+      rowPageBreak: 'avoid',
       headStyles: { fillStyle: 'f', fillColor: [5, 155, 39], textColor: 255 },
       footStyles: { fillColor: [240, 240, 240], textColor: 0, fontStyle: 'bold' }
     });
@@ -730,7 +767,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                     <p className="text-[12px] text-slate-500 font-medium">{t('admin_dashboard.tariff_summary.subtitle')}</p>
                     {plnSummary?.latestUpdate && (
                       <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100/50 text-[10px] font-bold rounded-md">
-                        <CheckCircle className="w-3 h-3" /> {t('admin_dashboard.tariff_summary.updated', { date: plnSummary.latestUpdate.date })}
+                        <CheckCircle className="w-3 h-3" /> {t('admin_dashboard.tariff_summary.updated', { date: getLocalizedDate(plnSummary.latestUpdate.date, i18n.language) })}
                       </span>
                     )}
                   </div>
@@ -773,7 +810,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                                 seg === 'Pemerintah & PJU' ? t('admin_dashboard.pln_segments.government') :
                                   seg === 'Pelayanan Sosial' ? t('admin_dashboard.pln_segments.social') : seg}
                       </p>
-                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">{plnSegmentCounts[seg] || 0} Golongan</p>
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">{plnSegmentCounts[seg] || 0} {t('admin_dashboard.pln_segments.group_label', 'Golongan')}</p>
                     </div>
                   </div>
                 );
@@ -784,7 +821,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
               <div className="text-[11px] text-slate-500 font-medium hidden md:block">
                 {plnSummary?.latestUpdate && (
                   <span>
-                    {t('admin_dashboard.pln_segments.last_update', 'Update Terakhir')}: <strong className="text-slate-700">{plnSummary.latestUpdate.category}</strong> (Rp {plnSummary.latestUpdate.tariff})
+                    {t('admin_dashboard.pln_segments.last_update', 'Update Terakhir')}: <strong className="text-slate-700">{translatePlnCategory(plnSummary.latestUpdate.category)}</strong> (Rp {plnSummary.latestUpdate.tariff})
                   </span>
                 )}
               </div>
@@ -793,7 +830,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   onClick={() => setShowPlnCategoriesModal(true)}
                   className="w-full sm:w-auto px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-600 font-semibold rounded-xl text-xs transition-colors border border-slate-200 flex items-center justify-center gap-2 shadow-sm"
                 >
-                  <Eye className="w-4 h-4" /> {t('admin_dashboard.pln_segments.btn_view_structure', 'Lihat Struktur Golongan')}
+                  <Eye className="w-4 h-4" /> {t('admin_dashboard.tariff.view_structure')}
                 </button>
                 <button
                   onClick={() => onNavigate && onNavigate('admin-tariff')}
@@ -1194,7 +1231,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                               'bg-rose-50 text-rose-700 border border-rose-200/60'
                             }`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {cust.status}
+                            {t(`admin_dashboard.status.${(cust.rawStatus || '').toLowerCase()}`, cust.rawStatus || '-')}
                           </div>
                         </div>
                       </td>
@@ -1233,7 +1270,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                         <div className="flex items-center justify-center gap-1">
                           {/* Quick Actions */}
                           <button
-                            title="Pause/Suspend"
+                            title={t('tooltip.pause_suspend')}
                             className="inline-flex w-8 h-8 items-center justify-center text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-x-2 group-hover:translate-x-0"
                           >
                             <AlertCircle className="w-4 h-4" />
@@ -1249,7 +1286,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                                 }, 100);
                               }
                             }}
-                            title="Detail"
+                            title={t('tooltip.detail')}
                             className="inline-flex w-8 h-8 items-center justify-center text-slate-400 hover:text-bieon-eco hover:bg-bieon-eco/10 rounded-lg transition-all active:scale-95 z-10"
                           >
                             <ChevronRight className="w-5 h-5" />
@@ -1296,7 +1333,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                         'bg-rose-50 text-rose-700 border border-rose-100/50'
                       }`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shadow-[0_0_8px_currentColor]"></span>
-                      {cust.status}
+                      {t(`admin_dashboard.status.${(cust.rawStatus || '').toLowerCase()}`, cust.rawStatus || '-')}
                     </div>
                   </div>
                   
@@ -1344,8 +1381,9 @@ export default function SuperAdminDashboard({ onNavigate }) {
 
           {/* Pagination */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 border-t border-slate-100/60 bg-white/40 backdrop-blur-md relative z-10">
-            <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{t('admin_dashboard.table.show')}</span>
+            {/* Left Column: Dropdown showing items per page */}
+            <div className="flex items-center gap-3 w-full md:w-auto md:flex-1 justify-center md:justify-start">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{t('admin_dashboard.table.rows_per_page')}</span>
               <div className="relative">
                 <button
                   onClick={() => setShowRowsDropdown(!showRowsDropdown)}
@@ -1375,6 +1413,10 @@ export default function SuperAdminDashboard({ onNavigate }) {
                   </>
                 )}
               </div>
+            </div>
+
+            {/* Center Column: Pagination Information */}
+            <div className="flex-1 text-center w-full md:w-auto">
               <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
                 {t('admin_dashboard.table.pagination_info', {
                   start: totalItems === 0 ? 0 : startIndex + 1,
@@ -1384,53 +1426,23 @@ export default function SuperAdminDashboard({ onNavigate }) {
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-50/80 p-1.5 rounded-xl border border-slate-100/80">
+            {/* Right Column: Previous and Next Navigation Buttons */}
+            <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto md:flex-1 justify-center md:justify-end">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-bieon-eco hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 transition-all font-bold text-xs shadow-sm hover:shadow-md disabled:shadow-none"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-slate-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4 md:hidden" />
+                <span className="hidden md:inline">{t('history.previous')}</span>
               </button>
-              
-              <div className="flex items-center gap-1 px-1">
-                {[...Array(totalPages)].map((_, i) => {
-                  const pageNumber = i + 1;
-                  // Show current page, first, last, and pages around current
-                  if (
-                    pageNumber === 1 ||
-                    pageNumber === totalPages ||
-                    (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
-                  ) {
-                    return (
-                      <button
-                        key={pageNumber}
-                        onClick={() => setCurrentPage(pageNumber)}
-                        className={`w-8 h-8 rounded-lg text-[11px] font-bold transition-all shadow-sm ${
-                          currentPage === pageNumber
-                            ? 'bg-gradient-to-br from-bieon-eco to-[#048722] text-white shadow-[0_2px_8px_rgba(5,155,39,0.3)]'
-                            : 'text-slate-500 hover:text-bieon-eco hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100'
-                        }`}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  } else if (
-                    pageNumber === currentPage - 2 ||
-                    pageNumber === currentPage + 2
-                  ) {
-                    return <span key={pageNumber} className="w-4 text-center text-slate-400 text-xs font-bold">...</span>;
-                  }
-                  return null;
-                })}
-              </div>
-
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-bieon-eco hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 transition-all font-bold text-xs shadow-sm hover:shadow-md disabled:shadow-none"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                className="p-2 md:px-5 lg:px-6 md:py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] md:text-[11px] font-bold text-slate-700 hover:bg-gray-100 disabled:opacity-50 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center min-w-[36px]"
               >
-                <ChevronRight className="w-4 h-4" />
+                <span className="hidden md:inline">{t('history.next')}</span>
+                <ChevronRight className="w-4 h-4 md:hidden" />
               </button>
             </div>
           </div>
@@ -1566,7 +1578,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                       {plnCategoriesGrouped[seg].map((cat) => (
                         <div key={cat.key || cat.label} className="bg-gradient-to-br from-slate-50 to-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:border-bieon-sense/15 transition-all">
                           <div className="text-sm font-bold text-slate-800 leading-snug">
-                            {cat.label}
+                            {translatePlnCategory(cat.label)}
                           </div>
                           <div className="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                             {localizedSeg || t('admin_dashboard.pln_segments.others')}
@@ -1587,7 +1599,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
                     {plnCategoriesGrouped[seg].map((cat) => (
                       <div key={cat.key || cat.label} className="bg-gradient-to-br from-slate-50 to-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:border-bieon-eco/15 transition-all">
                         <div className="text-sm font-bold text-slate-800 leading-snug">
-                          {cat.label}
+                          {translatePlnCategory(cat.label)}
                         </div>
                         <div className="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           {seg || t('admin_dashboard.pln_segments.others')}
