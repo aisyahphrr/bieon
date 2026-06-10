@@ -3,7 +3,10 @@ const router = express.Router();
 const kendaliPerangkatController = require('../controllers/kendaliPerangkatController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Apply authMiddleware to all routes
+// === DEV ONLY: Simulasi telemetri tanpa auth ===
+router.post('/:id/simulate-telemetry', kendaliPerangkatController.simulateTelemetry);
+
+// Apply authMiddleware to all routes below
 router.use(authMiddleware);
 
 // Route untuk simpan perangkat baru (Direct dari Form UI)

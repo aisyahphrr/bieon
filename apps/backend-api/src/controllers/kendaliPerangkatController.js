@@ -858,3 +858,61 @@ exports.sendRemoteCommand = async (req, res) => {
         res.status(500).json({ message: 'Gagal mengirim perintah remote', error: error.message });
     }
 };
+
+// ====================================================================
+// SIMULASI TELEMETRI (Development Only)
+// POST /api/kendaliperangkat/:id/simulate-telemetry
+// Body: { temperature: 28.5, humidity: 65 }
+// ====================================================================
+exports.simulateTelemetry = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { temperature, humidity } = req.body;
+
+        const updateFields = { lastSeen: new Date(), status: 'Active' };
+        if (temperature !== undefined) updateFields['currentValues.temperature'] = Number(temperature);
+        if (humidity !== undefined) updateFields['currentValues.humidity'] = Number(humidity);
+
+        const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(
+            id,
+            { $set: updateFields },
+            { new: true }
+        );
+
+        if (!updatedDevice) {
+            return res.status(404).json({ message: 'Device tidak ditemukan' });
+        }
+
+        // Emit via Socket.IO langsung dari io instance yang di-share via app
+        const io = req.app.get('io');
+        if (io) {
+            const emitPayload = {
+                _id: updatedDevice._id,
+                device_ieee: updatedDevice.device_ieee,
+                ieee: updatedDevice.device_ieee,
+                model: updatedDevice.modelId || updatedDevice.type,
+                manufacturer: updatedDevice.manufacturer,
+                currentValues: updatedDevice.currentValues,
+                battery: updatedDevice.battery,
+                status: String(updatedDevice.status),
+            };
+            io.emit('device_telemetry', emitPayload);
+            console.log('📡 [SIMULATE] Emitted device_telemetry:', updatedDevice.device_ieee, updatedDevice.currentValues);
+        } else {
+            console.warn('⚠️ [SIMULATE] io instance not found on app');
+        }
+
+        res.status(200).json({
+            message: 'Simulasi telemetri berhasil',
+            device: {
+                _id: updatedDevice._id,
+                name: updatedDevice.name,
+                currentValues: updatedDevice.currentValues,
+                status: updatedDevice.status
+            }
+        });
+    } catch (error) {
+        console.error('Error simulating telemetry:', error);
+        res.status(500).json({ message: 'Gagal simulasi telemetri', error: error.message });
+    }
+};

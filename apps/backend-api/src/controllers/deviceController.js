@@ -24,7 +24,7 @@ exports.startPairing = async (req, res) => {
 
 exports.startOpenJoin = async (req, res) => {
     try {
-        const { hubId, duration = 30 } = req.body || {};
+        const { hubId, duration = 30, mode, hub_only } = req.body || {};
         if (!hubId) {
             return res.status(400).json({ message: 'Missing hubId in request body' });
         }
@@ -63,7 +63,9 @@ exports.startOpenJoin = async (req, res) => {
         const { publishOpenJoin } = require('../config/mqtt');
         const published = publishOpenJoin(targetBieonId, Number(duration) || 30, {
             hubId: targetHub?._id ? String(targetHub._id) : String(hubId),
-            requestedBy: String(req.user.userId)
+            requestedBy: String(req.user.userId),
+            mode,
+            hub_only
         });
 
         res.status(200).json({

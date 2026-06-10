@@ -690,7 +690,7 @@ const connectMQTT = (io) => {
           if (deviceIeee) {
             try {
               const query = {
-                bieonId,
+                bieonId: buildFlexibleBieonIdRegex(bieonId) || bieonId,
                 $or: [
                   { device_ieee: deviceIeee },
                   { device_ieee: deviceIeee.toLowerCase() }
@@ -706,6 +706,7 @@ const connectMQTT = (io) => {
                       _id: updatedDevice._id,
                       bieonId,
                       hubId,
+                      device_ieee: updatedDevice.device_ieee || deviceIeee || undefined,
                       ieee: updatedDevice.device_ieee || deviceIeee || undefined,
                       model: updatedDevice.modelId || updatedDevice.type || updatedDevice.model || undefined,
                       manufacturer: updatedDevice.manufacturer || undefined,
@@ -916,8 +917,16 @@ const connectMQTT = (io) => {
         }
 
         if (parts.length >= 3) {
-          const friendlyName = parts[1];
-          const param = parts[2]; // suhu, kelembapan, status, command
+          let bieonId = null;
+          let friendlyName = parts[1];
+          let param = parts[2]; // suhu, kelembapan, status, command
+
+          // Support 4-segment topics: bieon/{bieonId}/{device_name}/{param}
+          if (parts.length >= 4) {
+            bieonId = parts[1];
+            friendlyName = parts[2];
+            param = parts[3];
+          }
 
           let actualValue = payload;
           if (typeof payload === 'object' && payload !== null) {
@@ -937,7 +946,7 @@ const connectMQTT = (io) => {
           else if (param === 'turbidity') formattedPayload.turbidity = actualValue;
           else if (param === 'status' || param === 'command') formattedPayload.status = String(actualValue);
 
-          await handleDeviceTelemetry(friendlyName, formattedPayload);
+          await handleDeviceTelemetry(friendlyName, formattedPayload, bieonId);
           await new SensorData({ topic, value: actualValue }).save();
         }
       }
@@ -949,7 +958,7 @@ const connectMQTT = (io) => {
   return mqttClient;
 };
 
-const handleDeviceTelemetry = async (friendlyName, payload) => {
+const handleDeviceTelemetry = async (friendlyName, payload, bieonId = null) => {
   try {
     let searchName = friendlyName;
     if (friendlyName.toLowerCase().includes('sensor_air')) {
@@ -957,7 +966,11 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
     }
 
     const nameRegex = new RegExp('^' + searchName.replace(/[_\s]/g, '[_\\s]') + '$', 'i');
-    let device = await KendaliPerangkat.findOne({ name: nameRegex });
+    const query = { name: nameRegex };
+    if (bieonId) {
+      query.bieonId = buildFlexibleBieonIdRegex(bieonId) || bieonId;
+    }
+    let device = await KendaliPerangkat.findOne(query);
 
     if (!device) return;
 
@@ -986,6 +999,7 @@ const handleDeviceTelemetry = async (friendlyName, payload) => {
     if (updatedDevice && ioInstance) {
       ioInstance.emit('device_telemetry', {
         _id: updatedDevice._id,
+        device_ieee: updatedDevice.device_ieee || undefined,
         ieee: updatedDevice.device_ieee || undefined,
         model: updatedDevice.modelId || updatedDevice.type || updatedDevice.model || undefined,
         manufacturer: updatedDevice.manufacturer || undefined,
@@ -1420,6 +1434,7 @@ const handleHierarchicalTelemetry = async (tenantId, bieonId, hubId, deviceId, p
     if (updatedDevice && ioInstance) {
       ioInstance.emit('device_telemetry', {
         _id: updatedDevice._id,
+        device_ieee: updatedDevice.device_ieee || undefined,
         ieee: updatedDevice.device_ieee || undefined,
         model: updatedDevice.modelId || updatedDevice.type || updatedDevice.model || undefined,
         manufacturer: updatedDevice.manufacturer || undefined,
