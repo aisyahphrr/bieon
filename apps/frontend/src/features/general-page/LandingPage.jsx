@@ -743,11 +743,8 @@ const LandingPage = () => {
           
           <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 relative z-10">
             <Reveal className="text-center mb-12 max-w-3xl mx-auto">
-              <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight drop-shadow-sm mb-8 uppercase">
                 {t('landing.faq.title')}
-              </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight drop-shadow-sm mb-8">
-                {t('landing.faq.heading')}
               </h2>
 
               {/* Dynamic Search Bar */}
@@ -950,7 +947,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="text-center text-[13px] text-white/60 font-medium pt-6 mt-8 border-t border-white/10 max-w-7xl mx-auto relative z-10">
-          {t('landing.footer.copyright')}
+          &copy; 2026 BIEON - Smart Living Monitoring System. Hak Cipta Dilindungi Undang-Undang.
         </div>
       </footer>
     </div>
