@@ -1,0 +1,21 @@
+{
+  "brand": "LG",
+  "deviceType": "TV",
+  "protocol": "1",
+  "bits": 32,
+  "buttons": {
+    "power": "0x20DF40BF",
+    "volume_up": "0x20DF40BF",
+    "volume_down": "0x20DFC03F",
+    "mute": "0x20DF906F",
+    "ch_up": "0x20DF00FF",
+    "ch_down": "0x20DF807F",
+    "input": "0x20DFF00F",
+    "menu": "0x20DFC23D",
+    "ok": "0x20DF22DD",
+    "up": "0x20DF02FD",
+    "down": "0x20DF827D",
+    "left": "0x20DFE01F",
+    "right": "0x20DF609F"
+  }
+}

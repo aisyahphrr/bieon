@@ -822,17 +822,19 @@ exports.sendRemoteCommand = async (req, res) => {
             if (hx.length > 0) bits = Math.min(hx.length * 4, 64);
         }
 
+        const isTransmitRaw = req.body.command === 'transmit_raw' || inferredProtocol === 'raw' || String(inferredProtocol).toLowerCase() === 'raw';
+
         const payload = {
-            command: req.body.command || 'transmit', // firmware expects transmit/send/run
-            action: functionKey || 'remote',
+            command: isTransmitRaw ? 'transmit_raw' : (req.body.command || 'transmit'), // firmware expects transmit/send/run
+            action: isTransmitRaw ? 'transmit_raw' : (functionKey || 'remote'),
             rawBitText: rawBitText || undefined,
             rawBitHex: rawBitHex || undefined,
             rawBitBinary: rawBitBinary || undefined,
             raw_signature: rawSignature || undefined,
             raw_hex: raw_hex || undefined,
             raw_value: raw_hex || undefined,
-            bits: bits ? String(bits) : undefined, // force string format for raw JSON parser on firmware
-            protocol: inferredProtocol ? String(inferredProtocol) : undefined, // force string format
+            bits: isTransmitRaw ? undefined : (bits ? String(bits) : undefined), // force string format for raw JSON parser on firmware
+            protocol: isTransmitRaw ? 'raw' : (inferredProtocol ? String(inferredProtocol) : undefined), // force string format
             sourceRemoteIeee: sourceRemoteIeee || undefined,
             sourceRemoteId: sourceRemoteId || undefined,
             // Include both target_ieee and ieee to match firmware expectations

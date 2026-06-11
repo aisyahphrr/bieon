@@ -94,17 +94,7 @@ exports.setupHubs = async (req, res) => {
                 });
             }
         } else {
-            // Fallback legacy (buat Hub dinamis jika tidak ada di gudang)
-            for (let i = 1; i <= count; i++) {
-                const newHub = new Hub({
-                    name: `Hub ${i}`,
-                    bieonId: normalizedBieonId,
-                    owner: userId,
-                    status: 'Online'
-                });
-                await newHub.save();
-                hubs.push(newHub);
-            }
+            console.log('[SETUP_HUBS] No hubs found in warehouse. No dummy hubs created.');
         }
 
         // 3. Klaim semua Perangkat terkait ke user baru ini

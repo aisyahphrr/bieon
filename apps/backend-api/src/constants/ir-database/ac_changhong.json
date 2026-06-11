@@ -1,0 +1,10 @@
+{
+  "brand": "Changhong",
+  "deviceType": "AC",
+  "protocol": "2",
+  "bits": 48,
+  "buttons": {
+    "power_on_cool_24": "0xB24D3F00FF00",
+    "power_off": "0xB24D7B00FF00"
+  }
+}

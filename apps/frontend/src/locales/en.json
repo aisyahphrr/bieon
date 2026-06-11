@@ -2205,6 +2205,19 @@
       "error_open": "Failed to open Open Join: ",
       "registered_success": "Success! {{name}} has been registered.",
       "save_failed": "Failed to save: "
+    },
+    "open_join_hub": {
+      "title": "Open Join Hub",
+      "desc": "Open search network for new BIEON Hub Nodes. The backend will automatically detect announcing Hubs and register them in real-time.",
+      "info": "The search duration is 30 seconds. Please activate pairing mode on your Hub device.",
+      "start_button": "Open Join Hub 30 Seconds",
+      "waiting_hubs": "Waiting for Hub to join...",
+      "click_start_desc": "Click the button above to open the Hub search network.",
+      "scanning_countdown": "Searching Hub Node... Time left: {{timeLeft}} s",
+      "error_activate": "Failed to activate open join hub",
+      "error_open": "Failed to open Open Join Hub: ",
+      "hubs_not_found": "Hub Not Found",
+      "hubs_not_found_desc": "No new hubs detected. Your Hub might already be registered."
     }
   },
   "datalog": {

@@ -2215,7 +2215,9 @@
       "click_start_desc": "Klik tombol di atas untuk membuka jaringan pencarian Hub.",
       "scanning_countdown": "Mencari Hub Node... Sisa waktu: {{timeLeft}} s",
       "error_activate": "Gagal mengaktifkan open join hub",
-      "error_open": "Gagal membuka Open Join Hub: "
+      "error_open": "Gagal membuka Open Join Hub: ",
+      "hubs_not_found": "Hub Tidak Ditemukan",
+      "hubs_not_found_desc": "Tidak ada hub baru yang terdeteksi. Hub Anda mungkin sudah terdaftar."
     }
   },
   "datalog": {

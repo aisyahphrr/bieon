@@ -19,6 +19,8 @@ const { findOneByBieonId, normalizeBieonId } = require('../shared/bieonId');
 const PdmMeter = require('../models/PdmMeter');
 const SystemLog = require('../models/SystemLog');
 const RemoteRawBitCatalog = require('../models/RemoteRawBitCatalog');
+const { classifyIrSignal } = require('../shared/irClassifier');
+
 
 const buildFlexibleBieonIdRegex = (value) => {
   const chars = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').split('');
@@ -208,6 +210,13 @@ const persistRemoteRawBitCatalog = async (bieonId, topic, payload) => {
   const bitEvent = normalizeRemoteBitPayload(topic, payload);
   const now = new Date();
 
+  const classification = classifyIrSignal(bitEvent.rawBitHex || bitEvent.rawBitText);
+  const deviceType = classification ? classification.deviceType : undefined;
+  const controlGroup = classification ? classification.brand : undefined;
+  const controlAction = classification ? classification.buttonKey : undefined;
+  const controlLabel = classification ? classification.label : undefined;
+  const autoNotes = classification ? classification.notes : undefined;
+
   try {
     const updated = await RemoteRawBitCatalog.findOneAndUpdate(
       { bieonId: normalizedBieonId, rawSignature: bitEvent.rawSignature },
@@ -224,10 +233,15 @@ const persistRemoteRawBitCatalog = async (bieonId, topic, payload) => {
           bitCount: bitEvent.bitCount,
           sequence: bitEvent.sequence,
           sessionId: bitEvent.sessionId,
-          sourceTopic: bitEvent.sourceTopic,
+          sourceTopic: topic,
           sourceRemoteId: bitEvent.sourceRemoteId,
           sourceRemoteIeee: bitEvent.sourceRemoteIeee,
           sourceHubId: bitEvent.sourceHubId,
+          deviceType,
+          controlGroup,
+          controlAction,
+          controlLabel,
+          notes: autoNotes,
           firstSeenAt: now,
           lastSeenAt: now,
           latestEventPayload: bitEvent.latestEventPayload
@@ -242,10 +256,15 @@ const persistRemoteRawBitCatalog = async (bieonId, topic, payload) => {
           bitCount: bitEvent.bitCount,
           sequence: bitEvent.sequence,
           sessionId: bitEvent.sessionId,
-          sourceTopic: bitEvent.sourceTopic,
+          sourceTopic: topic,
           sourceRemoteId: bitEvent.sourceRemoteId,
           sourceRemoteIeee: bitEvent.sourceRemoteIeee,
           sourceHubId: bitEvent.sourceHubId,
+          deviceType,
+          controlGroup,
+          controlAction,
+          controlLabel,
+          notes: autoNotes,
           lastSeenAt: now,
           latestEventPayload: bitEvent.latestEventPayload,
           isActive: true
@@ -270,10 +289,15 @@ const persistRemoteRawBitCatalog = async (bieonId, topic, payload) => {
       bitCount: bitEvent.bitCount,
       sequence: bitEvent.sequence,
       sessionId: bitEvent.sessionId,
-      sourceTopic: bitEvent.sourceTopic,
+      sourceTopic: topic,
       sourceRemoteId: bitEvent.sourceRemoteId,
       sourceRemoteIeee: bitEvent.sourceRemoteIeee,
       sourceHubId: bitEvent.sourceHubId,
+      deviceType,
+      controlGroup,
+      controlAction,
+      controlLabel,
+      notes: autoNotes,
       firstSeenAt: now,
       lastSeenAt: now,
       latestEventPayload: bitEvent.latestEventPayload,
@@ -348,7 +372,7 @@ const connectMQTT = (io) => {
               // Ignore non-hub device announces when hub-only mode is active
               console.log('[DISCOVERY] Ignored non-hub announce during hub-only open-join for', bieonId, deviceIeee, deviceModel, deviceManufacturer);
               if (ioInstance) ioInstance.emit('device_discovered', { bieonId, ieee: deviceIeee, model: deviceModel, manufacturer: deviceManufacturer, openJoin: { active: true, hubOnly: true } });
-            } else {
+            } else if (!isHubCandidate) {
               try {
                 const sessionHub = openJoinSession.hubId ? await Hub.findById(openJoinSession.hubId).lean() : await Hub.findOne({ bieonId }).lean();
                 if (sessionHub) {
@@ -1505,9 +1529,10 @@ const handleHierarchicalTelemetry = async (tenantId, bieonId, hubId, deviceId, p
 const publishOpenJoin = (bieonDeviceId, duration = 30, meta = {}) => {
   if (!bieonDeviceId) return;
   if (!mqttClient) return;
+  const isHubOnly = Boolean(meta.mode === 'add_hub_node' || meta.hub_only);
   const existingSession = getOpenJoinSession(bieonDeviceId);
-  if (existingSession) {
-    console.log(`[MQTT] skip duplicate open_join for ${bieonDeviceId}; session already active`);
+  if (existingSession && existingSession.hubOnly === isHubOnly) {
+    console.log(`[MQTT] skip duplicate open_join for ${bieonDeviceId}; session already active in same mode`);
     return false;
   }
   const topic = `bieon/${bieonDeviceId}/admin/open_join`;
@@ -1549,7 +1574,7 @@ const publishRemoteRegistration = (bieonDeviceId, duration = 90, meta = {}) => {
     requested_by: meta.requestedBy || meta.requested_by || 'api',
     session_id: meta.sessionId || `reg_${Date.now()}`,
     ...(meta.remoteId ? { remote_id: meta.remoteId } : {}),
-    ...(meta.remoteIeee ? { remote_ieee: meta.remoteIeee } : {}),
+    ...(meta.remoteIeee ? { remote_ieee: meta.remoteIeee, device_ieee: meta.remoteIeee, ieee: meta.remoteIeee } : {}),
     ...(meta.hubId ? { hub_id: meta.hubId } : {})
   };
 
