@@ -1,0 +1,9 @@
+{
+  "brand": "Daikin",
+  "deviceType": "AC",
+  "protocol": "raw",
+  "buttons": {
+    "power_on_cool_24": "232811940230023002300230",
+    "power_off": "232811940230023002300230"
+  }
+}

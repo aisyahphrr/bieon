@@ -1482,6 +1482,10 @@ export function DeviceControlPage({ onNavigate }) {
         : [];
     const existingMapping = currentMappings.find((item) => item.rawSignature === catalogItem.rawSignature || item._id === catalogItem._id);
 
+    const detectedType = catalogItem.deviceType ? normalizeRemoteDeviceType(catalogItem.deviceType) : null;
+    const detectedBrand = catalogItem.controlGroup || null;
+    const detectedKey = catalogItem.controlAction || null;
+
     setRemoteMappingDraft({
       deviceId: device.id,
       catalogId: catalogItem._id,
@@ -1491,12 +1495,12 @@ export function DeviceControlPage({ onNavigate }) {
       rawBitBinary: catalogItem.rawBitBinary || '',
       sourceRemoteIeee: existingMapping?.sourceRemoteIeee || catalogItem.sourceRemoteIeee || '',
       sourceRemoteId: existingMapping?.sourceRemoteId || catalogItem.sourceRemoteId || '',
-      deviceType: existingMapping?.deviceType || fallbackType,
-      functionKey: existingMapping?.functionKey || 'power',
-      brand: existingMapping?.brand || 'Other',
-      customBrand: existingMapping?.brand && existingMapping.brand !== 'Other' ? existingMapping.brand : '',
-      functionLabel: existingMapping?.functionLabel || getRemoteFunctionLabel(fallbackType, existingMapping?.functionKey || 'power'),
-      label: existingMapping?.label || ''
+      deviceType: existingMapping?.deviceType || detectedType || fallbackType,
+      functionKey: existingMapping?.functionKey || detectedKey || 'power',
+      brand: existingMapping?.brand || (detectedBrand ? (['Samsung', 'LG', 'Daikin', 'Panasonic', 'Sharp', 'Gree', 'Midea', 'TCL', 'Sony', 'Polytron', 'Xiaomi', 'Hisense', 'Miyako', 'Maspion', 'Cosmos', 'Sekai', 'KDK', 'Turbo'].includes(detectedBrand) ? detectedBrand : 'Other') : 'Other'),
+      customBrand: existingMapping?.brand && existingMapping.brand !== 'Other' ? existingMapping.brand : (detectedBrand && !['Samsung', 'LG', 'Daikin', 'Panasonic', 'Sharp', 'Gree', 'Midea', 'TCL', 'Sony', 'Polytron', 'Xiaomi', 'Hisense', 'Miyako', 'Maspion', 'Cosmos', 'Sekai', 'KDK', 'Turbo'].includes(detectedBrand) ? detectedBrand : ''),
+      functionLabel: existingMapping?.functionLabel || getRemoteFunctionLabel(existingMapping?.deviceType || detectedType || fallbackType, existingMapping?.functionKey || detectedKey || 'power'),
+      label: existingMapping?.label || catalogItem.controlLabel || ''
     });
   };
 
@@ -3447,8 +3451,19 @@ export function DeviceControlPage({ onNavigate }) {
                                                       <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-600 border border-gray-200">
                                                         x{bitItem.captureCount || 1}
                                                       </span>
+                                                      {bitItem.deviceType && bitItem.controlGroup && (
+                                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-green-100 text-green-700 border border-green-200 shadow-sm flex items-center gap-1 animate-pulse">
+                                                          Terdeteksi: {bitItem.controlGroup} {bitItem.deviceType} ({bitItem.controlLabel || bitItem.controlAction})
+                                                        </span>
+                                                      )}
                                                     </div>
                                                     <p className="text-sm font-bold text-gray-900 break-all">{extractBitsFromCatalog(bitItem)}</p>
+                                                    {bitItem.notes && (
+                                                      <p className="text-xs text-bieon-eco font-bold mt-1.5 flex items-center gap-1.5 bg-bieon-eco/5 px-2.5 py-1 rounded-lg w-fit border border-bieon-eco/10">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-bieon-eco animate-ping"></span>
+                                                        {bitItem.notes}
+                                                      </p>
+                                                    )}
                                                     <div className="flex flex-wrap gap-3 mt-3 text-[11px] text-gray-500">
                                                       <span>Remote: {bitItem.sourceRemoteIeee || bitItem.sourceRemoteId || '-'}</span>
                                                       <span>Seen: {bitItem.lastSeenAt ? new Date(bitItem.lastSeenAt).toLocaleString('id-ID') : '-'}</span>
@@ -4576,9 +4591,9 @@ export function DeviceControlPage({ onNavigate }) {
                         </div>
                       ) : hubScanAttempted && discoveredHubs.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-8 bg-gray-50 border border-dashed border-gray-200 rounded-3xl mb-6">
-                          <p className="text-sm text-gray-400 italic">{t('kendali.open_join.devices_not_found', 'Hub tidak ditemukan')}</p>
+                          <p className="text-sm text-gray-400 italic">{t('kendali.open_join_hub.hubs_not_found', 'Hub tidak ditemukan')}</p>
                           <p className="text-[10px] text-gray-300 mt-2 text-center px-6">
-                            {t('kendali.open_join.devices_not_found_desc', 'Tidak ada hub baru yang terdeteksi. Hub Anda mungkin sudah terdaftar.')}
+                            {t('kendali.open_join_hub.hubs_not_found_desc', 'Tidak ada hub baru yang terdeteksi. Hub Anda mungkin sudah terdaftar.')}
                           </p>
                         </div>
                       ) : discoveredHubs.length === 0 ? (

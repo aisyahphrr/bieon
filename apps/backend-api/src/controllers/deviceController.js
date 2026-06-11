@@ -24,13 +24,22 @@ exports.startPairing = async (req, res) => {
 
 exports.startOpenJoin = async (req, res) => {
     try {
-        const { hubId, duration = 30, mode, hub_only } = req.body || {};
-        if (!hubId) {
-            return res.status(400).json({ message: 'Missing hubId in request body' });
-        }
-
+        let { hubId, duration = 30, mode, hub_only } = req.body || {};
+        
         if (!req.user?.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const userId = req.user.userId;
+
+        // Jika hubId tidak diberikan, cari otomatis Hub Node milik user
+        if (!hubId) {
+            const userHubs = await Hub.find({ owner: userId }).lean();
+            if (userHubs.length === 0) {
+                return res.status(400).json({ message: 'Hub Node belum terdaftar. Silakan tambahkan Hub Node terlebih dahulu sebelum menambahkan perangkat!' });
+            }
+            // Pilih Hub Node pertama yang terdaftar secara otomatis
+            hubId = String(userHubs[0]._id);
         }
 
         // Resolve hubId: allow either the BIEON device id (bieon_001) or Mongo _id
@@ -50,20 +59,21 @@ exports.startOpenJoin = async (req, res) => {
             }
         }
 
-        if (!targetBieonId) {
-            return res.status(404).json({ message: 'Tidak dapat menemukan hub dengan id yang diberikan (coba gunakan bieon_001 atau hub _id yang valid).' });
+        // Menjamin Hub Node terdaftar dan fisik Hub Node sudah terhubung (memiliki IEEE) sebelum memulai open join
+        if (!targetHub || !targetHub.device_ieee) {
+            return res.status(400).json({ message: 'Fisik Hub Node belum terhubung. Silakan pasangkan (pairing) Hub Node fisik Anda terlebih dahulu sebelum menambahkan perangkat!' });
         }
 
         if (String(req.user.role || '').toLowerCase() !== 'superadmin') {
-            if (!targetHub?.owner || String(targetHub.owner) !== String(req.user.userId)) {
+            if (!targetHub.owner || String(targetHub.owner) !== String(userId)) {
                 return res.status(403).json({ message: 'Anda tidak memiliki akses untuk membuka open join pada hub ini.' });
             }
         }
 
         const { publishOpenJoin } = require('../config/mqtt');
         const published = publishOpenJoin(targetBieonId, Number(duration) || 30, {
-            hubId: targetHub?._id ? String(targetHub._id) : String(hubId),
-            requestedBy: String(req.user.userId),
+            hubId: String(targetHub._id),
+            requestedBy: String(userId),
             mode,
             hub_only
         });

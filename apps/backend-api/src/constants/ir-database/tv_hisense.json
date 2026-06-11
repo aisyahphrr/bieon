@@ -1,0 +1,21 @@
+{
+  "brand": "Hisense",
+  "deviceType": "TV",
+  "protocol": "1",
+  "bits": 32,
+  "buttons": {
+    "power": "0xFD02FF",
+    "volume_up": "0xFD28D7",
+    "volume_down": "0xFD6897",
+    "mute": "0xFD08F7",
+    "ch_up": "0xFD18E7",
+    "ch_down": "0xFD9867",
+    "input": "0xFD30CF",
+    "menu": "0xFD50AF",
+    "ok": "0xFD48B7",
+    "up": "0xFD20DF",
+    "down": "0xFDA05F",
+    "left": "0xFD609F",
+    "right": "0xFDE01F"
+  }
+}

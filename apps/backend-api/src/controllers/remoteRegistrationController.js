@@ -27,10 +27,13 @@ exports.startRemoteRegistration = async (req, res) => {
         }
 
         const requestedBy = String(req.user.userId);
+        const deviceIeee = req.body?.device_ieee || req.body?.deviceIeee || req.body?.ieee || req.body?.remoteIeee || req.body?.remote_ieee || req.query?.device_ieee || req.query?.ieee;
+        
         const published = publishRemoteRegistration(bieonId, duration, {
             requestedBy,
             source: 'web',
-            sessionId: req.body?.sessionId || `reg_${Date.now()}`
+            sessionId: req.body?.sessionId || `reg_${Date.now()}`,
+            remoteIeee: deviceIeee
         });
 
         if (!published) {

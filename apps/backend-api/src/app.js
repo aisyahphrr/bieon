@@ -17,6 +17,7 @@ const historyRoutes = require("./routes/historyRoutes");
 const productRoutes = require("./routes/productRoutes");
 const alertRoutes = require("./routes/alertRoutes");
 const sensorRoutes = require("./routes/sensorRoutes");
+const irDatabaseRoutes = require("./routes/irDatabaseRoutes");
 require('./models/AccountDeletionRequest');
 
 // Middleware
@@ -44,5 +45,6 @@ app.use('/api/history', historyRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/sensors', sensorRoutes);
+app.use('/api/ir-database', irDatabaseRoutes);
 
 module.exports = app;
