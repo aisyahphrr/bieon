@@ -184,6 +184,10 @@ export function DeviceControlPage({ onNavigate }) {
     if (!s && s !== 0) return '';
     return String(s).replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
   };
+  const normalizeBieonId = (s) => {
+    if (!s) return '';
+    return String(s).trim().toLowerCase().replace(/-/g, '_');
+  };
   const formatIeeeDisplay = (s) => {
     const n = normalizeIeee(s);
     return n || '-';
@@ -458,6 +462,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     return () => clearInterval(interval);
   }, [leavingDevices]);
+
 
   // Efek Hitung Mundur untuk Scanning Open Join
   useEffect(() => {
@@ -755,7 +760,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     // SOCKET.IO REAL-TIME MONITORING
     // Gunakan URL eksplisit ke backend agar tidak bergantung pada Vite proxy untuk WebSocket
-    const backendUrl = window.location.hostname === 'localhost' 
+    const backendUrl = window.location.hostname === 'localhost'
       ? `http://${window.location.hostname}:5000`
       : window.location.origin;
     const socket = io(backendUrl, {
@@ -795,7 +800,7 @@ export function DeviceControlPage({ onNavigate }) {
             devices: hub.devices.map(dev => {
               const devIeee = normalizeIeee(dev.device_ieee || '');
               const updIeee = normalizeIeee(updatedDevice.device_ieee || updatedDevice.ieee || '');
-              
+
               let isMatch = false;
               if (devIeee && updIeee) {
                 isMatch = devIeee === updIeee;
@@ -901,7 +906,7 @@ export function DeviceControlPage({ onNavigate }) {
           if (String(sys.bieonId).toLowerCase() === String(bieonId).toLowerCase() || String(sys.id) === String(hub.systemId)) {
             const alreadyExists = sys.hubs.some(h => String(h._id || h.id || '') === hubId);
             if (alreadyExists) return sys;
-            
+
             const formattedHub = {
               ...hub,
               id: hubId,
@@ -953,9 +958,9 @@ export function DeviceControlPage({ onNavigate }) {
 
       setRemoteRegistrationStateByBieon(prev => ({
         ...prev,
-        [bieonId]: {
+        [normalizeBieonId(bieonId)]: {
           ...registrationState,
-          bieonId,
+          bieonId: normalizeBieonId(bieonId),
           updatedAt: registrationState?.updatedAt || Date.now()
         }
       }));
@@ -967,11 +972,12 @@ export function DeviceControlPage({ onNavigate }) {
       if (!bieonId || !catalogItem) return;
 
       setRemoteBitCatalogByBieon(prev => {
-        const currentItems = Array.isArray(prev[bieonId]) ? prev[bieonId] : [];
+        const normalizedKey = normalizeBieonId(bieonId);
+        const currentItems = Array.isArray(prev[normalizedKey]) ? prev[normalizedKey] : [];
         const nextItems = currentItems.filter((item) => item._id !== catalogItem._id && item.rawSignature !== catalogItem.rawSignature);
         return {
           ...prev,
-          [bieonId]: [catalogItem, ...nextItems].sort((a, b) => new Date(b.lastSeenAt || b.createdAt || 0) - new Date(a.lastSeenAt || a.createdAt || 0))
+          [normalizedKey]: [catalogItem, ...nextItems].sort((a, b) => new Date(b.lastSeenAt || b.createdAt || 0) - new Date(a.lastSeenAt || a.createdAt || 0))
         };
       });
     });
@@ -982,14 +988,15 @@ export function DeviceControlPage({ onNavigate }) {
       if (!bieonId || !catalogItem) return;
 
       setRemoteBitCatalogByBieon(prev => {
-        const currentItems = Array.isArray(prev[bieonId]) ? prev[bieonId] : [];
+        const normalizedKey = normalizeBieonId(bieonId);
+        const currentItems = Array.isArray(prev[normalizedKey]) ? prev[normalizedKey] : [];
         const found = currentItems.some((item) => item._id === catalogItem._id || item.rawSignature === catalogItem.rawSignature);
         const nextItems = found
           ? currentItems.map((item) => (item._id === catalogItem._id || item.rawSignature === catalogItem.rawSignature) ? catalogItem : item)
           : [catalogItem, ...currentItems];
         return {
           ...prev,
-          [bieonId]: nextItems.sort((a, b) => new Date(b.lastSeenAt || b.createdAt || 0) - new Date(a.lastSeenAt || a.createdAt || 0))
+          [normalizedKey]: nextItems.sort((a, b) => new Date(b.lastSeenAt || b.createdAt || 0) - new Date(a.lastSeenAt || a.createdAt || 0))
         };
       });
     });
@@ -1030,7 +1037,7 @@ export function DeviceControlPage({ onNavigate }) {
         if (!cancelled && response.ok) {
           setRemoteBitCatalogByBieon(prev => ({
             ...prev,
-            [bieonId]: Array.isArray(data.items) ? data.items : []
+            [normalizeBieonId(bieonId)]: Array.isArray(data.items) ? data.items : []
           }));
         }
       } catch (error) {
@@ -1524,9 +1531,50 @@ export function DeviceControlPage({ onNavigate }) {
       const bieonId = String(currentBieon?.bieonId || '').trim();
       if (bieonId) {
         setRemoteBitCatalogByBieon(prev => {
-          const currentItems = Array.isArray(prev[bieonId]) ? prev[bieonId] : [];
+          const normalizedKey = normalizeBieonId(bieonId);
+          const currentItems = Array.isArray(prev[normalizedKey]) ? prev[normalizedKey] : [];
           const nextItems = currentItems.map((item) => (item._id === data.item._id || item.rawSignature === data.item.rawSignature) ? data.item : item);
-          return { ...prev, [bieonId]: nextItems };
+          return { ...prev, [normalizedKey]: nextItems };
+        });
+      }
+
+      if (remoteMappingDraft?.catalogId === catalogItem._id) {
+        setRemoteMappingDraft(null);
+      }
+    } catch (error) {
+      alert(t('alerts.raw_bit_delete_failed', { message: error.message }));
+    }
+  };
+
+  const executeDeleteRemoteBit = async (catalogItem) => {
+    if (!catalogItem?._id) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/devices/registration/catalog/${catalogItem._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          captureStatus: 'disabled',
+          isActive: false
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal menghapus raw bit');
+      }
+
+      const bieonId = String(currentBieon?.bieonId || '').trim();
+      if (bieonId) {
+        setRemoteBitCatalogByBieon(prev => {
+          const normalizedKey = normalizeBieonId(bieonId);
+          const currentItems = Array.isArray(prev[normalizedKey]) ? prev[normalizedKey] : [];
+          const nextItems = currentItems.map((item) => (item._id === data.item._id || item.rawSignature === data.item.rawSignature) ? data.item : item);
+          return { ...prev, [normalizedKey]: nextItems };
         });
       }
 
@@ -1633,10 +1681,13 @@ export function DeviceControlPage({ onNavigate }) {
 
       setBieonSystems(updatedSystems);
       setCurrentBieon(updatedSystems.find((system) => system.id === currentBieon.id) || currentBieon);
-      setRemoteBitCatalogByBieon(prev => ({
-        ...prev,
-        [currentBieon.bieonId]: (prev[currentBieon.bieonId] || []).map((item) => item._id === remoteMappingDraft.catalogId ? { ...item, captureStatus: 'mapped', isActive: true, controlAction: functionKey, controlLabel: label, deviceType, controlGroup: brand } : item)
-      }));
+      setRemoteBitCatalogByBieon(prev => {
+        const normalizedKey = normalizeBieonId(currentBieon.bieonId);
+        return {
+          ...prev,
+          [normalizedKey]: (prev[normalizedKey] || []).map((item) => item._id === remoteMappingDraft.catalogId ? { ...item, captureStatus: 'mapped', isActive: true, controlAction: functionKey, controlLabel: label, deviceType, controlGroup: brand } : item)
+        };
+      });
       setRemoteMappingDraft(null);
       alert(t('alerts.remote_mapping_saved'));
     } catch (error) {
@@ -3040,8 +3091,8 @@ export function DeviceControlPage({ onNavigate }) {
                           (String(device.controlledDevice || '').trim() !== '') ||
                           deviceCategoryKey !== 'sensor'
                         );
-                        const currentRemoteCatalog = remoteBitCatalogByBieon[currentBieon?.bieonId] || [];
-                        const currentRemoteRegistration = remoteRegistrationStateByBieon[currentBieon?.bieonId] || null;
+                        const currentRemoteCatalog = (remoteBitCatalogByBieon[normalizeBieonId(currentBieon?.bieonId)] || []).filter(item => item.isActive !== false && item.captureStatus !== 'disabled');
+                        const currentRemoteRegistration = remoteRegistrationStateByBieon[normalizeBieonId(currentBieon?.bieonId)] || null;
                         const deviceRemoteMappings = Array.isArray(device.remoteMappings)
                           ? device.remoteMappings
                           : Array.isArray(device.remoteState?.mappings)
@@ -3359,8 +3410,8 @@ export function DeviceControlPage({ onNavigate }) {
                                           disabled={remoteRegCountdown > 0 || currentRemoteRegistration?.active}
                                           onClick={() => handleStartRemoteRegistration(device)}
                                           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-sm transition-all ${(remoteRegCountdown > 0 || currentRemoteRegistration?.active)
-                                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                              : 'bg-bieon-eco text-white hover:bg-bieon-eco/90 active:scale-95'
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : 'bg-bieon-eco text-white hover:bg-bieon-eco/90 active:scale-95'
                                             }`}
                                         >
                                           {remoteRegCountdown > 0 ? `Registering (${remoteRegCountdown}s)` : currentRemoteRegistration?.active ? 'Registering' : 'Register'}
@@ -3414,8 +3465,8 @@ export function DeviceControlPage({ onNavigate }) {
                                                     </button>
                                                     <button
                                                       type="button"
-                                                      onClick={() => handleDisableRemoteBit(bitItem)}
-                                                      className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-all"
+                                                      onClick={() => executeDeleteRemoteBit(bitItem)}
+                                                      className="w-10 h-10 flex items-center justify-center rounded-xl border bg-red-50 text-red-600 border-red-100 hover:bg-red-100 transition-all"
                                                       title={t('placeholder.title_delete_raw_bit')}
                                                     >
                                                       <Minus className="w-4 h-4" />
@@ -4443,13 +4494,13 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full p-8 sm:p-10 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-black text-gray-900">{t('kendali.open_join_hub.title', 'Buka Open Join Hub')}</h2>
-                    <button 
-                      onClick={() => { 
-                        setStep("view-bieon"); 
-                        setHubScanAttempted(false); 
-                        setIsHubScanning(false); 
-                        setDiscoveredHubs([]); 
-                      }} 
+                    <button
+                      onClick={() => {
+                        setStep("view-bieon");
+                        setHubScanAttempted(false);
+                        setIsHubScanning(false);
+                        setDiscoveredHubs([]);
+                      }}
                       className="p-2 hover:bg-gray-100 rounded-full transition-all"
                     >
                       <X className="w-5 h-5 text-gray-400" />
@@ -4485,11 +4536,11 @@ export function DeviceControlPage({ onNavigate }) {
                     {/* ACTIONS */}
                     <div className="flex items-center gap-3 pt-2">
                       <button
-                        onClick={() => { 
-                          setStep("view-bieon"); 
-                          setHubScanAttempted(false); 
-                          setIsHubScanning(false); 
-                          setDiscoveredHubs([]); 
+                        onClick={() => {
+                          setStep("view-bieon");
+                          setHubScanAttempted(false);
+                          setIsHubScanning(false);
+                          setDiscoveredHubs([]);
                         }}
                         className="flex-1 py-4 px-6 border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
                       >
@@ -4498,11 +4549,10 @@ export function DeviceControlPage({ onNavigate }) {
                       <button
                         onClick={handleStartHubDiscovery}
                         disabled={isHubScanning || isOpenHubJoinRequestPending}
-                        className={`flex-1 py-4 px-6 rounded-2xl text-sm font-bold text-white transition-all shadow-lg ${
-                          isHubScanning 
-                            ? 'bg-gray-400 shadow-none cursor-not-allowed' 
+                        className={`flex-1 py-4 px-6 rounded-2xl text-sm font-bold text-white transition-all shadow-lg ${isHubScanning
+                            ? 'bg-gray-400 shadow-none cursor-not-allowed'
                             : 'bg-bieon-eco hover:bg-bieon-eco-dark hover:shadow-bieon-eco/30'
-                        }`}
+                          }`}
                       >
                         {isHubScanning ? (
                           <span className="flex items-center justify-center gap-2">

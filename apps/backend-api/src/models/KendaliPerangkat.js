@@ -85,8 +85,27 @@ const kendaliPerangkatSchema = new mongoose.Schema({
     collection: 'kendaliperangkat' // Specifically requested name
 });
 
-// Ensure uniqueness per Bieon system for hardware IEEE identifiers
-kendaliPerangkatSchema.index({ bieonId: 1, device_ieee: 1 }, { unique: true, sparse: true });
+// Ensure mapping per Bieon system for hardware IEEE identifiers (non-unique to support multiple remote targets)
+kendaliPerangkatSchema.index({ bieonId: 1, device_ieee: 1 }, { sparse: true });
+
+// Debug Delete Hooks to trace deletions
+kendaliPerangkatSchema.pre('deleteMany', function(next) {
+    console.log('🔴 deleteMany triggered! Query:', JSON.stringify(this.getQuery()));
+    console.log(new Error('Stack trace:').stack);
+    if (typeof next === 'function') next();
+});
+
+kendaliPerangkatSchema.pre('deleteOne', function(next) {
+    console.log('🔴 deleteOne triggered! Query:', JSON.stringify(this.getQuery()));
+    console.log(new Error('Stack trace:').stack);
+    if (typeof next === 'function') next();
+});
+
+kendaliPerangkatSchema.pre('findOneAndDelete', function(next) {
+    console.log('🔴 findOneAndDelete triggered! Query:', JSON.stringify(this.getQuery()));
+    console.log(new Error('Stack trace:').stack);
+    if (typeof next === 'function') next();
+});
 
 kendaliPerangkatSchema.plugin(dataSizePlugin);
 

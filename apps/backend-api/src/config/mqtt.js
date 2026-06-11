@@ -215,22 +215,7 @@ const persistRemoteRawBitCatalog = async (bieonId, topic, payload) => {
         $setOnInsert: {
           bieonId: normalizedBieonId,
           rawSignature: bitEvent.rawSignature,
-          rawPayload: bitEvent.rawPayload,
-          rawBitText: bitEvent.rawBitText,
-          rawBitHex: bitEvent.rawBitHex,
-          rawBitBinary: bitEvent.rawBitBinary,
-          protocol: bitEvent.protocol,
-          bitLength: bitEvent.bitLength,
-          bitCount: bitEvent.bitCount,
-          sequence: bitEvent.sequence,
-          sessionId: bitEvent.sessionId,
-          sourceTopic: bitEvent.sourceTopic,
-          sourceRemoteId: bitEvent.sourceRemoteId,
-          sourceRemoteIeee: bitEvent.sourceRemoteIeee,
-          sourceHubId: bitEvent.sourceHubId,
-          firstSeenAt: now,
-          lastSeenAt: now,
-          latestEventPayload: bitEvent.latestEventPayload
+          firstSeenAt: now
         },
         $set: {
           rawPayload: bitEvent.rawPayload,
