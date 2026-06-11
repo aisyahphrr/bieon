@@ -2329,9 +2329,13 @@
       "title": "SOLUTION",
       "heading": "ONE PLATFORM. TOTAL MONITORING",
       "energy": "Energy",
+      "energy_desc": "Monitor electricity consumption, power efficiency, and energy system performance in real-time.",
       "water": "Water",
+      "water_desc": "Track water quality and usage to maintain health and resource efficiency.",
       "environment": "Environment",
-      "security": "Security"
+      "environment_desc": "Measure air quality, temperature, humidity, and environmental conditions in an integrated way.",
+      "security": "Security",
+      "security_desc": "Smart monitoring system to enhance protection of areas, assets, and infrastructure."
     },
     "features": {
       "title": "Features",

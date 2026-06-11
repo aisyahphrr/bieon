@@ -2329,9 +2329,13 @@
       "title": "SOLUTION",
       "heading": "ONE PLATFORM. TOTAL MONITORING",
       "energy": "Energi",
+      "energy_desc": "Monitoring konsumsi listrik, efisiensi daya, dan performa sistem energi secara real-time.",
       "water": "Air",
+      "water_desc": "Pantau kualitas dan penggunaan air untuk menjaga kesehatan dan efisiensi sumber daya.",
       "environment": "Lingkungan",
-      "security": "Keamanan"
+      "environment_desc": "Ukur kualitas udara, suhu, kelembaban, dan kondisi lingkungan secara terintegrasi.",
+      "security": "Keamanan",
+      "security_desc": "Sistem pemantauan cerdas untuk meningkatkan proteksi area, aset, dan infrastruktur."
     },
     "features": {
       "title": "Features",

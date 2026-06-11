@@ -166,6 +166,7 @@ const FAQItem = ({ question, answer }) => {
   );
 };
 
+
 const LandingPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -388,57 +389,68 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* Section Solution */}
-        <section className="bg-white py-16 border-b border-slate-100 relative overflow-hidden">
-          <div className="w-full max-w-[1440px] mx-auto px-6 text-center relative z-10">
+        {/* Section Solution — Grid Cards dengan Deskripsi */}
+        <section className="bg-white py-20 lg:py-28 border-b border-slate-100 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-30">
+            <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[80%] bg-emerald-50 blur-[100px] rounded-full"></div>
+            <div className="absolute bottom-[-20%] left-[-10%] w-[35%] h-[70%] bg-teal-50 blur-[100px] rounded-full"></div>
+          </div>
+          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 text-center relative z-10">
             <Reveal>
               <p className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">{t('landing.solution.title')}</p>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-12">{t('landing.solution.heading')}</h2>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-4">{t('landing.solution.heading')}</h2>
+              <p className="text-slate-500 font-medium text-base max-w-xl mx-auto mb-14">
+                {t('landing.hero.desc')}
+              </p>
             </Reveal>
 
-            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* 1. Energi */}
-              <Reveal delay="0.1s" className="flex flex-col items-center group">
-                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/5ENERGY.png" alt={t('landing.solution.energy')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
+              <Reveal delay="0.1s" className="group bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1.5 transition-all duration-300 text-center">
+                <div className="w-16 h-16 mx-auto mb-5 bg-white rounded-xl shadow-md flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/5ENERGY.png" alt={t('landing.solution.energy')} className="w-full h-full object-cover rounded-xl" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.energy')}</span>
+                <h3 className="text-base font-extrabold text-slate-800 mb-2 uppercase tracking-wide">{t('landing.solution.energy')}</h3>
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">{t('landing.solution.energy_desc')}</p>
               </Reveal>
 
               {/* 2. Air */}
-              <Reveal delay="0.2s" className="flex flex-col items-center group">
-                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/6AIR.png" alt={t('landing.solution.water')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
+              <Reveal delay="0.2s" className="group bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-cyan-900/5 hover:-translate-y-1.5 transition-all duration-300 text-center">
+                <div className="w-16 h-16 mx-auto mb-5 bg-white rounded-xl shadow-md flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/6AIR.png" alt={t('landing.solution.water')} className="w-full h-full object-cover rounded-xl" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.water')}</span>
+                <h3 className="text-base font-extrabold text-slate-800 mb-2 uppercase tracking-wide">{t('landing.solution.water')}</h3>
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">{t('landing.solution.water_desc')}</p>
               </Reveal>
 
               {/* 3. Lingkungan */}
-              <Reveal delay="0.3s" className="flex flex-col items-center group">
-                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/7LINGKUNGAN.png" alt={t('landing.solution.environment')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
+              <Reveal delay="0.3s" className="group bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1.5 transition-all duration-300 text-center">
+                <div className="w-16 h-16 mx-auto mb-5 bg-white rounded-xl shadow-md flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/7LINGKUNGAN.png" alt={t('landing.solution.environment')} className="w-full h-full object-cover rounded-xl" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.environment')}</span>
+                <h3 className="text-base font-extrabold text-slate-800 mb-2 uppercase tracking-wide">{t('landing.solution.environment')}</h3>
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">{t('landing.solution.environment_desc')}</p>
               </Reveal>
 
               {/* 4. Keamanan */}
-              <Reveal delay="0.4s" className="flex flex-col items-center group">
-                <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
-                  <img src="/8PROTEKSI.png" alt={t('landing.solution.security')} className="w-full h-full object-cover rounded-[2rem] transition-all" />
+              <Reveal delay="0.4s" className="group bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-slate-900/5 hover:-translate-y-1.5 transition-all duration-300 text-center">
+                <div className="w-16 h-16 mx-auto mb-5 bg-white rounded-xl shadow-md flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
+                  <img src="/8PROTEKSI.png" alt={t('landing.solution.security')} className="w-full h-full object-cover rounded-xl" />
                 </div>
-                <span className="text-xs md:text-sm font-extrabold text-slate-700 uppercase tracking-wider mt-2">{t('landing.solution.security')}</span>
+                <h3 className="text-base font-extrabold text-slate-800 mb-2 uppercase tracking-wide">{t('landing.solution.security')}</h3>
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">{t('landing.solution.security_desc')}</p>
               </Reveal>
             </div>
           </div>
         </section>
 
         {/* Features / Bento Grid Platform Section */}
-        <section id="features" className="py-10 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto">
-          <div className="text-center mb-8 max-w-2xl mx-auto">
+        <section id="features" className="py-20 lg:py-28 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
             <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
               {t('landing.features.title')}
             </div>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 mb-6 drop-shadow-sm">
+            <h2 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
               {t('landing.features.heading')}
             </h2>
           </div>
@@ -446,64 +458,68 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
             {/* Feature Card 1 */}
-            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+            <Reveal delay="0.1s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+              <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-emerald-400"></div>
+              <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
                 <img src="/1REAL TIME MONITORING.png" alt={t('landing.features.item1.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
+              <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                <h3 className="text-lg font-bold text-emerald-700 mb-3 flex items-center justify-center gap-2">
                   <Activity size={18} /> {t('landing.features.item1.title')}
                 </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
                   {t('landing.features.item1.desc')}
                 </p>
               </div>
             </Reveal>
 
             {/* Feature Card 2 */}
-            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-amber-900/10 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+            <Reveal delay="0.2s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-amber-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+              <div className="h-1.5 bg-gradient-to-r from-amber-500 to-amber-400"></div>
+              <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
                 <img src="/2ANALYTICS.png" alt={t('landing.features.item2.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-amber-500 mb-4 flex items-center justify-center gap-2">
+              <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                <h3 className="text-lg font-bold text-amber-600 mb-3 flex items-center justify-center gap-2">
                   <BarChart3 size={18} /> {t('landing.features.item2.title')}
                 </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
                   {t('landing.features.item2.desc')}
                 </p>
               </div>
             </Reveal>
 
             {/* Feature Card 3 */}
-            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-500/20 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+            <Reveal delay="0.3s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+              <div className="h-1.5 bg-gradient-to-r from-blue-500 to-blue-400"></div>
+              <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
                 <img src="/3SMART ALERT.png" alt={t('landing.features.item3.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-slate-600 mb-4 flex items-center justify-center gap-2">
+              <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                <h3 className="text-lg font-bold text-blue-600 mb-3 flex items-center justify-center gap-2">
                   <Bell size={18} /> {t('landing.features.item3.title')}
                 </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
                   {t('landing.features.item3.desc')}
                 </p>
               </div>
             </Reveal>
 
             {/* Feature Card 4 */}
-            <Reveal delay="0.4s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-teal-900/10 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
+            <Reveal delay="0.4s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-teal-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+              <div className="h-1.5 bg-gradient-to-r from-teal-500 to-teal-400"></div>
+              <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
                 <img src="/4DASHBOARD.png" alt={t('landing.features.item4.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-[#009b7c] mb-4 flex items-center justify-center gap-2">
+              <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                <h3 className="text-lg font-bold text-teal-700 mb-3 flex items-center justify-center gap-2">
                   <Cloud size={18} /> {t('landing.features.item4.title')}
                 </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
+                <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
                   {t('landing.features.item4.desc')}
                 </p>
               </div>
@@ -512,83 +528,93 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* Products Line Section */}
-        <section id="products" className="py-10 pb-20 px-6 md:px-12 lg:px-16 w-full max-w-[1440px] mx-auto border-t border-slate-100">
-          <div className="text-center mb-12 max-w-2xl mx-auto pt-10">
-            <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
-              {t('landing.products.title')}
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
-              {t('landing.products.heading')}
-            </h2>
+        {/* Products Line Section — Polished Grid */}
+        <section id="products" className="py-20 lg:py-28 bg-[#f8fafc] border-y border-slate-100 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
+            <div className="absolute top-[-15%] left-[-5%] w-[35%] h-[60%] bg-emerald-100 blur-[100px] rounded-full"></div>
+            <div className="absolute bottom-[-15%] right-[-5%] w-[30%] h-[50%] bg-teal-100 blur-[100px] rounded-full"></div>
           </div>
+          <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 relative z-10">
+            <div className="text-center mb-14 max-w-2xl mx-auto">
+              <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
+                {t('landing.products.title')}
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight drop-shadow-sm">
+                {t('landing.products.heading')}
+              </h2>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
-            {/* Product Card 1 */}
-            <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
-                <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/8ECO ENERGY.png" alt={t('landing.products.item1.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-              </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-blue-700 mb-4 flex items-center justify-center gap-2">
-                  <Zap size={18} /> {t('landing.products.item1.title')}
-                </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  {t('landing.products.item1.desc')}
-                </p>
-              </div>
-            </Reveal>
+              {/* Product Card 1 — EcoSense Energy */}
+              <Reveal delay="0.1s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+                <div className="h-1.5 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                  <img src="/8ECO ENERGY.png" alt={t('landing.products.item1.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                </div>
+                <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-blue-700 mb-3 flex items-center justify-center gap-2">
+                    <Zap size={18} /> {t('landing.products.item1.title')}
+                  </h3>
+                  <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
+                    {t('landing.products.item1.desc')}
+                  </p>
+                </div>
+              </Reveal>
 
-            {/* Product Card 2 */}
-            <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-cyan-900/10 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
-                <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/9ECOWATER.png" alt={t('landing.products.item2.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-              </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-cyan-600 mb-4 flex items-center justify-center gap-2">
-                  <Droplets size={18} /> {t('landing.products.item2.title')}
-                </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  {t('landing.products.item2.desc')}
-                </p>
-              </div>
-            </Reveal>
+              {/* Product Card 2 — EcoSense Water */}
+              <Reveal delay="0.2s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-cyan-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+                <div className="h-1.5 bg-gradient-to-r from-cyan-500 to-teal-400"></div>
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                  <img src="/9ECOWATER.png" alt={t('landing.products.item2.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                </div>
+                <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-cyan-600 mb-3 flex items-center justify-center gap-2">
+                    <Droplets size={18} /> {t('landing.products.item2.title')}
+                  </h3>
+                  <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
+                    {t('landing.products.item2.desc')}
+                  </p>
+                </div>
+              </Reveal>
 
-            {/* Product Card 3 */}
-            <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
-                <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/9ECO ENVIRONMENT.png" alt={t('landing.products.item3.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-              </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-emerald-700 mb-4 flex items-center justify-center gap-2">
-                  <ThermometerSun size={18} /> {t('landing.products.item3.title')}
-                </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  {t('landing.products.item3.desc')}
-                </p>
-              </div>
-            </Reveal>
+              {/* Product Card 3 — EcoSense Environment */}
+              <Reveal delay="0.3s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-emerald-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+                <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-green-400"></div>
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                  <img src="/9ECO ENVIRONMENT.png" alt={t('landing.products.item3.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                </div>
+                <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-emerald-700 mb-3 flex items-center justify-center gap-2">
+                    <ThermometerSun size={18} /> {t('landing.products.item3.title')}
+                  </h3>
+                  <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
+                    {t('landing.products.item3.desc')}
+                  </p>
+                </div>
+              </Reveal>
 
-            {/* Product Card 4 */}
-            <Reveal delay="0.4s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-slate-900/10 hover:-translate-y-2 transition-all duration-300">
-              <div className="relative overflow-hidden rounded-[2rem] mb-8 border border-slate-100 shadow-inner">
-                <div className="absolute inset-0 bg-slate-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/10ECO SECURITY.png" alt={t('landing.products.item4.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
-              </div>
-              <div className="px-4 pb-6 text-center">
-                <h3 className="text-lg font-bold text-slate-700 mb-4 flex items-center justify-center gap-2">
-                  <ShieldCheck size={18} /> {t('landing.products.item4.title')}
-                </h3>
-                <p className="text-slate-500 text-[14px] font-medium leading-relaxed">
-                  {t('landing.products.item4.desc')}
-                </p>
-              </div>
-            </Reveal>
+              {/* Product Card 4 — EcoSense Security */}
+              <Reveal delay="0.4s" className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:shadow-slate-900/10 hover:-translate-y-2 transition-all duration-300 border border-slate-100 flex flex-col">
+                <div className="h-1.5 bg-gradient-to-r from-slate-600 to-slate-400"></div>
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-slate-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
+                  <img src="/10ECO SECURITY.png" alt={t('landing.products.item4.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                </div>
+                <div className="px-5 py-5 text-center flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-slate-700 mb-3 flex items-center justify-center gap-2">
+                    <ShieldCheck size={18} /> {t('landing.products.item4.title')}
+                  </h3>
+                  <p className="text-slate-500 text-[14px] font-medium leading-relaxed flex-1">
+                    {t('landing.products.item4.desc')}
+                  </p>
+                </div>
+              </Reveal>
 
+            </div>
           </div>
         </section>
 
