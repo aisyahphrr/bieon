@@ -2293,7 +2293,7 @@
     "nav": {
       "home": "Beranda",
       "features": "Fitur",
-      "about": "Tentang Kami",
+      "works": "Cara Kerja",
       "contact": "Kontak",
       "login": "Masuk"
     },
@@ -2329,9 +2329,13 @@
       "title": "SOLUTION",
       "heading": "ONE PLATFORM. TOTAL MONITORING",
       "energy": "Energi",
+      "energy_desc": "Monitoring konsumsi listrik, efisiensi daya, dan performa sistem energi secara real-time.",
       "water": "Air",
+      "water_desc": "Pantau kualitas dan penggunaan air untuk menjaga kesehatan dan efisiensi sumber daya.",
       "environment": "Lingkungan",
-      "security": "Keamanan"
+      "environment_desc": "Ukur kualitas udara, suhu, kelembaban, dan kondisi lingkungan secara terintegrasi.",
+      "security": "Keamanan",
+      "security_desc": "Sistem pemantauan cerdas untuk meningkatkan proteksi area, aset, dan infrastruktur."
     },
     "features": {
       "title": "Features",
@@ -2427,23 +2431,27 @@
       "items": [
         {
           "q": "Apa itu BIEON EcoSense?",
-          "a": "BIEON adalah sistem pemantauan pintar berbasis IoT yang membantu Anda memonitor penggunaan energi (listrik), air, kualitas lingkungan, dan keamanan bangunan secara real-time melalui satu dashboard."
+          "a": "BIEON EcoSense adalah sistem monitoring online yang mengintegrasikan sensor kualitas air (pH, turbidity, suhu, TDS dan parameter lainnya), sensor kenyamanan lingkungan (suhu, kelembapan dan parameter lainnya), sensor keamanan, dan energi listrik (konsumsi, kondisi kestabilan dan parameter lainnya) ke dalam satu dashboard terpadu untuk memudahkan monitoring harian. Parameter pengukuran di BIEON EcoSense dapat bersifat custom, sesuai dengan kebutuhan customers."
         },
         {
-          "q": "Siapa saja yang cocok menggunakan BIEON?",
-          "a": "Sistem kami dirancang fleksibel, mulai dari pemakaian rumah tangga (Home Owner), bisnis komersial (gedung/kantor), hingga skala industri dan pemerintahan."
+          "q": "Siapa saja yang dapat menggunakan BIEON EcoSense?",
+          "a": "BIEON EcoSense dirancang fleksibel dan dapat digunakan oleh pemilik rumah tinggal (Home Owner), pelaku usaha atau pengelola gedung perkantoran (Business), sektor pabrik (Industry), hingga instansi pelayanan publik (Government)."
         },
         {
-          "q": "Apakah instalasinya merepotkan?",
-          "a": "Tidak. Proses instalasi dilakukan sepenuhnya oleh tim teknisi profesional kami. Anda hanya perlu menjadwalkan survei, dan kami yang akan menangani sisanya hingga dashboard siap digunakan."
+          "q": "Di mana saja sistem BIEON dapat dipasang dan diakses?",
+          "a": "Perangkat fisik BIEON dipasang langsung pada area operasional Anda (seperti ruangan di rumah atau gedung perkantoran), sedangkan data pemantauannya dapat Anda akses kapan saja dan di mana saja melalui dashboard web BIEON di komputer, tablet, maupun smartphone."
         },
         {
-          "q": "Bagaimana dengan keamanan data saya?",
-          "a": "Sangat aman. Seluruh data yang dikirim dari sensor ke cloud telah dienkripsi dengan standar keamanan tinggi. Kami tidak membagikan data Anda kepada pihak ketiga."
+          "q": "Mengapa harus menggunakan BIEON EcoSense?",
+          "a": "Karena BIEON mendigitalisasi pemantauan manual menjadi sistem otomatis 24/7. Anda dapat mencegah pemborosan energi secara dini, menjaga standar kesehatan air & udara, serta langsung melaporkan gangguan perangkat secara cepat ke teknisi kami melalui fitur Pusat Pengaduan terintegrasi."
         },
         {
-          "q": "Bagaimana jika sensor mengalami masalah?",
-          "a": "BIEON memiliki fitur Pengaduan Klien / Smart Alert. Jika ada sensor yang offline atau bermasalah, Anda bisa langsung melaporkannya via sistem, dan teknisi kami akan segera melakukan perbaikan."
+          "q": "Kapan customer dapat melakukan monitoring data di dashboard BIEON EcoSense?",
+          "a": "Anda dapat melakukan monitoring secara real-time kapan saja, 24 jam sehari dan 7 hari seminggu. Seluruh aliran data sensor dikirimkan secara instan dan diperbarui otomatis di dashboard Anda, lengkap dengan tab riwayat untuk melihat tren data sebelumnya."
+        },
+        {
+          "q": "Bagaimana cara untuk menjadi customer BIEON EcoSense?",
+          "a": "Anda dapat mendaftar secara langsung melalui halaman registrasi di situs web BIEON, atau menghubungi kami di +6282320007800 untuk melakukan pemesanan perangkat. Setelah pemesanan selesai, Anda dapat memasang perangkat BIEON secara mandiri dengan mengikuti buku panduan yang disediakan. Namun, jika diperlukan, Anda juga dapat meminta bantuan teknisi kami untuk melakukan proses instalasi. Setelah perangkat terpasang, cukup masukkan BIEON ID ke dalam akun Anda untuk mulai melakukan pemantauan."
         }
       ]
     }
