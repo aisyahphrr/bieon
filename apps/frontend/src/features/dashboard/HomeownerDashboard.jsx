@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { io } from 'socket.io-client';
 import {
   Home,
   Zap,
@@ -896,9 +897,79 @@ export function HomeownerDashboard() {
       }
     };
 
+    // Panggil data awal sekali saat mount
     fetchSensorData();
-    const interval = setInterval(fetchSensorData, 2000);
-    return () => clearInterval(interval);
+
+    // Inisialisasi Socket.IO untuk pembaruan real-time selanjutnya
+    // Menggunakan path relative '/' yang aman untuk development (Vite proxy) & production
+    const socket = io('/', {
+      transports: ['websocket', 'polling']
+    });
+
+    socket.on('connect', () => {
+      console.log('📡 Dashboard Socket.IO connected! ID:', socket.id);
+    });
+
+    socket.on('device_telemetry', (updatedDevice) => {
+      // ─────── Dual-Powered Bypass Toggle (Limited to asrisaras17@gmail.com) ───────
+      const userEmail = getEmailFromToken();
+      const isTestAccount = userEmail === 'asrisaras17@gmail.com';
+      const USE_MOCK = isTestAccount && (import.meta.env.VITE_USE_MOCK_DATA === 'true' || localStorage.getItem('USE_MOCK_DATA') === 'true');
+      
+      if (USE_MOCK) return; // Hiraukan pembaruan real jika dalam mode mock data
+
+      console.log('📡 Dashboard Real-time Telemetry received:', updatedDevice);
+
+      // 1. Update fallback individual sensor states jika bernilai valid
+      if (updatedDevice.currentValues) {
+        const vals = updatedDevice.currentValues;
+        if (vals.temperature !== undefined && vals.temperature !== null) setLiveTemp(vals.temperature);
+        if (vals.humidity !== undefined && vals.humidity !== null) setLiveHumidity(vals.humidity);
+        if (vals.ph !== undefined && vals.ph !== null) setLivePh(vals.ph);
+        if (vals.tds !== undefined && vals.tds !== null) setLiveTds(vals.tds);
+        if (vals.turbidity !== undefined && vals.turbidity !== null) setLiveTurbidity(vals.turbidity);
+        if (vals.waterTemp !== undefined && vals.waterTemp !== null) setLiveWaterTemp(vals.waterTemp);
+        setSecurityLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+      }
+
+      // 2. Update status & values pada array realDevices agar widget rata-rata ruangan ter-update otomatis
+      setRealDevices(prevDevices => {
+        return prevDevices.map(dev => {
+          const devIeee = String(dev.device_ieee || '').replace(/[:\-\s]/g, '').toUpperCase();
+          const updIeee = String(updatedDevice.device_ieee || updatedDevice.ieee || '').replace(/[:\-\s]/g, '').toUpperCase();
+          
+          let isMatch = false;
+          if (devIeee && updIeee) {
+            isMatch = devIeee === updIeee;
+          } else if (dev._id && updatedDevice._id) {
+            isMatch = String(dev._id) === String(updatedDevice._id);
+          } else if (dev.id && updatedDevice.id) {
+            isMatch = String(dev.id) === String(updatedDevice.id);
+          }
+
+          if (isMatch) {
+            return {
+              ...dev,
+              currentValues: {
+                ...(dev.currentValues || {}),
+                ...(updatedDevice.currentValues || {})
+              },
+              status: updatedDevice.status !== undefined ? String(updatedDevice.status) : dev.status
+            };
+          }
+          return dev;
+        });
+      });
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('❌ Dashboard Socket.IO connection error:', err.message);
+    });
+
+    return () => {
+      socket.off('device_telemetry');
+      socket.disconnect();
+    };
   }, []);
 
   const triggerToast = (message, type = 'success') => {
@@ -937,9 +1008,9 @@ export function HomeownerDashboard() {
   }
 
   // Menentukan kategori apa saja yang muncul berdasarkan perangkat yang dimiliki
-  const hasComfort = currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));
-  const hasSecurity = currentDevices.some(d => d.environmentAspect === 'Keamanan' || (d.category === 'sensor' && ['Sensor Keamanan', 'Door Sensor', 'Motion Sensor'].some(t => d.type?.includes(t))));
-  const hasWater = currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
+  const hasComfort = currentDevices.some(d => d.environmentAspect === 'Kenyamanan' || (d.category?.toLowerCase() === 'sensor' && ['Sensor Kenyamanan', 'Humidity Sensor', 'Temperature Sensor'].includes(d.type)));
+  const hasSecurity = currentDevices.some(d => d.environmentAspect === 'Keamanan' || (d.category?.toLowerCase() === 'sensor' && ['Sensor Keamanan', 'Door Sensor', 'Motion Sensor'].some(t => d.type?.includes(t))));
+  const hasWater = currentDevices.some(d => d.environmentAspect === 'Kualitas Air' || (d.category?.toLowerCase() === 'sensor' && ['Sensor Kualitas Air', 'Water Sensor'].includes(d.type)));
 
   let currentSensors = {};
 
@@ -961,29 +1032,39 @@ export function HomeownerDashboard() {
 
     currentDevices.forEach(d => {
       if (d.currentValues) {
-        if (d.currentValues.temperature !== undefined && !isNaN(d.currentValues.temperature)) {
-          totalTemp += parseFloat(d.currentValues.temperature);
-          countTemp++;
-        }
-        if (d.currentValues.humidity !== undefined && !isNaN(d.currentValues.humidity)) {
-          totalHum += parseFloat(d.currentValues.humidity);
-          countHum++;
-        }
-        if (d.currentValues.ph !== undefined && !isNaN(d.currentValues.ph)) {
-          totalPh += parseFloat(d.currentValues.ph);
-          countPh++;
-        }
-        if (d.currentValues.turbidity !== undefined && !isNaN(d.currentValues.turbidity)) {
-          totalTurb += parseFloat(d.currentValues.turbidity);
-          countTurb++;
-        }
-        if (d.currentValues.tds !== undefined && !isNaN(d.currentValues.tds)) {
-          totalTds += parseFloat(d.currentValues.tds);
-          countTds++;
-        }
-        if (d.currentValues.waterTemp !== undefined && !isNaN(d.currentValues.waterTemp)) {
-          totalWaterTemp += parseFloat(d.currentValues.waterTemp);
-          countWaterTemp++;
+        const aspect = d.environmentAspect;
+        const isWaterSensor = aspect === 'Kualitas Air' || d.name?.toLowerCase().includes('bluecheck') || d.type?.toLowerCase().includes('water');
+        const isComfortSensor = aspect === 'Kenyamanan' || (!isWaterSensor && (aspect === null || aspect === undefined));
+
+        if (isComfortSensor) {
+          if (d.currentValues.temperature !== undefined && !isNaN(d.currentValues.temperature)) {
+            totalTemp += parseFloat(d.currentValues.temperature);
+            countTemp++;
+          }
+          if (d.currentValues.humidity !== undefined && !isNaN(d.currentValues.humidity)) {
+            totalHum += parseFloat(d.currentValues.humidity);
+            countHum++;
+          }
+        } else if (isWaterSensor) {
+          if (d.currentValues.temperature !== undefined && !isNaN(d.currentValues.temperature)) {
+            totalWaterTemp += parseFloat(d.currentValues.temperature);
+            countWaterTemp++;
+          } else if (d.currentValues.waterTemp !== undefined && !isNaN(d.currentValues.waterTemp)) {
+            totalWaterTemp += parseFloat(d.currentValues.waterTemp);
+            countWaterTemp++;
+          }
+          if (d.currentValues.ph !== undefined && !isNaN(d.currentValues.ph)) {
+            totalPh += parseFloat(d.currentValues.ph);
+            countPh++;
+          }
+          if (d.currentValues.turbidity !== undefined && !isNaN(d.currentValues.turbidity)) {
+            totalTurb += parseFloat(d.currentValues.turbidity);
+            countTurb++;
+          }
+          if (d.currentValues.tds !== undefined && !isNaN(d.currentValues.tds)) {
+            totalTds += parseFloat(d.currentValues.tds);
+            countTds++;
+          }
         }
       }
     });
@@ -1157,7 +1238,7 @@ export function HomeownerDashboard() {
                       {(() => {
                         const tempVal = currentSensors.comfort.temp;
                         const humVal = currentSensors.comfort.humidity;
-                        const isComfortable = tempVal >= 18 && tempVal <= 30 && humVal >= 40 && humVal <= 60;
+                        const isComfortable = tempVal >= 20.5 && tempVal <= 27.1 && humVal >= 50 && humVal <= 80;
 
                         const styles = getMasterCardStyles(isComfortable);
                         const statusText = isComfortable ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_comfort_bad_text', 'Tidak Nyaman');
@@ -1193,18 +1274,18 @@ export function HomeownerDashboard() {
                           // Range for visual progress dot: 15°C to 35°C (20 units)
                           const tempPercent = (tempVal != null && !isNaN(tempVal)) ? Math.min(100, Math.max(0, ((tempVal - 15) / 20) * 100)) : 0;
 
-                          // Status styling based on value
+                           // Status styling based on value
                           let statusLabel = '';
                           let textClass = '';
                           let borderClass = '';
                           let iconColorClass = 'text-eco';
                           let isPulse = false;
-                          if (tempVal < 18) {
+                          if (tempVal < 20.5) {
                             statusLabel = t('dashboard.status_cold', 'Dingin');
                             textClass = 'text-amber-600';
                             borderClass = 'border-amber-500/30';
                             iconColorClass = 'text-amber-500';
-                          } else if (tempVal <= 30) {
+                          } else if (tempVal <= 27.1) {
                             statusLabel = t('dashboard.status_comfortable', 'Nyaman');
                             textClass = 'text-eco';
                             borderClass = 'border-eco-500/30';
@@ -1216,20 +1297,20 @@ export function HomeownerDashboard() {
                             iconColorClass = 'text-amber-500';
                             isPulse = true;
                           }
-
+ 
                           return (
                             <div className="bg-white rounded-[24px] border-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-md transition-all p-5 flex flex-col justify-between h-full">
                               <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-sm text-text-headline tracking-tight">{t('dashboard.temperature')}</span>
                                 <ThermometerSun className={`w-8 h-8 ${iconColorClass} ${isPulse ? 'animate-pulse' : ''}`} strokeWidth={1.5} />
                               </div>
-
+ 
                               <div className="flex-1 py-1">
                                 <div className="text-3xl font-extrabold text-text-headline tracking-tight">
                                   {tempVal}°C
                                 </div>
                               </div>
-
+ 
                               {/* Segmented Range Indicator */}
                               <div className="relative mt-5 pt-2">
                                 <div
@@ -1241,24 +1322,24 @@ export function HomeownerDashboard() {
                                   </span>
                                   <div className="w-1.5 h-1.5 bg-white rotate-45 -mt-1 border-r border-b border-slate-200"></div>
                                 </div>
-
+ 
                                 {/* Color zones bar */}
                                 <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                  <div className="h-full bg-amber-200" style={{ width: '15%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<18°C)`}></div>
-                                  <div className="h-full bg-emerald-400" style={{ width: '60%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (18°C - 30°C)`}></div>
-                                  <div className="h-full bg-amber-200" style={{ width: '25%' }} title={`${t('dashboard.status_hot', 'Panas')} (>30°C)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '27.5%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<20.5°C)`}></div>
+                                  <div className="h-full bg-emerald-400" style={{ width: '33%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (20.5°C - 27.1°C)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '39.5%' }} title={`${t('dashboard.status_hot', 'Panas')} (>27.1°C)`}></div>
                                 </div>
-
+ 
                                 {/* Indicator dot */}
                                 <div
                                   className="absolute top-1.5 w-4 h-4 bg-white border-2 border-slate-700 rounded-full shadow-md transform -translate-x-1/2 transition-all duration-500 hover:scale-110 z-10"
                                   style={{ left: `${tempPercent}%` }}
                                 ></div>
-
+ 
                                 {/* Labels */}
                                 <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-6 w-full">
-                                  <span className="absolute" style={{ left: '15%', transform: 'translateX(-50%)' }}>18°C</span>
-                                  <span className="absolute" style={{ left: '75%', transform: 'translateX(-50%)' }}>30°C</span>
+                                  <span className="absolute" style={{ left: '27.5%', transform: 'translateX(-50%)' }}>20.5°C</span>
+                                  <span className="absolute" style={{ left: '60.5%', transform: 'translateX(-50%)' }}>27.1°C</span>
                                 </div>
                               </div>
                             </div>
@@ -1275,12 +1356,12 @@ export function HomeownerDashboard() {
                           let textClass = '';
                           let borderClass = '';
                           let iconColorClass = 'text-eco';
-                          if (humVal < 40) {
+                          if (humVal < 50) {
                             statusLabel = t('dashboard.status_humidity_dry', 'Kering');
                             textClass = 'text-amber-600';
                             borderClass = 'border-amber-500/30';
                             iconColorClass = 'text-amber-500';
-                          } else if (humVal <= 60) {
+                          } else if (humVal <= 80) {
                             statusLabel = t('dashboard.status_comfortable', 'Nyaman');
                             textClass = 'text-eco';
                             borderClass = 'border-eco-500/30';
@@ -1319,9 +1400,9 @@ export function HomeownerDashboard() {
 
                                 {/* Color zones bar */}
                                 <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
-                                  <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<40%)`}></div>
-                                  <div className="h-full bg-emerald-400" style={{ width: '33.33%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (40% - 60%)`}></div>
-                                  <div className="h-full bg-amber-200" style={{ width: '50%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>60%)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '33.33%' }} title={`${t('dashboard.status_humidity_dry', 'Kering')} (<50%)`}></div>
+                                  <div className="h-full bg-emerald-400" style={{ width: '50%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (50% - 80%)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '16.67%' }} title={`${t('dashboard.status_humidity_humid_short', 'Lembap')} (>80%)`}></div>
                                 </div>
 
                                 {/* Indicator dot */}
@@ -1332,8 +1413,8 @@ export function HomeownerDashboard() {
 
                                 {/* Labels */}
                                 <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-6 w-full">
-                                  <span className="absolute" style={{ left: '16.67%', transform: 'translateX(-50%)' }}>40%</span>
-                                  <span className="absolute" style={{ left: '50%', transform: 'translateX(-50%)' }}>60%</span>
+                                  <span className="absolute" style={{ left: '33.33%', transform: 'translateX(-50%)' }}>50%</span>
+                                  <span className="absolute" style={{ left: '83.33%', transform: 'translateX(-50%)' }}>80%</span>
                                 </div>
                               </div>
                             </div>
@@ -1494,12 +1575,11 @@ export function HomeownerDashboard() {
                     {/* Kiri (Master - Status Air) */}
                     <div className="w-full md:w-1/3">
                       {(() => {
-                        const ph = selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph;
-                        const turbidity = selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity;
-                        const tds = selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds;
-                        const waterTemp = selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp;
+                        const ph = currentSensors.waterQuality?.ph !== undefined ? currentSensors.waterQuality.ph : livePh;
+                        const turbidity = currentSensors.waterQuality?.turbidity !== undefined ? currentSensors.waterQuality.turbidity : liveTurbidity;
+                        const tds = currentSensors.waterQuality?.tds !== undefined ? currentSensors.waterQuality.tds : liveTds;
 
-                        const isWaterSafe = ph >= 6.5 && ph <= 8.5 && turbidity <= 25 && tds <= 1000 && waterTemp >= 10 && waterTemp <= 30;
+                        const isWaterSafe = ph >= 6.5 && ph <= 8.5 && turbidity <= 25 && tds <= 1000;
 
                         const styles = getMasterCardStyles(isWaterSafe);
                         const statusText = isWaterSafe ? t('dashboard.status_water_ok', 'Layak Pakai') : t('dashboard.status_water_bad', 'Tidak Layak');
@@ -1532,7 +1612,7 @@ export function HomeownerDashboard() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
                         {/* pH */}
                         {(() => {
-                          const phVal = selectedRoom === 'all' ? livePh : currentSensors.waterQuality.ph;
+                          const phVal = currentSensors.waterQuality?.ph !== undefined ? currentSensors.waterQuality.ph : livePh;
                           const isPhSafe = phVal >= 6.5 && phVal <= 8.5;
                           const statusLabel = isPhSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
                           const textClass = isPhSafe ? 'text-eco' : 'text-amber-600';
@@ -1563,7 +1643,7 @@ export function HomeownerDashboard() {
 
                         {/* Turbidity */}
                         {(() => {
-                          const turbVal = selectedRoom === 'all' ? liveTurbidity : currentSensors.waterQuality.turbidity;
+                          const turbVal = currentSensors.waterQuality?.turbidity !== undefined ? currentSensors.waterQuality.turbidity : liveTurbidity;
                           const isTurbSafe = turbVal <= 25;
                           const statusLabel = isTurbSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
                           const textClass = isTurbSafe ? 'text-eco' : 'text-amber-600';
@@ -1594,7 +1674,7 @@ export function HomeownerDashboard() {
 
                         {/* TDS */}
                         {(() => {
-                          const tdsVal = selectedRoom === 'all' ? liveTds : currentSensors.waterQuality.tds;
+                          const tdsVal = currentSensors.waterQuality?.tds !== undefined ? currentSensors.waterQuality.tds : liveTds;
                           const isTdsSafe = tdsVal <= 1000;
                           const statusLabel = isTdsSafe ? t('dashboard.status_water_usable', 'Layak Pakai') : t('dashboard.status_water_unusable', 'Tidak Layak');
                           const textClass = isTdsSafe ? 'text-eco' : 'text-amber-600';
@@ -1625,7 +1705,7 @@ export function HomeownerDashboard() {
 
                         {/* Water Temperature */}
                         {(() => {
-                          const waterTempVal = selectedRoom === 'all' ? liveWaterTemp : currentSensors.waterQuality.temp;
+                          const waterTempVal = currentSensors.waterQuality?.temp !== undefined ? currentSensors.waterQuality.temp : liveWaterTemp;
                           const isTempNormal = waterTempVal >= 10 && waterTempVal <= 30;
                           const statusLabel = isTempNormal ? t('dashboard.status_water_normal', 'Normal') : t('dashboard.status_water_not_normal', 'Tidak Normal');
                           const textClass = isTempNormal ? 'text-eco' : 'text-amber-600';

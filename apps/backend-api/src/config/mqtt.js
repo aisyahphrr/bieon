@@ -706,6 +706,7 @@ const connectMQTT = (io) => {
                 try {
                   const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(existing._id, { $set: telemetryUpdate }, { new: true });
                   if (updatedDevice) {
+                    await evaluateSensorAutomation(updatedDevice);
                     emitPayload = {
                       _id: updatedDevice._id,
                       bieonId,
@@ -893,17 +894,39 @@ const connectMQTT = (io) => {
               if (ae < prevEnergy) deltaKwh = ae;
 
               if (deltaKwh > 0) {
-                await new EnergyLog({
+                const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+                const recentEnergyLog = await EnergyLog.findOne({
                   device: updatedPdm._id,
-                  hub: undefined,
-                  date: new Date(),
-                  totalKwh: deltaKwh,
-                  power: activePower,
-                  voltage,
-                  current,
-                  pf,
-                  owner: updatedPdm.owner || bieonSystem?.owner
-                }).save();
+                  date: { $gte: tenMinutesAgo }
+                });
+
+                if (recentEnergyLog) {
+                  await EnergyLog.updateOne(
+                    { _id: recentEnergyLog._id },
+                    {
+                      $inc: { totalKwh: deltaKwh },
+                      $set: {
+                        power: activePower,
+                        voltage,
+                        current,
+                        pf,
+                        date: new Date()
+                      }
+                    }
+                  );
+                } else {
+                  await new EnergyLog({
+                    device: updatedPdm._id,
+                    hub: undefined,
+                    date: new Date(),
+                    totalKwh: deltaKwh,
+                    power: activePower,
+                    voltage,
+                    current,
+                    pf,
+                    owner: updatedPdm.owner || bieonSystem?.owner
+                  }).save();
+                }
 
                 await PdmMeter.findByIdAndUpdate(updatedPdm._id, {
                   $set: {
@@ -960,6 +983,194 @@ const connectMQTT = (io) => {
   });
 
   return mqttClient;
+};
+
+const evaluateSensorAutomation = async (updatedDevice) => {
+  try {
+    const { triggerRemoteMappingCommand } = require('../services/scheduler');
+    if (updatedDevice && updatedDevice.category === 'Sensor' && updatedDevice.currentValues) {
+      let aspect = updatedDevice.type;
+      if (aspect === 'SNZB-02DR2' || aspect === 'Sensor Kenyamanan' || aspect === 'Kenyamanan') aspect = 'Kenyamanan';
+      else if (aspect === 'Sensor Kualitas Air' || aspect === 'Kualitas Air') aspect = 'Kualitas Air';
+      else if (aspect === 'Sensor Keamanan' || aspect === 'Keamanan') aspect = 'Keamanan';
+
+      if (!['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect) && updatedDevice.environmentAspect) {
+        aspect = updatedDevice.environmentAspect;
+      }
+
+      if (['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect)) {
+        const actuators = await KendaliPerangkat.find({
+          owner: updatedDevice.owner,
+          category: 'Control Actuator System',
+          controlMethod: 'Lingkungan',
+          environmentAspect: aspect
+        });
+
+        for (const act of actuators) {
+          if (!act.thresholds) continue;
+          let isMet = true;
+          let hasCondition = false;
+          const sensor = updatedDevice;
+
+          // Check Temperature
+          if (act.thresholds.temperature !== undefined) {
+            const sensorVal = sensor.currentValues.waterTemp !== undefined ? sensor.currentValues.waterTemp : sensor.currentValues.temperature;
+            if (sensorVal !== undefined) {
+              hasCondition = true;
+              if (sensorVal <= act.thresholds.temperature) isMet = false;
+            }
+          }
+          // Check Humidity
+          if (act.thresholds.humidity !== undefined && sensor.currentValues.humidity !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.humidity <= act.thresholds.humidity) isMet = false;
+          }
+          // Check Water Quality
+          if (act.thresholds.ph !== undefined && sensor.currentValues.ph !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.ph <= act.thresholds.ph) isMet = false;
+          }
+          if (act.thresholds.tds !== undefined && sensor.currentValues.tds !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.tds <= act.thresholds.tds) isMet = false;
+          }
+          if (act.thresholds.turbidity !== undefined && sensor.currentValues.turbidity !== undefined) {
+            hasCondition = true;
+            if (sensor.currentValues.turbidity <= act.thresholds.turbidity) isMet = false;
+          }
+
+          if (hasCondition) {
+            const deviceIdentifier = String(act.device_ieee || act.modelId || act.name || '').replace(/[:\-\s]/g, '').toUpperCase();
+            const newStatus = isMet ? '1' : '0';
+            
+            if (String(act.status) !== newStatus) {
+              console.log(`[Automation] ${act.name} (IEEE: ${deviceIdentifier}) -> ${newStatus === '1' ? 'ON' : 'OFF'}`);
+              publishCommand(`bieon/${act.bieonId}/admin/command`, {
+                command: newStatus === '1' ? 'on' : 'off',
+                action: newStatus === '1' ? 'on' : 'off',
+                status: newStatus,
+                bieon_id: act.bieonId,
+                ieee: deviceIdentifier,
+                device_ieee: deviceIdentifier,
+                device_id: String(act._id),
+                command_id: `cmd_${Date.now()}`,
+                requested_by: 'automation',
+                timestamp: Date.now()
+              });
+              await KendaliPerangkat.findByIdAndUpdate(act._id, { status: newStatus });
+
+              await new Activity({
+                user: act.owner,
+                hub: act.hubId,
+                room: act.location,
+                actuator: act.name,
+                status: newStatus === '1' ? 'ON' : 'OFF',
+                action: newStatus === '1' ? 'Menyalakan' : 'Mematikan',
+                trigger: `Otomasi (${aspect})`
+              }).save();
+
+              if (ioInstance) ioInstance.emit('device_telemetry', act);
+
+              const Alert = require('../models/Alert');
+              await Alert.create({
+                owner: act.owner,
+                hub: act.hubId,
+                category: aspect === 'Kualitas Air' ? 'Air Sanitasi' : aspect,
+                title: isMet ? 'Otomasi Actuator' : 'Otomasi Selesai',
+                message: `Sistem otomatis ${isMet ? 'menyalakan' : 'mematikan'} ${act.name} karena kondisi ${aspect} ${isMet ? 'memerlukan tindakan' : 'kembali normal'}.`,
+                type: isMet ? 'Success' : 'Info',
+                link: 'kendali',
+                metadata: { deviceId: act._id }
+              });
+            }
+          }
+        }
+
+        // Otomatisasi Per-Fungsi Remote Universal
+        const remoteActuators = await KendaliPerangkat.find({
+          owner: updatedDevice.owner,
+          "remoteState.mappings.controlMethod": "Lingkungan",
+          "remoteState.mappings.environmentAspect": aspect
+        });
+
+        for (const act of remoteActuators) {
+          const mappings = (act.remoteState && typeof act.remoteState.get === 'function'
+            ? act.remoteState.get('mappings')
+            : act.remoteState?.mappings) || [];
+          let hasChanges = false;
+
+          for (const mapping of mappings) {
+            if (mapping.controlMethod !== 'Lingkungan' || mapping.environmentAspect !== aspect || !mapping.sensorParams) continue;
+
+            let isMet = true;
+            let hasCondition = false;
+            const sensor = updatedDevice;
+
+            // Check Temperature
+            if (mapping.sensorParams.temperature !== undefined) {
+              const sensorVal = sensor.currentValues.waterTemp !== undefined ? sensor.currentValues.waterTemp : sensor.currentValues.temperature;
+              if (sensorVal !== undefined) {
+                hasCondition = true;
+                if (sensorVal <= mapping.sensorParams.temperature) isMet = false;
+              }
+            }
+            // Check Humidity
+            if (mapping.sensorParams.humidity !== undefined && sensor.currentValues.humidity !== undefined) {
+              hasCondition = true;
+              if (sensor.currentValues.humidity <= mapping.sensorParams.humidity) isMet = false;
+            }
+            // Check Water Quality (pH, TDS, turbidity)
+            if (mapping.sensorParams.ph !== undefined && sensor.currentValues.ph !== undefined) {
+              hasCondition = true;
+              if (sensor.currentValues.ph <= mapping.sensorParams.ph) isMet = false;
+            }
+            if (mapping.sensorParams.tds !== undefined && sensor.currentValues.tds !== undefined) {
+              hasCondition = true;
+              if (sensor.currentValues.tds <= mapping.sensorParams.tds) isMet = false;
+            }
+            if (mapping.sensorParams.turbidity !== undefined && sensor.currentValues.turbidity !== undefined) {
+              hasCondition = true;
+              if (sensor.currentValues.turbidity <= mapping.sensorParams.turbidity) isMet = false;
+            }
+            // Check Motion
+            if (mapping.sensorParams.isMotionEnabled !== undefined && sensor.currentValues.motion !== undefined) {
+              hasCondition = true;
+              if (!sensor.currentValues.motion) isMet = false;
+            }
+            // Check Door
+            if (mapping.sensorParams.isDoorEnabled !== undefined && sensor.currentValues.doorOpen !== undefined) {
+              hasCondition = true;
+              if (!sensor.currentValues.doorOpen) isMet = false;
+            }
+
+            if (hasCondition) {
+              if (isMet) {
+                if (!mapping.isTriggered) {
+                  console.log(`[Automation - Remote] ${act.name} (${mapping.functionLabel}) -> TRIGGERED`);
+                  await triggerRemoteMappingCommand(act, mapping, 'sensor');
+                  mapping.isTriggered = true;
+                  hasChanges = true;
+                }
+              } else {
+                if (mapping.isTriggered) {
+                  console.log(`[Automation - Remote] ${act.name} (${mapping.functionLabel}) -> RESET (Below Threshold)`);
+                  mapping.isTriggered = false;
+                  hasChanges = true;
+                }
+              }
+            }
+          }
+
+          if (hasChanges) {
+            act.markModified('remoteState');
+            await act.save();
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error(`[evaluateSensorAutomation] Error:`, err);
+  }
 };
 
 const handleDeviceTelemetry = async (friendlyName, payload, bieonId = null) => {
@@ -1057,150 +1268,100 @@ const handleDeviceTelemetry = async (friendlyName, payload, bieonId = null) => {
             'currentValues.currentLoad': payload.currentLoad || 0
           });
 
-          await new EnergyLog({
+          const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+          const recentEnergyLog = await EnergyLog.findOne({
             device: updatedDevice._id,
-            hub: updatedDevice.hubId,
-            date: new Date(),
-            totalKwh: deltaKwh,
-            power: payload.currentLoad || 0,
-            owner: user._id
-          }).save();
+            date: { $gte: tenMinutesAgo }
+          });
+
+          if (recentEnergyLog) {
+            await EnergyLog.updateOne(
+              { _id: recentEnergyLog._id },
+              {
+                $inc: { totalKwh: deltaKwh },
+                $set: {
+                  power: payload.currentLoad || 0,
+                  date: new Date()
+                }
+              }
+            );
+          } else {
+            await new EnergyLog({
+              device: updatedDevice._id,
+              hub: updatedDevice.hubId,
+              date: new Date(),
+              totalKwh: deltaKwh,
+              power: payload.currentLoad || 0,
+              owner: user._id
+            }).save();
+          }
         }
       }
     }
 
     // 3. History Logging & Danger Alerts
     if (updatedDevice && updatedDevice.category === 'Sensor') {
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
       if (payload.temperature !== undefined || payload.humidity !== undefined) {
-        await new EnvironmentLog({
+        const recentEnvLog = await EnvironmentLog.findOne({
           hub: updatedDevice.hubId,
-          date: new Date(),
-          avgTemperature: payload.temperature || updatedDevice.currentValues?.temperature || 0,
-          avgHumidity: (payload.humidity || updatedDevice.currentValues?.humidity || 0) + '%',
           room: updatedDevice.location || 'Lainnya',
-          owner: updatedDevice.owner
-        }).save();
+          date: { $gte: tenMinutesAgo }
+        });
+        if (!recentEnvLog) {
+          await new EnvironmentLog({
+            hub: updatedDevice.hubId,
+            date: new Date(),
+            avgTemperature: payload.temperature || updatedDevice.currentValues?.temperature || 0,
+            avgHumidity: (payload.humidity || updatedDevice.currentValues?.humidity || 0) + '%',
+            room: updatedDevice.location || 'Lainnya',
+            owner: updatedDevice.owner
+          }).save();
+        }
       }
       if (payload.doorOpen !== undefined || payload.motion !== undefined) {
-        await new SecurityLog({
+        const recentSecLog = await SecurityLog.findOne({
           device: updatedDevice._id,
-          hub: updatedDevice.hubId,
-          date: new Date(),
-          room: updatedDevice.location || 'Lainnya',
-          door: payload.doorOpen ? 'Terbuka' : 'Tertutup',
-          motion: payload.motion ? 'Terdeteksi Gerak' : 'Tidak Ada Gerak',
-          status: (payload.doorOpen || payload.motion) ? 'Waspada' : 'Aman',
-          owner: updatedDevice.owner
-        }).save();
+          date: { $gte: tenMinutesAgo }
+        });
+        if (!recentSecLog) {
+          await new SecurityLog({
+            device: updatedDevice._id,
+            hub: updatedDevice.hubId,
+            date: new Date(),
+            room: updatedDevice.location || 'Lainnya',
+            door: payload.doorOpen ? 'Terbuka' : 'Tertutup',
+            motion: payload.motion ? 'Terdeteksi Gerak' : 'Tidak Ada Gerak',
+            status: (payload.doorOpen || payload.motion) ? 'Waspada' : 'Aman',
+            owner: updatedDevice.owner
+          }).save();
+        }
       }
       if (payload.ph !== undefined || payload.turbidity !== undefined || payload.tds !== undefined) {
-        await new WaterQualityLog({
-          owner: updatedDevice.owner,
+        const recentWaterLog = await WaterQualityLog.findOne({
           device: updatedDevice._id,
-          hub: updatedDevice.hubId,
-          ph: payload.ph || updatedDevice.currentValues?.ph || 0,
-          turbidity: payload.turbidity || updatedDevice.currentValues?.turbidity || 0,
-          temperature: payload.waterTemp || updatedDevice.currentValues?.waterTemp || 0,
-          tds: payload.tds || updatedDevice.currentValues?.tds || 0,
-          status: 'Layak Pakai',
-          date: new Date()
-        }).save();
+          date: { $gte: tenMinutesAgo }
+        });
+        if (!recentWaterLog) {
+          await new WaterQualityLog({
+            owner: updatedDevice.owner,
+            device: updatedDevice._id,
+            hub: updatedDevice.hubId,
+            ph: payload.ph || updatedDevice.currentValues?.ph || 0,
+            turbidity: payload.turbidity || updatedDevice.currentValues?.turbidity || 0,
+            temperature: payload.waterTemp || updatedDevice.currentValues?.waterTemp || 0,
+            tds: payload.tds || updatedDevice.currentValues?.tds || 0,
+            status: 'Layak Pakai',
+            date: new Date()
+          }).save();
+        }
       }
       await alertService.simulateSensorData(updatedDevice._id, payload);
     }
 
     // 4. Logika Otomatisasi
-    if (updatedDevice && updatedDevice.category === 'Sensor' && updatedDevice.currentValues) {
-      let aspect = updatedDevice.type;
-      if (aspect === 'SNZB-02DR2' || aspect === 'Sensor Kenyamanan' || aspect === 'Kenyamanan') aspect = 'Kenyamanan';
-      else if (aspect === 'Sensor Kualitas Air' || aspect === 'Kualitas Air') aspect = 'Kualitas Air';
-      else if (aspect === 'Sensor Keamanan' || aspect === 'Keamanan') aspect = 'Keamanan';
-
-      if (['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect)) {
-        const actuators = await KendaliPerangkat.find({
-          owner: updatedDevice.owner,
-          category: 'Control Actuator System',
-          controlMethod: 'Lingkungan',
-          environmentAspect: aspect
-        });
-
-        for (const act of actuators) {
-          if (!act.thresholds) continue;
-          let isMet = true;
-          let hasCondition = false;
-          const sensor = updatedDevice;
-
-          // Check Temperature
-          if (act.thresholds.temperature !== undefined) {
-            const sensorVal = sensor.currentValues.waterTemp !== undefined ? sensor.currentValues.waterTemp : sensor.currentValues.temperature;
-            if (sensorVal !== undefined) {
-              hasCondition = true;
-              if (sensorVal <= act.thresholds.temperature) isMet = false;
-            }
-          }
-          // Check Humidity
-          if (act.thresholds.humidity !== undefined && sensor.currentValues.humidity !== undefined) {
-            hasCondition = true;
-            if (sensor.currentValues.humidity <= act.thresholds.humidity) isMet = false;
-          }
-          // Check Water Quality
-          if (act.thresholds.ph !== undefined && sensor.currentValues.ph !== undefined) {
-            hasCondition = true;
-            if (sensor.currentValues.ph <= act.thresholds.ph) isMet = false;
-          }
-          if (act.thresholds.tds !== undefined && sensor.currentValues.tds !== undefined) {
-            hasCondition = true;
-            if (sensor.currentValues.tds <= act.thresholds.tds) isMet = false;
-          }
-          if (act.thresholds.turbidity !== undefined && sensor.currentValues.turbidity !== undefined) {
-            hasCondition = true;
-            if (sensor.currentValues.turbidity <= act.thresholds.turbidity) isMet = false;
-          }
-
-          if (hasCondition) {
-            const deviceIdentifier = String(act.device_ieee || act.modelId || act.name || '').replace(/[:\-\s]/g, '').toUpperCase();
-            const newStatus = isMet ? '1' : '0';
-            
-            if (String(act.status) !== newStatus) {
-              console.log(`[Automation] ${act.name} (IEEE: ${deviceIdentifier}) -> ${newStatus === '1' ? 'ON' : 'OFF'}`);
-              publishCommand(`bieon/${act.bieonId}/admin/command`, {
-                action: newStatus === '1' ? 'on' : 'off',
-                bieon_id: act.bieonId,
-                ieee: deviceIdentifier,
-                command_id: `cmd_${Date.now()}`,
-                requested_by: 'automation',
-                timestamp: Date.now()
-              });
-              await KendaliPerangkat.findByIdAndUpdate(act._id, { status: newStatus });
-
-              await new Activity({
-                user: act.owner,
-                hub: act.hubId,
-                room: act.location,
-                actuator: act.name,
-                status: newStatus === '1' ? 'ON' : 'OFF',
-                action: newStatus === '1' ? 'Menyalakan' : 'Mematikan',
-                trigger: `Otomasi (${aspect})`
-              }).save();
-
-              if (ioInstance) ioInstance.emit('device_telemetry', act);
-
-              const Alert = require('../models/Alert');
-              await Alert.create({
-                owner: act.owner,
-                hub: act.hubId,
-                category: aspect === 'Kualitas Air' ? 'Air Sanitasi' : aspect,
-                title: isMet ? 'Otomasi Aktif' : 'Otomasi Selesai',
-                message: `Sistem otomatis ${isMet ? 'menyalakan' : 'mematikan'} ${act.name} karena kondisi ${aspect} ${isMet ? 'memerlukan tindakan' : 'kembali normal'}.`,
-                type: isMet ? 'Success' : 'Info',
-                link: 'kendali',
-                metadata: { deviceId: act._id }
-              });
-            }
-          }
-        }
-      }
-    }
+    await evaluateSensorAutomation(updatedDevice);
   } catch (err) {
     console.error('❌ Telemetry Error:', err.message);
   }
@@ -1460,16 +1621,23 @@ const handleHierarchicalTelemetry = async (tenantId, bieonId, hubId, deviceId, p
 
     // 2. WaterQualityLog
     if (updates['currentValues.ph'] !== undefined || updates['currentValues.tds'] !== undefined) {
-        await new WaterQualityLog({
-          owner: updatedDevice.owner,
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+        const recentWaterLog = await WaterQualityLog.findOne({
           device: updatedDevice._id,
-          hub: updatedDevice.hubId,
-          ph: updates['currentValues.ph'] || updatedDevice.currentValues?.ph || 0,
-          tds: updates['currentValues.tds'] || updatedDevice.currentValues?.tds || 0,
-          temperature: updates['currentValues.waterTemp'] || updatedDevice.currentValues?.waterTemp || 0,
-          status: 'Layak Pakai',
-          date: new Date()
-        }).save();
+          date: { $gte: tenMinutesAgo }
+        });
+        if (!recentWaterLog) {
+          await new WaterQualityLog({
+            owner: updatedDevice.owner,
+            device: updatedDevice._id,
+            hub: updatedDevice.hubId,
+            ph: updates['currentValues.ph'] || updatedDevice.currentValues?.ph || 0,
+            tds: updates['currentValues.tds'] || updatedDevice.currentValues?.tds || 0,
+            temperature: updates['currentValues.waterTemp'] || updatedDevice.currentValues?.waterTemp || 0,
+            status: 'Layak Pakai',
+            date: new Date()
+          }).save();
+        }
     }
 
     // 3. Alerts (Jika status berubah)
@@ -1490,16 +1658,39 @@ const handleHierarchicalTelemetry = async (tenantId, bieonId, hubId, deviceId, p
 
     // 4. EnergyLog (Jika ada payload energy - Adaptasi dari handleDeviceTelemetry)
     if (payload.energyToday !== undefined) {
-        await new EnergyLog({
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+        const recentEnergyLog = await EnergyLog.findOne({
             device: updatedDevice._id,
-            hub: updatedDevice.hubId,
-            date: new Date(),
-            totalKwh: payload.energyToday,
-            power: payload.currentLoad || 0,
-            owner: updatedDevice.owner
-        }).save();
+            date: { $gte: tenMinutesAgo }
+        });
+
+        if (recentEnergyLog) {
+            await EnergyLog.updateOne(
+                { _id: recentEnergyLog._id },
+                {
+                    $inc: { totalKwh: payload.energyToday },
+                    $set: {
+                        power: payload.currentLoad || 0,
+                        date: new Date()
+                    }
+                }
+            );
+        } else {
+            await new EnergyLog({
+                device: updatedDevice._id,
+                hub: updatedDevice.hubId,
+                date: new Date(),
+                totalKwh: payload.energyToday,
+                power: payload.currentLoad || 0,
+                owner: updatedDevice.owner
+            }).save();
+        }
     }
 
+    if (updatedDevice) {
+        await evaluateSensorAutomation(updatedDevice);
+    }
+ 
     console.log(`[MQTT] Hierarchical Telemetry updated & logged for ${deviceId}`);
   } catch (err) {
     console.error('❌ Hierarchical Telemetry Error:', err.message);
@@ -1665,4 +1856,4 @@ const publishLeave = (bieonDeviceId, deviceIeee, options = {}) => {
   return true;
 };
 
-module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin, publishRemoteRegistration, publishLeave };
+module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin, publishRemoteRegistration, publishLeave, handleDeviceTelemetry };

@@ -2486,7 +2486,10 @@
     "device_name_required": "Device name cannot be empty!",
     "device_type_required": "Device type must be selected!",
     "profile_update_failed": "Failed to save profile updates.",
-    "profile_update_error": "An error occurred while saving the profile."
+    "profile_update_error": "An error occurred while saving the profile.",
+    "custom_device_type_required": "Custom device type name is required!",
+    "custom_function_required": "Custom function name is required!",
+    "custom_brand_required": "Custom brand name is required!"
   },
   "placeholder": {
     "describe_problem": "Describe the problem you are experiencing in detail...",
@@ -2498,6 +2501,7 @@
     "room_placeholder": "Room...",
     "example_tv": "Example: Power TV",
     "example_brand": "Example: Polytron",
+    "example_device_type": "Example: Air Purifier, Projector",
     "example_sensor_id": "Example: SNZB-02D",
     "sensor_id_input": "Type or select ID (Example: SNZB...)",
     "temperature_value": "Enter temperature value (°C)",

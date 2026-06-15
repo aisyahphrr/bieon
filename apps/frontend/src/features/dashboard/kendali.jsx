@@ -10,6 +10,7 @@ import {
   Power,
   Trash2,
   Calendar,
+  Clock,
   Thermometer,
   Sun,
   Volume2,
@@ -68,7 +69,7 @@ const REMOTE_DEVICE_TYPES = [
   { value: "Speaker", label: "Speaker" },
   { value: "Set Top Box", label: "Set Top Box" },
   { value: "Proyektor", label: "Proyektor" },
-  { value: "Custom", label: "Custom" }
+  { value: "Custom", label: "Lainnya" }
 ];
 
 const REMOTE_BRANDS = [
@@ -390,6 +391,20 @@ export function DeviceControlPage({ onNavigate }) {
   const [remoteCatalogLoading, setRemoteCatalogLoading] = useState(false);
   const [remoteMappingDraft, setRemoteMappingDraft] = useState(null);
   const [remoteRegCountdown, setRemoteRegCountdown] = useState(0);
+  const [isAddingSubDevice, setIsAddingSubDevice] = useState(false);
+  const [wizardTargetDeviceId, setWizardTargetDeviceId] = useState(null);
+  const [wizardDeviceType, setWizardDeviceType] = useState('TV');
+  const [isCustomWizardDeviceType, setIsCustomWizardDeviceType] = useState(false);
+  const [wizardCustomDeviceType, setWizardCustomDeviceType] = useState('');
+  const [wizardBrand, setWizardBrand] = useState('Polytron');
+  const [isCustomWizardBrand, setIsCustomWizardBrand] = useState(false);
+  const [wizardCustomBrand, setWizardCustomBrand] = useState('');
+  const [wizardNotes, setWizardNotes] = useState('');
+  const [wizardMappingDrafts, setWizardMappingDrafts] = useState({});
+  const [editingMappingDevice, setEditingMappingDevice] = useState(null);
+  const [editingMapping, setEditingMapping] = useState(null);
+  const [editingRemoteProfile, setEditingRemoteProfile] = useState(null);
+
   const [joinedDevicesPool, setJoinedDevicesPool] = useState([]);
   const [leavingDevices, setLeavingDevices] = useState({}); // { deviceId: seconds }
   const [pendingOpenJoinDevice, setPendingOpenJoinDevice] = useState(null);
@@ -1590,20 +1605,21 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
 
-  const handleSaveRemoteMapping = async () => {
-    if (!remoteMappingDraft || !currentBieon) return;
+  const handleSaveRemoteMapping = async (directDraft) => {
+    const draft = directDraft || remoteMappingDraft;
+    if (!draft || !currentBieon) return;
 
-    const device = getAllDevices().find((item) => String(item.id) === String(remoteMappingDraft.deviceId) || String(item._id) === String(remoteMappingDraft.deviceId));
+    const device = getAllDevices().find((item) => String(item.id) === String(draft.deviceId) || String(item._id) === String(draft.deviceId));
     if (!device) {
       alert(t('alerts.remote_card_not_found'));
       return;
     }
 
-    const deviceType = normalizeRemoteDeviceType(remoteMappingDraft.deviceType);
-    const functionKey = normalizeRemoteFunctionKey(remoteMappingDraft.functionKey);
+    const deviceType = normalizeRemoteDeviceType(draft.deviceType);
+    const functionKey = normalizeRemoteFunctionKey(draft.functionKey);
     const functionLabel = getRemoteFunctionLabel(deviceType, functionKey);
-    const brand = String(remoteMappingDraft.customBrand || remoteMappingDraft.brand || 'Other').trim() || 'Other';
-    const label = String(remoteMappingDraft.label || functionLabel || functionKey).trim() || functionLabel;
+    const brand = String(draft.customBrand || draft.brand || 'Other').trim() || 'Other';
+    const label = String(draft.label || functionLabel || functionKey).trim() || functionLabel;
 
     const existingMappings = Array.isArray(device.remoteMappings)
       ? device.remoteMappings
@@ -1612,18 +1628,19 @@ export function DeviceControlPage({ onNavigate }) {
         : [];
 
     const nextMapping = {
-      catalogId: remoteMappingDraft.catalogId,
-      rawSignature: remoteMappingDraft.rawSignature,
-      rawBitText: remoteMappingDraft.rawBitText,
-      rawBitHex: remoteMappingDraft.rawBitHex,
-      rawBitBinary: remoteMappingDraft.rawBitBinary,
-      sourceRemoteIeee: remoteMappingDraft.sourceRemoteIeee,
-      sourceRemoteId: remoteMappingDraft.sourceRemoteId,
+      catalogId: draft.catalogId,
+      rawSignature: draft.rawSignature,
+      rawBitText: draft.rawBitText,
+      rawBitHex: draft.rawBitHex,
+      rawBitBinary: draft.rawBitBinary,
+      sourceRemoteIeee: draft.sourceRemoteIeee,
+      sourceRemoteId: draft.sourceRemoteId,
       deviceType,
       functionKey,
       functionLabel,
       label,
       brand,
+      deviceNotes: draft.deviceNotes || '',
       isActive: true,
       captureStatus: 'mapped',
       mappedAt: new Date().toISOString()
@@ -1651,7 +1668,7 @@ export function DeviceControlPage({ onNavigate }) {
         body: JSON.stringify({
           name: device.name,
           location: device.location,
-          notes: String(device.notes || '').includes('Quick Saved') ? device.notes : device.notes,
+          notes: device.notes,
           controlledDevice: nextMappings.map((item) => `${item.deviceType} (${item.brand})`).join(', '),
           remoteState: nextRemoteState,
           controlMethod: device.controlMethod || 'Manual'
@@ -1689,13 +1706,492 @@ export function DeviceControlPage({ onNavigate }) {
         const normalizedKey = normalizeBieonId(currentBieon.bieonId);
         return {
           ...prev,
-          [normalizedKey]: (prev[normalizedKey] || []).map((item) => item._id === remoteMappingDraft.catalogId ? { ...item, captureStatus: 'mapped', isActive: true, controlAction: functionKey, controlLabel: label, deviceType, controlGroup: brand } : item)
+          [normalizedKey]: (prev[normalizedKey] || []).map((item) => item._id === draft.catalogId ? { ...item, captureStatus: 'mapped', isActive: true, controlAction: functionKey, controlLabel: label, deviceType, controlGroup: brand } : item)
         };
       });
       setRemoteMappingDraft(null);
       alert(t('alerts.remote_mapping_saved'));
     } catch (error) {
       alert(t('alerts.remote_mapping_failed', { message: error.message }));
+    }
+  };
+
+  const handleSaveAllRemoteMappings = async (device) => {
+    if (!device || !currentBieon) return;
+
+    const finalType = isCustomWizardDeviceType ? wizardCustomDeviceType : wizardDeviceType;
+    const finalBrand = isCustomWizardBrand ? wizardCustomBrand : wizardBrand;
+
+    const existingMappings = Array.isArray(device.remoteMappings)
+      ? device.remoteMappings
+      : Array.isArray(device.remoteState?.mappings)
+        ? device.remoteState.mappings
+        : [];
+
+    const unmappedItems = (remoteBitCatalogByBieon[normalizeBieonId(currentBieon?.bieonId)] || [])
+      .filter(item => item.isActive !== false && item.captureStatus !== 'disabled' && String(item.captureStatus) !== 'mapped');
+
+    let nextMappings = [...existingMappings];
+    let hasProfileChanges = false;
+
+    if (editingRemoteProfile) {
+      const origType = editingRemoteProfile.deviceType;
+      const origBrand = editingRemoteProfile.brand;
+      const origNotes = existingMappings.find(m => m.deviceType === origType && m.brand === origBrand)?.deviceNotes || '';
+
+      if (finalType !== origType || finalBrand !== origBrand || wizardNotes !== origNotes) {
+        hasProfileChanges = true;
+        nextMappings = existingMappings.map(item => {
+          if (item.deviceType === origType && item.brand === origBrand) {
+            return {
+              ...item,
+              deviceType: finalType,
+              brand: finalBrand,
+              deviceNotes: wizardNotes
+            };
+          }
+          return item;
+        });
+      }
+    }
+
+    // Update any existing mappings whose function draft was modified in wizardMappingDrafts
+    existingMappings.forEach(item => {
+      const draft = wizardMappingDrafts[item.catalogId];
+      if (draft) {
+        const finalFunc = draft.functionKey === 'custom_action' ? draft.customFunctionKey : draft.functionKey;
+        const finalLabel = draft.label || getRemoteFunctionLabel(finalType, finalFunc);
+        if (finalFunc && (item.functionKey !== finalFunc || item.label !== finalLabel)) {
+          hasProfileChanges = true;
+          nextMappings = nextMappings.map(m => m.catalogId === item.catalogId ? {
+            ...m,
+            functionKey: finalFunc,
+            functionLabel: finalLabel,
+            label: finalLabel
+          } : m);
+        }
+      }
+    });
+
+    if (unmappedItems.length === 0 && !hasProfileChanges) {
+      alert("Tidak ada perubahan profil atau tombol baru yang perlu disimpan.");
+      return;
+    }
+
+    for (const bitItem of unmappedItems) {
+      const functionOptions = [
+        ...getRemoteFunctionOptions(finalType),
+        { value: 'custom_action', label: 'Lainnya' }
+      ];
+
+      const currentDraft = wizardMappingDrafts[bitItem._id] || {
+        functionKey: functionOptions[0]?.value || 'power',
+        customFunctionKey: '',
+        label: getRemoteFunctionLabel(finalType, functionOptions[0]?.value || 'power')
+      };
+
+      const finalFunc = currentDraft.functionKey === 'custom_action' ? currentDraft.customFunctionKey : currentDraft.functionKey;
+      const finalLabel = currentDraft.label || getRemoteFunctionLabel(finalType, finalFunc);
+
+      if (!finalFunc) {
+        alert("Nama fungsi/tombol kustom tidak boleh kosong.");
+        return;
+      }
+
+      const nextMapping = {
+        catalogId: bitItem._id,
+        rawSignature: bitItem.rawSignature,
+        rawBitText: bitItem.rawBitText,
+        rawBitHex: bitItem.rawBitHex,
+        rawBitBinary: bitItem.rawBitBinary,
+        sourceRemoteIeee: bitItem.sourceRemoteIeee,
+        sourceRemoteId: bitItem.sourceRemoteId,
+        deviceType: finalType,
+        functionKey: finalFunc,
+        functionLabel: finalLabel,
+        label: finalLabel,
+        brand: finalBrand,
+        deviceNotes: wizardNotes,
+        isActive: true,
+        captureStatus: 'mapped',
+        mappedAt: new Date().toISOString()
+      };
+
+      nextMappings = [
+        ...nextMappings.filter((item) => item.rawSignature !== nextMapping.rawSignature && item.catalogId !== nextMapping.catalogId),
+        nextMapping
+      ];
+    }
+
+    const nextRemoteState = {
+      ...(device.remoteState || {}),
+      mappings: nextMappings,
+      profiles: groupRemoteMappings(nextMappings)
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: device.name,
+          location: device.location,
+          notes: device.notes,
+          controlledDevice: nextMappings.map((item) => `${item.deviceType} (${item.brand})`).join(', '),
+          remoteState: nextRemoteState,
+          controlMethod: device.controlMethod || 'Manual'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal menyimpan semua mapping remote');
+      }
+
+      const updatedDevice = {
+        ...data.device,
+        id: data.device._id,
+        remoteState: nextRemoteState,
+        remoteMappings: nextMappings
+      };
+
+      const updatedSystems = bieonSystems.map((system) => ({
+        ...system,
+        hubs: system.hubs.map((hub) => ({
+          ...hub,
+          devices: hub.devices.map((item) => String(item.id) === String(device.id) ? {
+            ...item,
+            ...updatedDevice,
+            remoteState: nextRemoteState,
+            remoteMappings: nextMappings
+          } : item)
+        }))
+      }));
+
+      setBieonSystems(updatedSystems);
+      setCurrentBieon(updatedSystems.find((system) => system.id === currentBieon.id) || currentBieon);
+      
+      setRemoteBitCatalogByBieon(prev => {
+        const normalizedKey = normalizeBieonId(currentBieon.bieonId);
+        let updatedCatalog = [...(prev[normalizedKey] || [])];
+        for (const bitItem of unmappedItems) {
+          const functionOptions = [
+            ...getRemoteFunctionOptions(finalType),
+            { value: 'custom_action', label: 'Lainnya' }
+          ];
+
+          const currentDraft = wizardMappingDrafts[bitItem._id] || {
+            functionKey: functionOptions[0]?.value || 'power',
+            customFunctionKey: '',
+            label: getRemoteFunctionLabel(finalType, functionOptions[0]?.value || 'power')
+          };
+
+          const finalFunc = currentDraft.functionKey === 'custom_action' ? currentDraft.customFunctionKey : currentDraft.functionKey;
+          const finalLabel = currentDraft.label || getRemoteFunctionLabel(finalType, finalFunc);
+
+          updatedCatalog = updatedCatalog.map((item) => 
+            item._id === bitItem._id 
+              ? { ...item, captureStatus: 'mapped', isActive: true, controlAction: finalFunc, controlLabel: finalLabel, deviceType: finalType, controlGroup: finalBrand } 
+              : item
+          );
+        }
+        return {
+          ...prev,
+          [normalizedKey]: updatedCatalog
+        };
+      });
+
+      setWizardMappingDrafts({});
+      setIsAddingSubDevice(false);
+    } catch (error) {
+      alert(`Gagal menyimpan semua bit raw: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSubDevice = async (device, profile) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus sub-perangkat ${profile.deviceType} (${profile.brand}) beserta semua tombolnya?`)) {
+      return;
+    }
+
+    const existingMappings = Array.isArray(device.remoteMappings)
+      ? device.remoteMappings
+      : Array.isArray(device.remoteState?.mappings)
+        ? device.remoteState.mappings
+        : [];
+
+    const nextMappings = existingMappings.filter(
+      (item) => !(item.deviceType === profile.deviceType && item.brand === profile.brand)
+    );
+
+    const nextRemoteState = {
+      ...(device.remoteState || {}),
+      mappings: nextMappings,
+      profiles: groupRemoteMappings(nextMappings)
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: device.name,
+          location: device.location,
+          notes: device.notes,
+          controlledDevice: nextMappings.map((item) => `${item.deviceType} (${item.brand})`).join(', '),
+          remoteState: nextRemoteState,
+          controlMethod: device.controlMethod || 'Manual'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal menghapus sub-perangkat');
+      }
+
+      const updatedDevice = {
+        ...data.device,
+        id: data.device._id,
+        remoteState: nextRemoteState,
+        remoteMappings: nextMappings
+      };
+
+      const updatedSystems = bieonSystems.map((system) => ({
+        ...system,
+        hubs: system.hubs.map((hub) => ({
+          ...hub,
+          devices: hub.devices.map((item) => String(item.id) === String(device.id) ? {
+            ...item,
+            ...updatedDevice,
+            remoteState: nextRemoteState,
+            remoteMappings: nextMappings
+          } : item)
+        }))
+      }));
+
+      setBieonSystems(updatedSystems);
+      setCurrentBieon(updatedSystems.find((system) => system.id === currentBieon.id) || currentBieon);
+      alert('Sub-perangkat berhasil dihapus.');
+    } catch (error) {
+      alert(`Gagal menghapus sub-perangkat: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSingleMapping = async (device, mapping) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus tombol "${mapping.label || mapping.functionLabel || mapping.functionKey}"?`)) {
+      return;
+    }
+
+    const existingMappings = Array.isArray(device.remoteMappings)
+      ? device.remoteMappings
+      : Array.isArray(device.remoteState?.mappings)
+        ? device.remoteState.mappings
+        : [];
+
+    const nextMappings = existingMappings.filter(
+      (item) => !(item.catalogId === mapping.catalogId && item.rawSignature === mapping.rawSignature)
+    );
+
+    const nextRemoteState = {
+      ...(device.remoteState || {}),
+      mappings: nextMappings,
+      profiles: groupRemoteMappings(nextMappings)
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: device.name,
+          location: device.location,
+          notes: device.notes,
+          controlledDevice: nextMappings.map((item) => `${item.deviceType} (${item.brand})`).join(', '),
+          remoteState: nextRemoteState,
+          controlMethod: device.controlMethod || 'Manual'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal menghapus tombol');
+      }
+
+      if (mapping.catalogId) {
+        await fetch(`/api/devices/registration/catalog/${mapping.catalogId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            captureStatus: 'captured',
+            isActive: true,
+            controlAction: '',
+            controlLabel: '',
+            deviceType: '',
+            controlGroup: ''
+          })
+        });
+      }
+
+      const updatedDevice = {
+        ...data.device,
+        id: data.device._id,
+        remoteState: nextRemoteState,
+        remoteMappings: nextMappings
+      };
+
+      const updatedSystems = bieonSystems.map((system) => ({
+        ...system,
+        hubs: system.hubs.map((hub) => ({
+          ...hub,
+          devices: hub.devices.map((item) => String(item.id) === String(device.id) ? {
+            ...item,
+            ...updatedDevice,
+            remoteState: nextRemoteState,
+            remoteMappings: nextMappings
+          } : item)
+        }))
+      }));
+
+      setBieonSystems(updatedSystems);
+      setCurrentBieon(updatedSystems.find((system) => system.id === currentBieon.id) || currentBieon);
+
+      if (mapping.catalogId) {
+        setRemoteBitCatalogByBieon(prev => {
+          const normalizedKey = normalizeBieonId(currentBieon.bieonId);
+          return {
+            ...prev,
+            [normalizedKey]: (prev[normalizedKey] || []).map((item) => 
+              item._id === mapping.catalogId 
+                ? { 
+                    ...item, 
+                    captureStatus: 'captured', 
+                    isActive: true, 
+                    controlAction: '', 
+                    controlLabel: '', 
+                    deviceType: '', 
+                    controlGroup: '' 
+                  } 
+                : item
+            )
+          };
+        });
+      }
+
+    } catch (error) {
+      alert(`Gagal menghapus tombol: ${error.message}`);
+    }
+  };
+
+  const openMappingConfig = (device, mapping) => {
+    setEditingMappingDevice(device);
+    setEditingMapping({
+      ...mapping,
+      controlMethod: mapping.controlMethod || 'Manual',
+      scheduleSettings: mapping.scheduleSettings || [],
+      sensorParams: mapping.sensorParams || {
+        temperature: 28,
+        humidity: 70,
+        ph: 7.0,
+        tds: 500,
+        turbidity: 100,
+        isMotionEnabled: false,
+        isDoorEnabled: false
+      },
+      environmentAspect: mapping.environmentAspect || 'Kenyamanan'
+    });
+  };
+
+  const handleSaveMappingAutomation = async () => {
+    if (!editingMappingDevice || !editingMapping) return;
+
+    const existingMappings = Array.isArray(editingMappingDevice.remoteMappings)
+      ? editingMappingDevice.remoteMappings
+      : Array.isArray(editingMappingDevice.remoteState?.mappings)
+        ? editingMappingDevice.remoteState.mappings
+        : [];
+
+    const nextMapping = {
+      ...editingMapping,
+      isActive: true,
+      captureStatus: 'mapped',
+      mappedAt: new Date().toISOString()
+    };
+
+    const nextMappings = existingMappings.map((item) =>
+      (item.catalogId === nextMapping.catalogId || item.rawSignature === nextMapping.rawSignature) ? nextMapping : item
+    );
+
+    const nextRemoteState = {
+      ...(editingMappingDevice.remoteState || {}),
+      mappings: nextMappings,
+      profiles: groupRemoteMappings(nextMappings)
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/kendaliperangkat/configure/${editingMappingDevice.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editingMappingDevice.name,
+          location: editingMappingDevice.location,
+          notes: editingMappingDevice.notes,
+          controlledDevice: nextMappings.map((item) => `${item.deviceType} (${item.brand})`).join(', '),
+          remoteState: nextRemoteState,
+          controlMethod: editingMappingDevice.controlMethod || 'Manual'
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Gagal menyimpan konfigurasi otomasi');
+      }
+
+      const updatedDevice = {
+        ...data.device,
+        id: data.device._id,
+        remoteState: nextRemoteState,
+        remoteMappings: nextMappings
+      };
+
+      const updatedSystems = bieonSystems.map((system) => ({
+        ...system,
+        hubs: system.hubs.map((hub) => ({
+          ...hub,
+          devices: hub.devices.map((item) => String(item.id) === String(editingMappingDevice.id) ? {
+            ...item,
+            ...updatedDevice,
+            remoteState: nextRemoteState,
+            remoteMappings: nextMappings
+          } : item)
+        }))
+      }));
+
+      setBieonSystems(updatedSystems);
+      setCurrentBieon(updatedSystems.find((system) => system.id === currentBieon.id) || currentBieon);
+      alert('Otomatisasi tombol berhasil disimpan.');
+      setEditingMapping(null);
+      setEditingMappingDevice(null);
+    } catch (error) {
+      alert(`Gagal menyimpan otomasi: ${error.message}`);
     }
   };
 
@@ -3395,7 +3891,583 @@ export function DeviceControlPage({ onNavigate }) {
                                   </div>
                                 )}
 
-                                {!isTechnicianMode && isActuatorDevice && (
+                                {isDeviceRemote && (
+                                  <div className="mb-6">
+                                    {isAddingSubDevice && String(wizardTargetDeviceId) === String(device.id) ? (
+                                      /* Render Inline Wizard Form */
+                                      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm space-y-4 animate-fade-in">
+                                        <div className="flex items-center justify-between border-b border-gray-150 pb-3">
+                                          <div>
+                                            <h4 className="text-xs font-black uppercase tracking-widest text-bieon-eco">
+                                              Detail & Rekam Tombol Sub-Perangkat
+                                            </h4>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                              Pilih jenis perangkat elektronik, merek, dan rekam remote fisik
+                                            </p>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setIsAddingSubDevice(false);
+                                              setWizardMappingDrafts({});
+                                              setEditingRemoteProfile(null);
+                                            }}
+                                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-all"
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end animate-fade-in">
+                                            {/* Box 1: Tipe Perangkat */}
+                                            <div>
+                                              <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Tipe Perangkat</label>
+                                              {isCustomWizardDeviceType ? (
+                                                <div className="flex items-center gap-1.5 h-[38px]">
+                                                  <input
+                                                    type="text"
+                                                    value={wizardCustomDeviceType}
+                                                    onChange={(e) => setWizardCustomDeviceType(e.target.value)}
+                                                    placeholder="Nama Tipe Perangkat Kustom"
+                                                    className="w-full px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-xs h-full focus:outline-none focus:border-bieon-eco transition-all"
+                                                  />
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setIsCustomWizardDeviceType(false);
+                                                      setWizardDeviceType('TV');
+                                                      setWizardCustomDeviceType('');
+                                                    }}
+                                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-500 transition-all shrink-0 h-full flex items-center justify-center animate-fade-in"
+                                                    title="Kembali ke Dropdown"
+                                                  >
+                                                    <X className="w-3.5 h-3.5" />
+                                                  </button>
+                                                </div>
+                                              ) : (
+                                                <select
+                                                  value={wizardDeviceType}
+                                                  onChange={(e) => {
+                                                    if (e.target.value === 'Custom') {
+                                                      setIsCustomWizardDeviceType(true);
+                                                      setWizardDeviceType('Custom');
+                                                      setWizardCustomDeviceType('Lainnya');
+                                                    } else {
+                                                      setIsCustomWizardDeviceType(false);
+                                                      setWizardDeviceType(e.target.value);
+                                                      setWizardCustomDeviceType('');
+                                                    }
+                                                  }}
+                                                  className="w-full px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-bieon-eco"
+                                                >
+                                                  {REMOTE_DEVICE_TYPES.map((type) => (
+                                                    <option key={type.value} value={type.value}>{type.label}</option>
+                                                  ))}
+                                                </select>
+                                              )}
+                                            </div>
+
+                                            {/* Box 2: Merek */}
+                                            <div>
+                                              <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Merek</label>
+                                              {isCustomWizardBrand ? (
+                                                <div className="flex items-center gap-1.5 h-[38px]">
+                                                  <input
+                                                    type="text"
+                                                    value={wizardCustomBrand}
+                                                    onChange={(e) => setWizardCustomBrand(e.target.value)}
+                                                    placeholder="Nama Merek Kustom"
+                                                    className="w-full px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-xs h-full focus:outline-none focus:border-bieon-eco transition-all"
+                                                  />
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setIsCustomWizardBrand(false);
+                                                      setWizardBrand('Polytron');
+                                                      setWizardCustomBrand('');
+                                                    }}
+                                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-500 transition-all shrink-0 h-full flex items-center justify-center animate-fade-in"
+                                                    title="Kembali ke Dropdown Merek"
+                                                  >
+                                                    <X className="w-3.5 h-3.5" />
+                                                  </button>
+                                                </div>
+                                              ) : (
+                                                <select
+                                                  value={wizardBrand}
+                                                  onChange={(e) => {
+                                                    if (e.target.value === 'Other') {
+                                                      setIsCustomWizardBrand(true);
+                                                      setWizardBrand('Other');
+                                                      setWizardCustomBrand('Lainnya');
+                                                    } else {
+                                                      setIsCustomWizardBrand(false);
+                                                      setWizardBrand(e.target.value);
+                                                      setWizardCustomBrand('');
+                                                    }
+                                                  }}
+                                                  className="w-full px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-bieon-eco"
+                                                >
+                                                  {REMOTE_BRANDS.map((brand) => (
+                                                    <option key={brand} value={brand}>{brand === "Other" ? "Lainnya" : brand}</option>
+                                                  ))}
+                                                </select>
+                                              )}
+                                            </div>
+
+                                            {/* Box 3: Keterangan / Lokasi */}
+                                            <div>
+                                              <label className="block text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">Keterangan / Lokasi (Opsional)</label>
+                                              <input
+                                                type="text"
+                                                value={wizardNotes}
+                                                onChange={(e) => setWizardNotes(e.target.value)}
+                                                placeholder="Contoh: Kamar Utama, Lantai 1"
+                                                className="w-full px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-bieon-eco"
+                                              />
+                                            </div>
+                                          </div>
+
+                                          {/* Active Recording Panel */}
+                                          <div className="border border-gray-150 rounded-2xl p-3 bg-gray-50/50 space-y-3">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-200/60 pb-2">
+                                              <div>
+                                                <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Recording Mode</h5>
+                                                <p className="text-[11px] text-gray-500 mt-0.5">
+                                                  {remoteRegCountdown > 0 ? `Mode registrasi aktif (${remoteRegCountdown}s)...` : 'Klik tombol rekam lalu tekan remote fisik.'}
+                                                </p>
+                                              </div>
+                                              <button
+                                                type="button"
+                                                disabled={remoteRegCountdown > 0}
+                                                onClick={() => handleStartRemoteRegistration(device)}
+                                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1 ${remoteRegCountdown > 0
+                                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                    : 'bg-bieon-eco text-white hover:bg-bieon-eco/90 active:scale-95'
+                                                  }`}
+                                              >
+                                                <Radio className={`w-3.5 h-3.5 ${remoteRegCountdown > 0 ? 'animate-ping text-red-500' : ''}`} />
+                                                {remoteRegCountdown > 0 ? `Merekam (${remoteRegCountdown}s)` : 'Mulai Rekam'}
+                                              </button>
+                                            </div>
+
+                                            {/* Captured list */}
+                                            <div className="space-y-2">
+                                              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Captured Raw Bits</p>
+                                              {remoteCatalogLoading && currentRemoteCatalog.length === 0 ? (
+                                                <div className="p-3 rounded-xl border border-dashed border-gray-200 bg-white text-center text-xs text-gray-500">
+                                                  Memuat katalog...
+                                                </div>
+                                              ) : currentRemoteCatalog.length === 0 ? (
+                                                <div className="p-4 rounded-xl border border-dashed border-gray-200 bg-white text-center text-xs text-gray-400 italic">
+                                                  Belum ada raw bit. Tekan "Mulai Rekam" lalu tekan tombol remote fisik Anda.
+                                                </div>
+                                              ) : (
+                                                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                                                    {currentRemoteCatalog.map((bitItem) => {
+                                                    const isMapped = String(bitItem.captureStatus) === 'mapped';
+                                                    const hex = String(bitItem.rawBitHex || bitItem.rawSignature || '').trim();
+                                                    const last4 = hex.length > 4 ? hex.slice(-4) : hex;
+                                                    const bitLen = bitItem.bits || bitItem.bit_length || 32;
+                                                    const rawDisplay = `Raw: ${last4.toUpperCase()} | Length: ${bitLen} bits`;
+
+                                                    const finalDeviceType = isCustomWizardDeviceType ? wizardCustomDeviceType : wizardDeviceType;
+                                                    const functionOptions = [
+                                                      ...getRemoteFunctionOptions(finalDeviceType),
+                                                      { value: 'custom_action', label: 'Lainnya' }
+                                                    ];
+
+                                                    const existingMappings = Array.isArray(device.remoteMappings)
+                                                      ? device.remoteMappings
+                                                      : Array.isArray(device.remoteState?.mappings)
+                                                        ? device.remoteState.mappings
+                                                        : [];
+
+                                                    const existingMapping = existingMappings.find(m => 
+                                                      (m.catalogId && String(m.catalogId) === String(bitItem._id)) || 
+                                                      (m.rawSignature && m.rawSignature === bitItem.rawSignature)
+                                                    );
+
+                                                    let initialFunctionKey = functionOptions[0]?.value || 'power';
+                                                    let initialCustomKey = '';
+                                                    let initialLabel = getRemoteFunctionLabel(finalDeviceType, initialFunctionKey);
+
+                                                    if (existingMapping) {
+                                                      const isStandard = getRemoteFunctionOptions(finalDeviceType).some(opt => opt.value === existingMapping.functionKey);
+                                                      if (isStandard) {
+                                                        initialFunctionKey = existingMapping.functionKey;
+                                                        initialLabel = existingMapping.label;
+                                                      } else {
+                                                        initialFunctionKey = 'custom_action';
+                                                        initialCustomKey = existingMapping.functionKey;
+                                                        initialLabel = existingMapping.label;
+                                                      }
+                                                    }
+
+                                                    const currentDraft = wizardMappingDrafts[bitItem._id] || {
+                                                      functionKey: initialFunctionKey,
+                                                      customFunctionKey: initialCustomKey,
+                                                      label: initialLabel
+                                                    };
+
+                                                    const isCustomFunction = currentDraft.functionKey === 'custom_action';
+
+                                                    return (
+                                                      <div key={bitItem._id || bitItem.rawSignature} className={`rounded-xl border p-2.5 transition-all bg-white text-xs ${isMapped ? 'border-blue-100 bg-blue-50/5' : 'border-gray-200'}`}>
+                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                                                          {/* Bagian Kiri: Info Teks */}
+                                                          <div className="flex flex-col gap-1 min-w-0 shrink-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                              <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[9px] font-black uppercase text-gray-600">
+                                                                {bitItem.protocol || 'raw'}
+                                                              </span>
+                                                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${isMapped ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>
+                                                                {isMapped ? 'Mapped' : 'Captured'}
+                                                              </span>
+                                                            </div>
+                                                            <p className="font-bold text-gray-800 font-mono text-[11px]">{rawDisplay}</p>
+                                                          </div>
+
+                                                          {/* Bagian Kanan: Kontrol Baris Tunggal Dinamis */}
+                                                          <div className="flex flex-col sm:flex-row items-center gap-1.5 w-full md:w-auto">
+                                                            <div className="w-full sm:w-[220px]">
+                                                              {isCustomFunction ? (
+                                                                <div className="flex items-center gap-1.5 h-[34px]">
+                                                                  <input
+                                                                    type="text"
+                                                                    value={currentDraft.customFunctionKey}
+                                                                    onChange={(e) => {
+                                                                      const customKey = e.target.value;
+                                                                      setWizardMappingDrafts(prev => ({
+                                                                        ...prev,
+                                                                        [bitItem._id]: {
+                                                                          ...currentDraft,
+                                                                          customFunctionKey: customKey,
+                                                                          label: customKey
+                                                                        }
+                                                                      }));
+                                                                    }}
+                                                                    placeholder="Nama Fungsi Baru"
+                                                                    className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-[11px] h-full focus:outline-none focus:border-bieon-eco transition-all"
+                                                                  />
+                                                                  <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                      const defaultFunc = functionOptions[0]?.value || 'power';
+                                                                      const defaultLabel = getRemoteFunctionLabel(finalDeviceType, defaultFunc);
+                                                                      setWizardMappingDrafts(prev => ({
+                                                                        ...prev,
+                                                                        [bitItem._id]: {
+                                                                          ...currentDraft,
+                                                                          functionKey: defaultFunc,
+                                                                          customFunctionKey: '',
+                                                                          label: defaultLabel
+                                                                        }
+                                                                      }));
+                                                                    }}
+                                                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-500 transition-all shrink-0 h-full flex items-center justify-center animate-fade-in"
+                                                                    title="Kembali ke Dropdown"
+                                                                  >
+                                                                    <X className="w-3.5 h-3.5" />
+                                                                  </button>
+                                                                </div>
+                                                              ) : (
+                                                                <select
+                                                                  value={currentDraft.functionKey}
+                                                                  onChange={(e) => {
+                                                                    const key = e.target.value;
+                                                                    const label = key === 'custom_action' ? 'Lainnya' : getRemoteFunctionLabel(finalDeviceType, key);
+                                                                    setWizardMappingDrafts(prev => ({
+                                                                      ...prev,
+                                                                      [bitItem._id]: {
+                                                                        ...currentDraft,
+                                                                        functionKey: key,
+                                                                        customFunctionKey: key === 'custom_action' ? 'Lainnya' : '',
+                                                                        label: label
+                                                                      }
+                                                                    }));
+                                                                  }}
+                                                                  className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-[11px] h-[34px] focus:outline-none focus:border-bieon-eco"
+                                                                >
+                                                                  {functionOptions.map((opt) => (
+                                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                                  ))}
+                                                                </select>
+                                                              )}
+                                                            </div>
+
+                                                            <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto justify-end">
+                                                              <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                  const finalType = isCustomWizardDeviceType ? wizardCustomDeviceType : wizardDeviceType;
+                                                                  const finalBrand = isCustomWizardBrand ? wizardCustomBrand : wizardBrand;
+                                                                  const finalFunc = currentDraft.functionKey === 'custom_action' ? currentDraft.customFunctionKey : currentDraft.functionKey;
+                                                                  const finalLabel = currentDraft.label || getRemoteFunctionLabel(finalType, finalFunc);
+                                                                  if (!finalFunc) {
+                                                                    alert("Nama fungsi/tombol tidak boleh kosong.");
+                                                                    return;
+                                                                  }
+                                                                  handleSaveRemoteMapping({
+                                                                    deviceId: device.id,
+                                                                    catalogId: bitItem._id,
+                                                                    rawSignature: bitItem.rawSignature,
+                                                                    rawBitText: bitItem.rawBitText,
+                                                                    rawBitHex: bitItem.rawBitHex,
+                                                                    rawBitBinary: bitItem.rawBitBinary,
+                                                                    sourceRemoteIeee: bitItem.sourceRemoteIeee,
+                                                                    sourceRemoteId: bitItem.sourceRemoteId,
+                                                                    deviceType: finalType,
+                                                                    brand: finalBrand,
+                                                                    functionKey: finalFunc,
+                                                                    label: finalLabel,
+                                                                    deviceNotes: wizardNotes
+                                                                  });
+                                                                }}
+                                                                className="h-[34px] w-[34px] flex items-center justify-center rounded-xl bg-bieon-eco text-white hover:bg-bieon-eco/90 transition-all active:scale-95 shadow-sm"
+                                                                title="Simpan Tombol"
+                                                              >
+                                                                <Check className="w-4 h-4" />
+                                                              </button>
+                                                              <button
+                                                                type="button"
+                                                                onClick={() => executeDeleteRemoteBit(bitItem)}
+                                                                className="h-[34px] w-[34px] flex items-center justify-center rounded-xl border bg-red-50 text-red-600 border-red-100 hover:bg-red-100 transition-all active:scale-95"
+                                                                title="Hapus Raw Bit"
+                                                              >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                              </button>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    );
+                                                  })}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Footer Action Buttons */}
+                                        <div className="flex items-center justify-between border-t border-gray-150 pt-3">
+                                          <div>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setIsAddingSubDevice(false);
+                                                setWizardMappingDrafts({});
+                                                setEditingRemoteProfile(null);
+                                              }}
+                                              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-95"
+                                            >
+                                              Batal
+                                            </button>
+                                          </div>
+
+                                          <div>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleSaveAllRemoteMappings(device)}
+                                              className="px-5 py-2 rounded-xl bg-gray-900 text-white text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-md"
+                                            >
+                                              SIMPAN SEMUA
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      /* Render Configured list or Empty state */
+                                      <div className="space-y-4">
+                                        <div className="flex items-center justify-between border-b border-gray-150 pb-3">
+                                          <div>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Daftar Sub-Perangkat</p>
+                                            <h4 className="text-sm font-bold text-gray-900 mt-1 font-sans">Perangkat yang Dikontrol</h4>
+                                          </div>
+                                          {!isTechnicianMode && deviceRemoteProfiles.length > 0 && (
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setIsAddingSubDevice(true);
+                                                setWizardDeviceType('TV');
+                                                setIsCustomWizardDeviceType(false);
+                                                setWizardCustomDeviceType('');
+                                                setWizardBrand('Polytron');
+                                                setIsCustomWizardBrand(false);
+                                                setWizardCustomBrand('');
+                                                setWizardNotes('');
+                                                setWizardTargetDeviceId(device.id);
+                                              }}
+                                              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-bieon-eco text-white text-xs font-black uppercase tracking-widest hover:bg-bieon-eco/90 transition-all active:scale-95 shadow-sm font-sans"
+                                            >
+                                              <Plus className="w-3.5 h-3.5" />
+                                              Tambah Perangkat
+                                            </button>
+                                          )}
+                                        </div>
+
+                                        {deviceRemoteProfiles.length === 0 ? (
+                                          <div className="p-6 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 text-center flex flex-col items-center justify-center">
+                                            <Radio className="w-8 h-8 text-gray-400 mb-2 animate-pulse" />
+                                            <p className="text-xs text-gray-500 font-medium">Belum ada sub-perangkat yang dikonfigurasi.</p>
+
+                                            {!isTechnicianMode && (
+                                              <>
+                                                <p className="text-[10px] text-gray-400 mt-1 mb-4">Klik "+ Tambah Perangkat" untuk mulai mendaftarkan tombol remote.</p>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setIsAddingSubDevice(true);
+                                                    setWizardDeviceType('TV');
+                                                    setIsCustomWizardDeviceType(false);
+                                                    setWizardCustomDeviceType('');
+                                                    setWizardBrand('Polytron');
+                                                    setIsCustomWizardBrand(false);
+                                                    setWizardCustomBrand('');
+                                                    setWizardNotes('');
+                                                    setWizardTargetDeviceId(device.id);
+                                                  }}
+                                                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-bieon-eco text-white text-xs font-black uppercase tracking-widest hover:bg-bieon-eco/90 transition-all active:scale-95 shadow-md font-sans"
+                                                >
+                                                  <Plus className="w-4 h-4" />
+                                                  Tambah Perangkat
+                                                </button>
+                                              </>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <div className="space-y-4">
+                                            {deviceRemoteProfiles.map((profile) => {
+                                              const profileNotes = profile.mappings[0]?.deviceNotes || '';
+                                              return (
+                                                <div key={profile.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+                                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-gray-50">
+                                                    <div>
+                                                      <div className="flex items-center gap-2">
+                                                        <span className="px-2.5 py-1 rounded-lg bg-gray-900 text-white text-xs font-extrabold uppercase tracking-wider">
+                                                          {profile.deviceType === "Custom" ? "Lainnya" : profile.deviceType}
+                                                        </span>
+                                                        <span className="text-xs font-bold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-lg">
+                                                          {profile.brand === "Other" ? "Lainnya" : profile.brand}
+                                                        </span>
+                                                      </div>
+                                                      {profileNotes && (
+                                                        <p className="text-xs text-gray-500 mt-1.5 font-medium flex items-center gap-1">
+                                                          <span className="w-1.5 h-1.5 rounded-full bg-bieon-eco"></span>
+                                                          {profileNotes}
+                                                        </p>
+                                                      )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                      {!isTechnicianMode && (
+                                                        <>
+                                                          <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                              setIsAddingSubDevice(true);
+                                                               setWizardDeviceType(profile.deviceType);
+                                                               setIsCustomWizardDeviceType(!REMOTE_DEVICE_TYPES.some(t => t.value === profile.deviceType));
+                                                               setWizardCustomDeviceType(!REMOTE_DEVICE_TYPES.some(t => t.value === profile.deviceType) ? profile.deviceType : '');
+                                                               setWizardBrand(profile.brand);
+                                                               setIsCustomWizardBrand(!REMOTE_BRANDS.includes(profile.brand));
+                                                               setWizardCustomBrand(!REMOTE_BRANDS.includes(profile.brand) ? profile.brand : '');
+                                                               setWizardNotes(profileNotes);
+                                                               setWizardTargetDeviceId(device.id);
+                                                               setEditingRemoteProfile({ deviceType: profile.deviceType, brand: profile.brand });
+                                                            }}
+                                                            className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-600 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-1"
+                                                          >
+                                                            <Pencil className="w-3 h-3" />
+                                                            Edit / Tambah Tombol
+                                                          </button>
+                                                          <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteSubDevice(device, profile)}
+                                                            className="p-2 rounded-xl bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-all active:scale-95"
+                                                            title="Hapus Sub-Perangkat"
+                                                          >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                          </button>
+                                                        </>
+                                                      )}
+                                                    </div>
+                                                  </div>
+
+                                                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                                                    {profile.mappings.map((mapping) => (
+                                                      <div
+                                                        key={mapping.catalogId || mapping.rawSignature}
+                                                        className="relative w-full"
+                                                      >
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => handleSendRemoteCommand(device, mapping)}
+                                                          title={`Kirim ${mapping.functionLabel}`}
+                                                          className="w-full text-left focus:outline-none group"
+                                                        >
+                                                          <div className="rounded-2xl border border-bieon-eco/20 bg-bieon-eco/5 px-3.5 py-3 hover:bg-bieon-eco hover:text-white transition-all cursor-pointer pr-10 shadow-sm">
+                                                            <p className="text-xs font-black uppercase tracking-widest text-bieon-eco group-hover:text-white transition-all truncate">{mapping.functionLabel}</p>
+                                                            <p className="text-[10px] text-gray-500 mt-1 truncate group-hover:text-white/80 transition-all">{mapping.label || mapping.rawBitText || mapping.rawSignature}</p>
+                                                            {mapping.controlMethod && mapping.controlMethod !== 'Manual' && (
+                                                              <span className="inline-flex items-center gap-1 mt-1 text-[9px] font-black uppercase tracking-wider text-bieon-eco group-hover:text-white bg-bieon-eco/10 group-hover:bg-white/20 px-1.5 py-0.5 rounded">
+                                                                {mapping.controlMethod === 'Jadwal' ? (
+                                                                  <>
+                                                                    <Calendar className="w-2.5 h-2.5" /> Jadwal
+                                                                  </>
+                                                                ) : (
+                                                                  <>
+                                                                    <Activity className="w-2.5 h-2.5" /> Sensor
+                                                                  </>
+                                                                )}
+                                                              </span>
+                                                            )}
+                                                          </div>
+                                                        </button>
+                                                        {/* Actions Panel */}
+                                                        <div className="absolute top-2 right-2 flex items-center gap-1 z-10 animate-fade-in">
+                                                          {/* Settings Gear Button */}
+                                                          <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              openMappingConfig(device, mapping);
+                                                            }}
+                                                            title="Atur Otomatisasi Tombol"
+                                                            className="p-1.5 rounded-lg bg-white/90 hover:bg-white text-gray-400 hover:text-bieon-eco border border-gray-100 hover:border-bieon-eco/20 transition-all shadow-sm active:scale-90 flex items-center justify-center"
+                                                          >
+                                                            <Settings className="w-3.5 h-3.5" />
+                                                          </button>
+                                                          {/* Delete Button */}
+                                                          {!isTechnicianMode && (
+                                                            <button
+                                                              type="button"
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteSingleMapping(device, mapping);
+                                                              }}
+                                                              title="Hapus Tombol"
+                                                              className="p-1.5 rounded-lg bg-white/90 hover:bg-white text-red-400 hover:text-red-650 border border-gray-100 hover:border-red-200 transition-all shadow-sm active:scale-90 flex items-center justify-center"
+                                                            >
+                                                              <Trash2 className="w-3.5 h-3.5" />
+                                                            </button>
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Disabled Remote Registration for non-remote actuators */}
+                                {false && !isTechnicianMode && isActuatorDevice && !isDeviceRemote && (
                                   <div className="mb-6">
                                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
                                       <div>
@@ -3544,7 +4616,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-bieon-eco"
                                             >
                                               {REMOTE_BRANDS.map((brand) => (
-                                                <option key={brand} value={brand}>{brand}</option>
+                                                <option key={brand} value={brand}>{brand === "Other" ? "Lainnya" : brand}</option>
                                               ))}
                                             </select>
                                           </div>
@@ -3592,7 +4664,7 @@ export function DeviceControlPage({ onNavigate }) {
                                       </div>
                                     )}
 
-                                    {hasRemoteProfile && (
+                                    {hasRemoteProfile && !isDeviceRemote && (
                                       <div className="mt-4 space-y-3">
                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Remote Control Console</p>
                                         <div className="grid grid-cols-1 gap-3">
@@ -3639,7 +4711,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               </div>
                                             ) : (
                                               <>
-                                                <Power className="w-4 h-4" /> {String(device.status) === "1" ? "Turn OFF" : "Turn ON"}
+                                                <Power className="w-4 h-4" /> {String(device.status) === "1" ? "OFF" : "ON"}
                                               </>
                                             )}
                                           </button>
@@ -3650,7 +4722,7 @@ export function DeviceControlPage({ onNavigate }) {
                                 )}
 
                                 {/* Quick Controls Section - Hidden for Technicians (TIDAK BISA EDIT) */}
-                                {!isTechnicianMode && !hasRemoteProfile && (
+                                {!isTechnicianMode && !hasRemoteProfile && !isDeviceRemote && (
                                   <div className="mb-6">
                                     <p className="text-xs  text-gray-400 uppercase tracking-wider mb-3">
                                       {device.category?.toLowerCase() === "sensor" ? "Status Monitoring" :
@@ -3805,7 +4877,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                 </div>
                                               ) : (
                                                 <>
-                                                  <Power className="w-4 h-4" /> Turn {String(device.status) === "1" ? "OFF" : "ON"}
+                                                  <Power className="w-4 h-4" /> {String(device.status) === "1" ? "OFF" : "ON"}
                                                 </>
                                               )}
                                             </button>
@@ -3869,7 +4941,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                 </div>
                                               ) : (
                                                 <>
-                                                  <Eye className="w-4 h-4" /> {String(device.status) === "1" ? "Stop Monitoring" : "Start Monitoring"}
+                                                  <Eye className="w-4 h-4" /> {String(device.status) === "1" ? "Stop Monitoring (Status: Aktif)" : `Start Monitoring (Status: ${device.status === "0" ? "Nonaktif" : device.status || "Nonaktif"})`}
                                                 </>
                                               )}
                                             </button>
@@ -3886,32 +4958,70 @@ export function DeviceControlPage({ onNavigate }) {
                                   <div className="mb-6 flex flex-wrap items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-gray-100">
                                     {/* Compact Eligibility Badge */}
                                     {(() => {
-                                      const enabledParams = Object.entries(device.sensorParams || {}).filter(([_, cfg]) => cfg.enabled);
                                       let isAbnormal = false;
-                                      enabledParams.forEach(([key, cfg]) => {
-                                        const currentVal = parseFloat(device.currentValues[key]);
-                                        const threshold = parseFloat(cfg.value);
-                                        if (!isNaN(currentVal) && !isNaN(threshold)) {
-                                          if (currentVal > threshold) isAbnormal = true;
-                                        }
-                                      });
+                                      
+                                      const type = device.deviceType || "";
+                                      const typeLower = type.toLowerCase();
+                                      const nameLower = String(device.name || "").toLowerCase();
+                                      const aspectLower = String(device.environmentAspect || "").toLowerCase();
+                                      
+                                      const isWater = typeLower.includes("kualitas air") || aspectLower === "kualitas air" || nameLower.includes("bluecheck");
+                                      const isComfort = aspectLower === "kenyamanan" || nameLower.includes("comfort") || (!isWater && (device.currentValues.temperature !== undefined || device.currentValues.humidity !== undefined));
+                                      const isSecurity = typeLower.includes("keamanan") || typeLower.includes("security") || typeLower.includes("door") || typeLower.includes("motion") || aspectLower === "keamanan";
+                                      
+                                      if (isWater) {
+                                        const phVal = device.currentValues.ph !== undefined ? parseFloat(device.currentValues.ph) : NaN;
+                                        const turbVal = device.currentValues.turbidity !== undefined ? parseFloat(device.currentValues.turbidity) : NaN;
+                                        const tdsVal = device.currentValues.tds !== undefined ? parseFloat(device.currentValues.tds) : NaN;
+                                        
+                                        const phEnabled = device.sensorParams?.ph !== undefined;
+                                        const turbEnabled = device.sensorParams?.turbidity !== undefined;
+                                        const tdsEnabled = device.sensorParams?.tds !== undefined;
+                                        
+                                        if (phEnabled && !isNaN(phVal) && (phVal < 6.5 || phVal > 8.5)) isAbnormal = true;
+                                        if (turbEnabled && !isNaN(turbVal) && turbVal > 25) isAbnormal = true;
+                                        if (tdsEnabled && !isNaN(tdsVal) && tdsVal > 1000) isAbnormal = true;
+                                      } else if (isComfort) {
+                                        const tempVal = device.currentValues.temperature !== undefined ? parseFloat(device.currentValues.temperature) : NaN;
+                                        const humVal = device.currentValues.humidity !== undefined ? parseFloat(device.currentValues.humidity) : NaN;
+                                        
+                                        const tempEnabled = device.sensorParams?.temperature !== undefined;
+                                        const humEnabled = device.sensorParams?.humidity !== undefined;
+                                        
+                                        if (tempEnabled && !isNaN(tempVal) && (tempVal < 20.5 || tempVal > 27.1)) isAbnormal = true;
+                                        if (humEnabled && !isNaN(humVal) && (humVal < 50 || humVal > 80)) isAbnormal = true;
+                                      } else if (isSecurity) {
+                                        const statusVal = String(device.currentValues.status || "").toLowerCase();
+                                        const motionEnabled = device.sensorParams?.isMotionEnabled !== undefined;
+                                        const doorEnabled = device.sensorParams?.isDoorEnabled !== undefined;
+                                        
+                                        if (motionEnabled && statusVal !== 'no motion' && statusVal !== 'normal' && statusVal !== 'closed') isAbnormal = true;
+                                        if (doorEnabled && statusVal !== 'closed' && statusVal !== 'normal' && statusVal !== 'no motion') isAbnormal = true;
+                                      } else {
+                                        Object.entries(device.sensorParams || {}).forEach(([key, val]) => {
+                                          if (key === "_id") return;
+                                          const currentVal = parseFloat(device.currentValues[key]);
+                                          const threshold = parseFloat(val);
+                                          if (!isNaN(currentVal) && !isNaN(threshold)) {
+                                            if (currentVal > threshold) isAbnormal = true;
+                                          }
+                                        });
+                                      }
 
                                       const StatusIcon = isAbnormal ? AlertCircle : Check;
 
                                       // Contextual Status Text
-                                      let statusTextNormal = "LAYAK PAKAI";
-                                      let statusTextAbnormal = "TIDAK LAYAK";
+                                      // Reuse variables from above
 
-                                      const type = device.deviceType;
-                                      if (type === "Sensor Kenyamanan" || type === "Humidity Sensor") {
-                                        statusTextNormal = "NYAMAN";
-                                        statusTextAbnormal = "TIDAK NYAMAN";
-                                      } else if (type === "Sensor Keamanan" || type === "Door Sensor") {
-                                        statusTextNormal = "AMAN";
-                                        statusTextAbnormal = "TIDAK AMAN";
-                                      } else if (type === "Sensor Kualitas Air") {
+                                      let statusTextNormal = "NYAMAN";
+                                      let statusTextAbnormal = "TIDAK NYAMAN";
+
+                                      if (typeLower.includes("kualitas air") || aspectLower === "kualitas air" || nameLower.includes("bluecheck")) {
                                         statusTextNormal = "LAYAK PAKAI";
                                         statusTextAbnormal = "TIDAK LAYAK PAKAI";
+                                      } else if (typeLower.includes("keamanan") || typeLower.includes("security") || typeLower.includes("door") || typeLower.includes("motion") || aspectLower === "keamanan") {
+                                        statusTextNormal = "AMAN";
+                                        statusTextAbnormal = "TIDAK AMAN";
                                       }
 
                                       return (
@@ -3928,38 +5038,38 @@ export function DeviceControlPage({ onNavigate }) {
                                     <div className="w-px h-8 bg-gray-200 hidden sm:block mx-1"></div>
 
                                     {/* Parameter Chips */}
-                                    {device.currentValues.temperature !== undefined && device.sensorParams?.temperature?.enabled && (
-                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.temperature) > parseFloat(device.sensorParams.temperature.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                    {device.currentValues.temperature !== undefined && device.sensorParams?.temperature !== undefined && (
+                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.temperature) < 20.5 || parseFloat(device.currentValues.temperature) > 27.1) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Thermometer className="w-4 h-4" />
                                         <span className="text-sm">Suhu: {device.currentValues.temperature}°C</span>
                                       </div>
                                     )}
-                                    {device.currentValues.humidity !== undefined && device.sensorParams?.humidity?.enabled && (
-                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.humidity) > parseFloat(device.sensorParams.humidity.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                    {device.currentValues.humidity !== undefined && device.sensorParams?.humidity !== undefined && (
+                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.humidity) < 50 || parseFloat(device.currentValues.humidity) > 80) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Droplets className="w-4 h-4" />
                                         <span className="text-sm">Lembap: {device.currentValues.humidity}%</span>
                                       </div>
                                     )}
-                                    {device.currentValues.ph !== undefined && device.sensorParams?.ph?.enabled && (
-                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.ph) > parseFloat(device.sensorParams.ph.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                    {device.currentValues.ph !== undefined && device.sensorParams?.ph !== undefined && (
+                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.ph) < 6.5 || parseFloat(device.currentValues.ph) > 8.5) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Beaker className="w-4 h-4" />
                                         <span className="text-sm">pH: {device.currentValues.ph}</span>
                                       </div>
                                     )}
-                                    {device.currentValues.turbidity !== undefined && device.sensorParams?.turbidity?.enabled && (
-                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.turbidity) > parseFloat(device.sensorParams.turbidity.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                    {device.currentValues.turbidity !== undefined && device.sensorParams?.turbidity !== undefined && (
+                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.turbidity) > 25 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Droplets className="w-4 h-4 text-yellow-600" />
                                         <span className="text-sm">NTU: {device.currentValues.turbidity}</span>
                                       </div>
                                     )}
-                                    {device.currentValues.tds !== undefined && device.sensorParams?.tds?.enabled && (
-                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.tds) > parseFloat(device.sensorParams.tds.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                    {device.currentValues.tds !== undefined && device.sensorParams?.tds !== undefined && (
+                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.tds) > 1000 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Wind className="w-4 h-4 text-bieon-sense" />
                                         <span className="text-sm">TDS: {device.currentValues.tds} ppm</span>
                                       </div>
                                     )}
-                                    {device.currentValues.waterTemp !== undefined && device.sensorParams?.waterTemp?.enabled && (
-                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.waterTemp) > parseFloat(device.sensorParams.waterTemp.value) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                    {device.currentValues.waterTemp !== undefined && (device.sensorParams?.waterTemp !== undefined || device.sensorParams?.temperature !== undefined) && (
+                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.waterTemp) > parseFloat(device.sensorParams.waterTemp || device.sensorParams.temperature) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Thermometer className="w-4 h-4" />
                                         <span className="text-sm">Suhu Air: {device.currentValues.waterTemp}°C</span>
                                       </div>
@@ -4565,8 +5675,8 @@ export function DeviceControlPage({ onNavigate }) {
                         onClick={handleStartHubDiscovery}
                         disabled={isHubScanning || isOpenHubJoinRequestPending}
                         className={`flex-1 py-4 px-6 rounded-2xl text-sm font-bold text-white transition-all shadow-lg ${isHubScanning
-                            ? 'bg-gray-400 shadow-none cursor-not-allowed'
-                            : 'bg-bieon-eco hover:bg-bieon-eco-dark hover:shadow-bieon-eco/30'
+                          ? 'bg-gray-400 shadow-none cursor-not-allowed'
+                          : 'bg-bieon-eco hover:bg-bieon-eco-dark hover:shadow-bieon-eco/30'
                           }`}
                       >
                         {isHubScanning ? (
@@ -6102,6 +7212,439 @@ export function DeviceControlPage({ onNavigate }) {
           </div>
         </div>
       )}
+      {/* Modal Otomatisasi Tombol Remote */}
+      {editingMapping && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-[200] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="p-6 pb-4 flex items-center justify-between shrink-0 border-b border-gray-100">
+              <div>
+                <h3 className="font-extrabold text-lg sm:text-xl text-gray-900 font-sans">Pilih Metode Pengaturan</h3>
+                <p className="text-xs text-gray-400 mt-1 font-medium font-sans">
+                  Parameter aspek sensor atau jadwal harian
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingMapping(null);
+                  setEditingMappingDevice(null);
+                }}
+                className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm text-gray-700">
+              {/* Mode Selection */}
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { value: 'Manual', label: 'Kontrol Manual', icon: Power, desc: 'Kontrol tombol secara manual kapan saja' },
+                    { value: 'Lingkungan', label: 'Parameter Aspek Sensor', icon: Settings, desc: 'Pengaturan berdasarkan aspek sensor' },
+                    { value: 'Jadwal', label: 'Jadwal Harian', icon: Calendar, desc: 'Pengaturan berdasarkan waktu & hari' }
+                  ].map((mode) => {
+                    const Icon = mode.icon;
+                    const isSelected = editingMapping.controlMethod === mode.value;
+                    return (
+                      <button
+                        key={mode.value}
+                        type="button"
+                        onClick={() => {
+                          setEditingMapping(prev => ({
+                            ...prev,
+                            controlMethod: mode.value,
+                            scheduleSettings: mode.value === 'Jadwal' && (!prev.scheduleSettings || prev.scheduleSettings.length === 0) ? [{
+                              enabled: true,
+                              startTime: "08:00",
+                              endTime: "17:00",
+                              days: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"],
+                              action: "ON"
+                            }] : prev.scheduleSettings
+                          }));
+                        }}
+                        className={`group p-4 rounded-2xl border-2 flex items-center gap-3 transition-all duration-200 text-left ${isSelected
+                            ? 'border-[#009b7c] bg-gradient-to-br from-[#009b7c]/5 to-[#009b7c]/12 text-gray-900 shadow-[0_8px_24px_-8px_rgba(0,155,124,0.25)] ring-1 ring-[#009b7c]/15 -translate-y-0.5'
+                            : 'border-gray-200 bg-white text-gray-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-gray-300'
+                          }`}
+                      >
+                        <div className={`p-2.5 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200 ${isSelected ? 'bg-[#009b7c]/20 text-[#009b7c]' : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className={`text-xs font-bold transition-colors duration-200 ${isSelected ? 'text-[#009b7c]' : 'text-gray-700 group-hover:text-[#009b7c]'}`}>{mode.label}</p>
+                          <p className="text-[10px] text-gray-400 mt-0.5 leading-normal truncate">{mode.desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mode Jadwal Settings */}
+              {editingMapping.controlMethod === 'Jadwal' && (
+                <div className="space-y-4 animate-fade-in">
+                  {(!editingMapping.scheduleSettings || editingMapping.scheduleSettings.length === 0) ? (
+                    <div className="p-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400 italic">
+                      Belum ada jadwal. Silakan klik "Tambah Jadwal".
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
+                      {editingMapping.scheduleSettings.map((sched, idx) => (
+                        <div key={idx} className="p-4 rounded-2xl border border-gray-200 bg-white space-y-4 relative group">
+                          <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                              <Calendar className="w-4 h-4 text-[#009b7c]" />
+                              Jadwal #{idx + 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                      setEditingMapping(prev => ({
+                                        ...prev,
+                                        scheduleSettings: prev.scheduleSettings.filter((_, i) => i !== idx)
+                                      }));
+                                    }}
+                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
+                              title="Hapus Jadwal"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">Jam Nyala</label>
+                              <div className="relative">
+                                <input
+                                  type="time"
+                                  value={sched.startTime || "08:00"}
+                                  onChange={(e) => {
+                                    const updated = [...editingMapping.scheduleSettings];
+                                    updated[idx] = { ...updated[idx], startTime: e.target.value };
+                                    setEditingMapping(prev => ({ ...prev, scheduleSettings: updated }));
+                                  }}
+                                  className="w-full pl-3 pr-10 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                                />
+                                <Clock className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">Jam Mati</label>
+                              <div className="relative">
+                                <input
+                                  type="time"
+                                  value={sched.endTime || "17:00"}
+                                  onChange={(e) => {
+                                    const updated = [...editingMapping.scheduleSettings];
+                                    updated[idx] = { ...updated[idx], endTime: e.target.value };
+                                    setEditingMapping(prev => ({ ...prev, scheduleSettings: updated }));
+                                  }}
+                                  className="w-full pl-3 pr-10 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                                />
+                                <Clock className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1.5">Hari Pengulangan</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                { key: "Senin", label: "Sen" },
+                                { key: "Selasa", label: "Sel" },
+                                { key: "Rabu", label: "Rab" },
+                                { key: "Kamis", label: "Kam" },
+                                { key: "Jumat", label: "Jum" },
+                                { key: "Sabtu", label: "Sab" },
+                                { key: "Minggu", label: "Min" }
+                              ].map((day) => {
+                                const isSelected = sched.days.includes(day.key);
+                                return (
+                                  <button
+                                    key={day.key}
+                                    type="button"
+                                    onClick={() => {
+                                      const nextDays = isSelected
+                                        ? sched.days.filter(d => d !== day.key)
+                                        : [...sched.days, day.key];
+                                      const updated = [...editingMapping.scheduleSettings];
+                                      updated[idx] = { ...updated[idx], days: nextDays };
+                                      setEditingMapping(prev => ({ ...prev, scheduleSettings: updated }));
+                                    }}
+                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all ${isSelected
+                                        ? "bg-[#009b7c] text-white shadow-sm"
+                                        : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-100"
+                                      }`}
+                                  >
+                                    {day.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingMapping(prev => ({
+                        ...prev,
+                        scheduleSettings: [
+                          ...(prev.scheduleSettings || []),
+                          {
+                            enabled: true,
+                            startTime: "08:00",
+                            endTime: "17:00",
+                            days: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"],
+                            action: "ON"
+                          }
+                        ]
+                      }));
+                    }}
+                    className="w-full py-3 rounded-2xl border border-dashed border-gray-300 hover:border-gray-400 text-gray-500 hover:bg-gray-50/50 transition-all text-xs font-semibold flex items-center justify-center gap-1.5 mt-2"
+                  >
+                    <Plus className="w-4 h-4 text-gray-400" />
+                    <span>Tambah Jadwal</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Mode Sensor Settings */}
+              {editingMapping.controlMethod === 'Lingkungan' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div>
+                    <div className="rounded-xl bg-green-50/50 border border-green-100 px-4 py-2.5 flex items-center gap-2 text-xs text-gray-600 font-medium font-sans mb-4">
+                      <Activity className="w-4 h-4 text-[#009b7c]" />
+                      <span>Pilih Aspek untuk Dikonfigurasi</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { value: 'Kenyamanan', label: 'Kenyamanan', sub: 'Suhu & Lembap', icon: Activity, bgClass: 'bg-green-50 text-green-600', selectedBg: 'border-[#009b7c] bg-[#009b7c]/5 ring-1 ring-[#009b7c]/20' },
+                        { value: 'Keamanan', label: 'Keamanan', sub: 'Motion & Door Sensor', icon: ShieldAlert, bgClass: 'bg-purple-50 text-purple-600', selectedBg: 'border-purple-600 bg-purple-50/5 ring-1 ring-purple-600/20' },
+                        { value: 'Kualitas Air', label: 'Kualitas Air', sub: 'pH, TDS, Keruh, Suhu', icon: Waves, bgClass: 'bg-cyan-50 text-cyan-600', selectedBg: 'border-cyan-600 bg-cyan-50/5 ring-1 ring-cyan-600/20' }
+                      ].map((aspect) => {
+                        const Icon = aspect.icon;
+                        const isSelected = (editingMapping.environmentAspect || 'Kenyamanan') === aspect.value;
+                        return (
+                          <button
+                            key={aspect.value}
+                            type="button"
+                            onClick={() => {
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                environmentAspect: aspect.value,
+                                sensorParams: aspect.value === 'Kenyamanan' ? { temperature: 28, humidity: 70 } :
+                                  aspect.value === 'Keamanan' ? { isMotionEnabled: true } :
+                                    { ph: 7.0, tds: 500, turbidity: 100, waterTemp: 30 }
+                              }));
+                            }}
+                            className={`p-3 py-4 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all text-center ${isSelected
+                                ? aspect.selectedBg
+                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                              }`}
+                          >
+                            <div className={`p-2 rounded-xl flex items-center justify-center shrink-0 ${aspect.bgClass}`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 text-center">
+                              <p className={`text-xs font-bold ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>{aspect.label}</p>
+                              <p className="text-[9px] text-gray-400 mt-0.5 leading-normal">{aspect.sub}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Conditional Aspect Params Render */}
+                  <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-4">
+                    {editingMapping.environmentAspect === 'Kenyamanan' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1 flex items-center gap-1">
+                            <Thermometer className="w-3.5 h-3.5 text-orange-500" /> Suhu Ambang (°C)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editingMapping.sensorParams?.temperature ?? 28}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, temperature: isNaN(val) ? undefined : val }
+                              }));
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1 flex items-center gap-1">
+                            <Droplets className="w-3.5 h-3.5 text-blue-500" /> Kelembapan (%)
+                          </label>
+                          <input
+                            type="number"
+                            value={editingMapping.sensorParams?.humidity ?? 70}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, humidity: isNaN(val) ? undefined : val }
+                              }));
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {editingMapping.environmentAspect === 'Keamanan' && (
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-150 cursor-pointer transition-all hover:bg-gray-100/50">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(editingMapping.sensorParams?.isMotionEnabled)}
+                            onChange={(e) => {
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, isMotionEnabled: e.target.checked }
+                              }));
+                            }}
+                            className="w-4.5 h-4.5 text-[#009b7c] rounded-md focus:ring-[#009b7c]/30"
+                          />
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                            <Eye className="w-4 h-4 text-purple-600" /> Aktifkan pada Sensor Gerakan
+                          </div>
+                        </label>
+                        <label className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-150 cursor-pointer transition-all hover:bg-gray-100/50">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(editingMapping.sensorParams?.isDoorEnabled)}
+                            onChange={(e) => {
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, isDoorEnabled: e.target.checked }
+                              }));
+                            }}
+                            className="w-4.5 h-4.5 text-[#009b7c] rounded-md focus:ring-[#009b7c]/30"
+                          />
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                            <Lock className="w-4 h-4 text-red-600" /> Aktifkan pada Sensor Pintu Terbuka
+                          </div>
+                        </label>
+                      </div>
+                    )}
+
+                    {editingMapping.environmentAspect === 'Kualitas Air' && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1 flex items-center gap-1">
+                            <Beaker className="w-3.5 h-3.5 text-cyan-500" /> pH Air
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editingMapping.sensorParams?.ph ?? 7.0}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, ph: isNaN(val) ? undefined : val }
+                              }));
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1 flex items-center gap-1">
+                            <Waves className="w-3.5 h-3.5 text-blue-500" /> TDS (mg/L)
+                          </label>
+                          <input
+                            type="number"
+                            value={editingMapping.sensorParams?.tds ?? 500}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, tds: isNaN(val) ? undefined : val }
+                              }));
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1 flex items-center gap-1">
+                            <Waves className="w-3.5 h-3.5 text-teal-500" /> Kekeruhan (NTU)
+                          </label>
+                          <input
+                            type="number"
+                            value={editingMapping.sensorParams?.turbidity ?? 100}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, turbidity: isNaN(val) ? undefined : val }
+                              }));
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1 flex items-center gap-1">
+                            <Thermometer className="w-3.5 h-3.5 text-orange-500" /> Suhu Air (°C)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={editingMapping.sensorParams?.waterTemp ?? 30.0}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              setEditingMapping(prev => ({
+                                ...prev,
+                                sensorParams: { ...prev.sensorParams, waterTemp: isNaN(val) ? undefined : val }
+                              }));
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs h-[38px] focus:outline-none focus:border-[#009b7c]"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 border-t border-gray-150 bg-white flex items-center justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingMapping(null);
+                  setEditingMappingDevice(null);
+                }}
+                className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-gray-55 transition-all active:scale-95 text-center"
+              >
+                Kembali
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveMappingAutomation}
+                className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-[#009b7c] hover:bg-[#009b7c]/90 text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+              >
+                <Save className="w-4 h-4" /> Simpan Konfigurasi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ==================== MODAL: DEVICE SCANNER ==================== */}
     </HomeownerLayout>
   );

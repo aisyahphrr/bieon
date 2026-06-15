@@ -66,7 +66,7 @@ exports.setupHubs = async (req, res) => {
         // Jika sistem belum ada sama sekali atau baru saja dihapus karena yatim piatu
         if (!system) {
             system = new BieonSystem({
-                bieonId: normalizedBieonId,
+                bieonId: bieonId,
                 owner: userId,
                 hubCount: count
             });

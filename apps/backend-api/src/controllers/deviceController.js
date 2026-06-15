@@ -65,8 +65,30 @@ exports.startOpenJoin = async (req, res) => {
         }
 
         if (String(req.user.role || '').toLowerCase() !== 'superadmin') {
-            if (!targetHub.owner || String(targetHub.owner) !== String(userId)) {
+            const BieonSystem = require('../models/BieonSystem');
+            const buildFlexibleBieonIdRegex = (value) => {
+                const chars = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').split('');
+                if (chars.length === 0) return null;
+                return new RegExp(`^${chars.map((char) => `${char}[^A-Z0-9]*`).join('')}$`, 'i');
+            };
+
+            const system = await BieonSystem.findOne({
+                $or: [
+                    { bieonId: targetBieonId },
+                    { bieonId: buildFlexibleBieonIdRegex(targetBieonId) || targetBieonId }
+                ]
+            }).lean();
+
+            const isHubOwner = targetHub.owner && String(targetHub.owner) === String(userId);
+            const isSystemOwner = system && system.owner && String(system.owner) === String(userId);
+
+            if (!isHubOwner && !isSystemOwner) {
                 return res.status(403).json({ message: 'Anda tidak memiliki akses untuk membuka open join pada hub ini.' });
+            }
+
+            // Self-healing database jika owner Hub kosong
+            if (isSystemOwner && !targetHub.owner) {
+                await Hub.findByIdAndUpdate(targetHub._id, { $set: { owner: userId } }).catch(() => {});
             }
         }
 

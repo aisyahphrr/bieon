@@ -2486,7 +2486,10 @@
     "device_name_required": "Nama device tidak boleh kosong!",
     "device_type_required": "Tipe device harus dipilih!",
     "profile_update_failed": "Gagal menyimpan pembaruan profil.",
-    "profile_update_error": "Terjadi kesalahan saat menyimpan profil."
+    "profile_update_error": "Terjadi kesalahan saat menyimpan profil.",
+    "custom_device_type_required": "Nama jenis perangkat custom wajib diisi!",
+    "custom_function_required": "Nama fungsi custom wajib diisi!",
+    "custom_brand_required": "Nama merek/brand custom wajib diisi!"
   },
   "placeholder": {
     "describe_problem": "Jelaskan masalah yang Anda alami secara detail...",
@@ -2498,6 +2501,7 @@
     "room_placeholder": "Ruangan...",
     "example_tv": "Contoh: Power TV",
     "example_brand": "Contoh: Polytron",
+    "example_device_type": "Contoh: Air Purifier, Proyektor",
     "example_sensor_id": "Contoh: SNZB-02D",
     "sensor_id_input": "Ketik atau pilih ID (Contoh: SNZB...)",
     "temperature_value": "Masukkan nilai suhu (°C)",
