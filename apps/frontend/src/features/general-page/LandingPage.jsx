@@ -206,7 +206,7 @@ const LandingPage = () => {
           <nav className="hidden md:flex gap-8 items-center list-none font-bold text-[13px] tracking-wide text-slate-600">
             <a href="#home" className="hover:text-emerald-600 transition-colors">{t('landing.nav.home')}</a>
             <a href="#features" className="hover:text-emerald-600 transition-colors">{t('landing.nav.features')}</a>
-            <a href="#about" className="hover:text-emerald-600 transition-colors">{t('landing.nav.about')}</a>
+            <a href="#works" className="hover:text-emerald-600 transition-colors">{t('landing.nav.works')}</a>
             <a href="#contact" className="hover:text-emerald-600 transition-colors">{t('landing.nav.contact')}</a>
           </nav>
 
@@ -674,7 +674,7 @@ const LandingPage = () => {
         </section>
 
         {/* How It Works Section */}
-        <section className="bg-white py-20 lg:py-28 border-t border-slate-100">
+        <section id="works" className="bg-white py-20 lg:py-28 border-t border-slate-100">
           <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16">
             <Reveal className="text-center mb-12 max-w-2xl mx-auto">
               <div className="text-[#129cc0] font-extrabold text-xs uppercase tracking-[0.3em] mb-3">
@@ -910,7 +910,7 @@ const LandingPage = () => {
               <ul className="space-y-3 text-[14px] text-white/80 font-medium">
                 <li><a href="#home" className="hover:text-white transition-colors">{t('landing.nav.home')}</a></li>
                 <li><a href="#features" className="hover:text-white transition-colors">{t('landing.nav.features')}</a></li>
-                <li><a href="#about" className="hover:text-white transition-colors">{t('landing.nav.about')}</a></li>
+                <li><a href="#works" className="hover:text-white transition-colors">{t('landing.nav.works')}</a></li>
                 <li><a href="#contact" className="hover:text-white transition-colors">{t('landing.nav.contact')}</a></li>
               </ul>
             </div>

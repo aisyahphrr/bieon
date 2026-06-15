@@ -2293,7 +2293,7 @@
     "nav": {
       "home": "Home",
       "features": "Features",
-      "about": "About Us",
+      "works": "How It Works",
       "contact": "Contact",
       "login": "Log In"
     },
@@ -2431,23 +2431,27 @@
       "items": [
         {
           "q": "What is BIEON EcoSense?",
-          "a": "BIEON is an IoT-based smart monitoring system that helps you monitor energy (electricity) usage, water quality, environmental conditions, and building security in real-time through a single dashboard."
+          "a": "BIEON EcoSense is an online monitoring system that integrates water quality sensors (pH, turbidity, temperature, TDS, and other parameters), environmental comfort sensors (temperature, humidity, and other parameters), security sensors, and electricity (consumption, stability conditions, and other parameters) into a single unified dashboard to facilitate daily monitoring. Measurement parameters in BIEON EcoSense can be customized according to customers' needs."
         },
         {
-          "q": "Who is suitable for using BIEON?",
-          "a": "Our system is designed flexibly, from household use (Home Owner), commercial businesses (buildings/offices), to industrial and government scales."
+          "q": "Who can use BIEON EcoSense?",
+          "a": "BIEON EcoSense is designed to be flexible and can be used by residential owners (Home Owner), commercial businesses or office managers (Business), manufacturing sectors (Industry), to public service agencies (Government)."
         },
         {
-          "q": "Is the installation complicated?",
-          "a": "No. The installation process is handled entirely by our professional technician team. You just need to schedule a survey, and we will handle the rest until the dashboard is ready to use."
+          "q": "Where can the BIEON system be installed and accessed?",
+          "a": "BIEON physical devices are installed directly in your operational areas (such as rooms in a house or office buildings), while the monitoring data can be accessed anytime and from anywhere via the BIEON web dashboard on computers, tablets, or smartphones."
         },
         {
-          "q": "How about my data security?",
-          "a": "Very secure. All data sent from sensors to the cloud is encrypted with high security standards. We do not share your data with third parties."
+          "q": "Why should I use BIEON EcoSense?",
+          "a": "Because BIEON digitalizes manual monitoring into an automatic 24/7 system. You can prevent energy waste early, maintain water & air health standards, and immediately report device disruptions quickly to our technicians via the integrated Complaint Center."
         },
         {
-          "q": "What if the sensor has a problem?",
-          "a": "BIEON has a Client Complaint / Smart Alert feature. If any sensor is offline or problematic, you can report it directly via the system, and our technician will fix it immediately."
+          "q": "When can customers monitor data on the BIEON EcoSense dashboard?",
+          "a": "You can monitor in real-time at any time, 24 hours a day and 7 days a week. All sensor data streams are transmitted instantly and updated automatically on your dashboard, complete with a history tab to review past trends."
+        },
+        {
+          "q": "How to become a BIEON EcoSense customer?",
+          "a": "You can register directly through the registration page on the BIEON website, or contact us at +6282320007800 to place a device order. Once the order is completed, you can install the BIEON device independently by following the provided guide book. However, if needed, you can also request assistance from our technicians for the installation process. After the device is installed, simply enter the BIEON ID into your account to start monitoring."
         }
       ]
     }
