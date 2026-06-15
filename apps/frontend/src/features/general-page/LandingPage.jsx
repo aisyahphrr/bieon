@@ -237,7 +237,7 @@ const LandingPage = () => {
 
       <main className="relative z-10">
         {/* High-Converting Hero Section */}
-        <section id="home" className="min-h-screen pt-24 pb-8 px-6 md:px-12 lg:px-16 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 w-full max-w-[1440px] mx-auto">
+        <section id="home" className="min-h-[100svh] pt-32 lg:pt-24 pb-12 lg:pb-8 px-6 md:px-12 lg:px-16 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 w-full max-w-[1440px] mx-auto">
 
           {/* Left Text Content */}
           <Reveal className="flex-1 w-full max-w-2xl text-center lg:text-left">
@@ -287,7 +287,7 @@ const LandingPage = () => {
           </Reveal>
 
           {/* Right Floating Dashboard Image */}
-          <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 hidden md:flex items-center justify-center mt-12 lg:mt-24">
+          <Reveal animation="animate-slide-in-right" className="flex-1 w-full relative perspective-1000 flex items-center justify-center mt-8 md:mt-12 lg:mt-24">
 
             <div className="relative z-20 w-full max-w-2xl rounded-3xl shadow-2xl transform hover:-translate-y-2 hover:scale-[1.02] transition-all duration-700 ease-out">
               <img
@@ -462,7 +462,7 @@ const LandingPage = () => {
               <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-emerald-400"></div>
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/1REAL TIME MONITORING.png" alt={t('landing.features.item1.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/1REAL TIME MONITORING.png" alt={t('landing.features.item1.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-5 py-5 text-center flex-1 flex flex-col">
                 <h3 className="text-lg font-bold text-emerald-700 mb-3 flex items-center justify-center gap-2">
@@ -479,7 +479,7 @@ const LandingPage = () => {
               <div className="h-1.5 bg-gradient-to-r from-amber-500 to-amber-400"></div>
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/2ANALYTICS.png" alt={t('landing.features.item2.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/2ANALYTICS.png" alt={t('landing.features.item2.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-5 py-5 text-center flex-1 flex flex-col">
                 <h3 className="text-lg font-bold text-amber-600 mb-3 flex items-center justify-center gap-2">
@@ -496,7 +496,7 @@ const LandingPage = () => {
               <div className="h-1.5 bg-gradient-to-r from-blue-500 to-blue-400"></div>
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/3SMART ALERT.png" alt={t('landing.features.item3.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/3SMART ALERT.png" alt={t('landing.features.item3.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-5 py-5 text-center flex-1 flex flex-col">
                 <h3 className="text-lg font-bold text-blue-600 mb-3 flex items-center justify-center gap-2">
@@ -513,7 +513,7 @@ const LandingPage = () => {
               <div className="h-1.5 bg-gradient-to-r from-teal-500 to-teal-400"></div>
               <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/4DASHBOARD.png" alt={t('landing.features.item4.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/4DASHBOARD.png" alt={t('landing.features.item4.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
               <div className="px-5 py-5 text-center flex-1 flex flex-col">
                 <h3 className="text-lg font-bold text-teal-700 mb-3 flex items-center justify-center gap-2">
@@ -551,7 +551,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/8ECO ENERGY.png" alt={t('landing.products.item1.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/8ECO ENERGY.png" alt={t('landing.products.item1.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-blue-700 mb-3 flex items-center justify-center gap-2">
@@ -568,7 +568,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-cyan-500 to-teal-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/9ECOWATER.png" alt={t('landing.products.item2.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/9ECOWATER.png" alt={t('landing.products.item2.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-cyan-600 mb-3 flex items-center justify-center gap-2">
@@ -585,7 +585,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-green-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/9ECO ENVIRONMENT.png" alt={t('landing.products.item3.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/9ECO ENVIRONMENT.png" alt={t('landing.products.item3.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-emerald-700 mb-3 flex items-center justify-center gap-2">
@@ -602,7 +602,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-slate-600 to-slate-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-slate-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/10ECO SECURITY.png" alt={t('landing.products.item4.title')} className="w-full h-48 lg:h-56 object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/10ECO SECURITY.png" alt={t('landing.products.item4.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-slate-700 mb-3 flex items-center justify-center gap-2">
