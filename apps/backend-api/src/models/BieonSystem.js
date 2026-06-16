@@ -6,7 +6,8 @@ const bieonSystemSchema = new mongoose.Schema({
         type: String, 
         required: true, 
         unique: true,
-        trim: true
+        trim: true,
+        uppercase: true
     },
     owner: { 
         type: mongoose.Schema.Types.ObjectId, 

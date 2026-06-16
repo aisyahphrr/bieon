@@ -59,7 +59,7 @@ const SystemHardwareStep = ({
                             type="text" 
                             placeholder={t('auth.setup.step2.placeholder_bieon_id')} 
                             value={formData.bieonId} 
-                            onChange={(e) => setFormData({...formData, bieonId: e.target.value})} 
+                            onChange={(e) => setFormData({...formData, bieonId: e.target.value.toUpperCase()})} 
                             className="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-[14px] text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009b7c] focus:ring-4 focus:ring-[#009b7c]/10 transition-all font-semibold shadow-sm" 
                         />
                     </div>
