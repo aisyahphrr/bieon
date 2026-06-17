@@ -55,15 +55,15 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
-      
+
       const response = await fetch('/api/auth/firebase-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: idToken, mode: 'login' })
       });
-      
+
       const data = await parseJsonSafely(response);
-      
+
       if (!response.ok) {
         throw new Error(data.message || t('auth.errors.google_failed'));
       }
@@ -79,7 +79,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
       localStorage.setItem('role', data.user.role);
       localStorage.setItem('fullName', data.user.fullName);
       localStorage.setItem('email', data.user.email);
-      
+
       if (data.user.email?.toLowerCase() === 'asrisaras17@gmail.com') {
         localStorage.setItem('USE_MOCK_DATA', 'true');
       }
@@ -202,22 +202,20 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
         <div className="flex items-center bg-white/40 backdrop-blur-md p-0.5 rounded-xl border border-white/40 shadow-sm select-none">
           <button
             onClick={() => handleLanguageChange('id')}
-            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
-              currentLang === 'id'
+            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${currentLang === 'id'
                 ? 'bg-white text-[#009b7c] shadow-sm scale-100'
                 : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
-            }`}
+              }`}
             title="Bahasa Indonesia"
           >
             ID
           </button>
           <button
             onClick={() => handleLanguageChange('en')}
-            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${
-              currentLang === 'en'
+            className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all duration-300 ${currentLang === 'en'
                 ? 'bg-white text-[#009b7c] shadow-sm scale-100'
                 : 'text-slate-500 hover:text-[#009b7c] bg-transparent'
-            }`}
+              }`}
             title="English"
           >
             EN
@@ -280,16 +278,16 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
               </div>
             </div>
 
-              {error && (
-                <div className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-100">
-                  {error}
-                </div>
-              )}
-              {info && (
-                <div className="text-green-600 text-sm font-semibold bg-green-50 p-3 rounded-xl border border-green-100">
-                  {info}
-                </div>
-              )}
+            {error && (
+              <div className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-100">
+                {error}
+              </div>
+            )}
+            {info && (
+              <div className="text-green-600 text-sm font-semibold bg-green-50 p-3 rounded-xl border border-green-100">
+                {info}
+              </div>
+            )}
 
             {/* Login Button */}
             <div className="pt-4">
