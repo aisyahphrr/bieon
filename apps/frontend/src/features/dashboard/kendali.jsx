@@ -576,7 +576,7 @@ export function DeviceControlPage({ onNavigate }) {
       const token = localStorage.getItem('token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch('/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || t('kendali.open_join.error_activate', 'Gagal mengaktifkan open join'));
@@ -614,7 +614,7 @@ export function DeviceControlPage({ onNavigate }) {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('/api/hubs/open_join', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/hubs/open_join', {
         method: 'POST',
         headers,
         body: JSON.stringify({ bieonId: currentBieon?.bieonId, duration: 30 })
@@ -697,7 +697,7 @@ export function DeviceControlPage({ onNavigate }) {
         }
 
         // 1. Get Me
-        const meRes = await fetch('/api/auth/me', {
+        const meRes = await fetch(import.meta.env.VITE_API_URL + '/api/auth/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!meRes.ok) throw new Error("Gagal fetch profil");
@@ -716,13 +716,13 @@ export function DeviceControlPage({ onNavigate }) {
         setIsTechnicianMode(techAccess);
 
         // 2. Get Systems (Disesuaikan untuk target ID)
-        const sysRes = await fetch(`/api/hubs/systems/${targetId}`, {
+        const sysRes = await fetch(import.meta.env.VITE_API_URL + `/api/hubs/systems/${targetId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const systemsData = await sysRes.json();
 
         // 3. Get Devices (Disesuaikan untuk target ID)
-        const devRes = await fetch(`/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
+        const devRes = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const devicesData = await devRes.json();
@@ -1043,7 +1043,7 @@ export function DeviceControlPage({ onNavigate }) {
       try {
         setRemoteCatalogLoading(true);
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/devices/registration/${encodeURIComponent(bieonId)}/catalog`, {
+        const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/${encodeURIComponent(bieonId)}/catalog`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -1074,7 +1074,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     const checkTechStatus = async () => {
       try {
-        const response = await fetch(`/api/technician-access/status/${userProfile._id}`);
+        const response = await fetch(import.meta.env.VITE_API_URL + `/api/technician-access/status/${userProfile._id}`);
         if (response.ok) {
           const data = await response.json();
           setIsTechnicianActiveInSystem(data.isAccessed);
@@ -1175,7 +1175,7 @@ export function DeviceControlPage({ onNavigate }) {
       }
 
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/technician-access/generate-token', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/technician-access/generate-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1217,7 +1217,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/hubs/setup', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/hubs/setup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1277,7 +1277,7 @@ export function DeviceControlPage({ onNavigate }) {
   const fetchRegisteredProducts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/products/list', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/products/list', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -1299,7 +1299,7 @@ export function DeviceControlPage({ onNavigate }) {
   const handleRegisterProduct = async (e, targetStep = "select-category") => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/products/register', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/products/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1355,7 +1355,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!window.confirm(t('alerts.delete_product_confirm'))) return;
 
     try {
-      const response = await fetch(`/api/products/${productId}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -1449,7 +1449,7 @@ export function DeviceControlPage({ onNavigate }) {
       setRemoteMappingDraft(null);
       setRemoteRegistrationDeviceId(device.id);
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devices/registration/${encodeURIComponent(currentBieon.bieonId)}/start`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/${encodeURIComponent(currentBieon.bieonId)}/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1530,7 +1530,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devices/registration/catalog/${catalogItem._id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${catalogItem._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1570,7 +1570,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devices/registration/catalog/${catalogItem._id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${catalogItem._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1659,7 +1659,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1831,7 +1831,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1935,7 +1935,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2008,7 +2008,7 @@ export function DeviceControlPage({ onNavigate }) {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2030,7 +2030,7 @@ export function DeviceControlPage({ onNavigate }) {
       }
 
       if (mapping.catalogId) {
-        await fetch(`/api/devices/registration/catalog/${mapping.catalogId}`, {
+        await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${mapping.catalogId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -2144,7 +2144,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${editingMappingDevice.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${editingMappingDevice.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2462,7 +2462,7 @@ export function DeviceControlPage({ onNavigate }) {
         onlyRegister: true, // TAMBAHKAN INI: Agar cuma masuk ke list "Perangkat Terdaftar"
       };
 
-      const response = await fetch('/api/kendaliperangkat', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/kendaliperangkat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2688,7 +2688,7 @@ export function DeviceControlPage({ onNavigate }) {
         }))
       })));
 
-      const response = await fetch(`/api/kendaliperangkat/${deviceId}/toggle`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/toggle`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -2745,7 +2745,7 @@ export function DeviceControlPage({ onNavigate }) {
     // 2. Persistent Update (Backend API)
     try {
       const token = localStorage.getItem('token');
-      await fetch(`/api/kendaliperangkat/${deviceId}/params`, {
+      await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/params`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2776,7 +2776,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/${device.id}/remote-command`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${device.id}/remote-command`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2805,7 +2805,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/${deviceId}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -2848,7 +2848,7 @@ export function DeviceControlPage({ onNavigate }) {
   const togglePinDevice = async (deviceId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/${deviceId}/pin`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/pin`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

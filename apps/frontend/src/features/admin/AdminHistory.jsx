@@ -290,7 +290,7 @@ export default function AdminHistory({ onNavigate }) {
         setApiError(null);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/admin/homeowners', { headers: { 'Authorization': `Bearer ${token}` } });
+            const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/homeowners', { headers: { 'Authorization': `Bearer ${token}` } });
             const result = await response.json();
             if (result.success && result.data) {
                 setAllHomeowners(result.data);
@@ -303,7 +303,7 @@ export default function AdminHistory({ onNavigate }) {
         setIsLoadingBieon(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/admin/all-bieon-systems', {
+            const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/all-bieon-systems', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const result = await response.json();

@@ -51,7 +51,7 @@ const Signup = ({ setTempData }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
       
-      const response = await fetch('/api/auth/firebase-login', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/auth/firebase-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: idToken, mode: 'signup' })

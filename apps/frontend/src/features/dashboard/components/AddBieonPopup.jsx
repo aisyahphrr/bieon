@@ -20,7 +20,7 @@ export default function AddBieonPopup({ isOpen, onClose, onSuccess, userId }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/hubs/setup', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/hubs/setup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

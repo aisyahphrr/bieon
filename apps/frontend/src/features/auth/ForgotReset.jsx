@@ -24,7 +24,7 @@ export default function ForgotReset(){
     if (pw !== pw2) return setError(t('auth.forgot.err_passwords_dont_match', 'Password tidak cocok'));
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/forgot-password/reset', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/auth/forgot-password/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resetToken: token, newPassword: pw })

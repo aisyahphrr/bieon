@@ -56,7 +56,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
       
-      const response = await fetch('/api/auth/firebase-login', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/auth/firebase-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: idToken, mode: 'login' })
@@ -115,7 +115,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -173,7 +173,7 @@ const Login = ({ expectedRole = 'Homeowner' }) => {
     setError('');
     setInfo('');
     try {
-      const response = await fetch('/api/auth/forgot-password/request', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/auth/forgot-password/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: email })

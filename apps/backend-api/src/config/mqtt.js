@@ -361,23 +361,23 @@ const connectMQTT = (io) => {
                     { device_ieee: deviceIeee, bieonId },
                     {
                       $set: {
+                        status: 'Active',
+                        lifecycleState: 'AUTHORIZED',
+                        isAuthorized: true,
+                        lastSeen: now
+                      },
+                      $setOnInsert: {
                         name: announce.display_name || displayName,
                         location: announce.location || sessionHub.name || 'Pending',
                         notes: announce.notes || undefined,
                         hubId: sessionHub._id,
                         category: announce.category || normalizeDeviceCategory(announce.type || announce.model),
                         type: announce.type || announce.model || 'Unknown',
-                        status: 'Active',
-                        lifecycleState: 'AUTHORIZED',
-                        isAuthorized: true,
                         tenantId: sessionHub.tenantId || undefined,
                         bieonId,
                         device_ieee: deviceIeee,
                         modelId: announce.model || announce.model_id || undefined,
                         owner: sessionHub.owner || undefined,
-                        lastSeen: now
-                      },
-                      $setOnInsert: {
                         thresholds: {}
                       }
                     },
@@ -434,20 +434,26 @@ const connectMQTT = (io) => {
             ioInstance.emit('device_discovered', discoveredPayload);
           }
 
-          // If this device already exists in DB, update missing metadata (model/manufacturer/name)
+          // If this device already exists in DB, update missing metadata (modelId/lastSeen)
           if (deviceIeee) {
             try {
-              const updateFields = {};
-              if (discoveredPayload.model) updateFields.modelId = discoveredPayload.model;
-              if (discoveredPayload.manufacturer) updateFields.manufacturer = discoveredPayload.manufacturer;
-              if (discoveredPayload.name) updateFields.name = discoveredPayload.name;
-              if (Object.keys(updateFields).length > 0) {
-                updateFields.lastSeen = new Date();
-                const updated = await KendaliPerangkat.findOneAndUpdate(
-                  { bieonId, $or: [{ device_ieee: deviceIeee }, { device_ieee: deviceIeee.toLowerCase() }] },
+              const existingDevice = await KendaliPerangkat.findOne({
+                bieonId,
+                $or: [{ device_ieee: deviceIeee }, { device_ieee: deviceIeee.toLowerCase() }]
+              }).lean();
+
+              if (existingDevice) {
+                const updateFields = { lastSeen: new Date() };
+                if (discoveredPayload.model && !existingDevice.modelId) {
+                  updateFields.modelId = discoveredPayload.model;
+                }
+                
+                const updated = await KendaliPerangkat.findByIdAndUpdate(
+                  existingDevice._id,
                   { $set: updateFields },
                   { new: true }
                 );
+
                 if (updated && ioInstance) {
                   ioInstance.emit('device_discovered', { ...discoveredPayload, updated: true });
                 }

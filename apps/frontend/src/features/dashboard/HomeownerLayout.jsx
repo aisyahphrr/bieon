@@ -68,7 +68,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await fetch('/api/auth/me', {
+        const response = await fetch(import.meta.env.VITE_API_URL + '/api/auth/me', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -87,7 +87,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const response = await fetch('/api/alerts', {
+        const response = await fetch(import.meta.env.VITE_API_URL + '/api/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -152,7 +152,7 @@ export default function HomeownerLayout({ children, currentPage, onNavigate, hid
   const handleTechReportSubmit = async (reportContent) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/technician-access/submit-report', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/technician-access/submit-report', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

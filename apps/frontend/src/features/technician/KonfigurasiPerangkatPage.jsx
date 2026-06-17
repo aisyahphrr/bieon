@@ -18,7 +18,7 @@ export function KonfigurasiPerangkatPage({ onNavigate, triggerToast }) {
 
     try {
       const technicianId = localStorage.getItem('userId'); // Konsisten dengan TechnicianProfilePage
-      const response = await fetch('/api/technician-access/validate-token', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/technician-access/validate-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

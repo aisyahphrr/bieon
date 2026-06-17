@@ -59,7 +59,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
     let apiData = [];
     try {
       if (token) {
-        const response = await fetch('/api/alerts', {
+        const response = await fetch(import.meta.env.VITE_API_URL + '/api/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -117,7 +117,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
 
   const markAllAsSeenSilent = async () => {
     try {
-      await fetch('/api/alerts/seen-all', {
+      await fetch(import.meta.env.VITE_API_URL + '/api/alerts/seen-all', {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -200,7 +200,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
 
       // Update to backend
       if (token && id && !id.startsWith('notif-')) {
-        await fetch(`/api/alerts/${id}/read`, {
+        await fetch(import.meta.env.VITE_API_URL + `/api/alerts/${id}/read`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -213,7 +213,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
   const resetReadStatus = async () => {
     try {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: false })));
-      await fetch('/api/history/alerts/reset-read', {
+      await fetch(import.meta.env.VITE_API_URL + '/api/history/alerts/reset-read', {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -225,7 +225,7 @@ const NotificationPopup = ({ isOpen, onClose, role = 'homeowner', onUnreadChange
   const markAllAsRead = async () => {
     try {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      await fetch('/api/history/alerts/read-all', {
+      await fetch(import.meta.env.VITE_API_URL + '/api/history/alerts/read-all', {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });

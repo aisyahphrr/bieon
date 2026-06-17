@@ -138,11 +138,19 @@ exports.getUserSystems = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak diizinkan melihat data sistem pengguna lain.' });
         }
 
-        const systems = await BieonSystem.find({ owner: userId });
+        const query = { $or: [{ owner: userId }] };
+        if (req.user.bieonId) {
+            query.$or.push({ bieonId: buildFlexibleBieonIdRegex(req.user.bieonId) || req.user.bieonId });
+        }
+        const systems = await BieonSystem.find(query);
         
         // Untuk setiap sistem, ambil daftar hub-nya
         const result = await Promise.all(systems.map(async (sys) => {
-            const hubs = await Hub.find({ owner: userId, ...bieonIdFilter(sys.bieonId) });
+            const hubQuery = { $or: [{ owner: userId }] };
+            if (req.user.bieonId) {
+                hubQuery.$or.push({ bieonId: buildFlexibleBieonIdRegex(req.user.bieonId) || req.user.bieonId });
+            }
+            const hubs = await Hub.find({ ...hubQuery, ...bieonIdFilter(sys.bieonId) });
             return {
                 ...sys.toObject(),
                 hubs: hubs.map(h => ({
@@ -169,7 +177,11 @@ exports.getHubs = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak diizinkan melihat data hub pengguna lain.' });
         }
 
-        const hubs = await Hub.find({ owner: userId });
+        const query = { $or: [{ owner: userId }] };
+        if (req.user.bieonId) {
+            query.$or.push({ bieonId: buildFlexibleBieonIdRegex(req.user.bieonId) || req.user.bieonId });
+        }
+        const hubs = await Hub.find(query);
         res.status(200).json(hubs);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data hub', error: error.message });
@@ -305,7 +317,10 @@ exports.startHubOpenJoin = async (req, res) => {
             return res.status(404).json({ message: 'Sistem BIEON tidak ditemukan.' });
         }
 
-        if (req.user.role !== 'SuperAdmin' && String(system.owner) !== String(req.user.userId)) {
+        const isSystemOwner = String(system.owner) === String(req.user.userId);
+        const isSystemMember = req.user.bieonId && String(req.user.bieonId).toLowerCase() === String(system.bieonId).toLowerCase();
+        
+        if (req.user.role !== 'SuperAdmin' && !isSystemOwner && !isSystemMember) {
             return res.status(403).json({ message: 'Anda tidak memiliki akses untuk membuka open join pada sistem ini.' });
         }
 
@@ -337,7 +352,10 @@ exports.leaveHub = async (req, res) => {
             return res.status(404).json({ message: 'Hub tidak ditemukan.' });
         }
 
-        if (req.user.role !== 'SuperAdmin' && String(hub.owner) !== String(req.user.userId)) {
+        const isHubOwner = String(hub.owner) === String(req.user.userId);
+        const isHubMember = req.user.bieonId && String(req.user.bieonId).toLowerCase() === String(hub.bieonId).toLowerCase();
+
+        if (req.user.role !== 'SuperAdmin' && !isHubOwner && !isHubMember) {
             return res.status(403).json({ message: 'Anda tidak memiliki akses untuk menghapus hub ini.' });
         }
 
@@ -378,7 +396,10 @@ exports.deleteHub = async (req, res) => {
             return res.status(404).json({ message: 'Hub tidak ditemukan.' });
         }
 
-        if (req.user.role !== 'SuperAdmin' && String(hub.owner) !== String(req.user.userId)) {
+        const isHubOwner = String(hub.owner) === String(req.user.userId);
+        const isHubMember = req.user.bieonId && String(req.user.bieonId).toLowerCase() === String(hub.bieonId).toLowerCase();
+
+        if (req.user.role !== 'SuperAdmin' && !isHubOwner && !isHubMember) {
             return res.status(403).json({ message: 'Anda tidak memiliki akses untuk menghapus hub ini.' });
         }
 
