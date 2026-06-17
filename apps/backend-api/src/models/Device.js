@@ -18,7 +18,7 @@ const deviceSchema = new mongoose.Schema({
     hub: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub' },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     tenantId: { type: String }, // For multi-tenant isolation
-    bieonId: { type: String },  // Hierarchical mapping
+    bieonId: { type: String, uppercase: true },  // Hierarchical mapping
     hubId: { type: String },    // Hierarchical mapping
     room: { type: String, default: 'Unassigned' },
     

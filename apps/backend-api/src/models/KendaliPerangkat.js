@@ -6,28 +6,28 @@ const kendaliPerangkatSchema = new mongoose.Schema({
     location: { type: String, required: true },
     notes: { type: String },
     hubId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hub', required: true },
-    category: { 
-        type: String, 
-        enum: ['Sensor', 'Control Actuator System'], 
-        required: true 
+    category: {
+        type: String,
+        enum: ['Sensor', 'Control Actuator System'],
+        required: true
     },
-    type: { 
-        type: String, 
-        required: true 
+    type: {
+        type: String,
+        required: true
     },
-    status: { 
-        type: String, 
-        enum: ['Discovered', 'Active', '1', '0', 'OFFLINE', 'STALE', 'ORPHAN', 'BLOCKED'], 
-        default: 'Discovered' 
+    status: {
+        type: String,
+        enum: ['Discovered', 'Active', '1', '0', 'OFFLINE', 'STALE', 'ORPHAN', 'BLOCKED'],
+        default: 'Discovered'
     },
-    lifecycleState: { 
-        type: String, 
+    lifecycleState: {
+        type: String,
         enum: ['UNCLAIMED', 'PROVISIONED', 'AUTH_PENDING', 'AUTHORIZED', 'STALE', 'ORPHAN', 'BLOCKED', 'DECOMMISSIONED'],
-        default: 'UNCLAIMED' 
+        default: 'UNCLAIMED'
     },
     isAuthorized: { type: Boolean, default: false },
     tenantId: { type: String }, // For multi-tenant isolation
-    bieonId: { type: String },  // Hierarchical mapping (BIEON System ID)
+    bieonId: { type: String, uppercase: true },  // Hierarchical mapping (BIEON System ID)
     device_ieee: { type: String, sparse: true }, // Hardware architecture requirement
     modelId: { type: String }, // Technical ID (e.g. SNZB_02DR2)
     // Thresholds for Sensors
@@ -44,13 +44,13 @@ const kendaliPerangkatSchema = new mongoose.Schema({
         isDoorEnabled: { type: Boolean, default: false }
     },
     // Control Logic for Actuators
-    controlMethod: { 
-        type: String, 
+    controlMethod: {
+        type: String,
         enum: ['Manual', 'Lingkungan', 'Jadwal'],
         default: 'Manual'
     },
-    environmentAspect: { 
-        type: String, 
+    environmentAspect: {
+        type: String,
         enum: ['Kualitas Air', 'Kenyamanan', 'Keamanan', null],
         default: null
     },
@@ -80,7 +80,7 @@ const kendaliPerangkatSchema = new mongoose.Schema({
     isPinned: { type: Boolean, default: false },
     lastCommandStatus: { type: String }, // For command response correlation
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }
-}, { 
+}, {
     timestamps: true,
     collection: 'kendaliperangkat' // Specifically requested name
 });
@@ -89,19 +89,19 @@ const kendaliPerangkatSchema = new mongoose.Schema({
 kendaliPerangkatSchema.index({ bieonId: 1, device_ieee: 1 }, { sparse: true });
 
 // Debug Delete Hooks to trace deletions
-kendaliPerangkatSchema.pre('deleteMany', function(next) {
+kendaliPerangkatSchema.pre('deleteMany', function (next) {
     console.log('🔴 deleteMany triggered! Query:', JSON.stringify(this.getQuery()));
     console.log(new Error('Stack trace:').stack);
     if (typeof next === 'function') next();
 });
 
-kendaliPerangkatSchema.pre('deleteOne', function(next) {
+kendaliPerangkatSchema.pre('deleteOne', function (next) {
     console.log('🔴 deleteOne triggered! Query:', JSON.stringify(this.getQuery()));
     console.log(new Error('Stack trace:').stack);
     if (typeof next === 'function') next();
 });
 
-kendaliPerangkatSchema.pre('findOneAndDelete', function(next) {
+kendaliPerangkatSchema.pre('findOneAndDelete', function (next) {
     console.log('🔴 findOneAndDelete triggered! Query:', JSON.stringify(this.getQuery()));
     console.log(new Error('Stack trace:').stack);
     if (typeof next === 'function') next();

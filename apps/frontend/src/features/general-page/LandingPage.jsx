@@ -139,7 +139,7 @@ import { useTranslation } from 'react-i18next';
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div 
+    <div
       className={`group bg-white border border-slate-200 rounded-[2rem] overflow-hidden transition-all duration-500 ease-out flex flex-col ${isOpen ? 'shadow-[0_8px_30px_rgb(0,0,0,0.08)] border-[#009b7c]/30 -translate-y-1' : 'shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1'}`}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
@@ -155,7 +155,7 @@ const FAQItem = ({ question, answer }) => {
           <ChevronDown size={20} className="transition-transform duration-500" />
         </div>
       </button>
-      <div 
+      <div
         className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100 mb-6' : 'max-h-0 opacity-0 mb-0'}`}
       >
         <div className="px-6 lg:px-8 text-slate-500 font-medium leading-relaxed text-base">
@@ -740,7 +740,7 @@ const LandingPage = () => {
           {/* Subtle blurred backgrounds for aesthetics */}
           <div className="absolute top-0 left-[-10%] w-[40%] h-[50%] bg-emerald-50 blur-[100px] rounded-full pointer-events-none"></div>
           <div className="absolute bottom-0 right-[-10%] w-[30%] h-[60%] bg-[#129cc0]/5 blur-[120px] rounded-full pointer-events-none"></div>
-          
+
           <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 relative z-10">
             <Reveal className="text-center mb-12 max-w-3xl mx-auto">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight drop-shadow-sm mb-8 uppercase">
@@ -760,7 +760,7 @@ const LandingPage = () => {
                   onChange={(e) => setFaqSearchQuery(e.target.value)}
                 />
                 {faqSearchQuery && (
-                  <button 
+                  <button
                     onClick={() => setFaqSearchQuery('')}
                     className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
                   >
@@ -775,8 +775,8 @@ const LandingPage = () => {
               {(() => {
                 const items = t('landing.faq.items', { returnObjects: true });
                 const faqItems = Array.isArray(items) ? items : [];
-                const filteredItems = faqItems.filter(item => 
-                  (item.q?.toLowerCase() || '').includes(faqSearchQuery.toLowerCase()) || 
+                const filteredItems = faqItems.filter(item =>
+                  (item.q?.toLowerCase() || '').includes(faqSearchQuery.toLowerCase()) ||
                   (item.a?.toLowerCase() || '').includes(faqSearchQuery.toLowerCase())
                 );
 

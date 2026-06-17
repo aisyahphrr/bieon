@@ -2,26 +2,27 @@ const mongoose = require('mongoose');
 const dataSizePlugin = require('../plugins/dataSizePlugin');
 
 const bieonSystemSchema = new mongoose.Schema({
-    bieonId: { 
-        type: String, 
-        required: true, 
+    bieonId: {
+        type: String,
+        required: true,
         unique: true,
-        trim: true
+        trim: true,
+        uppercase: true
     },
-    owner: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: false 
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
     },
-    hubCount: { 
-        type: Number, 
-        required: true, 
-        default: 1 
+    hubCount: {
+        type: Number,
+        required: true,
+        default: 1
     },
-    status: { 
-        type: String, 
-        enum: ['Active', 'Maintenance', 'Offline'], 
-        default: 'Active' 
+    status: {
+        type: String,
+        enum: ['Active', 'Maintenance', 'Offline'],
+        default: 'Active'
     }
 }, { timestamps: true });
 

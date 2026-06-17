@@ -4,7 +4,7 @@ const dataSizePlugin = require('../plugins/dataSizePlugin');
 const PdmMeterSchema = new mongoose.Schema({
     name: { type: String, required: true },
     device_id: { type: String, required: true, unique: true },
-    bieonId: { type: String, required: true },
+    bieonId: { type: String, required: true, uppercase: true },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     isSystemMeter: { type: Boolean, default: false },
     manufacturer: { type: String },
