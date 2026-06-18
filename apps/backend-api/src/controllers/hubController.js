@@ -414,3 +414,61 @@ exports.deleteHub = async (req, res) => {
     }
 };
 
+// POST /api/hubs/:hubId/claim
+exports.claimHub = async (req, res) => {
+    try {
+        const { hubId } = req.params;
+        const userId = req.user.userId;
+
+        // 1. Cari hub di database
+        const hub = await Hub.findById(hubId);
+        if (!hub) {
+            return res.status(404).json({ message: 'Hub tidak ditemukan.' });
+        }
+
+        // 2. Cari BieonSystem untuk memverifikasi kepemilikan sistem BIEON
+        const system = await BieonSystem.findOne({ bieonId: hub.bieonId });
+        if (!system) {
+            return res.status(404).json({ message: 'Sistem BIEON untuk Hub ini tidak ditemukan.' });
+        }
+
+        // Pastikan user adalah pemilik sistem ini
+        if (String(system.owner) !== String(userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke sistem BIEON ini.' });
+        }
+
+        // 3. Set owner dan tenantId pada Hub
+        const user = await User.findById(userId);
+        hub.owner = userId;
+        hub.tenantId = user?.tenantId || "tenant_001";
+        hub.status = 'Online';
+        await hub.save();
+
+        // 4. Kirim bootstrap claim MQTT untuk sinkronisasi hardware jika diperlukan
+        const { publishCommand } = require('../config/mqtt');
+        let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_').replace(/\s+/g, '_');
+        let rawIeee = hub.device_ieee || "0000000000000000";
+        let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
+        
+        const payload = {
+            tenant_id: user?.tenantId || "tenant_001",
+            bieon_id: hub.bieonId,
+            hub_id: "hub_001",
+            hubs: [{
+                id: formattedHubId,
+                ieee: canonicalIeee
+            }]
+        };
+        publishCommand(`bieon/${hub.bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
+
+        res.status(200).json({
+            message: 'Hub berhasil disimpan dan diklaim!',
+            hub: hub
+        });
+    } catch (error) {
+        console.error('Error in claimHub:', error);
+        res.status(500).json({ message: 'Gagal mengklaim Hub', error: error.message });
+    }
+};
+
+

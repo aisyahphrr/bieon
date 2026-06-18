@@ -33,6 +33,11 @@ let ioInstance = null;
 const openJoinSessions = new Map();
 const remoteRegistrationSessions = new Map();
 
+// Telemetry throttling caches (10 minutes interval)
+const lastDbWriteTimeMap = new Map(); // key: deviceId or meterId (string), value: timestamp (number)
+const latestTelemetryValues = new Map(); // key: deviceId or meterId (string), value: merged currentValues object
+
+
 const normalizeDeviceCategory = (value) => {
   const text = String(value || '').toLowerCase();
   if (text.includes('actuator') || text.includes('control') || text.includes('relay') || text.includes('switch')) {
@@ -664,25 +669,10 @@ const connectMQTT = (io) => {
           const payloadDeviceIeee = String(payloadObj.device_ieee || payloadObj.ieee || '').replace(/[:\-\s]/g, '').toUpperCase();
           const deviceIeee = payloadDeviceIeee || topicDeviceIeee;
 
-          const telemetryUpdate = {
-            lastSeen: new Date(),
-            status: 'Active',
-            lifecycleState: 'AUTHORIZED'
-          };
-
           const cluster = String(payloadObj.cluster || '').toLowerCase();
           const attr = String(payloadObj.attr || '').toLowerCase();
           const numericValue = Number(payloadObj.value);
           const hasNumericValue = Number.isFinite(numericValue);
-
-          if (cluster.includes('temp') && hasNumericValue) {
-            telemetryUpdate['currentValues.temperature'] = numericValue;
-          } else if (cluster.includes('humid') && hasNumericValue) {
-            telemetryUpdate['currentValues.humidity'] = numericValue;
-          } else if (cluster.includes('on_off')) {
-            const onOff = String(payloadObj.value).toLowerCase();
-            telemetryUpdate.status = (onOff === '1' || onOff === 'true' || onOff === 'on') ? '1' : '0';
-          }
 
           // Try to persist telemetry and emit a normalized device_telemetry payload.
           // Normalize by resolving DB `_id` when possible so frontend can match reliably.
@@ -708,32 +698,73 @@ const connectMQTT = (io) => {
               };
               const existing = await KendaliPerangkat.findOne(query).lean();
               if (existing) {
-                // Update and return the updated device so we can emit canonical fields
-                try {
-                  const updatedDevice = await KendaliPerangkat.findByIdAndUpdate(existing._id, { $set: telemetryUpdate }, { new: true });
-                  if (updatedDevice) {
-                    await evaluateSensorAutomation(updatedDevice);
-                    emitPayload = {
-                      _id: updatedDevice._id,
-                      bieonId,
-                      hubId,
-                      device_ieee: updatedDevice.device_ieee || deviceIeee || undefined,
-                      ieee: updatedDevice.device_ieee || deviceIeee || undefined,
-                      model: updatedDevice.modelId || updatedDevice.type || updatedDevice.model || undefined,
-                      manufacturer: updatedDevice.manufacturer || undefined,
-                      currentValues: updatedDevice.currentValues,
-                      battery: updatedDevice.battery,
-                      status: String(updatedDevice.status),
-                      raw: payloadObj
-                    };
-                  }
-                } catch (e) {
-                  // If update-with-return fails, fall back to emitting at least an identifier and the raw payload
-                  emitPayload = { ...emitPayload, _id: existing._id };
+                const deviceIdStr = String(existing._id);
+                const cachedValues = latestTelemetryValues.get(deviceIdStr) || existing.currentValues || {};
+                const newValues = { ...cachedValues };
+
+                if (cluster.includes('temp') && hasNumericValue) {
+                  newValues.temperature = numericValue;
+                } else if (cluster.includes('humid') && hasNumericValue) {
+                  newValues.humidity = numericValue;
+                }
+
+                let nextStatus = existing.status;
+                if (cluster.includes('on_off')) {
+                  const onOff = String(payloadObj.value).toLowerCase();
+                  nextStatus = (onOff === '1' || onOff === 'true' || onOff === 'on') ? '1' : '0';
+                }
+
+                latestTelemetryValues.set(deviceIdStr, newValues);
+
+                const now = Date.now();
+                const lastWrite = lastDbWriteTimeMap.get(deviceIdStr) || 0;
+                const shouldSave = (now - lastWrite) >= 10 * 60 * 1000;
+
+                let updatedDevice = null;
+                if (shouldSave) {
+                  updatedDevice = await KendaliPerangkat.findByIdAndUpdate(
+                    existing._id,
+                    {
+                      $set: {
+                        status: nextStatus,
+                        lastSeen: new Date(),
+                        lifecycleState: 'AUTHORIZED',
+                        currentValues: newValues
+                      }
+                    },
+                    { new: true }
+                  ).lean();
+                  lastDbWriteTimeMap.set(deviceIdStr, now);
+                  console.log(`[MQTT][ZIGBEE] Throttled DB Write triggered for ${existing.name || deviceIdStr}`);
+                } else {
+                  updatedDevice = {
+                    ...existing,
+                    status: nextStatus,
+                    lastSeen: new Date(),
+                    lifecycleState: 'AUTHORIZED',
+                    currentValues: newValues
+                  };
+                }
+
+                if (updatedDevice) {
+                  await evaluateSensorAutomation(updatedDevice);
+                  emitPayload = {
+                    _id: existing._id,
+                    bieonId,
+                    hubId,
+                    device_ieee: existing.device_ieee || deviceIeee || undefined,
+                    ieee: existing.device_ieee || deviceIeee || undefined,
+                    model: existing.modelId || existing.type || existing.model || undefined,
+                    manufacturer: existing.manufacturer || undefined,
+                    currentValues: newValues,
+                    battery: existing.battery,
+                    status: String(nextStatus),
+                    raw: payloadObj
+                  };
                 }
               }
             } catch (err) {
-              console.warn('[MQTT][ZIGBEE] Failed to persist zigbee telemetry:', err && err.message ? err.message : err);
+              console.warn('[MQTT][ZIGBEE] Failed to process zigbee telemetry:', err && err.message ? err.message : err);
             }
           }
 
@@ -870,6 +901,21 @@ const connectMQTT = (io) => {
               });
             }
 
+            const pdmIdStr = String(pdm._id);
+            const cachedValues = latestTelemetryValues.get(pdmIdStr) || pdm.currentValues || {};
+            const newValues = { ...cachedValues };
+
+            newValues.currentLoad = activePower;
+            if (ae !== undefined) {
+              newValues.energyToday = ae;
+            }
+
+            latestTelemetryValues.set(pdmIdStr, newValues);
+
+            const now = Date.now();
+            const lastWrite = lastDbWriteTimeMap.get(pdmIdStr) || 0;
+            const shouldSave = (now - lastWrite) >= 10 * 60 * 1000;
+
             const updates = {
               'currentValues.currentLoad': activePower,
               lastSeen: new Date(),
@@ -884,7 +930,21 @@ const connectMQTT = (io) => {
               updates.owner = bieonSystem.owner;
             }
 
-            const updatedPdm = await PdmMeter.findByIdAndUpdate(pdm._id, { $set: updates }, { new: true });
+            let updatedPdm = null;
+            if (shouldSave) {
+              updatedPdm = await PdmMeter.findByIdAndUpdate(pdm._id, { $set: updates }, { new: true });
+              lastDbWriteTimeMap.set(pdmIdStr, now);
+              console.log(`[MQTT][PDM] Throttled DB Write triggered for PDM Meter ${bieonId}`);
+            } else {
+              updatedPdm = {
+                ...(pdm.toObject ? pdm.toObject() : pdm),
+                ...updates,
+                currentValues: {
+                  ...pdm.currentValues,
+                  ...newValues
+                }
+              };
+            }
 
             if (updatedPdm && ioInstance) {
               ioInstance.emit('device_telemetry', {
@@ -934,12 +994,18 @@ const connectMQTT = (io) => {
                   }).save();
                 }
 
-                await PdmMeter.findByIdAndUpdate(updatedPdm._id, {
-                  $set: {
-                    'currentValues.lastEnergyReading': ae,
-                    'currentValues.energyToday': ae
-                  }
-                });
+                newValues.lastEnergyReading = ae;
+                newValues.energyToday = ae;
+                latestTelemetryValues.set(pdmIdStr, newValues);
+
+                if (shouldSave) {
+                  await PdmMeter.findByIdAndUpdate(updatedPdm._id, {
+                    $set: {
+                      'currentValues.lastEnergyReading': ae,
+                      'currentValues.energyToday': ae
+                    }
+                  });
+                }
               }
             }
           } catch (err) {
@@ -980,7 +1046,12 @@ const connectMQTT = (io) => {
           else if (param === 'status' || param === 'command') formattedPayload.status = String(actualValue);
 
           await handleDeviceTelemetry(friendlyName, formattedPayload, bieonId);
-          await new SensorData({ topic, value: actualValue }).save();
+          const sensorDataKey = `sensordata_${topic}`;
+          const lastSensorDataWrite = lastDbWriteTimeMap.get(sensorDataKey) || 0;
+          if (Date.now() - lastSensorDataWrite >= 10 * 60 * 1000) {
+            await new SensorData({ topic, value: actualValue }).save();
+            lastDbWriteTimeMap.set(sensorDataKey, Date.now());
+          }
         }
       }
     } catch (err) {
@@ -1195,27 +1266,67 @@ const handleDeviceTelemetry = async (friendlyName, payload, bieonId = null) => {
 
     if (!device) return;
 
-    const updates = { lastSeen: new Date() };
-    if (payload.temperature !== undefined) updates['currentValues.temperature'] = payload.temperature;
-    if (payload.waterTemp !== undefined) updates['currentValues.waterTemp'] = payload.waterTemp;
-    if (payload.humidity !== undefined) updates['currentValues.humidity'] = payload.humidity;
-    if (payload.ph !== undefined) updates['currentValues.ph'] = payload.ph;
-    if (payload.tds !== undefined) updates['currentValues.tds'] = payload.tds;
-    if (payload.turbidity !== undefined) updates['currentValues.turbidity'] = payload.turbidity;
-    if (payload.battery !== undefined) updates.battery = payload.battery;
+    const deviceIdStr = String(device._id);
+    const cachedValues = latestTelemetryValues.get(deviceIdStr) || device.currentValues || {};
+    const newValues = { ...cachedValues };
 
+    if (payload.temperature !== undefined) newValues.temperature = payload.temperature;
+    if (payload.waterTemp !== undefined) newValues.waterTemp = payload.waterTemp;
+    if (payload.humidity !== undefined) newValues.humidity = payload.humidity;
+    if (payload.ph !== undefined) newValues.ph = payload.ph;
+    if (payload.tds !== undefined) newValues.tds = payload.tds;
+    if (payload.turbidity !== undefined) newValues.turbidity = payload.turbidity;
+
+    // Handle energy fields:
+    if (payload.energyToday !== undefined) {
+      newValues.lastEnergyReading = payload.energyToday;
+      newValues.energyToday = payload.energyToday;
+    }
+    if (payload.currentLoad !== undefined) {
+      newValues.currentLoad = payload.currentLoad;
+    }
+
+    let nextStatus = device.status;
     if (payload.status !== undefined) {
       let normStatus = String(payload.status).toUpperCase();
       if (normStatus === 'ON' || normStatus === '1') normStatus = '1';
       else if (normStatus === 'OFF' || normStatus === '0') normStatus = '0';
-      updates.status = normStatus;
+      nextStatus = normStatus;
     }
 
-    const updatedDevice = await KendaliPerangkat.findOneAndUpdate(
-      { _id: device._id },
-      { $set: updates },
-      { new: true }
-    );
+    let nextBattery = payload.battery !== undefined ? payload.battery : device.battery;
+
+    latestTelemetryValues.set(deviceIdStr, newValues);
+
+    const now = Date.now();
+    const lastWrite = lastDbWriteTimeMap.get(deviceIdStr) || 0;
+    const shouldSave = (now - lastWrite) >= 10 * 60 * 1000;
+
+    let updatedDevice = null;
+    if (shouldSave) {
+      updatedDevice = await KendaliPerangkat.findOneAndUpdate(
+        { _id: device._id },
+        {
+          $set: {
+            status: nextStatus,
+            lastSeen: new Date(),
+            battery: nextBattery,
+            currentValues: newValues
+          }
+        },
+        { new: true }
+      );
+      lastDbWriteTimeMap.set(deviceIdStr, now);
+      console.log(`[MQTT][WIFI] Throttled DB Write triggered for ${device.name || deviceIdStr}`);
+    } else {
+      updatedDevice = {
+        ...(device.toObject ? device.toObject() : device),
+        status: nextStatus,
+        lastSeen: new Date(),
+        battery: nextBattery,
+        currentValues: newValues
+      };
+    }
 
     if (updatedDevice && ioInstance) {
       ioInstance.emit('device_telemetry', {
@@ -1231,9 +1342,9 @@ const handleDeviceTelemetry = async (friendlyName, payload, bieonId = null) => {
     }
 
     // 1. Notifikasi Perubahan Status
-    if (updates.status !== undefined && device.status !== updates.status) {
+    if (payload.status !== undefined && device.status !== nextStatus) {
       const Alert = require('../models/Alert');
-      const statusText = updates.status === '1' ? 'Menyala (ON)' : 'Mati (OFF)';
+      const statusText = nextStatus === '1' ? 'Menyala (ON)' : 'Mati (OFF)';
       let category = device.environmentAspect === 'Keamanan' ? 'Keamanan' : 
                      (device.environmentAspect === 'Kenyamanan' ? 'Kenyamanan' : 
                      (device.environmentAspect === 'Kualitas Air' ? 'Air Sanitasi' : 'Sistem'));
@@ -1264,15 +1375,14 @@ const handleDeviceTelemetry = async (friendlyName, payload, bieonId = null) => {
           const tariffRecord = await PlnTariff.findOne({ category: new RegExp(plnCategory, 'i') }).sort({ createdAt: -1 });
           const tariffPrice = tariffRecord ? tariffRecord.tariff : 1444;
           const cost = deltaKwh * tariffPrice;
-          
-          // user.tokenBalance = Math.max(0, (user.tokenBalance || 0) - cost); // STOP DEDUCTION (Switching to Budget System)
-          // await user.save();
 
-          await KendaliPerangkat.findByIdAndUpdate(updatedDevice._id, { 
-            'currentValues.lastEnergyReading': currentEnergy,
-            'currentValues.energyToday': currentEnergy,
-            'currentValues.currentLoad': payload.currentLoad || 0
-          });
+          if (shouldSave) {
+            await KendaliPerangkat.findByIdAndUpdate(updatedDevice._id, { 
+              'currentValues.lastEnergyReading': currentEnergy,
+              'currentValues.energyToday': currentEnergy,
+              'currentValues.currentLoad': payload.currentLoad || 0
+            });
+          }
 
           const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
           const recentEnergyLog = await EnergyLog.findOne({
