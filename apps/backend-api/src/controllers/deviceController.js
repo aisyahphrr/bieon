@@ -81,8 +81,9 @@ exports.startOpenJoin = async (req, res) => {
 
             const isHubOwner = targetHub.owner && String(targetHub.owner) === String(userId);
             const isSystemOwner = system && system.owner && String(system.owner) === String(userId);
+            const isSystemMember = req.user.bieonId && String(req.user.bieonId).toLowerCase() === String(targetBieonId).toLowerCase();
 
-            if (!isHubOwner && !isSystemOwner) {
+            if (!isHubOwner && !isSystemOwner && !isSystemMember && req.user.role !== 'SuperAdmin') {
                 return res.status(403).json({ message: 'Anda tidak memiliki akses untuk membuka open join pada hub ini.' });
             }
 

@@ -31,7 +31,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const response = await fetch('/api/alerts', {
+        const response = await fetch(import.meta.env.VITE_API_URL + '/api/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -78,7 +78,7 @@ export default function TechnicianLayout({ children, activeMenu, setActiveMenu, 
       }
 
       try {
-        await fetch('/api/technician/location', {
+        await fetch(import.meta.env.VITE_API_URL + '/api/technician/location', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

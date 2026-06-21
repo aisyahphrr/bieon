@@ -242,7 +242,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
         try {
             setIsLoading(true);
             setApiError(null);
-            const response = await fetch('/api/complaints/technician', {
+            const response = await fetch(import.meta.env.VITE_API_URL + '/api/complaints/technician', {
                 headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
                 cache: 'no-store'
             });
@@ -330,7 +330,7 @@ export function PengaduanKlienPage({ onNavigate, returnTicketId, onReturnTicketH
 
     const handleStartProcess = async (ticket) => {
         try {
-            const response = await fetch(`/api/complaints/${ticket.originalId}/status`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${ticket.originalId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

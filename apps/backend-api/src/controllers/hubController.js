@@ -138,11 +138,19 @@ exports.getUserSystems = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak diizinkan melihat data sistem pengguna lain.' });
         }
 
-        const systems = await BieonSystem.find({ owner: userId });
+        const query = { $or: [{ owner: userId }] };
+        if (req.user.bieonId) {
+            query.$or.push({ bieonId: buildFlexibleBieonIdRegex(req.user.bieonId) || req.user.bieonId });
+        }
+        const systems = await BieonSystem.find(query);
         
         // Untuk setiap sistem, ambil daftar hub-nya
         const result = await Promise.all(systems.map(async (sys) => {
-            const hubs = await Hub.find({ owner: userId, ...bieonIdFilter(sys.bieonId) });
+            const hubQuery = { $or: [{ owner: userId }] };
+            if (req.user.bieonId) {
+                hubQuery.$or.push({ bieonId: buildFlexibleBieonIdRegex(req.user.bieonId) || req.user.bieonId });
+            }
+            const hubs = await Hub.find({ ...hubQuery, ...bieonIdFilter(sys.bieonId) });
             return {
                 ...sys.toObject(),
                 hubs: hubs.map(h => ({
@@ -169,7 +177,11 @@ exports.getHubs = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak diizinkan melihat data hub pengguna lain.' });
         }
 
-        const hubs = await Hub.find({ owner: userId });
+        const query = { $or: [{ owner: userId }] };
+        if (req.user.bieonId) {
+            query.$or.push({ bieonId: buildFlexibleBieonIdRegex(req.user.bieonId) || req.user.bieonId });
+        }
+        const hubs = await Hub.find(query);
         res.status(200).json(hubs);
     } catch (error) {
         res.status(500).json({ message: 'Gagal mengambil data hub', error: error.message });
@@ -305,7 +317,10 @@ exports.startHubOpenJoin = async (req, res) => {
             return res.status(404).json({ message: 'Sistem BIEON tidak ditemukan.' });
         }
 
-        if (req.user.role !== 'SuperAdmin' && String(system.owner) !== String(req.user.userId)) {
+        const isSystemOwner = String(system.owner) === String(req.user.userId);
+        const isSystemMember = req.user.bieonId && String(req.user.bieonId).toLowerCase() === String(system.bieonId).toLowerCase();
+        
+        if (req.user.role !== 'SuperAdmin' && !isSystemOwner && !isSystemMember) {
             return res.status(403).json({ message: 'Anda tidak memiliki akses untuk membuka open join pada sistem ini.' });
         }
 
@@ -337,7 +352,10 @@ exports.leaveHub = async (req, res) => {
             return res.status(404).json({ message: 'Hub tidak ditemukan.' });
         }
 
-        if (req.user.role !== 'SuperAdmin' && String(hub.owner) !== String(req.user.userId)) {
+        const isHubOwner = String(hub.owner) === String(req.user.userId);
+        const isHubMember = req.user.bieonId && String(req.user.bieonId).toLowerCase() === String(hub.bieonId).toLowerCase();
+
+        if (req.user.role !== 'SuperAdmin' && !isHubOwner && !isHubMember) {
             return res.status(403).json({ message: 'Anda tidak memiliki akses untuk menghapus hub ini.' });
         }
 
@@ -378,7 +396,10 @@ exports.deleteHub = async (req, res) => {
             return res.status(404).json({ message: 'Hub tidak ditemukan.' });
         }
 
-        if (req.user.role !== 'SuperAdmin' && String(hub.owner) !== String(req.user.userId)) {
+        const isHubOwner = String(hub.owner) === String(req.user.userId);
+        const isHubMember = req.user.bieonId && String(req.user.bieonId).toLowerCase() === String(hub.bieonId).toLowerCase();
+
+        if (req.user.role !== 'SuperAdmin' && !isHubOwner && !isHubMember) {
             return res.status(403).json({ message: 'Anda tidak memiliki akses untuk menghapus hub ini.' });
         }
 
@@ -392,4 +413,62 @@ exports.deleteHub = async (req, res) => {
         res.status(500).json({ message: 'Gagal menghapus hub secara paksa', error: error.message });
     }
 };
+
+// POST /api/hubs/:hubId/claim
+exports.claimHub = async (req, res) => {
+    try {
+        const { hubId } = req.params;
+        const userId = req.user.userId;
+
+        // 1. Cari hub di database
+        const hub = await Hub.findById(hubId);
+        if (!hub) {
+            return res.status(404).json({ message: 'Hub tidak ditemukan.' });
+        }
+
+        // 2. Cari BieonSystem untuk memverifikasi kepemilikan sistem BIEON
+        const system = await BieonSystem.findOne({ bieonId: hub.bieonId });
+        if (!system) {
+            return res.status(404).json({ message: 'Sistem BIEON untuk Hub ini tidak ditemukan.' });
+        }
+
+        // Pastikan user adalah pemilik sistem ini
+        if (String(system.owner) !== String(userId)) {
+            return res.status(403).json({ message: 'Anda tidak memiliki akses ke sistem BIEON ini.' });
+        }
+
+        // 3. Set owner dan tenantId pada Hub
+        const user = await User.findById(userId);
+        hub.owner = userId;
+        hub.tenantId = user?.tenantId || "tenant_001";
+        hub.status = 'Online';
+        await hub.save();
+
+        // 4. Kirim bootstrap claim MQTT untuk sinkronisasi hardware jika diperlukan
+        const { publishCommand } = require('../config/mqtt');
+        let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_').replace(/\s+/g, '_');
+        let rawIeee = hub.device_ieee || "0000000000000000";
+        let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
+        
+        const payload = {
+            tenant_id: user?.tenantId || "tenant_001",
+            bieon_id: hub.bieonId,
+            hub_id: "hub_001",
+            hubs: [{
+                id: formattedHubId,
+                ieee: canonicalIeee
+            }]
+        };
+        publishCommand(`bieon/${hub.bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
+
+        res.status(200).json({
+            message: 'Hub berhasil disimpan dan diklaim!',
+            hub: hub
+        });
+    } catch (error) {
+        console.error('Error in claimHub:', error);
+        res.status(500).json({ message: 'Gagal mengklaim Hub', error: error.message });
+    }
+};
+
 

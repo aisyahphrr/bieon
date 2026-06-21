@@ -239,7 +239,7 @@ exports.createDevice = async (req, res) => {
 exports.configureDevice = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes, controlledDevice, remoteState } = req.body;
+        const { name, location, sensorParams, controlMode, environmentAspect, scheduleSettings, thresholds, controlMethod, notes, controlledDevice, remoteState, category, deviceType, type } = req.body;
 
         // Cari dulu untuk cek kepemilikan
         const device = await KendaliPerangkat.findById(id);
@@ -267,6 +267,15 @@ exports.configureDevice = async (req, res) => {
             status: 'Active',
             lastActivity: new Date()
         };
+
+        if (category) {
+            updateFields.category = category;
+        }
+
+        const targetType = type || deviceType;
+        if (targetType) {
+            updateFields.type = targetType;
+        }
 
         if (scheduleSettings !== null && scheduleSettings !== undefined) {
             updateFields.scheduleSettings = scheduleSettings;

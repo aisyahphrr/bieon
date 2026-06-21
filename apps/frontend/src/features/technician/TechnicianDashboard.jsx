@@ -354,9 +354,9 @@ export function TechnicianDashboard({ onNavigate }) {
 
       try {
         const [metricsRes, chartsRes, clientsRes] = await Promise.all([
-          fetch('/api/technician/dashboard/metrics', { headers }),
-          fetch('/api/technician/dashboard/charts', { headers }),
-          fetch('/api/technician/dashboard/clients', { headers })
+          fetch(import.meta.env.VITE_API_URL + '/api/technician/dashboard/metrics', { headers }),
+          fetch(import.meta.env.VITE_API_URL + '/api/technician/dashboard/charts', { headers }),
+          fetch(import.meta.env.VITE_API_URL + '/api/technician/dashboard/clients', { headers })
         ]);
 
         const metricsData = await metricsRes.json();
@@ -380,7 +380,7 @@ export function TechnicianDashboard({ onNavigate }) {
     const setAutoOnline = async () => {
       if (!token || !userId) return;
       try {
-        await fetch(`/api/technician/profile/${userId}`, {
+        await fetch(import.meta.env.VITE_API_URL + `/api/technician/profile/${userId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

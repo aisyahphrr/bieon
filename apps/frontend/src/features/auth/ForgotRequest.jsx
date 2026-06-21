@@ -17,7 +17,7 @@ export default function ForgotRequest() {
     if (!identifier) return setError(t('auth.forgot.err_identifier_required', 'Email atau nomor telepon wajib diisi'));
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/forgot-password/request', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/auth/forgot-password/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier })

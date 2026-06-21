@@ -252,7 +252,7 @@ export function ComplaintDetailModal({
     const fetchComplaintDetail = async () => {
         try {
             setIsRefreshing(true);
-            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${localTicket._id || localTicket.originalId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error(t('complaint.detail_box.error_fetch_latest', 'Gagal mengambil data terbaru'));
@@ -276,7 +276,7 @@ export function ComplaintDetailModal({
     const handleStatusUpdate = async (newStatus, note = '', rating = null) => {
         try {
             setIsSubmitting(true);
-            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}/status`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${localTicket._id || localTicket.originalId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -307,7 +307,7 @@ export function ComplaintDetailModal({
         if (!progressOption) return;
         try {
             setIsSubmitting(true);
-            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}/progress`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${localTicket._id || localTicket.originalId}/progress`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -337,7 +337,7 @@ export function ComplaintDetailModal({
         try {
             setIsSubmitting(true);
             const endpoint = action === 'request' ? 'request-log' : 'grant-log';
-            const response = await fetch(`/api/complaints/${localTicket._id || localTicket.originalId}/${endpoint}`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${localTicket._id || localTicket.originalId}/${endpoint}`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',

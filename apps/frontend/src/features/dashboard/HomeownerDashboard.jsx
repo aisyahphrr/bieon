@@ -126,7 +126,7 @@ function ComplaintModal({ isOpen, onClose, realDevices = [] }) {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/complaints', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/complaints', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -480,7 +480,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
       };
 
       if (!isNaN(parsedLimit) && parsedLimit !== limit) {
-        const resThr = await fetch('/api/admin/tariffs/threshold', {
+        const resThr = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/threshold', {
           method: 'PUT',
           headers,
           body: JSON.stringify({ threshold: parsedLimit })
@@ -489,7 +489,7 @@ function WarningLimitModal({ isOpen, onClose, limit, setLimit, deposit, setDepos
       }
 
       if (!isNaN(parsedDeposit) && parsedDeposit > 0) {
-        const resTop = await fetch('/api/admin/tariffs/topup', {
+        const resTop = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/topup', {
           method: 'POST',
           headers,
           body: JSON.stringify({ amount: parsedDeposit })
@@ -737,14 +737,14 @@ export function HomeownerDashboard() {
       // 1. Fetch Devices (for devices count per room)
       const userId = localStorage.getItem('userId');
       if (userId) {
-        const resDevices = await fetch(`/api/kendaliperangkat/my-devices`, { headers });
+        const resDevices = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/my-devices`, { headers });
         if (resDevices.ok) setRealDevices(await resDevices.json());
       }
 
       // 2. Fetch Notifications
       let apiData = [];
       try {
-        const resAlerts = await fetch('/api/alerts', { headers });
+        const resAlerts = await fetch(import.meta.env.VITE_API_URL + '/api/alerts', { headers });
         if (resAlerts.ok) {
           const data = await resAlerts.json();
           apiData = data.data || [];
@@ -792,7 +792,7 @@ export function HomeownerDashboard() {
       setRealNotifications(merged);
 
       // 3. Fetch Energy Summary
-      const resEnergy = await fetch('/api/history/energy-summary', { headers });
+      const resEnergy = await fetch(import.meta.env.VITE_API_URL + '/api/history/energy-summary', { headers });
       if (resEnergy.ok) {
         const data = await resEnergy.json();
         setEnergySummary(data.data);
@@ -801,7 +801,7 @@ export function HomeownerDashboard() {
       }
 
       // 4. Fetch Activities
-      const resActivities = await fetch('/api/history/activity', { headers });
+      const resActivities = await fetch(import.meta.env.VITE_API_URL + '/api/history/activity', { headers });
       if (resActivities.ok) {
         const data = await resActivities.json();
         setRealActivities(data.data || []);
@@ -856,37 +856,37 @@ export function HomeownerDashboard() {
       }
 
       try {
-        const resTemp = await fetch('/api/sensors/suhu');
+        const resTemp = await fetch(import.meta.env.VITE_API_URL + '/api/sensors/suhu');
         if (resTemp.ok) {
           const data = await resTemp.json();
           if (data && data[0] && data[0].value !== null) setLiveTemp(data[0].value);
         }
 
-        const resHum = await fetch('/api/sensors/kelembapan');
+        const resHum = await fetch(import.meta.env.VITE_API_URL + '/api/sensors/kelembapan');
         if (resHum.ok) {
           const data = await resHum.json();
           if (data && data[0] && data[0].value !== null) setLiveHumidity(data[0].value);
         }
 
-        const resPh = await fetch('/api/sensors/ph');
+        const resPh = await fetch(import.meta.env.VITE_API_URL + '/api/sensors/ph');
         if (resPh.ok) {
           const data = await resPh.json();
           if (data && data[0] && data[0].value !== null) setLivePh(data[0].value);
         }
 
-        const resTurbidity = await fetch('/api/sensors/turbidity');
+        const resTurbidity = await fetch(import.meta.env.VITE_API_URL + '/api/sensors/turbidity');
         if (resTurbidity.ok) {
           const data = await resTurbidity.json();
           if (data && data[0] && data[0].value !== null) setLiveTurbidity(data[0].value);
         }
 
-        const resTds = await fetch('/api/sensors/tds');
+        const resTds = await fetch(import.meta.env.VITE_API_URL + '/api/sensors/tds');
         if (resTds.ok) {
           const data = await resTds.json();
           if (data && data[0] && data[0].value !== null) setLiveTds(data[0].value);
         }
 
-        const resWaterTemp = await fetch('/api/sensors/suhu-air');
+        const resWaterTemp = await fetch(import.meta.env.VITE_API_URL + '/api/sensors/suhu-air');
         if (resWaterTemp.ok) {
           const data = await resWaterTemp.json();
           if (data && data[0] && data[0].value !== null) setLiveWaterTemp(data[0].value);
@@ -1187,7 +1187,7 @@ export function HomeownerDashboard() {
       // Update to backend
       const token = localStorage.getItem('token');
       if (token && id && !id.startsWith('notif-')) {
-        await fetch(`/api/alerts/${id}/read`, {
+        await fetch(import.meta.env.VITE_API_URL + `/api/alerts/${id}/read`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}` }
         });

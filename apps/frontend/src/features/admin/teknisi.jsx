@@ -405,7 +405,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         setFormError('');
 
         try {
-            const response = await fetch('/api/admin/technicians', {
+            const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/technicians', {
                 method: 'GET',
                 headers: getAuthHeaders(),
             });
@@ -433,7 +433,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         setMapError('');
 
         try {
-            const response = await fetch('/api/admin/technicians/locations', {
+            const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/technicians/locations', {
                 headers: getAuthHeaders(),
             });
             const result = await parseApiResponse(response);
@@ -507,7 +507,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
     const fetchAvailableClients = async () => {
         setIsLoadingClients(true);
         try {
-            const response = await fetch('/api/admin/homeowners/available', {
+            const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/homeowners/available', {
                 headers: getAuthHeaders(),
             });
             const result = await response.json();
@@ -532,7 +532,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         
         setIsSubmitting(true);
         try {
-            const response = await fetch(`/api/admin/technicians/${selectedTechnician._id || selectedTechnician.id}/assign-clients`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/technicians/${selectedTechnician._id || selectedTechnician.id}/assign-clients`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ clientIds: selectedClients }),
@@ -545,7 +545,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                 setSelectedClients([]);
                 
                 // Refresh technician details to show updated clients
-                const techRes = await fetch(`/api/admin/technicians/${selectedTechnician._id || selectedTechnician.id}`, {
+                const techRes = await fetch(import.meta.env.VITE_API_URL + `/api/admin/technicians/${selectedTechnician._id || selectedTechnician.id}`, {
                     headers: getAuthHeaders(),
                 });
                 const techResult = await techRes.json();
@@ -627,7 +627,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                 return;
             }
 
-            const response = await fetch('/api/admin/technicians', {
+            const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/technicians', {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(payload),
@@ -669,7 +669,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         setFormError('');
 
         try {
-            const response = await fetch(`/api/admin/technicians/${selectedTechnician._id}`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/technicians/${selectedTechnician._id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ reason: deleteReason.trim() }),
@@ -703,7 +703,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
         setIsDetailModalOpen(true);
         
         try {
-            const response = await fetch(`/api/admin/technicians/${tech._id}`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/technicians/${tech._id}`, {
                 headers: getAuthHeaders(),
             });
             const result = await response.json();
@@ -757,7 +757,7 @@ export function ManajemenTeknisiPage({ onNavigate }) {
                 ...(formData.password ? { password: formData.password } : {}),
             };
 
-            const response = await fetch(`/api/admin/technicians/${selectedTechnician._id}`, {
+            const response = await fetch(import.meta.env.VITE_API_URL + `/api/admin/technicians/${selectedTechnician._id}`, {
                 method: 'PUT',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(payload),

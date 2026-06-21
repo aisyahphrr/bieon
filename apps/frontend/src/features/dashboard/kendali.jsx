@@ -160,7 +160,7 @@ const REMOTE_FUNCTION_LABELS = REMOTE_DEVICE_TYPES.reduce((acc, item) => {
 }, {});
 
 export function DeviceControlPage({ onNavigate }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [step, setStep] = useState("idle");
   const [bieonSystems, setBieonSystems] = useState([]);
   const [currentBieon, setCurrentBieon] = useState(null);
@@ -438,6 +438,26 @@ export function DeviceControlPage({ onNavigate }) {
       productAspectLower.includes('plug');
   }, [selectedCategory, selectedDeviceType, deviceForm.name, selectedProduct]);
 
+  // Sinkronisasi daftar ruangan berdasarkan perangkat yang ada di sistem BIEON saat ini
+  useEffect(() => {
+    if (currentBieon && currentBieon.hubs) {
+      const existingLocations = new Set();
+      const defaultRooms = ["R1", "R2", "R3", "R4"];
+      defaultRooms.forEach(r => existingLocations.add(r));
+
+      currentBieon.hubs.forEach(hub => {
+        if (hub.devices) {
+          hub.devices.forEach(dev => {
+            if (dev.location) {
+              existingLocations.add(dev.location);
+            }
+          });
+        }
+      });
+      setRooms(Array.from(existingLocations));
+    }
+  }, [currentBieon]);
+
   // Efek Hitung Mundur untuk Pembuangan Perangkat
   useEffect(() => {
     const timers = Object.keys(leavingDevices);
@@ -576,7 +596,7 @@ export function DeviceControlPage({ onNavigate }) {
       const token = localStorage.getItem('token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch('/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || t('kendali.open_join.error_activate', 'Gagal mengaktifkan open join'));
@@ -614,7 +634,7 @@ export function DeviceControlPage({ onNavigate }) {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('/api/hubs/open_join', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/hubs/open_join', {
         method: 'POST',
         headers,
         body: JSON.stringify({ bieonId: currentBieon?.bieonId, duration: 30 })
@@ -637,6 +657,36 @@ export function DeviceControlPage({ onNavigate }) {
     } finally {
       setIsOpenHubJoinRequestPending(false);
       openHubJoinSubmitLockRef.current = false;
+    }
+  };
+
+  const handleConfirmHub = async (hub) => {
+    try {
+      const token = localStorage.getItem('token');
+      const hubId = hub._id || hub.id;
+      
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/hubs/${hubId}/claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Gagal menyimpan Hub');
+      }
+
+      setHubScanAttempted(false);
+      setIsHubScanning(false);
+      setDiscoveredHubs([]);
+      
+      await fetchData(); // Refresh data real-time agar hub langsung muncul di UI
+      setStep("view-bieon");
+      alert(t('kendali.open_join_hub.success_claim', 'Hub berhasil disimpan ke daftar perangkat Anda!'));
+    } catch (err) {
+      alert(t('kendali.open_join_hub.error_save', 'Gagal menyimpan Hub: ') + err.message);
     }
   };
 
@@ -685,94 +735,96 @@ export function DeviceControlPage({ onNavigate }) {
     return 'Mode Manual';
   };
 
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      // 1. Get Me
+      const meRes = await fetch(import.meta.env.VITE_API_URL + '/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!meRes.ok) throw new Error("Gagal fetch profil");
+      const user = await meRes.json();
+      setUserProfile(user);
+
+      // Tentukan apakah kita dalam mode teknisi (cek localStorage langsung untuk menghindari stale state)
+      const techAccess = localStorage.getItem('bieon_tech_access') === 'true';
+      const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
+
+      const targetId = (techAccess && activeHomeownerId)
+        ? activeHomeownerId
+        : user._id;
+
+      // Update state agar UI sinkron
+      setIsTechnicianMode(techAccess);
+
+      // 2. Get Systems (Disesuaikan untuk target ID)
+      const sysRes = await fetch(import.meta.env.VITE_API_URL + `/api/hubs/systems/${targetId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const systemsData = await sysRes.json();
+
+      // 3. Get Devices (Disesuaikan untuk target ID)
+      const devRes = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const devicesData = await devRes.json();
+      const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
+      const uniqueDevicesData = Array.from(
+        new Map(devicesData.map((device) => {
+          const key = normalizeIeee(device.device_ieee) || String(device._id || device.id || '');
+          return [key, device];
+        }))
+      ).map(([, device]) => device);
+
+      // Join devices into hubs in systems
+      const joinedSystems = systemsData.map(sys => ({
+        id: sys._id,
+        bieonId: sys.bieonId,
+        name: sys.bieonId, // Fallback name
+        totalHubs: sys.hubCount || sys.hubs?.length || 0,
+        hubs: sys.hubs.map(hub => ({
+          ...hub,
+          devices: uniqueDevicesData
+            .filter(d => String(d.hubId) === String(hub.id))
+            .map(d => ({
+              ...d,
+              id: d._id,
+              installedDate: d.createdAt,
+              currentValues: d.currentValues || {},
+              sensorParams: d.thresholds || {},
+              controls: d.remoteState || {},
+              remoteState: d.remoteState || {},
+              remoteMappings: Array.isArray(d.remoteState?.mappings) ? d.remoteState.mappings : (Array.isArray(d.remoteMappings) ? d.remoteMappings : [])
+            }))
+        })),
+        createdAt: sys.createdAt
+      }));
+
+      setBieonSystems(joinedSystems);
+      if (joinedSystems.length > 0) {
+        setStep("view-bieon");
+      } else {
+        setStep("idle");
+      }
+    } catch (err) {
+      console.error("Error loading data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load User and Systems from Backend
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setIsLoading(false);
-          return;
-        }
-
-        // 1. Get Me
-        const meRes = await fetch('/api/auth/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!meRes.ok) throw new Error("Gagal fetch profil");
-        const user = await meRes.json();
-        setUserProfile(user);
-
-        // Tentukan apakah kita dalam mode teknisi (cek localStorage langsung untuk menghindari stale state)
-        const techAccess = localStorage.getItem('bieon_tech_access') === 'true';
-        const activeHomeownerId = localStorage.getItem('bieon_active_homeowner_id');
-
-        const targetId = (techAccess && activeHomeownerId)
-          ? activeHomeownerId
-          : user._id;
-
-        // Update state agar UI sinkron
-        setIsTechnicianMode(techAccess);
-
-        // 2. Get Systems (Disesuaikan untuk target ID)
-        const sysRes = await fetch(`/api/hubs/systems/${targetId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const systemsData = await sysRes.json();
-
-        // 3. Get Devices (Disesuaikan untuk target ID)
-        const devRes = await fetch(`/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const devicesData = await devRes.json();
-        const normalizeIeee = (value) => String(value || '').replace(/[:\-\s]/g, '').toUpperCase();
-        const uniqueDevicesData = Array.from(
-          new Map(devicesData.map((device) => {
-            const key = normalizeIeee(device.device_ieee) || String(device._id || device.id || '');
-            return [key, device];
-          }))
-        ).map(([, device]) => device);
-
-        // Join devices into hubs in systems
-        const joinedSystems = systemsData.map(sys => ({
-          id: sys._id,
-          bieonId: sys.bieonId,
-          name: sys.bieonId, // Fallback name
-          totalHubs: sys.hubCount || sys.hubs?.length || 0,
-          hubs: sys.hubs.map(hub => ({
-            ...hub,
-            devices: uniqueDevicesData
-              .filter(d => String(d.hubId) === String(hub.id))
-              .map(d => ({
-                ...d,
-                id: d._id,
-                installedDate: d.createdAt,
-                currentValues: d.currentValues || {},
-                sensorParams: d.thresholds || {},
-                controls: d.remoteState || {},
-                remoteState: d.remoteState || {},
-                remoteMappings: Array.isArray(d.remoteState?.mappings) ? d.remoteState.mappings : (Array.isArray(d.remoteMappings) ? d.remoteMappings : [])
-              }))
-          })),
-          createdAt: sys.createdAt
-        }));
-
-        setBieonSystems(joinedSystems);
-        if (joinedSystems.length > 0) {
-          setStep("view-bieon");
-        } else {
-          setStep("idle");
-        }
-      } catch (err) {
-        console.error("Error loading data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  useEffect(() => {
     // SOCKET.IO REAL-TIME MONITORING
     // Gunakan URL eksplisit ke backend agar tidak bergantung pada Vite proxy untuk WebSocket
     const backendUrl = window.location.hostname === 'localhost'
@@ -1043,7 +1095,7 @@ export function DeviceControlPage({ onNavigate }) {
       try {
         setRemoteCatalogLoading(true);
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/devices/registration/${encodeURIComponent(bieonId)}/catalog`, {
+        const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/${encodeURIComponent(bieonId)}/catalog`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -1074,7 +1126,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     const checkTechStatus = async () => {
       try {
-        const response = await fetch(`/api/technician-access/status/${userProfile._id}`);
+        const response = await fetch(import.meta.env.VITE_API_URL + `/api/technician-access/status/${userProfile._id}`);
         if (response.ok) {
           const data = await response.json();
           setIsTechnicianActiveInSystem(data.isAccessed);
@@ -1175,7 +1227,7 @@ export function DeviceControlPage({ onNavigate }) {
       }
 
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/technician-access/generate-token', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/technician-access/generate-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1217,7 +1269,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/hubs/setup', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/hubs/setup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1277,7 +1329,7 @@ export function DeviceControlPage({ onNavigate }) {
   const fetchRegisteredProducts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/products/list', {
+      const res = await fetch(import.meta.env.VITE_API_URL + '/api/products/list', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -1299,7 +1351,7 @@ export function DeviceControlPage({ onNavigate }) {
   const handleRegisterProduct = async (e, targetStep = "select-category") => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/products/register', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/products/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1355,7 +1407,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!window.confirm(t('alerts.delete_product_confirm'))) return;
 
     try {
-      const response = await fetch(`/api/products/${productId}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -1449,7 +1501,7 @@ export function DeviceControlPage({ onNavigate }) {
       setRemoteMappingDraft(null);
       setRemoteRegistrationDeviceId(device.id);
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devices/registration/${encodeURIComponent(currentBieon.bieonId)}/start`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/${encodeURIComponent(currentBieon.bieonId)}/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1530,7 +1582,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devices/registration/catalog/${catalogItem._id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${catalogItem._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1570,7 +1622,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/devices/registration/catalog/${catalogItem._id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${catalogItem._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1659,7 +1711,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1831,7 +1883,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1935,7 +1987,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2008,7 +2060,7 @@ export function DeviceControlPage({ onNavigate }) {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2030,7 +2082,7 @@ export function DeviceControlPage({ onNavigate }) {
       }
 
       if (mapping.catalogId) {
-        await fetch(`/api/devices/registration/catalog/${mapping.catalogId}`, {
+        await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${mapping.catalogId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -2144,7 +2196,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/configure/${editingMappingDevice.id}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${editingMappingDevice.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2462,7 +2514,7 @@ export function DeviceControlPage({ onNavigate }) {
         onlyRegister: true, // TAMBAHKAN INI: Agar cuma masuk ke list "Perangkat Terdaftar"
       };
 
-      const response = await fetch('/api/kendaliperangkat', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/kendaliperangkat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2688,7 +2740,7 @@ export function DeviceControlPage({ onNavigate }) {
         }))
       })));
 
-      const response = await fetch(`/api/kendaliperangkat/${deviceId}/toggle`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/toggle`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -2745,7 +2797,7 @@ export function DeviceControlPage({ onNavigate }) {
     // 2. Persistent Update (Backend API)
     try {
       const token = localStorage.getItem('token');
-      await fetch(`/api/kendaliperangkat/${deviceId}/params`, {
+      await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/params`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2776,7 +2828,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/${device.id}/remote-command`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${device.id}/remote-command`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2805,7 +2857,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/${deviceId}`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -2848,7 +2900,7 @@ export function DeviceControlPage({ onNavigate }) {
   const togglePinDevice = async (deviceId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/kendaliperangkat/${deviceId}/pin`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/pin`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2955,9 +3007,16 @@ export function DeviceControlPage({ onNavigate }) {
 
     let actualDeviceType = isDeviceRemote ? "remote" : (device.type || device.deviceType || "");
 
-    // Auto-correct device type based on name if it's a sensor
+    // Normalisasi tipe sensor dari backend ke format dropdown frontend
     if (mappedCategory === "sensor") {
-      if (devNameLower.includes("water") || devNameLower.includes("bluecheck")) {
+      const typeLower = actualDeviceType.toLowerCase();
+      if (typeLower === "kenyamanan" || typeLower === "comfort" || typeLower === "humidity sensor") {
+        actualDeviceType = "Sensor Kenyamanan";
+      } else if (typeLower === "kualitas air" || typeLower === "water quality") {
+        actualDeviceType = "Sensor Kualitas Air";
+      } else if (typeLower === "keamanan" || typeLower === "security") {
+        actualDeviceType = "Sensor Keamanan";
+      } else if (devNameLower.includes("water") || devNameLower.includes("bluecheck")) {
         actualDeviceType = "Sensor Kualitas Air";
       } else if (devNameLower.includes("sonoff") || devNameLower.includes("th snzb") || devNameLower.includes("kenyamanan") || devNameLower.includes("airguard")) {
         actualDeviceType = "Sensor Kenyamanan";
@@ -3726,7 +3785,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                               <div className="flex items-center gap-2 mb-2">
                                                 <Thermometer className="w-4 h-4 text-orange-500" />
-                                                <span className="text-xs font-bold text-gray-500">Suhu Air</span>
+                                                <span className="text-xs font-bold text-gray-500">{t('kendali.params.water_temp', 'Suhu Air')}</span>
                                               </div>
                                               <div className="flex items-baseline gap-1">
                                                 <span className="text-2xl font-black text-gray-900">
@@ -3744,7 +3803,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                               <Zap className="w-4 h-4 text-bieon-eco" />
-                                              <span className="text-xs font-bold text-gray-500">Baterai Alat</span>
+                                              <span className="text-xs font-bold text-gray-500">{t('kendali.device_details.device_battery', 'Baterai Alat')}</span>
                                             </div>
                                             <div className="flex items-baseline gap-1">
                                               <span className="text-2xl font-black text-gray-900">
@@ -3764,13 +3823,13 @@ export function DeviceControlPage({ onNavigate }) {
 
                                   return (
                                     <div className="mb-8 animate-in fade-in duration-500">
-                                      <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">Hasil Monitoring Real-time</p>
+                                      <p className="text-[10px] font-black text-bieon-eco uppercase tracking-widest mb-4">{t('kendali.device_details.realtime_monitoring', 'Hasil Monitoring Real-time')}</p>
                                       <div className="flex flex-row gap-4 overflow-x-auto pb-2 scrollbar-thin">
                                         {showTemp && (
                                           <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                               <Thermometer className="w-4 h-4 text-orange-500" />
-                                              <span className="text-xs font-bold text-gray-500">Suhu Sekarang</span>
+                                              <span className="text-xs font-bold text-gray-500">{t('kendali.device_details.current_temperature', 'Suhu Sekarang')}</span>
                                             </div>
                                             <div className="flex items-baseline gap-1">
                                               <span className="text-2xl font-black text-gray-900">
@@ -3785,7 +3844,7 @@ export function DeviceControlPage({ onNavigate }) {
                                           <div className="bg-gradient-to-br from-blue-50 to-white p-4 rounded-2xl border border-blue-100 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
                                               <Droplets className="w-4 h-4 text-blue-500" />
-                                              <span className="text-xs font-bold text-gray-500">Kelembapan</span>
+                                              <span className="text-xs font-bold text-gray-500">{t('kendali.params.humidity', 'Kelembapan')}</span>
                                             </div>
                                             <div className="flex items-baseline gap-1">
                                               <span className="text-2xl font-black text-gray-900">
@@ -3799,7 +3858,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
                                           <div className="flex items-center gap-2 mb-2">
                                             <Zap className="w-4 h-4 text-bieon-eco" />
-                                            <span className="text-xs font-bold text-gray-500">Baterai Alat</span>
+                                            <span className="text-xs font-bold text-gray-500">{t('kendali.device_details.device_battery', 'Baterai Alat')}</span>
                                           </div>
                                           <div className="flex items-baseline gap-1">
                                             <span className="text-2xl font-black text-gray-900">
@@ -3819,7 +3878,7 @@ export function DeviceControlPage({ onNavigate }) {
                                     <div className="flex items-center gap-3 mb-4">
                                       <p className="text-sm  text-gray-700 flex items-center gap-2">
                                         Mode: <span className={`${(device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? "text-bieon-eco bg-bieon-eco/5" : (device.controlMethod === "Manual" || device.controlMethod === "manual" ? "text-blue-600 bg-blue-50" : (device.controlMethod ? "text-purple-600 bg-purple-50" : "text-gray-500 bg-gray-100"))}  px-2 py-0.5 rounded capitalize`}>
-                                          {device.controlMethod === "Manual" || device.controlMethod === "manual" ? "Mode Manual" : (device.controlMethod ? ((device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? "Parameter Sensor" : "Jadwal Otomatis") : "-")}
+                                          {device.controlMethod === "Manual" || device.controlMethod === "manual" ? t('kendali.device_details.mode_manual', 'Mode Manual') : (device.controlMethod ? ((device.category === "sensor" || device.controlMethod === "Lingkungan" || device.controlMethod === "sensor") ? t('kendali.device_details.parameter_sensor', 'Parameter Sensor') : t('kendali.device_details.schedule_auto', 'Jadwal Otomatis')) : "-")}
                                         </span>
                                       </p>
                                     </div>
@@ -3848,19 +3907,19 @@ export function DeviceControlPage({ onNavigate }) {
                                                     {key === "isDoorEnabled" && <Lock className="w-4 h-4 text-red-600" />}
                                                     {["ph", "turbidity", "tds"].includes(key) && <Waves className="w-4 h-4 text-cyan-600" />}
                                                     <span className="text-xs text-gray-700">
-                                                      {key === "temperature" ? (isWaterQuality ? "Suhu Air" : "Suhu") :
-                                                        key === "humidity" ? "Lembap" :
-                                                          key === "isMotionEnabled" ? "Gerakan" :
-                                                            key === "isDoorEnabled" ? "Buka Pintu" :
-                                                              key === "ph" ? "pH" :
-                                                                key === "turbidity" ? "Kekeruhan" :
-                                                                  key === "tds" ? "TDS" : "Suhu Air"}:
-                                                      {val !== undefined ? ` > ${val}${(key === "temperature" || key === "waterTemp") ? "°C" : key === "humidity" ? "%" : ""}` : " (Aktif)"}
+                                                      {key === "temperature" ? (isWaterQuality ? t('kendali.device_details.param_water_temp', 'Suhu Air') : t('kendali.device_details.param_temp', 'Suhu')) :
+                                                        key === "humidity" ? t('kendali.device_details.param_humidity', 'Lembap') :
+                                                          key === "isMotionEnabled" ? t('kendali.device_details.param_motion', 'Gerakan') :
+                                                            key === "isDoorEnabled" ? t('kendali.device_details.param_door', 'Buka Pintu') :
+                                                              key === "ph" ? t('kendali.device_details.param_ph', 'pH') :
+                                                                key === "turbidity" ? t('kendali.device_details.param_turbidity', 'Kekeruhan') :
+                                                                  key === "tds" ? t('kendali.device_details.param_tds', 'TDS') : t('kendali.device_details.param_water_temp', 'Suhu Air')}:
+                                                      {val !== undefined ? ` > ${val}${(key === "temperature" || key === "waterTemp") ? "°C" : key === "humidity" ? "%" : ""}` : t('kendali.device_details.active_label', ' (Aktif)')}
                                                     </span>
                                                   </div>
                                                 ))
                                             ) : (
-                                              <p className="text-xs text-gray-500 italic">Belum ada sensor yang diaktifkan</p>
+                                              <p className="text-xs text-gray-500 italic">{t('kendali.device_details.no_sensor_active', 'Belum ada sensor yang diaktifkan')}</p>
                                             )}
                                           </>
                                         ) : (
@@ -3871,7 +3930,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                   <div className="flex items-center gap-2">
                                                     <Calendar className="w-4 h-4 text-purple-600" />
                                                     <span className="text-xs  text-gray-700">
-                                                      Jam {sched.startTime} - {sched.endTime} ({sched.action})
+                                                      {t('kendali.device_details.hour', 'Jam')} {sched.startTime} - {sched.endTime} ({sched.action})
                                                     </span>
                                                   </div>
                                                   <div className="flex gap-1">
@@ -3882,7 +3941,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                 </div>
                                               ))
                                             ) : (
-                                              <p className="text-xs text-gray-500 italic">Belum ada jadwal yang diatur</p>
+                                              <p className="text-xs text-gray-500 italic">{t('kendali.device_details.no_schedule_set', 'Belum ada jadwal yang diatur')}</p>
                                             )}
                                           </>
                                         )}
@@ -5013,22 +5072,22 @@ export function DeviceControlPage({ onNavigate }) {
                                       // Contextual Status Text
                                       // Reuse variables from above
 
-                                      let statusTextNormal = "NYAMAN";
-                                      let statusTextAbnormal = "TIDAK NYAMAN";
+                                      let statusTextNormal = t('kendali.device_details.comfortable', 'NYAMAN');
+                                      let statusTextAbnormal = t('kendali.device_details.uncomfortable', 'TIDAK NYAMAN');
 
                                       if (typeLower.includes("kualitas air") || aspectLower === "kualitas air" || nameLower.includes("bluecheck")) {
-                                        statusTextNormal = "LAYAK PAKAI";
-                                        statusTextAbnormal = "TIDAK LAYAK PAKAI";
+                                        statusTextNormal = t('kendali.device_details.water_usable', 'LAYAK PAKAI');
+                                        statusTextAbnormal = t('kendali.device_details.water_unusable', 'TIDAK LAYAK PAKAI');
                                       } else if (typeLower.includes("keamanan") || typeLower.includes("security") || typeLower.includes("door") || typeLower.includes("motion") || aspectLower === "keamanan") {
-                                        statusTextNormal = "AMAN";
-                                        statusTextAbnormal = "TIDAK AMAN";
+                                        statusTextNormal = t('kendali.device_details.safe', 'AMAN');
+                                        statusTextAbnormal = t('kendali.device_details.unsafe', 'TIDAK AMAN');
                                       }
 
                                       return (
                                         <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2 shadow-sm transition-all ${isAbnormal ? 'bg-red-600 border-red-700 text-white animate-pulse' : 'bg-bieon-eco border-bieon-eco/80 text-white'}`}>
                                           <StatusIcon className="w-5 h-5" />
                                           <span className="text-sm  tracking-tight whitespace-nowrap">
-                                            STATUS: {isAbnormal ? statusTextAbnormal : statusTextNormal}
+                                            {t('kendali.device_details.status_label', 'STATUS: ')}{isAbnormal ? statusTextAbnormal : statusTextNormal}
                                           </span>
                                         </div>
                                       );
@@ -5041,37 +5100,37 @@ export function DeviceControlPage({ onNavigate }) {
                                     {device.currentValues.temperature !== undefined && device.sensorParams?.temperature !== undefined && (
                                       <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.temperature) < 20.5 || parseFloat(device.currentValues.temperature) > 27.1) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Thermometer className="w-4 h-4" />
-                                        <span className="text-sm">Suhu: {device.currentValues.temperature}°C</span>
+                                        <span className="text-sm">{t('kendali.device_details.param_temp', 'Suhu')}: {device.currentValues.temperature}°C</span>
                                       </div>
                                     )}
                                     {device.currentValues.humidity !== undefined && device.sensorParams?.humidity !== undefined && (
                                       <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.humidity) < 50 || parseFloat(device.currentValues.humidity) > 80) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Droplets className="w-4 h-4" />
-                                        <span className="text-sm">Lembap: {device.currentValues.humidity}%</span>
+                                        <span className="text-sm">{t('kendali.device_details.param_humidity', 'Lembap')}: {device.currentValues.humidity}%</span>
                                       </div>
                                     )}
                                     {device.currentValues.ph !== undefined && device.sensorParams?.ph !== undefined && (
                                       <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.ph) < 6.5 || parseFloat(device.currentValues.ph) > 8.5) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Beaker className="w-4 h-4" />
-                                        <span className="text-sm">pH: {device.currentValues.ph}</span>
+                                        <span className="text-sm">{t('kendali.device_details.param_ph', 'pH')}: {device.currentValues.ph}</span>
                                       </div>
                                     )}
                                     {device.currentValues.turbidity !== undefined && device.sensorParams?.turbidity !== undefined && (
                                       <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.turbidity) > 25 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Droplets className="w-4 h-4 text-yellow-600" />
-                                        <span className="text-sm">NTU: {device.currentValues.turbidity}</span>
+                                        <span className="text-sm">{t('kendali.device_details.param_turbidity', 'Kekeruhan')}: {device.currentValues.turbidity}</span>
                                       </div>
                                     )}
                                     {device.currentValues.tds !== undefined && device.sensorParams?.tds !== undefined && (
                                       <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.tds) > 1000 ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Wind className="w-4 h-4 text-bieon-sense" />
-                                        <span className="text-sm">TDS: {device.currentValues.tds} ppm</span>
+                                        <span className="text-sm">{t('kendali.device_details.param_tds', 'TDS')}: {device.currentValues.tds} ppm</span>
                                       </div>
                                     )}
                                     {device.currentValues.waterTemp !== undefined && (device.sensorParams?.waterTemp !== undefined || device.sensorParams?.temperature !== undefined) && (
                                       <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${parseFloat(device.currentValues.waterTemp) > parseFloat(device.sensorParams.waterTemp || device.sensorParams.temperature) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Thermometer className="w-4 h-4" />
-                                        <span className="text-sm">Suhu Air: {device.currentValues.waterTemp}°C</span>
+                                        <span className="text-sm">{t('kendali.device_details.param_water_temp', 'Suhu Air')}: {device.currentValues.waterTemp}°C</span>
                                       </div>
                                     )}
                                   </div>
@@ -5080,23 +5139,23 @@ export function DeviceControlPage({ onNavigate }) {
                                 {/* Details Grid */}
                                 <div className="grid grid-cols-2 gap-y-4 gap-x-8 mb-6">
                                   <div>
-                                    <p className="text-xs  text-gray-500 mb-1">Kategori</p>
-                                    <p className="text-sm text-gray-900  capitalize">{isDeviceRemote ? "Control Actuator System" : device.category}</p>
+                                    <p className="text-xs  text-gray-500 mb-1">{t('kendali.device_details.category', 'Kategori')}</p>
+                                    <p className="text-sm text-gray-900  capitalize">{isDeviceRemote ? t('kendali.device_details.control_actuator_system', 'Control Actuator System') : (device.category === 'sensor' ? t('kendali.sensor_title', 'Sensor') : t('kendali.control_title', 'Control'))}</p>
                                   </div>
                                   <div>
-                                    <p className="text-xs  text-gray-500 mb-1">Hub Node</p>
+                                    <p className="text-xs  text-gray-500 mb-1">{t('kendali.device_details.hub_node', 'Hub Node')}</p>
                                     <p className="text-sm text-gray-900 ">{currentBieon.hubs.find((h) => h.id === device.hubId)?.name}</p>
                                   </div>
                                   <div>
-                                    <p className="text-xs  text-gray-500 mb-1">Installed</p>
-                                    <p className="text-sm text-gray-900 ">{new Date(device.installedDate).toLocaleDateString("id-ID")}</p>
+                                    <p className="text-xs  text-gray-500 mb-1">{t('kendali.device_details.installed', 'Installed')}</p>
+                                    <p className="text-sm text-gray-900 ">{new Date(device.installedDate).toLocaleDateString((i18n.language && i18n.language.startsWith('en')) ? 'en-US' : 'id-ID')}</p>
                                   </div>
                                   <div>
-                                    <p className="text-xs  text-gray-500 mb-1">Last Activity</p>
-                                    <p className="text-sm text-gray-900 ">{new Date(device.lastActivity).toLocaleString("id-ID", { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
+                                    <p className="text-xs  text-gray-500 mb-1">{t('kendali.device_details.last_activity', 'Last Activity')}</p>
+                                    <p className="text-sm text-gray-900 ">{new Date(device.lastActivity).toLocaleString((i18n.language && i18n.language.startsWith('en')) ? 'en-US' : 'id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
                                   </div>
                                   <div className="col-span-2 mt-2 p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                    <p className="text-xs text-gray-500 mb-1">Keterangan Tambahan</p>
+                                    <p className="text-xs text-gray-500 mb-1">{t('kendali.device_details.additional_notes', 'Keterangan Tambahan')}</p>
                                     <p className="text-sm text-gray-700 italic">"{device.notes || device.thresholds?.notes || "-"}"</p>
                                   </div>
                                 </div>
@@ -5108,7 +5167,7 @@ export function DeviceControlPage({ onNavigate }) {
                                       onClick={() => deleteDevice(device.id)}
                                       className="sm:w-auto px-6 sm:px-10 py-2.5 border-2 border-gray-200 text-gray-700 rounded-lg  hover:bg-gray-50 transition-colors"
                                     >
-                                      Hapus
+                                      {t('kendali.device_details.delete_btn', 'Hapus')}
                                     </button>
                                   )}
                                   {!isTechnicianMode && (
@@ -5123,7 +5182,7 @@ export function DeviceControlPage({ onNavigate }) {
                                   {isTechnicianMode && (
                                     <div className="w-full p-4 bg-bieon-eco/5 rounded-xl border border-bieon-eco/20 flex items-center gap-3">
                                       <ShieldAlert className="w-5 h-5 text-bieon-eco" />
-                                      <p className="text-xs  text-gray-700">Mode Akses Terbatas: Anda hanya diperbolehkan melihat status perangkat.</p>
+                                      <p className="text-xs  text-gray-700">{t('kendali.device_details.tech_mode_warning', 'Mode Akses Terbatas: Anda hanya diperbolehkan melihat status perangkat.')}</p>
                                     </div>
                                   )}
                                 </div>
@@ -5734,9 +5793,14 @@ export function DeviceControlPage({ onNavigate }) {
                                     </span>
                                   </div>
                                 </div>
-                                <div className="w-10 h-10 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <button
+                                  type="button"
+                                  onClick={() => handleConfirmHub(hub)}
+                                  className="w-10 h-10 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/20 cursor-pointer hover:bg-green-600 transition-all text-white border-0 outline-none animate-bounce"
+                                  title={t('kendali.open_join_hub.save_button', 'Simpan Hub')}
+                                >
                                   <Check className="w-5 h-5 text-white" />
-                                </div>
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -6205,8 +6269,19 @@ export function DeviceControlPage({ onNavigate }) {
                           <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Pilih Jenis</label>
                           <select
                             value={selectedCategory === "sensor" ? "sensor" : "control"}
-                            disabled
-                            className="w-full p-4 bg-gray-100 border-2 border-gray-100 rounded-2xl outline-none font-bold text-gray-500 cursor-not-allowed"
+                            onChange={(e) => {
+                              const nextCategory = e.target.value;
+                              setSelectedCategory(nextCategory);
+                              if (nextCategory === "sensor") {
+                                setSelectedDeviceType("Sensor Kenyamanan");
+                                setActiveSensorAspect("kenyamanan");
+                                setConfigMode("sensor");
+                              } else {
+                                setSelectedDeviceType("smart-switch");
+                                setConfigMode("manual");
+                              }
+                            }}
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold text-gray-700"
                           >
                             <option value="sensor">Sensor</option>
                             <option value="control">Control Actuator System</option>
@@ -6216,9 +6291,20 @@ export function DeviceControlPage({ onNavigate }) {
                           <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Tipe / Spesifik</label>
                           <select
                             value={selectedDeviceType}
-                            onChange={(e) => setSelectedDeviceType(e.target.value)}
-                            disabled
-                            className="w-full p-4 bg-gray-100 border-2 border-gray-100 rounded-2xl outline-none font-bold text-gray-500 cursor-not-allowed"
+                            onChange={(e) => {
+                              const nextType = e.target.value;
+                              setSelectedDeviceType(nextType);
+                              if (selectedCategory === "sensor") {
+                                if (nextType === "Sensor Kenyamanan") {
+                                  setActiveSensorAspect("kenyamanan");
+                                } else if (nextType === "Sensor Kualitas Air") {
+                                  setActiveSensorAspect("kualitasAir");
+                                } else if (nextType === "Sensor Keamanan") {
+                                  setActiveSensorAspect("keamanan");
+                                }
+                              }
+                            }}
+                            className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none font-bold text-gray-700"
                           >
                             {selectedCategory === "sensor" ? (
                               <>
@@ -6299,9 +6385,9 @@ export function DeviceControlPage({ onNavigate }) {
                               onChange={(e) => e.target.value === "__new__" ? setShowNewRoomInput(true) : setDeviceForm({ ...deviceForm, location: e.target.value })}
                               className="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-bieon-eco outline-none  appearance-none"
                             >
-                              <option value="">-- Pilih Ruangan --</option>
+                              <option value="">{t('kendali.select_room_placeholder', '-- Pilih Ruangan --')}</option>
                               {rooms.map((room) => <option key={room} value={room}>{room}</option>)}
-                              <option value="__new__">+ Buat Ruangan Baru</option>
+                              <option value="__new__">{t('kendali.create_new_room', '+ Buat Ruangan Baru')}</option>
                             </select>
                             <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                           </div>
@@ -6335,14 +6421,14 @@ export function DeviceControlPage({ onNavigate }) {
                               disabled={!isFormValid}
                               className={`flex-1 py-4 border-2 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-white border-bieon-eco text-bieon-eco hover:bg-bieon-eco/5 active:scale-[0.98]' : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'}`}
                             >
-                              Simpan
+                              {t('kendali.save_only', 'Simpan')}
                             </button>
                             <button
                               onClick={handleSubmitDeviceForm}
                               disabled={!isFormValid}
                               className={`flex-[1.5] py-4 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-bieon-eco text-white shadow-xl shadow-bieon-eco/20 hover:scale-[1.02] active:scale-[0.98]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                             >
-                              Lanjut ke Metode Otomatis
+                              {t('kendali.continue_to_auto', 'Lanjut ke Metode Otomatis')}
                             </button>
                           </>
                         );
@@ -6353,7 +6439,7 @@ export function DeviceControlPage({ onNavigate }) {
                             disabled={!isFormValid}
                             className={`flex-1 py-4 rounded-2xl font-bold transition-all ${isFormValid ? 'bg-bieon-eco text-white shadow-xl shadow-bieon-eco/20 hover:scale-[1.02] active:scale-[0.98]' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                           >
-                            Lanjut ke Parameter
+                            {t('kendali.continue_to_params', 'Lanjut ke Parameter')}
                           </button>
                         );
                       }
@@ -6368,8 +6454,8 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-4 sm:p-6 mt-8 sm:mt-12 mb-20">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">{!isControlActuator ? "Konfigurasi Parameter" : "Pilih Metode Pengaturan"}</h2>
-                      <p className="text-sm text-gray-600">{!isControlActuator ? "Tentukan batas/nilai referensi untuk sensor ini" : "Parameter aspek sensor atau jadwal harian"}</p>
+                      <h2 className="text-2xl font-bold text-gray-900">{!isControlActuator ? t('kendali.configure_params_title', 'Konfigurasi Parameter') : t('kendali.select_method_title', 'Pilih Metode Pengaturan')}</h2>
+                      <p className="text-sm text-gray-600">{!isControlActuator ? t('kendali.configure_params_desc', 'Tentukan batas/nilai referensi untuk sensor ini') : t('kendali.select_method_desc', 'Parameter aspek sensor atau jadwal harian')}</p>
                     </div>
                     <button
                       onClick={() => setStep("add-device-form")}
@@ -7147,7 +7233,7 @@ export function DeviceControlPage({ onNavigate }) {
                             onClick={addSchedule}
                             className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-600 rounded-xl  hover:border-bieon-eco hover:text-bieon-eco"
                           >
-                            + Tambah Jadwal
+                            {t('kendali.add_schedule', '+ Tambah Jadwal')}
                           </button>
                         </div>
                       );
@@ -7219,9 +7305,9 @@ export function DeviceControlPage({ onNavigate }) {
             {/* Header */}
             <div className="p-6 pb-4 flex items-center justify-between shrink-0 border-b border-gray-100">
               <div>
-                <h3 className="font-extrabold text-lg sm:text-xl text-gray-900 font-sans">Pilih Metode Pengaturan</h3>
+                <h3 className="font-extrabold text-lg sm:text-xl text-gray-900 font-sans">{t('kendali.select_method_title', 'Pilih Metode Pengaturan')}</h3>
                 <p className="text-xs text-gray-400 mt-1 font-medium font-sans">
-                  Parameter aspek sensor atau jadwal harian
+                  {t('kendali.select_method_desc', 'Parameter aspek sensor atau jadwal harian')}
                 </p>
               </div>
               <button
@@ -7242,9 +7328,9 @@ export function DeviceControlPage({ onNavigate }) {
               <div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
-                    { value: 'Manual', label: 'Kontrol Manual', icon: Power, desc: 'Kontrol tombol secara manual kapan saja' },
-                    { value: 'Lingkungan', label: 'Parameter Aspek Sensor', icon: Settings, desc: 'Pengaturan berdasarkan aspek sensor' },
-                    { value: 'Jadwal', label: 'Jadwal Harian', icon: Calendar, desc: 'Pengaturan berdasarkan waktu & hari' }
+                    { value: 'Manual', label: t('kendali.manual_control', 'Kontrol Manual'), icon: Power, desc: t('kendali.manual_control_desc', 'Kontrol tombol secara manual kapan saja') },
+                    { value: 'Lingkungan', label: t('kendali.sensor_aspect_param', 'Parameter Aspek Sensor'), icon: Settings, desc: t('kendali.config_based_on_sensor', 'Pengaturan berdasarkan aspek sensor') },
+                    { value: 'Jadwal', label: t('kendali.daily_schedule', 'Jadwal Harian'), icon: Calendar, desc: t('kendali.config_based_on_time', 'Pengaturan berdasarkan waktu & hari') }
                   ].map((mode) => {
                     const Icon = mode.icon;
                     const isSelected = editingMapping.controlMethod === mode.value;
@@ -7288,7 +7374,7 @@ export function DeviceControlPage({ onNavigate }) {
                 <div className="space-y-4 animate-fade-in">
                   {(!editingMapping.scheduleSettings || editingMapping.scheduleSettings.length === 0) ? (
                     <div className="p-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 text-center text-xs text-gray-400 italic">
-                      Belum ada jadwal. Silakan klik "Tambah Jadwal".
+                      {t('kendali.no_schedule_desc', 'Belum ada jadwal. Silakan klik "Tambah Jadwal".')}
                     </div>
                   ) : (
                     <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
@@ -7308,7 +7394,7 @@ export function DeviceControlPage({ onNavigate }) {
                                       }));
                                     }}
                               className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors"
-                              title="Hapus Jadwal"
+                              title={t('kendali.delete_schedule', 'Hapus Jadwal')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -7410,7 +7496,7 @@ export function DeviceControlPage({ onNavigate }) {
                     className="w-full py-3 rounded-2xl border border-dashed border-gray-300 hover:border-gray-400 text-gray-500 hover:bg-gray-50/50 transition-all text-xs font-semibold flex items-center justify-center gap-1.5 mt-2"
                   >
                     <Plus className="w-4 h-4 text-gray-400" />
-                    <span>Tambah Jadwal</span>
+                    <span>{t('kendali.add_schedule_button', 'Tambah Jadwal')}</span>
                   </button>
                 </div>
               )}
@@ -7421,14 +7507,14 @@ export function DeviceControlPage({ onNavigate }) {
                   <div>
                     <div className="rounded-xl bg-green-50/50 border border-green-100 px-4 py-2.5 flex items-center gap-2 text-xs text-gray-600 font-medium font-sans mb-4">
                       <Activity className="w-4 h-4 text-[#009b7c]" />
-                      <span>Pilih Aspek untuk Dikonfigurasi</span>
+                      <span>{t('kendali.select_aspect_config', 'Pilih Aspek untuk Dikonfigurasi')}</span>
                     </div>
                     
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { value: 'Kenyamanan', label: 'Kenyamanan', sub: 'Suhu & Lembap', icon: Activity, bgClass: 'bg-green-50 text-green-600', selectedBg: 'border-[#009b7c] bg-[#009b7c]/5 ring-1 ring-[#009b7c]/20' },
-                        { value: 'Keamanan', label: 'Keamanan', sub: 'Motion & Door Sensor', icon: ShieldAlert, bgClass: 'bg-purple-50 text-purple-600', selectedBg: 'border-purple-600 bg-purple-50/5 ring-1 ring-purple-600/20' },
-                        { value: 'Kualitas Air', label: 'Kualitas Air', sub: 'pH, TDS, Keruh, Suhu', icon: Waves, bgClass: 'bg-cyan-50 text-cyan-600', selectedBg: 'border-cyan-600 bg-cyan-50/5 ring-1 ring-cyan-600/20' }
+                        { value: 'Kenyamanan', label: 'Kenyamanan', sub: t('kendali.aspect_comfort_desc', 'Suhu & Lembap'), icon: Activity, bgClass: 'bg-green-50 text-green-600', selectedBg: 'border-[#009b7c] bg-[#009b7c]/5 ring-1 ring-[#009b7c]/20' },
+                        { value: 'Keamanan', label: 'Keamanan', sub: t('kendali.aspect_security_desc', 'Motion & Door Sensor'), icon: ShieldAlert, bgClass: 'bg-purple-50 text-purple-600', selectedBg: 'border-purple-600 bg-purple-50/5 ring-1 ring-purple-600/20' },
+                        { value: 'Kualitas Air', label: 'Kualitas Air', sub: t('kendali.aspect_water_desc', 'pH, TDS, Keruh, Suhu'), icon: Waves, bgClass: 'bg-cyan-50 text-cyan-600', selectedBg: 'border-cyan-600 bg-cyan-50/5 ring-1 ring-cyan-600/20' }
                       ].map((aspect) => {
                         const Icon = aspect.icon;
                         const isSelected = (editingMapping.environmentAspect || 'Kenyamanan') === aspect.value;
@@ -7454,7 +7540,11 @@ export function DeviceControlPage({ onNavigate }) {
                               <Icon className="w-5 h-5" />
                             </div>
                             <div className="min-w-0 text-center">
-                              <p className={`text-xs font-bold ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>{aspect.label}</p>
+                              <p className={`text-xs font-bold ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
+                                {aspect.value === 'Kenyamanan' ? t('dashboard.comfort', 'Kenyamanan') :
+                                 aspect.value === 'Keamanan' ? t('dashboard.security.title', 'Keamanan') :
+                                 t('dashboard.water_health', 'Kualitas Air')}
+                              </p>
                               <p className="text-[9px] text-gray-400 mt-0.5 leading-normal">{aspect.sub}</p>
                             </div>
                           </button>
@@ -7520,7 +7610,7 @@ export function DeviceControlPage({ onNavigate }) {
                             className="w-4.5 h-4.5 text-[#009b7c] rounded-md focus:ring-[#009b7c]/30"
                           />
                           <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                            <Eye className="w-4 h-4 text-purple-600" /> Aktifkan pada Sensor Gerakan
+                            <Eye className="w-4 h-4 text-purple-600" /> {t('kendali.enable_on_motion', 'Aktifkan pada Sensor Gerakan')}
                           </div>
                         </label>
                         <label className="flex items-center gap-2.5 p-2 bg-white rounded-xl border border-gray-150 cursor-pointer transition-all hover:bg-gray-100/50">
@@ -7536,7 +7626,7 @@ export function DeviceControlPage({ onNavigate }) {
                             className="w-4.5 h-4.5 text-[#009b7c] rounded-md focus:ring-[#009b7c]/30"
                           />
                           <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-                            <Lock className="w-4 h-4 text-red-600" /> Aktifkan pada Sensor Pintu Terbuka
+                            <Lock className="w-4 h-4 text-red-600" /> {t('kendali.enable_on_door_open', 'Aktifkan pada Sensor Pintu Terbuka')}
                           </div>
                         </label>
                       </div>
@@ -7631,14 +7721,14 @@ export function DeviceControlPage({ onNavigate }) {
                 }}
                 className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-600 text-xs font-black uppercase tracking-widest hover:bg-gray-55 transition-all active:scale-95 text-center"
               >
-                Kembali
+                {t('common.back', 'Kembali')}
               </button>
               <button
                 type="button"
                 onClick={handleSaveMappingAutomation}
                 className="flex-1 sm:flex-initial px-6 py-2.5 rounded-xl bg-[#009b7c] hover:bg-[#009b7c]/90 text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5"
               >
-                <Save className="w-4 h-4" /> Simpan Konfigurasi
+                <Save className="w-4 h-4" /> {t('kendali.save_config', 'Simpan Konfigurasi')}
               </button>
             </div>
           </div>
