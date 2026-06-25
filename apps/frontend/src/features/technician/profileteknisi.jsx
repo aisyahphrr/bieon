@@ -42,7 +42,7 @@ export function TechnicianProfilePage({ onNavigate }) {
         }
         try {
             setIsLoading(true);
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/technician/profile/${userId}`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/technician/profile/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -89,7 +89,7 @@ export function TechnicianProfilePage({ onNavigate }) {
 
     const handleUpdateProfile = async (dataToUpdate) => {
         try {
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/technician/profile/${userId}`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/technician/profile/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export function TechnicianProfilePage({ onNavigate }) {
         }
 
         try {
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/auth/change-password`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/auth/change-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1193,7 +1193,7 @@ export function TechnicianProfilePage({ onNavigate }) {
                                     if (confirm(t('tech_profile.messages.logout_confirm', 'Apakah Anda yakin ingin keluar dari sistem?'))) {
                                         try {
                                             // Set status ke nonaktif di database sebelum logout
-                                            await fetch(import.meta.env.VITE_API_URL + `/api/technician/profile/${userId}`, {
+                                            await fetch((import.meta.env.VITE_API_URL || '') + `/api/technician/profile/${userId}`, {
                                                 method: 'PUT',
                                                 headers: {
                                                     'Content-Type': 'application/json',

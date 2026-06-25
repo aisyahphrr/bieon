@@ -112,7 +112,7 @@ export function HomeownerComplaint({ onNavigate }) {
         }
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(import.meta.env.VITE_API_URL + `/api/hubs/owner/${userId}`, {
+            const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/hubs/owner/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -136,7 +136,7 @@ export function HomeownerComplaint({ onNavigate }) {
         }
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/my-devices`, {
+            const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/my-devices`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -186,7 +186,7 @@ export function HomeownerComplaint({ onNavigate }) {
                 return;
             }
 
-            const res = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/owner/${idToUse}`, {
+            const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/complaints/owner/${idToUse}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) throw new Error('Gagal memuat data');
@@ -427,7 +427,7 @@ export function HomeownerComplaint({ onNavigate }) {
             const token = localStorage.getItem('token');
             const uploadedFiles = formFiles.map(f => ({ name: f.name, url: f.previewUrl }));
 
-            const response = await fetch(import.meta.env.VITE_API_URL + '/api/complaints', {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/complaints', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -475,7 +475,7 @@ export function HomeownerComplaint({ onNavigate }) {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${ratingTargetId}/status`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/complaints/${ratingTargetId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

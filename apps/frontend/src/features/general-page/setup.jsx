@@ -98,7 +98,7 @@ const Setup = ({ tempData }) => {
     useEffect(() => {
         const fetchPlnOptions = async () => {
             try {
-                const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/public/categories?scope=all');
+                const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/public/categories?scope=all');
                 const data = await response.json();
                 if (data.success && Array.isArray(data.data)) {
                     setPlnCategories(data.data);
@@ -186,7 +186,7 @@ const Setup = ({ tempData }) => {
                 // Untuk user Google, akun sudah dibuat di backend (firebase-login)
                 // Kita hanya perlu melengkapi datanya via updateSettings
                 const token = localStorage.getItem('token');
-                const updateRes = await fetch(import.meta.env.VITE_API_URL + '/api/auth/settings', {
+                const updateRes = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/settings', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ const Setup = ({ tempData }) => {
 
             } else {
                 // Registrasi standar (Email/Password)
-                const registerRes = await fetch(import.meta.env.VITE_API_URL + '/api/auth/register', {
+                const registerRes = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -246,7 +246,7 @@ const Setup = ({ tempData }) => {
                 userId = registerData.user.id;
 
                 // Login otomatis setelah registrasi
-                const loginRes = await fetch(import.meta.env.VITE_API_URL + '/api/auth/login', {
+                const loginRes = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: tempData.email, password: tempData.password })
@@ -263,7 +263,7 @@ const Setup = ({ tempData }) => {
 
             // Setup Hub jika ada bieonId
             if (formData.bieonId && userId) {
-                await fetch(import.meta.env.VITE_API_URL + '/api/hubs/setup', {
+                await fetch((import.meta.env.VITE_API_URL || '') + '/api/hubs/setup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

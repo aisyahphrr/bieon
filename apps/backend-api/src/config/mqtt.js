@@ -489,19 +489,23 @@ const connectMQTT = (io) => {
               const systemRec = bieonRegex ? await BieonSystem.findOne({ bieonId: bieonRegex }).select('owner').lean() : null;
               const ownerId = systemRec ? systemRec.owner : undefined;
 
-              // Upsert hub by name or ieee
+              // Upsert hub by name or ieee (Atomic with uppercase bieonId to prevent race conditions)
+              const upperBieonId = String(bieonId).toUpperCase();
               let hubRec = null;
-              if (ieee) hubRec = await Hub.findOne({ bieonId, device_ieee: ieee }).lean();
-              if (!hubRec) hubRec = await Hub.findOne({ bieonId, name: hubName }).lean();
-              if (!hubRec) {
-                const created = await Hub.create({ name: hubName, bieonId, device_ieee: ieee, status: 'Online', owner: ownerId });
-                hubRec = created.toObject ? created.toObject() : created;
-                console.log('[HUB] Created new hub record:', hubRec._id || hubRec.name);
+              if (ieee) {
+                hubRec = await Hub.findOneAndUpdate(
+                  { bieonId: upperBieonId, device_ieee: ieee },
+                  { $set: { name: hubName, status: 'Online', owner: ownerId } },
+                  { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+                ).lean();
               } else {
-                // Update status/ieee/owner if missing
-                await Hub.findByIdAndUpdate(hubRec._id, { $set: { status: 'Online', device_ieee: ieee || hubRec.device_ieee, owner: ownerId || hubRec.owner } }).catch(() => {});
-                hubRec = await Hub.findById(hubRec._id).lean();
+                hubRec = await Hub.findOneAndUpdate(
+                  { bieonId: upperBieonId, name: hubName },
+                  { $set: { status: 'Online', owner: ownerId } },
+                  { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+                ).lean();
               }
+              console.log('[HUB] Upserted hub record:', hubRec._id || hubRec.name);
 
               if (ioInstance) ioInstance.emit('hub_added', { bieonId, hub: hubRec, payload: evt });
             } catch (err) {
@@ -708,6 +712,16 @@ const connectMQTT = (io) => {
                   newValues.humidity = numericValue;
                 }
 
+                // Tangkap data sensor air & baterai dari analog_input atau cluster lainnya
+                if (hasNumericValue && attr) {
+                  if (attr === 'ph') newValues.ph = numericValue;
+                  if (attr === 'turbidity' || attr === 'kekeruhan') newValues.turbidity = numericValue;
+                  if (attr === 'tds') newValues.tds = numericValue;
+                  if (attr === 'water_temp' || attr === 'suhu_air') newValues.waterTemp = numericValue;
+                  if (attr === 'temperature' || attr === 'temp' || attr === 'suhu') newValues.temperature = numericValue;
+                  if (attr === 'battery' || attr === 'baterai') newValues.battery = numericValue;
+                }
+
                 let nextStatus = existing.status;
                 if (cluster.includes('on_off')) {
                   const onOff = String(payloadObj.value).toLowerCase();
@@ -889,6 +903,7 @@ const connectMQTT = (io) => {
               const bieonSystem = bieonRegex ? await BieonSystem.findOne({ bieonId: bieonRegex }).select('owner') : null;
               pdm = await PdmMeter.create({
                 name: `PDM ${bieonId}`,
+                device_id: `pdm_${bieonId.toLowerCase()}`,
                 bieonId,
                 owner: bieonSystem?.owner,
                 isSystemMeter: true,

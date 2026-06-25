@@ -78,7 +78,7 @@ const DeviceScanner = ({ onScanSuccess, onCancel }) => {
     setError(null);
 
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/products/validate/${code}`);
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/products/validate/${code}`);
       const data = await response.json();
 
       if (data.isValid) {
@@ -112,7 +112,7 @@ const DeviceScanner = ({ onScanSuccess, onCancel }) => {
     setPairingStatus("Membuka Jaringan Zigbee...");
 
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/devices/pairing/start', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/devices/pairing/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ qrCode: detectedDevice.rawCode })

@@ -36,7 +36,7 @@ export default function ForgotVerify() {
     if (!otp) return setError(t('auth.forgot.err_otp_required', 'OTP wajib diisi'));
     setLoading(true);
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/auth/forgot-password/verify', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/forgot-password/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, otp })
@@ -57,7 +57,7 @@ export default function ForgotVerify() {
     setError('');
     setInfo('');
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/auth/forgot-password/request', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/forgot-password/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier })

@@ -105,39 +105,11 @@ exports.register = async (req, res) => {
             const hubs = bieonRegex
                 ? await Hub.find({ bieonId: bieonRegex })
                 : [];
-            const hubsPayload = [];
-
             for (const hub of hubs) {
                 hub.owner = newUser._id;
                 hub.tenantId = newUser.tenantId;
                 await hub.save();
-
-                // Format nama hub dari "Hub Node 001" menjadi "hubnode_001"
-                let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
-                
-                // Format IEEE ke kanonik: uppercase hex tanpa pemisah (misal AABBCCDDEEFF)
-                let rawIeee = hub.device_ieee || "0000000000000000";
-                let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
-
-                hubsPayload.push({
-                    id: formattedHubId,
-                    ieee: canonicalIeee
-                });
             }
-
-            // 5. MENGIRIM BOOTSTRAP CLAIM KE HARDWARE SECARA KOLEKTIF
-            if (hubsPayload.length > 0) {
-                const payload = {
-                    tenant_id: newUser.tenantId, 
-                    bieon_id: exactBieonId,
-                    hub_id: "hub_001", // ID Master/Gateway
-                    hubs: hubsPayload
-                };
-                
-                // Tambahkan RETAIN agar ESP32 yang telat nyala tetap menerimanya
-                publishCommand(`bieon/${exactBieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
-            }
-
             return res.status(201).json({ message: 'Registrasi berhasil!', user: { id: newUser._id, email: newUser.email, role: newUser.role } });
         }
 

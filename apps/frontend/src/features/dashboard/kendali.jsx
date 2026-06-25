@@ -596,7 +596,7 @@ export function DeviceControlPage({ onNavigate }) {
       const token = localStorage.getItem('token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/devices/pairing/open', { method: 'POST', headers, body: JSON.stringify({ hubId: selectedHub?.id, duration: 30 }) });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || t('kendali.open_join.error_activate', 'Gagal mengaktifkan open join'));
@@ -634,7 +634,7 @@ export function DeviceControlPage({ onNavigate }) {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/hubs/open_join', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/hubs/open_join', {
         method: 'POST',
         headers,
         body: JSON.stringify({ bieonId: currentBieon?.bieonId, duration: 30 })
@@ -665,7 +665,7 @@ export function DeviceControlPage({ onNavigate }) {
       const token = localStorage.getItem('token');
       const hubId = hub._id || hub.id;
       
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/hubs/${hubId}/claim`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/hubs/${hubId}/claim`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -744,7 +744,7 @@ export function DeviceControlPage({ onNavigate }) {
       }
 
       // 1. Get Me
-      const meRes = await fetch(import.meta.env.VITE_API_URL + '/api/auth/me', {
+      const meRes = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!meRes.ok) throw new Error("Gagal fetch profil");
@@ -763,13 +763,13 @@ export function DeviceControlPage({ onNavigate }) {
       setIsTechnicianMode(techAccess);
 
       // 2. Get Systems (Disesuaikan untuk target ID)
-      const sysRes = await fetch(import.meta.env.VITE_API_URL + `/api/hubs/systems/${targetId}`, {
+      const sysRes = await fetch((import.meta.env.VITE_API_URL || '') + `/api/hubs/systems/${targetId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const systemsData = await sysRes.json();
 
       // 3. Get Devices (Disesuaikan untuk target ID)
-      const devRes = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
+      const devRes = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/my-devices?ownerId=${targetId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const devicesData = await devRes.json();
@@ -961,8 +961,13 @@ export function DeviceControlPage({ onNavigate }) {
 
       // Update the discovered list for the scanning modal
       setDiscoveredHubs(prev => {
-        if (prev.some(h => String(h._id || h.id || '') === hubId)) {
-          return prev;
+        if (prev.some(h => String(h._id || h.id || '') === hubId || (h.device_ieee && hub.device_ieee && h.device_ieee === hub.device_ieee))) {
+          // Jika sudah ada (berdasarkan ID atau IEEE), update datanya saja
+          return prev.map(h => 
+            (String(h._id || h.id || '') === hubId || (h.device_ieee && hub.device_ieee && h.device_ieee === hub.device_ieee)) 
+              ? { ...h, ...hub } 
+              : h
+          );
         }
         return [...prev, hub];
       });
@@ -1095,7 +1100,7 @@ export function DeviceControlPage({ onNavigate }) {
       try {
         setRemoteCatalogLoading(true);
         const token = localStorage.getItem('token');
-        const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/${encodeURIComponent(bieonId)}/catalog`, {
+        const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/devices/registration/${encodeURIComponent(bieonId)}/catalog`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -1126,7 +1131,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     const checkTechStatus = async () => {
       try {
-        const response = await fetch(import.meta.env.VITE_API_URL + `/api/technician-access/status/${userProfile._id}`);
+        const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/technician-access/status/${userProfile._id}`);
         if (response.ok) {
           const data = await response.json();
           setIsTechnicianActiveInSystem(data.isAccessed);
@@ -1227,7 +1232,7 @@ export function DeviceControlPage({ onNavigate }) {
       }
 
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/technician-access/generate-token', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/technician-access/generate-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1269,7 +1274,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/hubs/setup', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/hubs/setup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1311,6 +1316,28 @@ export function DeviceControlPage({ onNavigate }) {
     }
   };
 
+  const handleDeleteHub = async (hubId, hubName) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus Hub Node "${hubName}"? Semua perangkat di dalamnya juga akan terhapus.`)) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error("Akses ditolak: Token tidak ditemukan.");
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/hubs/${hubId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || 'Gagal menghapus Hub Node');
+      }
+      alert("Hub Node berhasil dihapus!");
+      await fetchData();
+    } catch (err) {
+      alert("Terjadi kesalahan: " + err.message);
+    }
+  };
+
   const handleAddHub = () => {
     if (!currentBieon) return;
     setDiscoveredHubs([]);
@@ -1329,7 +1356,7 @@ export function DeviceControlPage({ onNavigate }) {
   const fetchRegisteredProducts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/products/list', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/products/list', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -1351,7 +1378,7 @@ export function DeviceControlPage({ onNavigate }) {
   const handleRegisterProduct = async (e, targetStep = "select-category") => {
     e.preventDefault();
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/products/register', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/products/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1407,7 +1434,7 @@ export function DeviceControlPage({ onNavigate }) {
     if (!window.confirm(t('alerts.delete_product_confirm'))) return;
 
     try {
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/products/${productId}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -1501,7 +1528,7 @@ export function DeviceControlPage({ onNavigate }) {
       setRemoteMappingDraft(null);
       setRemoteRegistrationDeviceId(device.id);
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/${encodeURIComponent(currentBieon.bieonId)}/start`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/devices/registration/${encodeURIComponent(currentBieon.bieonId)}/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1582,7 +1609,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${catalogItem._id}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/devices/registration/catalog/${catalogItem._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1622,7 +1649,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${catalogItem._id}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/devices/registration/catalog/${catalogItem._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1711,7 +1738,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1883,7 +1910,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1987,7 +2014,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2060,7 +2087,7 @@ export function DeviceControlPage({ onNavigate }) {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${device.id}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/configure/${device.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2082,7 +2109,7 @@ export function DeviceControlPage({ onNavigate }) {
       }
 
       if (mapping.catalogId) {
-        await fetch(import.meta.env.VITE_API_URL + `/api/devices/registration/catalog/${mapping.catalogId}`, {
+        await fetch((import.meta.env.VITE_API_URL || '') + `/api/devices/registration/catalog/${mapping.catalogId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -2196,7 +2223,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/configure/${editingMappingDevice.id}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/configure/${editingMappingDevice.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2514,7 +2541,7 @@ export function DeviceControlPage({ onNavigate }) {
         onlyRegister: true, // TAMBAHKAN INI: Agar cuma masuk ke list "Perangkat Terdaftar"
       };
 
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/kendaliperangkat', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/kendaliperangkat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2740,7 +2767,7 @@ export function DeviceControlPage({ onNavigate }) {
         }))
       })));
 
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/toggle`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/${deviceId}/toggle`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -2797,7 +2824,7 @@ export function DeviceControlPage({ onNavigate }) {
     // 2. Persistent Update (Backend API)
     try {
       const token = localStorage.getItem('token');
-      await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/params`, {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/${deviceId}/params`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -2828,7 +2855,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${device.id}/remote-command`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/${device.id}/remote-command`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2857,7 +2884,7 @@ export function DeviceControlPage({ onNavigate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/${deviceId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -2900,7 +2927,7 @@ export function DeviceControlPage({ onNavigate }) {
   const togglePinDevice = async (deviceId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + `/api/kendaliperangkat/${deviceId}/pin`, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/kendaliperangkat/${deviceId}/pin`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -3525,10 +3552,26 @@ export function DeviceControlPage({ onNavigate }) {
                             <div className="w-12 h-12 bg-gradient-to-br from-bieon-eco to-bieon-sense rounded-lg flex items-center justify-center">
                               <Wifi className="w-6 h-6 text-white" />
                             </div>
-                            <div>
-                              <h3 className="font-bold text-gray-900">{hub.name}</h3>
-                              <p className="text-xs text-gray-600 font-medium">{hub.id}</p>
+                            <div className="flex-1">
+                              <h3 className="font-bold text-gray-900">
+                                {/^[0-9a-fA-F]{16}$/.test(hub.name) ? 'BIEON Hub Node' : hub.name}
+                              </h3>
+                              <p className="text-xs text-gray-600 font-medium font-mono">
+                                IEEE: {/^[0-9a-fA-F]{16}$/.test(hub.name) ? hub.name : (hub.device_ieee || hub.id)}
+                              </p>
                             </div>
+                            {!isTechnicianMode && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteHub(hub.id, hub.name);
+                                }}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Hapus Hub Node"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            )}
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
@@ -5259,8 +5302,12 @@ export function DeviceControlPage({ onNavigate }) {
                           <Cpu className="w-6 h-6 text-bieon-eco" />
                         </div>
                         <div>
-                          <h4 className="font-bold text-gray-900">{selectedHub?.name || "Hub Node"}</h4>
-                          <p className="text-xs text-gray-500">{selectedHub?.id || "Unknown ID"}</p>
+                          <h4 className="font-bold text-gray-900">
+                            {selectedHub?.name && /^[0-9a-fA-F]{16}$/.test(selectedHub.name) ? 'BIEON Hub Node' : (selectedHub?.name || "Hub Node")}
+                          </h4>
+                          <p className="text-xs text-gray-500 font-mono">
+                            IEEE: {selectedHub?.name && /^[0-9a-fA-F]{16}$/.test(selectedHub.name) ? selectedHub.name : (selectedHub?.device_ieee || selectedHub?.id || "Unknown ID")}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -5310,6 +5357,13 @@ export function DeviceControlPage({ onNavigate }) {
                         // Ambil perangkat dari scan live
                         const fromScan = (discoveredDevices || []).filter(dev => {
                           const devIeee = normalizeIeee(dev?.device_ieee || dev?.id || '');
+                          
+                          // 1. Cek apakah ini sebenarnya adalah Hub itu sendiri
+                          const isHubItself = (currentBieon?.hubs || []).some(hub => 
+                            normalizeIeee(hub?.device_ieee || '') === devIeee
+                          );
+
+                          // 2. Cek apakah perangkat sudah ada di DB
                           const isAlreadyInDb = (currentBieon?.hubs || []).some(hub =>
                             (hub?.devices || []).some(d => {
                               const dbIeee = normalizeIeee(d?.device_ieee || d?.id || '');
@@ -5318,7 +5372,8 @@ export function DeviceControlPage({ onNavigate }) {
                                 (devIeee && dbIeee && devIeee === dbIeee);
                             })
                           );
-                          return !isAlreadyInDb;
+                          
+                          return !isAlreadyInDb && !isHubItself;
                         });
 
                         // Ambil perangkat "Quick Saved" dari database

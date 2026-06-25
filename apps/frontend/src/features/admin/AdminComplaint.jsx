@@ -226,11 +226,11 @@ export default function AdminComplaint({ onNavigate }) {
 
             // Fetch tickets using parallel promise
             const [complaintsRes, techsRes] = await Promise.all([
-                fetch(import.meta.env.VITE_API_URL + '/api/complaints', {
+                fetch((import.meta.env.VITE_API_URL || '') + '/api/complaints', {
                     headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
                     cache: 'no-store'
                 }),
-                fetch(import.meta.env.VITE_API_URL + '/api/admin/technicians', {
+                fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/technicians', {
                     headers: { 'Authorization': `Bearer ${token}`, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
                     cache: 'no-store'
                 })
@@ -856,7 +856,7 @@ export default function AdminComplaint({ onNavigate }) {
         if (!window.confirm(t('complaint.confirm_reject', 'Apakah Anda yakin ingin menolak tiket {{id}}?', { id: ticket.id }))) return;
         
         try {
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${ticket.originalId}/status`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/complaints/${ticket.originalId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -882,7 +882,7 @@ export default function AdminComplaint({ onNavigate }) {
         if (!selectedTechnicianId) return;
 
         try {
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${selectedTicket.originalId}/assign`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/complaints/${selectedTicket.originalId}/assign`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -906,7 +906,7 @@ export default function AdminComplaint({ onNavigate }) {
 
     const confirmPing = async () => {
         try {
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${selectedTicket.originalId}/ping`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/complaints/${selectedTicket.originalId}/ping`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -934,7 +934,7 @@ export default function AdminComplaint({ onNavigate }) {
             
             // API Call
             const ticket = complaints.find(c => c.id === ticketId);
-            const response = await fetch(import.meta.env.VITE_API_URL + `/api/complaints/${ticket.originalId}/grant-log`, {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/complaints/${ticket.originalId}/grant-log`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',

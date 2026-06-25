@@ -47,7 +47,7 @@ export function SuperAdminLayout({ children, activeMenu, onNavigate, title = "Su
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const response = await fetch(import.meta.env.VITE_API_URL + '/api/alerts', {
+        const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/alerts', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

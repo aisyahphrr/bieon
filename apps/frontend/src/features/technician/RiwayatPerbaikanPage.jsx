@@ -150,7 +150,7 @@ export function RiwayatPerbaikanPage() {
       try {
         setIsLoading(true);
         const token = localStorage.getItem('token');
-        const response = await fetch(import.meta.env.VITE_API_URL + '/api/complaints/technician?isHistory=true', {
+        const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/complaints/technician?isHistory=true', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

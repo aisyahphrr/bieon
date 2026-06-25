@@ -52,7 +52,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
     setIsLoadingBieon(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(import.meta.env.VITE_API_URL + `/api/hubs/systems/${userProfile._id}`, {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/hubs/systems/${userProfile._id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -82,7 +82,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/auth/settings', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -303,7 +303,7 @@ export default function HomeownerProfilePopup({ isOpen, onClose, onNavigate, use
                       try {
                         const token = localStorage.getItem('token');
                         if (token) {
-                          await fetch(import.meta.env.VITE_API_URL + '/api/auth/logout', {
+                          await fetch((import.meta.env.VITE_API_URL || '') + '/api/auth/logout', {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}` }
                           });

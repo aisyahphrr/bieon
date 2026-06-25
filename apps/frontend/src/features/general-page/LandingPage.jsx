@@ -551,7 +551,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-blue-500 to-cyan-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/8ECO ENERGY.png" alt={t('landing.products.item1.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/8ECO ENERGY (REVISI).png" alt={t('landing.products.item1.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-blue-700 mb-3 flex items-center justify-center gap-2">
@@ -568,7 +568,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-cyan-500 to-teal-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/9ECOWATER.png" alt={t('landing.products.item2.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/9ECOWATER (REVISI).png" alt={t('landing.products.item2.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-cyan-600 mb-3 flex items-center justify-center gap-2">
@@ -585,7 +585,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-emerald-500 to-green-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/9ECO ENVIRONMENT.png" alt={t('landing.products.item3.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/9ECO ENVIRONMENT (REVISI).png" alt={t('landing.products.item3.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-emerald-700 mb-3 flex items-center justify-center gap-2">
@@ -602,7 +602,7 @@ const LandingPage = () => {
                 <div className="h-1.5 bg-gradient-to-r from-slate-600 to-slate-400"></div>
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-slate-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                  <img src="/10ECO SECURITY.png" alt={t('landing.products.item4.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img src="/10ECO SECURITY (REVISI).png" alt={t('landing.products.item4.title')} className="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700 ease-out" />
                 </div>
                 <div className="px-5 py-5 text-center flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-slate-700 mb-3 flex items-center justify-center gap-2">
@@ -712,7 +712,7 @@ const LandingPage = () => {
             <Reveal delay="0.1s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
                 <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/5 30BIAYA.png" alt="- 30% Biaya" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/5 30BIAYA (REVISI).png" alt="- 30% Biaya" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
             </Reveal>
 
@@ -720,7 +720,7 @@ const LandingPage = () => {
             <Reveal delay="0.2s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
                 <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/6EFISIENSI.png" alt="+ 50% Efisiensi" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/6EFISIENSI (REVISI).png" alt="+ 50% Efisiensi" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
             </Reveal>
 
@@ -728,7 +728,7 @@ const LandingPage = () => {
             <Reveal delay="0.3s" className="group bg-white border border-slate-200 rounded-[2.5rem] p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
               <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 shadow-inner h-full">
                 <div className="absolute inset-0 bg-slate-100/10 opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                <img src="/7SUSTAINBILITY.png" alt="Sustainability Ready" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
+                <img src="/7SUSTAINBILITY (REVISI).png" alt="Sustainability Ready" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
             </Reveal>
 
@@ -936,7 +936,7 @@ const LandingPage = () => {
                 </li>
                 <li className="flex items-center gap-3 justify-center sm:justify-start group">
                   <Phone size={18} className="shrink-0 text-white/60 group-hover:text-white transition-colors" />
-                  <span>+62 812-121-323</span>
+                  <span>+62 823-2000-7800</span>
                 </li>
                 <li className="flex items-center gap-3 justify-center sm:justify-start group">
                   <Mail size={18} className="shrink-0 text-white/60 group-hover:text-white transition-colors" />

@@ -269,10 +269,10 @@ export default function AdminTariff({ onNavigate }) {
             const headers = { 'Authorization': `Bearer ${token}` };
 
             const [currentRes, historyRes, distributionRes, trendRes] = await Promise.allSettled([
-                fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/current?scope=all', { headers }),
-                fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/history', { headers }),
-                fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/distribution', { headers }),
-                fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/trend', { headers })
+                fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/current?scope=all', { headers }),
+                fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/history', { headers }),
+                fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/distribution', { headers }),
+                fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/trend', { headers })
             ]);
 
             const extractResponseData = async (result, key) => {
@@ -331,7 +331,7 @@ export default function AdminTariff({ onNavigate }) {
         const fetchPlnCategories = async () => {
             try {
                 setPlnCategoriesLoading(true);
-                const res = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/public/categories?scope=all');
+                const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/public/categories?scope=all');
                 if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
                 }
@@ -531,7 +531,7 @@ export default function AdminTariff({ onNavigate }) {
 
             const dateISO = new Date(year, monthMap[monthStr], day).toISOString();
 
-            const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs', {
+            const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

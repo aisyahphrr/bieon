@@ -75,23 +75,12 @@ exports.setupHubs = async (req, res) => {
 
         // 2. Klaim semua Hub terkait
         const hubs = await Hub.find({ bieonId: bieonRegex || bieonId });
-        const hubsPayload = [];
-
         if (hubs.length > 0) {
             const user = await User.findById(userId);
             for (const hub of hubs) {
                 hub.owner = userId;
                 hub.tenantId = user?.tenantId || "tenant_001";
                 await hub.save();
-
-                let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_');
-                let rawIeee = hub.device_ieee || "0000000000000000";
-                let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
-
-                hubsPayload.push({
-                    id: formattedHubId,
-                    ieee: canonicalIeee
-                });
             }
         } else {
             console.log('[SETUP_HUBS] No hubs found in warehouse. No dummy hubs created.');
@@ -103,16 +92,7 @@ exports.setupHubs = async (req, res) => {
             { $set: { owner: userId, tenantId: userId } }
         );
 
-        // 4. Publikasi MQTT Claim jika stok berasal dari gudang
-        if (hubsPayload.length > 0) {
-            const payload = {
-                tenant_id: "tenant_001",
-                bieon_id: bieonId,
-                hub_id: "hub_001",
-                hubs: hubsPayload
-            };
-            publishCommand(`bieon/${bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
-        }
+        // 4. (Dihapus) Fitur MQTT bootstrap claim sudah tidak digunakan lagi
 
         res.status(201).json({ 
             message: 'Sistem BIEON dan Hub berhasil disiapkan!', 
@@ -157,6 +137,7 @@ exports.getUserSystems = async (req, res) => {
                     id: h._id,
                     name: h.name,
                     status: h.status,
+                    device_ieee: h.device_ieee,
                     devices: [] // Akan diisi di frontend atau via join nanti
                 }))
             };
@@ -403,6 +384,27 @@ exports.deleteHub = async (req, res) => {
             return res.status(403).json({ message: 'Anda tidak memiliki akses untuk menghapus hub ini.' });
         }
 
+        const { publishLeave } = require('../config/mqtt');
+        
+        // Memicu leave_device untuk setiap perangkat di dalam hub ini
+        const devices = await KendaliPerangkat.find({ hubId });
+        for (const device of devices) {
+            const normalizedIeee = String(device.device_ieee || device.modelId || device.name || '').replace(/[:\-\s]/g, '').toUpperCase();
+            if (normalizedIeee) {
+                publishLeave(device.bieonId || hub.bieonId, normalizedIeee, {
+                    requested_by: String(req.user.userId)
+                });
+            }
+        }
+
+        const deviceIeee = hub.device_ieee;
+        if (deviceIeee) {
+            publishLeave(hub.bieonId, deviceIeee, {
+                remove_children: true,
+                requested_by: String(req.user.userId)
+            });
+        }
+
         await Hub.findByIdAndDelete(hubId);
 
         // Hapus perangkat yang menempel di hub ini
@@ -444,23 +446,7 @@ exports.claimHub = async (req, res) => {
         hub.status = 'Online';
         await hub.save();
 
-        // 4. Kirim bootstrap claim MQTT untuk sinkronisasi hardware jika diperlukan
-        const { publishCommand } = require('../config/mqtt');
-        let formattedHubId = hub.name.toLowerCase().replace('hub node ', 'hubnode_').replace(/\s+/g, '_');
-        let rawIeee = hub.device_ieee || "0000000000000000";
-        let canonicalIeee = rawIeee.replace(/[:\-]/g, '').toUpperCase();
-        
-        const payload = {
-            tenant_id: user?.tenantId || "tenant_001",
-            bieon_id: hub.bieonId,
-            hub_id: "hub_001",
-            hubs: [{
-                id: formattedHubId,
-                ieee: canonicalIeee
-            }]
-        };
-        publishCommand(`bieon/${hub.bieonId}/bootstrap/claim`, payload, { qos: 1, retain: true });
-
+        // 4. (Dihapus) Fitur MQTT bootstrap claim sudah tidak digunakan lagi
         res.status(200).json({
             message: 'Hub berhasil disimpan dan diklaim!',
             hub: hub

@@ -227,7 +227,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
       setMetricsError(null);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/dashboard/metrics', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/dashboard/metrics', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
       setHomeownersError(null);
       const token = localStorage.getItem('token');
 
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/homeowners', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/homeowners', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const fetchPlnCategories = async () => {
     try {
       setPlnCategoriesLoading(true);
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/public/categories?scope=all');
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/public/categories?scope=all');
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
         setPlnCategories(data.data);
@@ -320,7 +320,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
     try {
       setPlnSummaryLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/summary', {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/summary', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -337,7 +337,7 @@ export default function SuperAdminDashboard({ onNavigate }) {
   const fetchPlnCurrentTariffs = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(import.meta.env.VITE_API_URL + '/api/admin/tariffs/current?scope=all', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/tariffs/current?scope=all', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const json = await res.json();
