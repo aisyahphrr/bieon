@@ -490,19 +490,24 @@ const connectMQTT = (io) => {
               const systemRec = bieonRegex ? await BieonSystem.findOne({ bieonId: bieonRegex }).select('owner').lean() : null;
               const ownerId = systemRec ? systemRec.owner : undefined;
 
-              // Upsert hub by name or ieee (Atomic with uppercase bieonId to prevent race conditions)
-              const upperBieonId = String(bieonId).toUpperCase();
+              // Upsert hub by name or ieee (Case-insensitive bieonId to prevent duplicates)
               let hubRec = null;
               if (ieee) {
                 hubRec = await Hub.findOneAndUpdate(
-                  { bieonId: upperBieonId, device_ieee: ieee },
-                  { $set: { name: hubName, status: 'Online', owner: ownerId } },
+                  { bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') }, device_ieee: ieee },
+                  { 
+                    $set: { name: hubName, status: 'Online', owner: ownerId },
+                    $setOnInsert: { bieonId: String(bieonId).toLowerCase() }
+                  },
                   { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
                 ).lean();
               } else {
                 hubRec = await Hub.findOneAndUpdate(
-                  { bieonId: upperBieonId, name: hubName },
-                  { $set: { status: 'Online', owner: ownerId } },
+                  { bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') }, name: hubName },
+                  { 
+                    $set: { status: 'Online', owner: ownerId },
+                    $setOnInsert: { bieonId: String(bieonId).toLowerCase() }
+                  },
                   { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
                 ).lean();
               }
