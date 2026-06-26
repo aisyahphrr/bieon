@@ -823,30 +823,30 @@ const LandingPage = () => {
                 </p>
 
                 {/* 4 Benefit Icons */}
-                <div className="flex flex-wrap gap-6 sm:gap-8 mb-10 max-w-2xl mx-0">
-                  <Reveal delay="0.1s" className="flex flex-col items-start group">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-10 max-w-2xl mx-auto lg:mx-0">
+                  <Reveal delay="0.1s" className="flex flex-col items-center lg:items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/9EFISIENSI MENINGKAT.png" alt={t('landing.cta.benefit1')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit1')}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center lg:text-left leading-tight">{t('landing.cta.benefit1')}</span>
                   </Reveal>
-                  <Reveal delay="0.15s" className="flex flex-col items-start group">
+                  <Reveal delay="0.15s" className="flex flex-col items-center lg:items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/10BIAYA BERKURANG.png" alt={t('landing.cta.benefit2')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit2')}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center lg:text-left leading-tight">{t('landing.cta.benefit2')}</span>
                   </Reveal>
-                  <Reveal delay="0.2s" className="flex flex-col items-start group">
+                  <Reveal delay="0.2s" className="flex flex-col items-center lg:items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/11OPERASIONAL HIJAU.png" alt={t('landing.cta.benefit3')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit3')}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center lg:text-left leading-tight">{t('landing.cta.benefit3')}</span>
                   </Reveal>
-                  <Reveal delay="0.25s" className="flex flex-col items-start group">
+                  <Reveal delay="0.25s" className="flex flex-col items-center lg:items-start group">
                     <div className="w-14 h-14 bg-white rounded-2xl shadow-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300 overflow-hidden border border-slate-50">
                       <img src="/12KEPUTUSAN CEPAT.png" alt={t('landing.cta.benefit4')} className="w-full h-full object-cover rounded-2xl" />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-left leading-tight">{t('landing.cta.benefit4')}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-slate-600 text-center lg:text-left leading-tight">{t('landing.cta.benefit4')}</span>
                   </Reveal>
                 </div>
 
