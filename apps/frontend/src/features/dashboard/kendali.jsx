@@ -3819,7 +3819,7 @@ export function DeviceControlPage({ onNavigate }) {
                                                 <span className="text-2xl font-black text-gray-900">
                                                   {device.currentValues?.tds !== undefined ? parseFloat(device.currentValues.tds).toFixed(0) : '--'}
                                                 </span>
-                                                <span className="text-sm font-bold text-gray-400 font-bold ml-1">mg/L</span>
+                                                <span className="text-sm font-bold text-gray-400 font-bold ml-1">ppm</span>
                                               </div>
                                             </div>
                                           )}
@@ -3843,18 +3843,7 @@ export function DeviceControlPage({ onNavigate }) {
                                             </div>
                                           )}
 
-                                          <div className="bg-gradient-to-br from-bieon-eco/5 to-white p-4 rounded-2xl border border-bieon-eco/20 shadow-sm transition-all hover:shadow-md flex-1 min-w-[140px] sm:min-w-0">
-                                            <div className="flex items-center gap-2 mb-2">
-                                              <Zap className="w-4 h-4 text-bieon-eco" />
-                                              <span className="text-xs font-bold text-gray-500">{t('kendali.device_details.device_battery', 'Baterai Alat')}</span>
-                                            </div>
-                                            <div className="flex items-baseline gap-1">
-                                              <span className="text-2xl font-black text-gray-900">
-                                                {device.battery || '--'}
-                                              </span>
-                                              <span className="text-sm font-bold text-gray-400 font-bold ml-1">%</span>
-                                            </div>
-                                          </div>
+
                                         </div>
                                       </div>
                                     );
@@ -5090,7 +5079,7 @@ export function DeviceControlPage({ onNavigate }) {
                                         const tempEnabled = device.sensorParams?.temperature !== undefined;
                                         const humEnabled = device.sensorParams?.humidity !== undefined;
                                         
-                                        if (tempEnabled && !isNaN(tempVal) && (tempVal < 20.5 || tempVal > 27.1)) isAbnormal = true;
+                                        if (tempEnabled && !isNaN(tempVal) && (tempVal < 20.5 || tempVal > 31)) isAbnormal = true;
                                         if (humEnabled && !isNaN(humVal) && (humVal < 50 || humVal > 80)) isAbnormal = true;
                                       } else if (isSecurity) {
                                         const statusVal = String(device.currentValues.status || "").toLowerCase();
@@ -5141,7 +5130,7 @@ export function DeviceControlPage({ onNavigate }) {
 
                                     {/* Parameter Chips */}
                                     {device.currentValues.temperature !== undefined && device.sensorParams?.temperature !== undefined && (
-                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.temperature) < 20.5 || parseFloat(device.currentValues.temperature) > 27.1) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
+                                      <div className={`px-4 py-2 rounded-xl border-2 flex items-center gap-2  transition-all ${(parseFloat(device.currentValues.temperature) < 20.5 || parseFloat(device.currentValues.temperature) > 31) ? 'bg-red-50 border-red-200 text-red-600' : 'bg-white border-gray-100 text-gray-700'}`}>
                                         <Thermometer className="w-4 h-4" />
                                         <span className="text-sm">{t('kendali.device_details.param_temp', 'Suhu')}: {device.currentValues.temperature}°C</span>
                                       </div>
@@ -7109,7 +7098,7 @@ export function DeviceControlPage({ onNavigate }) {
                                               })}
                                               className="w-4 h-4"
                                             />
-                                            <span className="text-sm text-gray-700">Default (1000 mg/L)</span>
+                                            <span className="text-sm text-gray-700">Default (1000 ppm)</span>
                                           </label>
                                           <label className="flex items-center gap-2">
                                             <input
@@ -7709,7 +7698,7 @@ export function DeviceControlPage({ onNavigate }) {
                         </div>
                         <div>
                           <label className="block text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1 flex items-center gap-1">
-                            <Waves className="w-3.5 h-3.5 text-blue-500" /> TDS (mg/L)
+                            <Waves className="w-3.5 h-3.5 text-blue-500" /> TDS (ppm)
                           </label>
                           <input
                             type="number"

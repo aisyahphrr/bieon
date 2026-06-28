@@ -1238,7 +1238,7 @@ export function HomeownerDashboard() {
                       {(() => {
                         const tempVal = currentSensors.comfort.temp;
                         const humVal = currentSensors.comfort.humidity;
-                        const isComfortable = tempVal >= 20.5 && tempVal <= 27.1 && humVal >= 50 && humVal <= 80;
+                        const isComfortable = tempVal >= 20.5 && tempVal <= 31 && humVal >= 50 && humVal <= 80;
 
                         const styles = getMasterCardStyles(isComfortable);
                         const statusText = isComfortable ? t('dashboard.status_comfortable', 'Nyaman') : t('dashboard.status_comfort_bad_text', 'Tidak Nyaman');
@@ -1285,7 +1285,7 @@ export function HomeownerDashboard() {
                             textClass = 'text-amber-600';
                             borderClass = 'border-amber-500/30';
                             iconColorClass = 'text-amber-500';
-                          } else if (tempVal <= 27.1) {
+                          } else if (tempVal <= 31) {
                             statusLabel = t('dashboard.status_comfortable', 'Nyaman');
                             textClass = 'text-eco';
                             borderClass = 'border-eco-500/30';
@@ -1326,8 +1326,8 @@ export function HomeownerDashboard() {
                                 {/* Color zones bar */}
                                 <div className="h-2.5 w-full rounded-full flex overflow-hidden bg-slate-100">
                                   <div className="h-full bg-amber-200" style={{ width: '27.5%' }} title={`${t('dashboard.status_cold', 'Dingin')} (<20.5°C)`}></div>
-                                  <div className="h-full bg-emerald-400" style={{ width: '33%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (20.5°C - 27.1°C)`}></div>
-                                  <div className="h-full bg-amber-200" style={{ width: '39.5%' }} title={`${t('dashboard.status_hot', 'Panas')} (>27.1°C)`}></div>
+                                  <div className="h-full bg-emerald-400" style={{ width: '33%' }} title={`${t('dashboard.status_ideal', 'Ideal')} (20.5°C - 31°C)`}></div>
+                                  <div className="h-full bg-amber-200" style={{ width: '39.5%' }} title={`${t('dashboard.status_hot', 'Panas')} (>31°C)`}></div>
                                 </div>
  
                                 {/* Indicator dot */}
@@ -1339,7 +1339,7 @@ export function HomeownerDashboard() {
                                 {/* Labels */}
                                 <div className="relative text-[9px] text-text-dim font-bold mt-1.5 h-6 w-full">
                                   <span className="absolute" style={{ left: '27.5%', transform: 'translateX(-50%)' }}>20.5°C</span>
-                                  <span className="absolute" style={{ left: '60.5%', transform: 'translateX(-50%)' }}>27.1°C</span>
+                                  <span className="absolute" style={{ left: '60.5%', transform: 'translateX(-50%)' }}>31°C</span>
                                 </div>
                               </div>
                             </div>
@@ -1579,7 +1579,11 @@ export function HomeownerDashboard() {
                         const turbidity = currentSensors.waterQuality?.turbidity !== undefined ? currentSensors.waterQuality.turbidity : liveTurbidity;
                         const tds = currentSensors.waterQuality?.tds !== undefined ? currentSensors.waterQuality.tds : liveTds;
 
-                        const isWaterSafe = ph >= 6.5 && ph <= 8.5 && turbidity <= 25 && tds <= 1000;
+                        const waterTempValMaster = currentSensors.waterQuality?.temp !== undefined ? currentSensors.waterQuality.temp : liveWaterTemp;
+                        const airTempMaster = currentSensors.comfort?.temp !== undefined ? currentSensors.comfort.temp : 27;
+                        const isTempNormalMaster = waterTempValMaster >= (airTempMaster - 3) && waterTempValMaster <= (airTempMaster + 3);
+
+                        const isWaterSafe = ph >= 6.5 && ph <= 8.5 && turbidity <= 25 && tds <= 1000 && isTempNormalMaster;
 
                         const styles = getMasterCardStyles(isWaterSafe);
                         const statusText = isWaterSafe ? t('dashboard.status_water_ok', 'Layak Pakai') : t('dashboard.status_water_bad', 'Tidak Layak');
@@ -1706,7 +1710,10 @@ export function HomeownerDashboard() {
                         {/* Water Temperature */}
                         {(() => {
                           const waterTempVal = currentSensors.waterQuality?.temp !== undefined ? currentSensors.waterQuality.temp : liveWaterTemp;
-                          const isTempNormal = waterTempVal >= 10 && waterTempVal <= 30;
+                          const airTemp = currentSensors.comfort?.temp !== undefined ? currentSensors.comfort.temp : 27;
+                          const minTemp = airTemp - 3;
+                          const maxTemp = airTemp + 3;
+                          const isTempNormal = waterTempVal >= minTemp && waterTempVal <= maxTemp;
                           const statusLabel = isTempNormal ? t('dashboard.status_water_normal', 'Normal') : t('dashboard.status_water_not_normal', 'Tidak Normal');
                           const textClass = isTempNormal ? 'text-eco' : 'text-amber-600';
                           const iconColorClass = isTempNormal ? 'text-eco' : 'text-amber-500 animate-pulse';
@@ -1726,7 +1733,7 @@ export function HomeownerDashboard() {
                                 </div>
                                 <div className="flex justify-between text-[9px] text-text-dim font-bold mt-1.5 px-0.5">
                                   <span>0°C</span>
-                                  <span className={textClass}>{statusLabel}</span>
+                                  <span className={textClass}>{statusLabel} ({minTemp}°C - {maxTemp}°C)</span>
                                   <span>50°C</span>
                                 </div>
                               </div>

@@ -314,6 +314,9 @@ const connectMQTT = (io) => {
     mqttClient.subscribe('bieon/+/hub/+/lifecycle');
     mqttClient.subscribe('bieon/+/energi/pdm/telemetry');
     mqttClient.subscribe('bieon/+/hub/+/zigbee_devices/+/telemetry');
+    mqttClient.subscribe('bieon/+/zigbee_devices/+/telemetry');
+    mqttClient.subscribe('bieon/+/zigbee_devices/+/events/bit_registration_announce');
+    mqttClient.subscribe('bieon/+/hub/+/zigbee_devices/+/events/bit_registration_announce');
   });
 
   mqttClient.on('message', async (topic, message) => {
@@ -663,12 +666,24 @@ const connectMQTT = (io) => {
           return;
         }
 
-        // Handle Zigbee telemetry forwarded by ESP-B:
+        // Handle Zigbee telemetry forwarded by ESP-B or direct:
         // bieon/{bieonId}/hub/{hubId}/zigbee_devices/{deviceIeee}/telemetry
-        if (parts.length >= 7 && parts[2] === 'hub' && parts[4] === 'zigbee_devices' && parts[6] === 'telemetry') {
+        // bieon/{bieonId}/zigbee_devices/{deviceIeee}/telemetry
+        const isHubTelemetryTopic = parts.length >= 7 && parts[2] === 'hub' && parts[4] === 'zigbee_devices' && parts[6] === 'telemetry';
+        const isDirectTelemetryTopic = parts.length >= 5 && parts[2] === 'zigbee_devices' && parts[4] === 'telemetry';
+
+        if (isHubTelemetryTopic || isDirectTelemetryTopic) {
           const bieonId = parts[1];
-          const hubId = parts[3];
-          const topicDeviceIeee = String(parts[5] || '').replace(/[:\-\s]/g, '').toUpperCase();
+          let hubId = undefined;
+          let topicDeviceIeee = '';
+          
+          if (isHubTelemetryTopic) {
+            hubId = parts[3];
+            topicDeviceIeee = String(parts[5] || '').replace(/[:\-\s]/g, '').toUpperCase();
+          } else {
+            topicDeviceIeee = String(parts[3] || '').replace(/[:\-\s]/g, '').toUpperCase();
+          }
+
           const payloadObj = (typeof payload === 'object' && payload !== null) ? payload : { value: payload };
           const payloadDeviceIeee = String(payloadObj.device_ieee || payloadObj.ieee || '').replace(/[:\-\s]/g, '').toUpperCase();
           const deviceIeee = payloadDeviceIeee || topicDeviceIeee;
@@ -1100,7 +1115,7 @@ const evaluateSensorAutomation = async (updatedDevice) => {
 
         for (const act of actuators) {
           if (!act.thresholds) continue;
-          let isMet = true;
+          let isMet = false;
           let hasCondition = false;
           const sensor = updatedDevice;
 
@@ -1109,26 +1124,26 @@ const evaluateSensorAutomation = async (updatedDevice) => {
             const sensorVal = sensor.currentValues.waterTemp !== undefined ? sensor.currentValues.waterTemp : sensor.currentValues.temperature;
             if (sensorVal !== undefined) {
               hasCondition = true;
-              if (sensorVal <= act.thresholds.temperature) isMet = false;
+              if (sensorVal > act.thresholds.temperature) isMet = true;
             }
           }
           // Check Humidity
           if (act.thresholds.humidity !== undefined && sensor.currentValues.humidity !== undefined) {
             hasCondition = true;
-            if (sensor.currentValues.humidity <= act.thresholds.humidity) isMet = false;
+            if (sensor.currentValues.humidity > act.thresholds.humidity) isMet = true;
           }
           // Check Water Quality
           if (act.thresholds.ph !== undefined && sensor.currentValues.ph !== undefined) {
             hasCondition = true;
-            if (sensor.currentValues.ph <= act.thresholds.ph) isMet = false;
+            if (sensor.currentValues.ph > act.thresholds.ph) isMet = true;
           }
           if (act.thresholds.tds !== undefined && sensor.currentValues.tds !== undefined) {
             hasCondition = true;
-            if (sensor.currentValues.tds <= act.thresholds.tds) isMet = false;
+            if (sensor.currentValues.tds > act.thresholds.tds) isMet = true;
           }
           if (act.thresholds.turbidity !== undefined && sensor.currentValues.turbidity !== undefined) {
             hasCondition = true;
-            if (sensor.currentValues.turbidity <= act.thresholds.turbidity) isMet = false;
+            if (sensor.currentValues.turbidity > act.thresholds.turbidity) isMet = true;
           }
 
           if (hasCondition) {

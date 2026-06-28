@@ -15,8 +15,8 @@ i18n
     },
     fallbackLng: 'id',
     detection: {
-      // Prioritas deteksi: localStorage -> cookie -> htmlTag -> path -> dsb
-      order: ['localStorage', 'cookie', 'htmlTag', 'path', 'subdomain'],
+      // Prioritas deteksi: Cek lokal memori saja, jika kosong langsung gunakan fallback (ID)
+      order: ['localStorage'],
       // Key yang digunakan untuk menyimpan di localStorage
       lookupLocalStorage: 'bieon_language',
       // Cache hasil deteksi kembali ke localStorage
