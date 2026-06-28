@@ -1146,6 +1146,18 @@ const evaluateSensorAutomation = async (updatedDevice) => {
       if (!['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect) && updatedDevice.environmentAspect) {
         aspect = updatedDevice.environmentAspect;
       }
+      
+      // Safety Fallback: Infer aspect from telemetry data if still invalid
+      if (!['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect) && updatedDevice.currentValues) {
+        const vals = updatedDevice.currentValues;
+        if (vals.temperature !== undefined || vals.humidity !== undefined) {
+          aspect = 'Kenyamanan';
+        } else if (vals.ph !== undefined || vals.tds !== undefined || vals.turbidity !== undefined) {
+          aspect = 'Kualitas Air';
+        } else if (vals.motion !== undefined || vals.doorOpen !== undefined) {
+          aspect = 'Keamanan';
+        }
+      }
 
       if (['Kenyamanan', 'Kualitas Air', 'Keamanan'].includes(aspect)) {
         const actuators = await KendaliPerangkat.find({
