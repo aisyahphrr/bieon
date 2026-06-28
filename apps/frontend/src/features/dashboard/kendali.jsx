@@ -2408,7 +2408,7 @@ export function DeviceControlPage({ onNavigate }) {
         : '/api/kendaliperangkat';
       const method = editingId ? 'PUT' : 'POST';
 
-      const response = await fetch(endpoint, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + endpoint, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
@@ -2595,7 +2595,7 @@ export function DeviceControlPage({ onNavigate }) {
         : '/api/kendaliperangkat';
       const method = editingId ? 'PUT' : 'POST';
 
-      const response = await fetch(endpoint, {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + endpoint, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
