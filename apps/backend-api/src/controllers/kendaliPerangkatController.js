@@ -58,14 +58,31 @@ exports.createDevice = async (req, res) => {
                     status: 'Active'
                 });
                 if (!session) return res.status(403).json({ message: 'Sesi akses teknisi tidak valid.' });
-                ownerId = manualOwnerId;
+                ownerId = manualOwnerId; // Gunakan ID homeowner jika diizinkan
             } else if (req.user.role !== 'SuperAdmin') {
-                return res.status(403).json({ message: 'Akses ditolak.' });
+                return res.status(403).json({ message: 'Anda tidak memiliki izin.' });
             } else {
                 ownerId = manualOwnerId;
             }
         }
+
+        // --- SAFETY FALLBACKS ---
+        let finalCategory = category;
+        const typeLower = String(deviceType || '').toLowerCase();
+        if (!finalCategory || finalCategory === "") {
+            if (typeLower.includes("plug") || typeLower.includes("switch") || typeLower.includes("remote") || typeLower === "control actuator") {
+                finalCategory = "Control Actuator System";
+            } else {
+                finalCategory = "Sensor";
+            }
+        }
         
+        let finalControlMode = controlMode;
+        if (!finalControlMode || !['Manual', 'Lingkungan', 'Jadwal'].includes(finalControlMode)) {
+            finalControlMode = 'Manual';
+        }
+        // ------------------------
+
         const user = await User.findById(ownerId);
         
         let hub;
@@ -194,7 +211,7 @@ exports.createDevice = async (req, res) => {
             location: finalLocation,
             notes,
             hubId,
-            category: category, // KendaliPerangkat mau APA ADANYA (Sensor / Control Actuator System)
+            category: finalCategory,
             type: deviceType,
             status: 'Active',
             lifecycleState: 'PROVISIONED',
@@ -204,7 +221,7 @@ exports.createDevice = async (req, res) => {
             device_ieee: capturedIeee, 
             modelId: capturedModelId, // Simpan model id asli (ID Teknis)
             thresholds: sensorParams, 
-            controlMethod: controlMode || 'manual',
+            controlMethod: finalControlMode,
             scheduleSettings,
             sensorData, 
             controlledDevice,
