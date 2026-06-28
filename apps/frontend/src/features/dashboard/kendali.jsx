@@ -2307,9 +2307,9 @@ export function DeviceControlPage({ onNavigate }) {
     let backendAspect = null;
 
     // Map Category
-    if (category === "sensor") {
+    if (category === "sensor" || type === "Sensor Kualitas Air" || type === "Sensor Kenyamanan" || type === "Sensor Keamanan") {
       backendCategory = "Sensor";
-    } else if (category === "control" || ["smart-plug", "smart-switch", "remote"].includes(category)) {
+    } else if (category === "control" || ["smart-plug", "smart-switch", "remote"].includes(category) || ["smart-plug", "smart-switch", "remote"].includes(type?.toLowerCase())) {
       backendCategory = "Control Actuator System";
     }
 
