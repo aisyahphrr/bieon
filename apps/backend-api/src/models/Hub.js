@@ -14,4 +14,7 @@ const hubSchema = new mongoose.Schema({
 
 hubSchema.plugin(dataSizePlugin);
 
+// Tambahkan unique compound index untuk mencegah race condition duplikasi
+hubSchema.index({ bieonId: 1, device_ieee: 1 }, { unique: true, sparse: true });
+
 module.exports = mongoose.model('Hub', hubSchema);

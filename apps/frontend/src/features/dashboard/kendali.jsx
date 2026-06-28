@@ -883,7 +883,7 @@ export function DeviceControlPage({ onNavigate }) {
                   device_ieee: updatedDevice.device_ieee || updatedDevice.ieee || dev.device_ieee,
                   model: updatedDevice.model || dev.model,
                   manufacturer: updatedDevice.manufacturer || dev.manufacturer,
-                  currentValues: updatedDevice.currentValues || dev.currentValues,
+                  currentValues: { ...(dev.currentValues || {}), ...(updatedDevice.currentValues || {}) },
                   battery: updatedDevice.battery || dev.battery,
                   status: updatedDevice.status !== undefined ? String(updatedDevice.status) : dev.status,
                   isToggling: pending ? String(updatedDevice.status) !== pending.targetStatus : false
@@ -972,50 +972,10 @@ export function DeviceControlPage({ onNavigate }) {
         return [...prev, hub];
       });
 
-      // Update bieonSystems with the new hub
-      setBieonSystems(prevSystems => {
-        return prevSystems.map(sys => {
-          if (String(sys.bieonId).toLowerCase() === String(bieonId).toLowerCase() || String(sys.id) === String(hub.systemId)) {
-            const alreadyExists = sys.hubs.some(h => String(h._id || h.id || '') === hubId);
-            if (alreadyExists) return sys;
-
-            const formattedHub = {
-              ...hub,
-              id: hubId,
-              devices: []
-            };
-
-            return {
-              ...sys,
-              totalHubs: (sys.totalHubs || 0) + 1,
-              hubs: [...sys.hubs, formattedHub]
-            };
-          }
-          return sys;
-        });
-      });
-
-      // Also update currentBieon if it matches
-      setCurrentBieon(prevCurrent => {
-        if (!prevCurrent) return null;
-        if (String(prevCurrent.bieonId).toLowerCase() === String(bieonId).toLowerCase() || String(prevCurrent.id) === String(hub.systemId)) {
-          const alreadyExists = prevCurrent.hubs.some(h => String(h._id || h.id || '') === hubId);
-          if (alreadyExists) return prevCurrent;
-
-          const formattedHub = {
-            ...hub,
-            id: hubId,
-            devices: []
-          };
-
-          return {
-            ...prevCurrent,
-            totalHubs: (prevCurrent.totalHubs || 0) + 1,
-            hubs: [...prevCurrent.hubs, formattedHub]
-          };
-        }
-        return prevCurrent;
-      });
+      // Removed setBieonSystems and setCurrentBieon updates from here to prevent
+      // the hub card from automatically appearing in the background before the user confirms it.
+      // After the user clicks "Confirm Hub" inside the modal, handleConfirmHub is triggered,
+      // which will then call fetchData() and properly update bieonSystems and currentBieon.
     });
 
     socket.on('remote_registration_state', (registrationState) => {

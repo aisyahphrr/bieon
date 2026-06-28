@@ -1,0 +1,1 @@
+const mongoose = require('mongoose'); mongoose.connect(process.env.MONGODB_URI).then(async () => { const Hub = require('./src/models/Hub'); const hubs = await Hub.find({}); console.log(JSON.stringify(hubs, null, 2)); process.exit(0); });

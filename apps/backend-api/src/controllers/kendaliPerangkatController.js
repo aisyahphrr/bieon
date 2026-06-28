@@ -8,6 +8,7 @@ const Hub = require('../models/Hub');
 const TechnicianAccess = require('../models/TechnicianAccess');
 const DeviceWhitelist = require('../models/DeviceWhitelist');
 const mqtt = require('../config/mqtt');
+const { getLatestTelemetry } = require('../config/mqtt');
 
 // Helper: normalize product/device identifiers (IEEE / productId)
 function normalizeId(input) {
@@ -342,6 +343,12 @@ exports.getDevicesByUser = async (req, res) => {
         for (const device of devices) {
             const key = normalizeIeee(device.device_ieee) || String(device._id);
             if (!seen.has(key)) {
+                // Merge in-memory real-time cache (updated every MQTT message) over stale DB values.
+                // This ensures dashboard shows live values on load/refresh even before 10-min DB write.
+                const liveValues = getLatestTelemetry(String(device._id));
+                if (liveValues) {
+                    device.currentValues = { ...(device.currentValues || {}), ...liveValues };
+                }
                 seen.set(key, device);
             }
         }
@@ -363,6 +370,12 @@ exports.getDevicesByHub = async (req, res) => {
         for (const device of devices) {
             const key = normalizeIeee(device.device_ieee) || String(device._id);
             if (!seen.has(key)) {
+                // Merge in-memory real-time cache (updated every MQTT message) over stale DB values.
+                // This ensures dashboard shows live values on load/refresh even before 10-min DB write.
+                const liveValues = getLatestTelemetry(String(device._id));
+                if (liveValues) {
+                    device.currentValues = { ...(device.currentValues || {}), ...liveValues };
+                }
                 seen.set(key, device);
             }
         }

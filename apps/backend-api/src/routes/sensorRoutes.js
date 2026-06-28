@@ -27,9 +27,15 @@ router.get('/suhu', async (req, res) => {
 // GET /api/sensors/suhu-air (Water Temperature)
 router.get('/suhu-air', async (req, res) => {
     try {
-        const latestData = await SensorData.findOne({ topic: { $regex: /sensor_air_01\/suhu$/i } }).sort({ timestamp: -1 });
+        const bieonId = req.user.bieonId;
+        if (!bieonId) return res.json([{ value: null }]);
+
+        const latestData = await SensorData.findOne({ 
+            topic: { $regex: new RegExp(`${bieonId}/.*suhu_air$`, 'i') } 
+        }).sort({ timestamp: -1 });
         res.json([{ value: latestData ? latestData.value : null }]);
     } catch (err) {
+        console.error("Error fetching latest suhu-air:", err);
         res.status(500).json({ error: "Server Error" });
     }
 });
