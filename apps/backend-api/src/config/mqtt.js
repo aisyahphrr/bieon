@@ -313,8 +313,8 @@ const connectMQTT = (io) => {
     mqttClient.subscribe('bieon/+/log/system');
     mqttClient.subscribe('bieon/+/hub/+/lifecycle');
     mqttClient.subscribe('bieon/+/energi/pdm/telemetry');
-    mqttClient.subscribe('bieon/+/hub/+/zigbee_devices/+/telemetry');
-    mqttClient.subscribe('bieon/+/zigbee_devices/+/telemetry');
+    mqttClient.subscribe('bieon/+/hub/+/zigbee_devices/+/telemetry'); // Legacy firmware
+    mqttClient.subscribe('bieon/+/zigbee_devices/+/telemetry'); // New V2 firmware
     mqttClient.subscribe('bieon/+/zigbee_devices/+/events/bit_registration_announce');
     mqttClient.subscribe('bieon/+/hub/+/zigbee_devices/+/events/bit_registration_announce');
   });
@@ -492,19 +492,24 @@ const connectMQTT = (io) => {
               const systemRec = bieonRegex ? await BieonSystem.findOne({ bieonId: bieonRegex }).select('owner').lean() : null;
               const ownerId = systemRec ? systemRec.owner : undefined;
 
-              // Upsert hub by name or ieee (Atomic with uppercase bieonId to prevent race conditions)
-              const upperBieonId = String(bieonId).toUpperCase();
+              // Upsert hub by name or ieee (Case-insensitive bieonId to prevent duplicates)
               let hubRec = null;
               if (ieee) {
                 hubRec = await Hub.findOneAndUpdate(
-                  { bieonId: upperBieonId, device_ieee: ieee },
-                  { $set: { name: hubName, status: 'Online', owner: ownerId } },
+                  { bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') }, device_ieee: ieee },
+                  { 
+                    $set: { name: hubName, status: 'Online', owner: ownerId },
+                    $setOnInsert: { bieonId: String(bieonId).toLowerCase() }
+                  },
                   { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
                 ).lean();
               } else {
                 hubRec = await Hub.findOneAndUpdate(
-                  { bieonId: upperBieonId, name: hubName },
-                  { $set: { status: 'Online', owner: ownerId } },
+                  { bieonId: { $regex: new RegExp(`^${bieonId}$`, 'i') }, name: hubName },
+                  { 
+                    $set: { status: 'Online', owner: ownerId },
+                    $setOnInsert: { bieonId: String(bieonId).toLowerCase() }
+                  },
                   { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
                 ).lean();
               }
@@ -708,11 +713,13 @@ const connectMQTT = (io) => {
 
           if (deviceIeee) {
             try {
+              const ieeeUpper = deviceIeee.toUpperCase();
+              const ieeeLower = deviceIeee.toLowerCase();
               const query = {
-                bieonId: buildFlexibleBieonIdRegex(bieonId) || bieonId,
                 $or: [
-                  { device_ieee: deviceIeee },
-                  { device_ieee: deviceIeee.toLowerCase() }
+                  { device_ieee: ieeeUpper },
+                  { device_ieee: ieeeLower },
+                  { device_ieee: { $regex: new RegExp(`^${ieeeUpper}$`, 'i') } }
                 ]
               };
               const existing = await KendaliPerangkat.findOne(query).lean();
@@ -720,11 +727,27 @@ const connectMQTT = (io) => {
                 const deviceIdStr = String(existing._id);
                 const cachedValues = latestTelemetryValues.get(deviceIdStr) || existing.currentValues || {};
                 const newValues = { ...cachedValues };
+                const targetBieonId = existing.bieonId || bieonId;
 
                 if (cluster.includes('temp') && hasNumericValue) {
                   newValues.temperature = numericValue;
+                  const nameLower = String(existing.name || '').toLowerCase();
+                  const typeLower = String(existing.type || '').toLowerCase();
+                  const modelLower = String(existing.modelId || existing.model || '').toLowerCase();
+                  const isWater = nameLower.includes('bluecheck') || typeLower.includes('water') || modelLower.includes('bluecheck');
+                  if (isWater) {
+                    newValues.waterTemp = numericValue;
+                  }
                 } else if (cluster.includes('humid') && hasNumericValue) {
                   newValues.humidity = numericValue;
+                } else if (cluster.includes('analog_input') || cluster.includes('analog')) {
+                  if (attr === 'ph' && hasNumericValue) {
+                    newValues.ph = numericValue;
+                  } else if (attr === 'tds' && hasNumericValue) {
+                    newValues.tds = numericValue;
+                  } else if (attr === 'turbidity' && hasNumericValue) {
+                    newValues.turbidity = numericValue;
+                  }
                 }
 
                 // Tangkap data sensor air & baterai dari analog_input atau cluster lainnya
@@ -744,6 +767,46 @@ const connectMQTT = (io) => {
                 }
 
                 latestTelemetryValues.set(deviceIdStr, newValues);
+
+                // Save to SensorData for graphing and dashboard routes
+                const tenantId = existing.tenantId || 'default';
+                let sensorTopic = null;
+                let sensorVal = null;
+
+                if (cluster.includes('temp') && hasNumericValue) {
+                  const nameLower = String(existing.name || '').toLowerCase();
+                  const typeLower = String(existing.type || '').toLowerCase();
+                  const modelLower = String(existing.modelId || existing.model || '').toLowerCase();
+                  const isWater = nameLower.includes('bluecheck') || typeLower.includes('water') || modelLower.includes('bluecheck');
+                  if (isWater) {
+                    sensorTopic = `tenant/${tenantId}/bieon/${targetBieonId}/suhu_air`;
+                  } else {
+                    sensorTopic = `tenant/${tenantId}/bieon/${targetBieonId}/suhu`;
+                  }
+                  sensorVal = numericValue;
+                } else if ((cluster.includes('analog_input') || cluster.includes('analog')) && hasNumericValue) {
+                  if (attr === 'ph') {
+                    sensorTopic = `tenant/${tenantId}/bieon/${targetBieonId}/ph`;
+                    sensorVal = numericValue;
+                  } else if (attr === 'tds') {
+                    sensorTopic = `tenant/${tenantId}/bieon/${targetBieonId}/tds`;
+                    sensorVal = numericValue;
+                  } else if (attr === 'turbidity') {
+                    sensorTopic = `tenant/${tenantId}/bieon/${targetBieonId}/turbidity`;
+                    sensorVal = numericValue;
+                  }
+                }
+
+                if (sensorTopic && sensorVal !== null) {
+                  const sensorDataKey = `sensordata_${sensorTopic}`;
+                  const lastSensorDataWrite = lastDbWriteTimeMap.get(sensorDataKey) || 0;
+                  if (Date.now() - lastSensorDataWrite >= 10 * 60 * 1000) {
+                    await new SensorData({ topic: sensorTopic, value: sensorVal }).save()
+                      .catch(err => console.warn('[MQTT][ZIGBEE] Failed to save SensorData:', err.message));
+                    lastDbWriteTimeMap.set(sensorDataKey, Date.now());
+                    console.log(`[MQTT][ZIGBEE] SensorData logged: ${sensorTopic} = ${sensorVal}`);
+                  }
+                }
 
                 const now = Date.now();
                 const lastWrite = lastDbWriteTimeMap.get(deviceIdStr) || 0;
@@ -779,7 +842,7 @@ const connectMQTT = (io) => {
                   await evaluateSensorAutomation(updatedDevice);
                   emitPayload = {
                     _id: existing._id,
-                    bieonId,
+                    bieonId: targetBieonId,
                     hubId,
                     device_ieee: existing.device_ieee || deviceIeee || undefined,
                     ieee: existing.device_ieee || deviceIeee || undefined,
@@ -2002,4 +2065,15 @@ const publishLeave = (bieonDeviceId, deviceIeee, options = {}) => {
   return true;
 };
 
-module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin, publishRemoteRegistration, publishLeave, handleDeviceTelemetry };
+/**
+ * getLatestTelemetry(deviceId)
+ * Returns the latest in-memory real-time sensor values for a device (by _id string).
+ * This is always up-to-date regardless of DB write throttle (10-minute interval).
+ * Use this in HTTP controllers to serve real-time values on page load/refresh.
+ */
+const getLatestTelemetry = (deviceId) => {
+  if (!deviceId) return null;
+  return latestTelemetryValues.get(String(deviceId)) || null;
+};
+
+module.exports = { connectMQTT, publishCommand, publishHierarchicalCommand, publishOpenJoin, publishRemoteRegistration, publishLeave, handleDeviceTelemetry, getLatestTelemetry, latestTelemetryValues };
