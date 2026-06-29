@@ -604,7 +604,7 @@ export function DeviceControlPage({ onNavigate }) {
 
       setIsScanning(true);
       setScanAttempted(true);
-      setDiscoveredDevices([]);
+      // setDiscoveredDevices([]); // Removed so we don't clear previously discovered devices in memory
       setJoinedDevicesPool([]);
       setLeavingDevices({});
       setScanTimer(30);
@@ -5271,7 +5271,7 @@ export function DeviceControlPage({ onNavigate }) {
                     {/* FOOTER BUTTONS */}
                     <div className="flex items-center gap-3 pt-2">
                       <button
-                        onClick={() => { setStep("add-device-choice"); setScanAttempted(false); setDiscoveredDevices([]); setJoinedDevicesPool([]); setLeavingDevices({}); }}
+                        onClick={() => { setStep("add-device-choice"); setScanAttempted(false); setJoinedDevicesPool([]); setLeavingDevices({}); }}
                         className="flex-1 py-4 px-6 border-2 border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
                       >
                         {t('kendali.open_join.back', 'Kembali')}
