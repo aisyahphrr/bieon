@@ -1,22 +1,46 @@
 const { Server } = require('socket.io');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const { createClient } = require('redis');
 
 let io = null;
+let pubClient = null;
+let subClient = null;
 
 /**
- * Initialize Socket.IO server
+ * Initialize Socket.IO server with Redis adapter for multi-instance support
  * @param {http.Server} httpServer - Express server instance
- * @returns {Server} Socket.IO instance
+ * @returns {Promise<Server>} Socket.IO instance
  */
-function initializeSocket(httpServer) {
-  const frontendUrl = process.env.FRONTEND_URL || 'https://ecosense-bieon.up.railway.app';
+async function initializeSocket(httpServer) {
+  // Initialize Redis clients for pub/sub
+  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
   
+  pubClient = createClient({ url: redisUrl });
+  subClient = pubClient.duplicate();
+
+  // Connect both clients
+  await Promise.all([
+    pubClient.connect().catch(err => {
+      console.error('❌ Failed to connect pubClient:', err);
+      throw err;
+    }),
+    subClient.connect().catch(err => {
+      console.error('❌ Failed to connect subClient:', err);
+      throw err;
+    })
+  ]);
+
+  console.log('✅ Redis clients connected');
+
+  // Initialize Socket.IO with Redis adapter
   io = new Server(httpServer, {
     cors: {
-      origin: [frontendUrl, 'http://localhost:5173', 'http://localhost:3000'],
+      origin: process.env.FRONTEND_URL || '*',
       methods: ['GET', 'POST'],
       credentials: true
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    adapter: createAdapter(pubClient, subClient)
   });
 
   // Middleware untuk autentikasi (optional)
@@ -51,7 +75,7 @@ function initializeSocket(httpServer) {
     });
   });
 
-  console.log('✅ Socket.IO initialized');
+  console.log('✅ Socket.IO initialized with Redis adapter');
   return io;
 }
 
@@ -95,10 +119,23 @@ function emitDeviceStatusUpdate(systemId, statusUpdate) {
   io.to(`system_${systemId}`).emit('device_status_update', statusUpdate);
 }
 
+/**
+ * Gracefully close Redis connections
+ */
+async function closeRedisConnections() {
+  if (pubClient) {
+    await pubClient.quit().catch(err => console.error('Error closing pubClient:', err));
+  }
+  if (subClient) {
+    await subClient.quit().catch(err => console.error('Error closing subClient:', err));
+  }
+}
+
 module.exports = {
   initializeSocket,
   getSocket,
   emitDeviceTelemetry,
   emitNewUnassignedDevice,
-  emitDeviceStatusUpdate
+  emitDeviceStatusUpdate,
+  closeRedisConnections
 };
