@@ -826,10 +826,11 @@ export function DeviceControlPage({ onNavigate }) {
 
   useEffect(() => {
     // SOCKET.IO REAL-TIME MONITORING
-    // Gunakan URL eksplisit ke backend agar tidak bergantung pada Vite proxy untuk WebSocket
-    const backendUrl = window.location.hostname === 'localhost'
+    // Gunakan VITE_API_URL jika tersedia (untuk environment production terpisah), jika tidak gunakan origin
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const backendUrl = apiUrl || (window.location.hostname === 'localhost'
       ? `http://${window.location.hostname}:5000`
-      : window.location.origin;
+      : window.location.origin);
     const socket = io(backendUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
