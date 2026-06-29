@@ -5298,7 +5298,7 @@ export function DeviceControlPage({ onNavigate }) {
                       </button>
                     </div>
 
-                    {/* CONNECTED DEVICES SECTION */}
+{/* CONNECTED DEVICES SECTION */}
                     <div className="pt-4 border-t border-gray-100">
                       <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-4">{t('kendali.open_join.registered_devices', 'Perangkat Terdaftar Anda')}</p>
 
@@ -5311,17 +5311,17 @@ export function DeviceControlPage({ onNavigate }) {
                           const isHubItself = (currentBieon?.hubs || []).some(hub => 
                             normalizeIeee(hub?.device_ieee || '') === devIeee
                           );
-
+                          
                           // 2. Cek apakah perangkat sudah ada di DB
                           const isAlreadyInDb = (currentBieon?.hubs || []).some(hub =>
                             (hub?.devices || []).some(d => {
-                              const dbIeee = normalizeIeee(d?.device_ieee || d?.id || '');
+                              // Jika perangkat Zigbee (punya IEEE), selalu tampilkan card-nya saat ada announce baru
+                              if (devIeee) return false;
+                              
                               return d?.modelId === dev?.id ||
-                                d?.productId === dev?.id ||
-                                (devIeee && dbIeee && devIeee === dbIeee);
+                                     d?.productId === dev?.id;
                             })
                           );
-                          
                           return !isAlreadyInDb && !isHubItself;
                         });
 
