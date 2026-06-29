@@ -413,9 +413,28 @@ const connectMQTT = (io) => {
             raw: announce,
             topics: announce.topics || undefined
           };
-
-
-
+          // If this announce looks like a hub node and we're in hub-only open-join,
+          // create or update the Hub record so the master registers the new hub.
+          if (openJoinSession && openJoinSession.hubOnly && isHubCandidate && deviceIeee) {
+            try {
+              const hubName = announce.display_name || displayName || (openJoinSession.hubId || `hub_${Date.now()}`);
+              const ieeeCanonical = deviceIeee;
+              // Try find by ieee first
+              let hubRec = await Hub.findOne({ bieonId, device_ieee: ieeeCanonical }).lean();
+              if (!hubRec) hubRec = await Hub.findOne({ bieonId, name: hubName }).lean();
+              if (!hubRec) {
+                const created = await Hub.create({ name: hubName, bieonId, device_ieee: ieeeCanonical, status: 'Online' });
+                hubRec = created.toObject ? created.toObject() : created;
+                console.log('[HUB] Auto-created hub from announce:', hubRec.name || hubRec._id);
+              } else {
+                await Hub.findByIdAndUpdate(hubRec._id, { $set: { status: 'Online', device_ieee: hubRec.device_ieee || ieeeCanonical } }).catch(() => {});
+              }
+              // Notify UI
+              if (ioInstance) ioInstance.emit('hub_added', { bieonId, hub: hubRec, discovered: discoveredPayload });
+            } catch (err) {
+              console.warn('[HUB] Failed to auto-create hub from announce:', err && err.message ? err.message : err);
+            }
+          }
           console.log('[DISCOVERY] device_announce received:', discoveredPayload);
           if (ioInstance) {
             ioInstance.emit('device_discovered', discoveredPayload);
