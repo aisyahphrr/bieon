@@ -8,12 +8,15 @@ let io = null;
  * @returns {Server} Socket.IO instance
  */
 function initializeSocket(httpServer) {
+  const frontendUrl = process.env.FRONTEND_URL || 'https://ecosense-bieon.up.railway.app';
+  
   io = new Server(httpServer, {
     cors: {
-      origin: '*',
+      origin: [frontendUrl, 'http://localhost:5173', 'http://localhost:3000'],
       methods: ['GET', 'POST'],
       credentials: true
-    }
+    },
+    transports: ['websocket', 'polling']
   });
 
   // Middleware untuk autentikasi (optional)
