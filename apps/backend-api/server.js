@@ -10,7 +10,7 @@ const { initializeSocket, closeRedisConnections } = require('./src/config/socket
 // Jalankan koneksi ke database
 connectDB();
 
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   // Buat HTTP server untuk Express dan Socket.IO

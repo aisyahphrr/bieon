@@ -17,11 +17,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api-sensor/, '/api')
       },
       '/api': {
-        target: 'http://localhost:80',
+        target: 'http://localhost:5000',
         changeOrigin: true
       },
       '/socket.io': {
-        target: 'http://localhost:80',
+        target: 'http://localhost:5000',
         ws: true,
         changeOrigin: true
       }
