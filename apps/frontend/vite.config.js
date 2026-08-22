@@ -7,8 +7,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
-    open: true,
+    open: true, // (Catatan: Ini aman dibiarkan, meski di Railway tidak akan membuka browser)
     host: true,
+    allowedHosts: true, // <--- TAMBAHKAN BARIS INI DI SINI
     proxy: {
       '/api-sensor': {
         target: 'http://localhost:5005',
