@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 // Lazy loading for feature modules
 const LandingPage = lazy(() => import('./features/general-page/LandingPage'));
