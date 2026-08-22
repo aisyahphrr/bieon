@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const app = express();
 
 // Import Routes
@@ -46,5 +47,13 @@ app.use('/api/products', productRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/sensors', sensorRoutes);
 app.use('/api/ir-database', irDatabaseRoutes);
+
+// --- Serve React Static Files ---
+app.use(express.static(path.join(__dirname, '../public/dist')));
+
+// Catch-all route to serve index.html for React SPA
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/dist/index.html'));
+});
 
 module.exports = app;

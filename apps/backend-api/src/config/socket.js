@@ -1,46 +1,21 @@
 const { Server } = require('socket.io');
-const { createAdapter } = require('@socket.io/redis-adapter');
-const { createClient } = require('redis');
 
 let io = null;
-let pubClient = null;
-let subClient = null;
 
 /**
- * Initialize Socket.IO server with Redis adapter for multi-instance support
+ * Initialize Socket.IO server
  * @param {http.Server} httpServer - Express server instance
  * @returns {Promise<Server>} Socket.IO instance
  */
 async function initializeSocket(httpServer) {
-  // Initialize Redis clients for pub/sub
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-  
-  pubClient = createClient({ url: redisUrl });
-  subClient = pubClient.duplicate();
-
-  // Connect both clients
-  await Promise.all([
-    pubClient.connect().catch(err => {
-      console.error('❌ Failed to connect pubClient:', err);
-      throw err;
-    }),
-    subClient.connect().catch(err => {
-      console.error('❌ Failed to connect subClient:', err);
-      throw err;
-    })
-  ]);
-
-  console.log('✅ Redis clients connected');
-
-  // Initialize Socket.IO with Redis adapter
+  // Initialize Socket.IO
   io = new Server(httpServer, {
     cors: {
       origin: process.env.FRONTEND_URL || '*',
       methods: ['GET', 'POST'],
       credentials: true
     },
-    transports: ['websocket', 'polling'],
-    adapter: createAdapter(pubClient, subClient)
+    transports: ['websocket', 'polling']
   });
 
   // Middleware untuk autentikasi (optional)
@@ -120,15 +95,10 @@ function emitDeviceStatusUpdate(systemId, statusUpdate) {
 }
 
 /**
- * Gracefully close Redis connections
+ * Gracefully close connections
  */
 async function closeRedisConnections() {
-  if (pubClient) {
-    await pubClient.quit().catch(err => console.error('Error closing pubClient:', err));
-  }
-  if (subClient) {
-    await subClient.quit().catch(err => console.error('Error closing subClient:', err));
-  }
+  // No-op since Redis adapter is removed
 }
 
 module.exports = {
