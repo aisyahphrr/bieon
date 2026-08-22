@@ -319,6 +319,10 @@ const connectMQTT = (io) => {
     mqttClient.subscribe('bieon/+/hub/+/zigbee_devices/+/events/bit_registration_announce');
   });
 
+  mqttClient.on('error', (err) => {
+    console.error('MQTT Client Error:', err.message);
+  });
+
   mqttClient.on('message', async (topic, message) => {
     try {
       let payload;
