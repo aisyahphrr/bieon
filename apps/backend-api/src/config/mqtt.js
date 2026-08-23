@@ -731,6 +731,22 @@ const connectMQTT = (io) => {
                 const newValues = { ...cachedValues };
                 const targetBieonId = existing.bieonId || bieonId;
 
+                // 1. Direct property extraction for combined payloads (e.g. { ph, tds, turbidity, waterTemp, temperature })
+                if (payloadObj.ph !== undefined && Number.isFinite(Number(payloadObj.ph))) newValues.ph = Number(payloadObj.ph);
+                if (payloadObj.tds !== undefined && Number.isFinite(Number(payloadObj.tds))) newValues.tds = Number(payloadObj.tds);
+                if (payloadObj.turbidity !== undefined && Number.isFinite(Number(payloadObj.turbidity))) newValues.turbidity = Number(payloadObj.turbidity);
+                if (payloadObj.waterTemp !== undefined && Number.isFinite(Number(payloadObj.waterTemp))) newValues.waterTemp = Number(payloadObj.waterTemp);
+                if (payloadObj.temperature !== undefined && Number.isFinite(Number(payloadObj.temperature))) {
+                  newValues.temperature = Number(payloadObj.temperature);
+                  const nameLower = String(existing.name || '').toLowerCase();
+                  const typeLower = String(existing.type || '').toLowerCase();
+                  const modelLower = String(existing.modelId || existing.model || '').toLowerCase();
+                  if (nameLower.includes('bluecheck') || typeLower.includes('water') || modelLower.includes('bluecheck')) {
+                    newValues.waterTemp = Number(payloadObj.temperature);
+                  }
+                }
+
+                // 2. Single ZCL cluster & attribute report extraction
                 if (cluster.includes('temp') && hasNumericValue) {
                   newValues.temperature = numericValue;
                   const nameLower = String(existing.name || '').toLowerCase();
