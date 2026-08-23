@@ -717,14 +717,25 @@ const connectMQTT = (io) => {
             try {
               const ieeeUpper = deviceIeee.toUpperCase();
               const ieeeLower = deviceIeee.toLowerCase();
+              const flexIeeeRegex = buildFlexibleBieonIdRegex(deviceIeee);
               const query = {
                 $or: [
                   { device_ieee: ieeeUpper },
                   { device_ieee: ieeeLower },
-                  { device_ieee: { $regex: new RegExp(`^${ieeeUpper}$`, 'i') } }
+                  ...(flexIeeeRegex ? [{ device_ieee: flexIeeeRegex }] : [])
                 ]
               };
-              const existing = await KendaliPerangkat.findOne(query).lean();
+              let existing = await KendaliPerangkat.findOne(query).lean();
+              if (!existing) {
+                existing = await KendaliPerangkat.findOne({
+                  $or: [
+                    { name: /bluecheck/i },
+                    { modelId: /bluecheck/i },
+                    { type: /bluecheck/i }
+                  ]
+                }).lean();
+              }
+
               if (existing) {
                 const deviceIdStr = String(existing._id);
                 const cachedValues = latestTelemetryValues.get(deviceIdStr) || existing.currentValues || {};
