@@ -802,7 +802,7 @@ const connectMQTT = (io) => {
                 if (sensorTopic && sensorVal !== null) {
                   const sensorDataKey = `sensordata_${sensorTopic}`;
                   const lastSensorDataWrite = lastDbWriteTimeMap.get(sensorDataKey) || 0;
-                  if (Date.now() - lastSensorDataWrite >= 10 * 60 * 1000) {
+                  if (Date.now() - lastSensorDataWrite >= 2000) {
                     await new SensorData({ topic: sensorTopic, value: sensorVal }).save()
                       .catch(err => console.warn('[MQTT][ZIGBEE] Failed to save SensorData:', err.message));
                     lastDbWriteTimeMap.set(sensorDataKey, Date.now());
@@ -812,7 +812,7 @@ const connectMQTT = (io) => {
 
                 const now = Date.now();
                 const lastWrite = lastDbWriteTimeMap.get(deviceIdStr) || 0;
-                const shouldSave = (now - lastWrite) >= 10 * 60 * 1000;
+                const shouldSave = (now - lastWrite) >= 2000;
 
                 let updatedDevice = null;
                 if (shouldSave) {
@@ -1143,7 +1143,7 @@ const connectMQTT = (io) => {
           await handleDeviceTelemetry(friendlyName, formattedPayload, bieonId);
           const sensorDataKey = `sensordata_${topic}`;
           const lastSensorDataWrite = lastDbWriteTimeMap.get(sensorDataKey) || 0;
-          if (Date.now() - lastSensorDataWrite >= 10 * 60 * 1000) {
+          if (Date.now() - lastSensorDataWrite >= 2000) {
             await new SensorData({ topic, value: actualValue }).save();
             lastDbWriteTimeMap.set(sensorDataKey, Date.now());
           }
@@ -1407,7 +1407,7 @@ const handleDeviceTelemetry = async (friendlyName, payload, bieonId = null) => {
 
     const now = Date.now();
     const lastWrite = lastDbWriteTimeMap.get(deviceIdStr) || 0;
-    const shouldSave = (now - lastWrite) >= 10 * 60 * 1000;
+    const shouldSave = (now - lastWrite) >= 2000;
 
     let updatedDevice = null;
     if (shouldSave) {
